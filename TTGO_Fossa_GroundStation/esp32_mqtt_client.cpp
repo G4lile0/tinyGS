@@ -53,7 +53,7 @@ esp_err_t Esp32_mqtt_clientClass::mqtt_event_handler (esp_mqtt_event_handle_t ev
 		//esp_mqtt_client_subscribe (((Esp32_mqtt_clientClass*)event)->client, "test/hello", 0);
 		if (client->mqtt_cfg.lwt_topic) {
 			esp_mqtt_client_publish (
-				client->client, client->mqtt_cfg.lwt_topic, "1", 1, 0, false);
+				client->client, client->mqtt_cfg.lwt_topic, "1", 1, 0, true);
 		}
 	} else if (event->event_id == MQTT_EVENT_DISCONNECTED) {
 		ESP_LOGI (MQTT_TAG, "MQTT event: %d. MQTT_EVENT_DISCONNECTED", event->event_id);
