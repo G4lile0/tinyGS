@@ -17,18 +17,20 @@
 #include <ESPAsyncWiFiManager.h>
 #include "esp32_mqtt_client.h"
 
-constexpr auto STATION_NAME_LENGTH = 20;
-constexpr auto MQTT_SERVER_LENGTH = 30;
-constexpr auto MQTT_USER_LENGTH = 30;
-constexpr auto MQTT_PASS_LENGTH = 30;
+constexpr auto LOG_TAG = "WIFIMAN";
+
+constexpr auto STATION_NAME_LENGTH = 21;
+constexpr auto MQTT_SERVER_LENGTH = 31;
+constexpr auto MQTT_USER_LENGTH = 31;
+constexpr auto MQTT_PASS_LENGTH = 31;
 constexpr auto SSID_LENGTH = 30;
 
 typedef struct {
 	char station[STATION_NAME_LENGTH];
-	float latitude;    // ** Beware this information is publically available use max 3 decimals 
-	float longitude;    // ** Beware this information is publically available use max 3 decimals 
+	float latitude = 0.0;    // ** Beware this information is publically available use max 3 decimals 
+	float longitude = 0.0;    // ** Beware this information is publically available use max 3 decimals 
 
-	char mqtt_server_name[MQTT_SERVER_LENGTH];
+	char mqtt_server_name[MQTT_SERVER_LENGTH] = "fossa.apaluba.com";
 #ifdef SECURE_MQTT
 	uint32_t mqtt_port = 8883;
 #else
@@ -43,13 +45,21 @@ typedef struct {
 class Config_managerClass
 {
  protected:
+	 boardconfig_t* board_config;
 
+	 AsyncWebServer* server;
+	 DNSServer* dns;
+	 AsyncWiFiManager* wifiManager;
+
+	 bool loadFlashData ();
+	 bool saveFlashData ();
+	 bool configWiFiManager ();
+	 static void doSave (void);
 
  public:
-	void init();
+	 Config_managerClass (boardconfig_t* config);
+	 bool begin();
 };
-
-extern Config_managerClass Config_manager;
 
 #endif
 

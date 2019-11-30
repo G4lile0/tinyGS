@@ -48,6 +48,8 @@ Esp32_mqtt_clientClass mqtt;
 // User configuration //
 
 boardconfig_t board_config;
+Config_managerClass config_manager (&board_config);
+
 //const char* ssid              = ""; //your WiFi SSID
 //const char* password          = ""; //your Wifi Password
 //const char*  station          = "your_station_name"   ;

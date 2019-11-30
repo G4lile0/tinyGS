@@ -4,12 +4,160 @@
 
 #include "config_manager.h"
 
-void Config_managerClass::init()
+const char CONFIG_FILE[] = "config.txt";
+
+bool shouldSave = false;
+
+Config_managerClass::Config_managerClass (boardconfig_t *config) {
+	board_config = config;
+}
+
+bool Config_managerClass::begin()
 {
+	if (!SPIFFS.begin ()) {
+		ESP_LOGE (LOG_TAG,"Error mounting flash");
+		return false;
+	}
+	if (!loadFlashData ()) { // Load from flash
+		if (configWiFiManager ()) {
+			if (shouldSave) {
+				ESP_LOGD (LOG_TAG,"Got configuration. Storing");
+				if (saveFlashData ()) {
+					ESP_LOGD (LOG_TAG, "Network Key stored on flash");
+				} else {
+					ESP_LOGE (LOG_TAG, "Error saving data on flash");
+				}
+				ESP.restart ();
+			} else {
+				ESP_LOGI (LOG_TAG, "Configuration has not to be saved");
+			}
+		} else {
+			ESP_LOGE (LOG_TAG, "Configuration error. Restarting");
+			ESP.restart ();
+		}
+	} else {
+		ESP_LOGI (LOG_TAG, "Configuration loaded from flash");
+	}
+}
 
+bool Config_managerClass::loadFlashData () {
+	if (SPIFFS.exists (CONFIG_FILE)) {
+		ESP_LOGD (LOG_TAG, "Opening %s file", CONFIG_FILE);
+		File configFile = SPIFFS.open (CONFIG_FILE, "r");
+		if (configFile) {
+			ESP_LOGD (LOG_TAG, "%s opened", CONFIG_FILE);
+			size_t size = configFile.size ();
+			if (size != sizeof (board_config)) {
+				ESP_LOGW (LOG_TAG, "Config file is corrupted. Deleting and formatting");
+				SPIFFS.remove (CONFIG_FILE);
+				SPIFFS.format ();
+				WiFi.begin ("0", "0"); // Delete WiFi credentials
+				return false;
+			}
+			configFile.read ((uint8_t*)(&board_config), sizeof (boardconfig_t));
+			ESP_LOGD (LOG_TAG, "Config file stored station name: %s", board_config->station);
+			configFile.close ();
+			ESP_LOGV (LOG_TAG, "Gateway configuration successfuly read");
+			ESP_LOG_BUFFER_HEX_LEVEL (LOG_TAG, &board_config, sizeof (boardconfig_t), ESP_LOG_VERBOSE);
+			return true;
+		}
+	} else {
+		ESP_LOGW (LOG_TAG, "%s do not exist. Formatting", CONFIG_FILE);
+		SPIFFS.format ();
+		WiFi.begin ("0", "0"); // Delete WiFi credentials
+		ESP_LOGW (LOG_TAG, "Dummy STA config loaded");
+		WiFi.begin ("0", "0"); // Delete WiFi credentials
+		return false;
+	}
+}
 
+bool Config_managerClass::saveFlashData () {
+	return false;
+}
+
+void Config_managerClass::doSave (void) {
+	ESP_LOGI (LOG_TAG, "Configuration saving activated");
+	shouldSave = true;
 }
 
 
-Config_managerClass Config_manager;
+bool Config_managerClass::configWiFiManager () {
+	server = new AsyncWebServer (80);
+	dns = new DNSServer ();
+	wifiManager = new AsyncWiFiManager (server, dns);
 
+	char station[STATION_NAME_LENGTH] = "";
+	//char networkName[NETWORK_NAME_LENGTH] = "";
+	char latitude[10];
+	snprintf (latitude, sizeof (latitude), "%f", board_config->latitude);
+	char longitude[10] = "0.0";
+	snprintf (longitude, sizeof (longitude), "%f", board_config->longitude);
+	char mqtt_port[6];
+	snprintf (mqtt_port, sizeof (mqtt_port), "%u", board_config->mqtt_port);
+
+	AsyncWiFiManagerParameter stationNameParam ("station_name", "Station Name", board_config->station, STATION_NAME_LENGTH - 1, "required type=\"text\" maxlength=20");
+	AsyncWiFiManagerParameter latitudeParam ("lat", "Latitude", latitude, 9, "required type=\"number\" min=\"-180\" max=\"180\" step=\"0.001\"");
+	AsyncWiFiManagerParameter longitudeParam ("lon", "Longitude", longitude, 9, "required type=\"number\" min=\"-180\" max=\"180\" step=\"0.001\"");
+	AsyncWiFiManagerParameter mqttServerNameParam ("server_name", "MQTT Server Name", board_config->mqtt_server_name, MQTT_SERVER_LENGTH - 1, "required type=\"text\" maxlength=30");
+	AsyncWiFiManagerParameter mqttServerPortParam ("server_port", "MQTT Server Port", mqtt_port, 5, "required type=\"number\" min=\"0\" max=\"65536\" step=\"1\"");
+	AsyncWiFiManagerParameter mqttUserParam ("user", "MQTT User Name", board_config->mqtt_user, MQTT_USER_LENGTH - 1, "required type=\"text\" maxlength=30");
+	AsyncWiFiManagerParameter mqttPassParam ("pass", "MQTT Password", board_config->mqtt_pass, MQTT_PASS_LENGTH - 1, "required type=\"password\" maxlength=30");
+
+	wifiManager->addParameter (&stationNameParam);
+	wifiManager->addParameter (&latitudeParam);
+	wifiManager->addParameter (&longitudeParam);
+	wifiManager->addParameter (new AsyncWiFiManagerParameter ("<br>"));
+	wifiManager->addParameter (&mqttServerNameParam);
+	wifiManager->addParameter (&mqttServerPortParam);
+	wifiManager->addParameter (&mqttUserParam);
+	wifiManager->addParameter (&mqttPassParam);
+
+	//if (notifyWiFiManagerStarted) {
+	//	notifyWiFiManagerStarted ();
+	//}
+
+	wifiManager->setDebugOutput (true);
+	//wifiManager->setBreakAfterConfig (true);
+	wifiManager->setTryConnectDuringConfigPortal (false);
+	wifiManager->setSaveConfigCallback (doSave);
+	wifiManager->setConfigPortalTimeout (150);
+
+	boolean result = wifiManager->autoConnect ("FossaGroundStation");
+	ESP_LOGI (LOG_TAG, "==== Config Portal result ====");
+	ESP_LOGI (LOG_TAG, "Station Name: %s", stationNameParam.getValue ());
+	ESP_LOGI (LOG_TAG, "Latitude: %s", latitudeParam.getValue ());
+	ESP_LOGI (LOG_TAG, "Longitude: %s", longitudeParam.getValue ());
+	ESP_LOGI (LOG_TAG, "MQTT Server Name: %s", mqttServerNameParam.getValue ());
+	ESP_LOGI (LOG_TAG, "MQTT Server Port: %s", mqttServerPortParam.getValue ());
+	ESP_LOGI (LOG_TAG, "MQTT User: %s", mqttUserParam.getValue ());
+	ESP_LOGI (LOG_TAG, "MQTT Password: %s", mqttPassParam.getValue ());
+	ESP_LOGI (LOG_TAG, "Status: %s", result ? "true" : "false");
+	// -> ESP_LOGI (LOG_TAG, "Save config: %s", shouldSave ? "yes" : "no");
+	if (result) {
+		if (shouldSave) {
+			memcpy (board_config->station, stationNameParam.getValue (), stationNameParam.getValueLength ());
+			board_config->latitude = atof (latitudeParam.getValue ());
+			board_config->longitude = atof (longitudeParam.getValue ());
+
+			memcpy(board_config->mqtt_server_name, mqttServerNameParam.getValue (), mqttServerNameParam.getValueLength ());
+			board_config->mqtt_port = atoi (mqttServerPortParam.getValue ());
+			memcpy(board_config->mqtt_user, mqttServerNameParam.getValue (), mqttServerNameParam.getValueLength ());
+			memcpy(board_config->mqtt_pass, mqttServerNameParam.getValue (), mqttServerNameParam.getValueLength ());
+		} else {
+			ESP_LOGD (LOG_TAG, "Configuration does not need to be saved");
+		}
+	} else {
+		ESP_LOGE (LOG_TAG, "WiFi connection unsuccessful. Restarting");
+		ESP.restart ();
+	}
+
+	//if (notifyWiFiManagerExit) {
+	//	notifyWiFiManagerExit (result);
+	//}
+
+	free (server);
+	free (dns);
+	free (wifiManager);
+
+	return result;
+}
