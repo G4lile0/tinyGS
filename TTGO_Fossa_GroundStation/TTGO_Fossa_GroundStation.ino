@@ -47,16 +47,17 @@ Esp32_mqtt_clientClass mqtt;
 //**********************
 // User configuration //
 
-const char* ssid              = ""; //your WiFi SSID
-const char* password          = ""; //your Wifi Password
-const char*  station          = "your_station_name"   ;
-const float latitude          =  40.64 ;    // ** Beware this information is publically available use max 3 decimals 
-const float longitude         =  -3.98 ;    // ** Beware this information is publically available use max 3 decimals 
-
-#define MQTT_SERVER "fossa.apaluba.com"
-#define MQTT_PORT 8883
-#define MQTT_USER ""           // ask for user and password on the Telegram group
-#define MQTT_PASS ""           // https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q 
+boardconfig_t board_config;
+//const char* ssid              = ""; //your WiFi SSID
+//const char* password          = ""; //your Wifi Password
+//const char*  station          = "your_station_name"   ;
+//const float latitude          =  40.64 ;    // ** Beware this information is publically available use max 3 decimals 
+//const float longitude         =  -3.98 ;    // ** Beware this information is publically available use max 3 decimals 
+//
+//#define MQTT_SERVER "fossa.apaluba.com"
+//#define MQTT_PORT 8883
+//#define MQTT_USER ""           // ask for user and password on the Telegram group
+//#define MQTT_PASS ""           // https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q 
 
 // Oled board configuration  uncomment your board
 // SSD1306 display( address, OLED_SDA, OLED_SCL)
@@ -81,7 +82,7 @@ void manageMQTTEvent (esp_mqtt_event_id_t event) {
   Serial.printf ("MQTT event %d\n", event);
   if (event == MQTT_EVENT_CONNECTED) {
     char topic[64];
-    strcpy(topic,station);
+    strcpy(topic,board_config.station);
     strcat(topic,"/data/#");
     mqtt.subscribe (topic);
     Serial.println (topic);
@@ -215,7 +216,7 @@ void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->drawXbm(x , y + 14, Fossa_Logo_width, Fossa_Logo_height, Fossa_Logo_bits);
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString( x+70, y + 40, "Sta: "+ String(station));
+  display->drawString( x+70, y + 40, "Sta: "+ String(board_config.station));
   }
 
 
@@ -362,14 +363,14 @@ void setup() {
   display.clear();
   display.drawXbm(34, 0 , WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
   display.setTextAlignment(TEXT_ALIGN_CENTER);
-  display.drawString(64 , 35 , "Connecting "+String(ssid));
+  display.drawString(64 , 35 , "Connecting "+String(board_config.ssid));
   display.display();
 
   delay (500);  
   
   //connect to WiFi
-  Serial.printf("Connecting to %s ", ssid);
-  WiFi.begin(ssid, password);
+  Serial.printf("Connecting to %s ", board_config.ssid);
+  //WiFi.begin(ssid, password);
   uint8_t waiting = 0;
   while (WiFi.status() != WL_CONNECTED) {
 
@@ -393,15 +394,15 @@ void setup() {
   display.drawXbm(34, 0 , WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
   
   Serial.println(" CONNECTED");
-  display.drawString(64 , 35 , "Connected "+String(ssid));
+  display.drawString(64 , 35 , "Connected "+String(board_config.ssid));
   display.drawString(64 ,53 , (WiFi.localIP().toString()));
   display.display();
   delay (1000);  
 
-  mqtt.init (MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS);
+  mqtt.init (board_config.mqtt_server_name, board_config.mqtt_port, board_config.mqtt_user, board_config.mqtt_pass);
 
    char topic[64];
-   strcpy(topic,station);
+   strcpy(topic, board_config.station);
    strcat(topic,"/status");
    
   mqtt.setLastWill(topic);
@@ -731,17 +732,17 @@ void  welcome_message (void) {
 
         const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(16);
           DynamicJsonDocument doc(capacity);
-          doc["station"] = station;  // G4lile0
+          doc["station"] = board_config.station;  // G4lile0
           JsonArray station_location = doc.createNestedArray("station_location");
-          station_location.add(latitude);
-          station_location.add(longitude);
+          station_location.add(board_config.latitude);
+          station_location.add(board_config.longitude);
           doc["version"] = fs_version;
 
           
 //          doc["time"] = ;
           serializeJson(doc, Serial);
           char topic[64];
-          strcpy(topic,station);
+          strcpy(topic, board_config.station);
           strcat(topic,"/welcome");
           char buffer[512];
           serializeJson(doc, buffer);
@@ -759,10 +760,10 @@ void  json_system_info(void) {
           
           const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(16);
           DynamicJsonDocument doc(capacity);
-          doc["station"] = station;  // G4lile0
+          doc["station"] = board_config.station;  // G4lile0
           JsonArray station_location = doc.createNestedArray("station_location");
-          station_location.add(latitude);
-          station_location.add(longitude);
+          station_location.add(board_config.latitude);
+          station_location.add(board_config.longitude);
           doc["rssi"] = last_packet_received_rssi;
           doc["snr"] = last_packet_received_snr;
           doc["frequency_error"] = last_packet_received_frequencyerror;
@@ -779,7 +780,7 @@ void  json_system_info(void) {
           doc["powerConfig"] = powerConfig;
           serializeJson(doc, Serial);
           char topic[64];
-          strcpy(topic,station);
+          strcpy(topic, board_config.station);
           strcat(topic,"/sys_info");
           char buffer[512];
           serializeJson(doc, buffer);
