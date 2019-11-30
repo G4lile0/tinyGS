@@ -1,22 +1,11 @@
 /*
-   RadioLib SX127x Receive with Interrupts Example
+ 
+    Based on theRadioLib SX127x Receive with Interrupts Example
+    For full API reference, see the GitHub Pages
+     https://jgromes.github.io/RadioLib/
 
-   This example listens for LoRa transmissions and tries to
-   receive them. Once a packet is received, an interrupt is
-   triggered. To successfully receive data, the following
-   settings have to be the same on both transmitter
-   and receiver:
-    - carrier frequency
-    - bandwidth
-    - spreading factor
-    - coding rate
-    - sync word
 
-   Other modules from SX127x/RFM9x family can also be used.
-
-   For full API reference, see the GitHub Pages
-   https://jgromes.github.io/RadioLib/
-*/
+  */
 
 // include the library
 #include <RadioLib.h>
@@ -27,11 +16,7 @@
 #include "SSD1306.h" // alias for `#include "SSD1306Wire.h"       https://github.com/ThingPulse/esp8266-oled-ssd1306
 #include "OLEDDisplayUi.h"                                  //    https://github.com/ThingPulse/esp8266-oled-ssd1306
 
-SSD1306 display(0x3c, 4, 15);
-OLEDDisplayUi ui     ( &display );
 #include "graphics.h"
-
-
 #include <ArduinoJson.h>                                    //    https://github.com/bblanchon/ArduinoJson
 
 
@@ -50,12 +35,13 @@ OLEDDisplayUi ui     ( &display );
 Esp32_mqtt_clientClass mqtt;
 
 
+
 //**********************
 // User configuration //
 
-const char* ssid              = "";                  //your WiFi SSID
+const char* ssid              = ""; //your WiFi SSID
 const char* password          = ""; //your Wifi Password
-const char*  station          =  "test_v1"   ;
+const char*  station          = "your_station_name"   ;
 const float latitude          =  40.64 ;    // ** Beware this information is publically available use max 3 decimals 
 const float longitude         =  -3.98 ;    // ** Beware this information is publically available use max 3 decimals 
 
@@ -65,8 +51,17 @@ const float longitude         =  -3.98 ;    // ** Beware this information is pub
 #define MQTT_PASS ""           // https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q 
 
 
+// Oled board configuration  uncomment your board
+// SSD1306 display( address, OLED_SDA, OLED_SCL)
+SSD1306 display(0x3c, 4, 15);         // configuration for TTGO v1 and Heltec
+// SSD1306 display(0x3c, 21, 22);      // configuration for TTGO v2 (SMA antenna connector)
+#define OLED_RST  16                   // seems that all board until now use pin 16
+
 //*********************
 
+const int fs_version =   1911303;      // version year month day 
+
+OLEDDisplayUi ui     ( &display );
 
 
 
@@ -78,7 +73,12 @@ const float longitude         =  -3.98 ;    // ** Beware this information is pub
 void manageMQTTEvent (esp_mqtt_event_id_t event) {
   Serial.printf ("MQTT event %d\n", event);
   if (event == MQTT_EVENT_CONNECTED) {
-    mqtt.subscribe ("test/data/#");
+    char topic[64];
+    strcpy(topic,station);
+    strcat(topic,"/data/#");
+    mqtt.subscribe (topic);
+    Serial.println (topic);
+    
   }
 }
 
@@ -111,7 +111,7 @@ void printLocalTime()
 
 
 
-//OLED pins to ESP32 GPIOs via this connection:
+//OLED pins to ESP32 TTGO v1 GPIOs 
 //OLED_SDA — GPIO4
 //OLED_SCL — GPIO15
 //OLED_RST — GPIO16
@@ -200,18 +200,19 @@ void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
 
 }
 
-
 void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   // draw an xbm image.
   // Please note that everything that should be transitioned
   // needs to be drawn relative to x and y
 
   display->drawXbm(x , y + 14, Fossa_Logo_width, Fossa_Logo_height, Fossa_Logo_bits);
-}
+  display->setFont(ArialMT_Plain_10);
+  display->setTextAlignment(TEXT_ALIGN_CENTER);
+  display->drawString( x+70, y + 40, "Sta: "+ String(station));
+  }
 
 
-
-//System info:
+//Initial dummy System info:
 float batteryChargingVoltage = 3.50;
 float batteryChargingCurrent = 0.0204;
 float batteryVoltage = 1.90;
@@ -329,41 +330,81 @@ int overlaysCount = 1;
 
 void setup() {
 
-  pinMode(16,OUTPUT);
-  digitalWrite(16, LOW); // set GPIO16 low to power on the OLED
+  pinMode(OLED_RST,OUTPUT);
+  digitalWrite(OLED_RST, LOW);      //    Reset the OLED    
   delay(50);
-  digitalWrite(16, HIGH);
+  digitalWrite(OLED_RST, HIGH);
 
 
+  display.init();
+  display.flipScreenVertically();
+  display.setFont(ArialMT_Plain_16);
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.drawString(0,5,"FossaSAT-1 Sta");
+  display.setFont(ArialMT_Plain_10);
+  display.drawString(55,23,"ver. "+String(fs_version));
+  
+  display.drawString(5,38,"developed by");
+  display.drawString(20,52,"@gmag12 & @g4lile0");
+  display.display();
 
-Serial.begin (115200);
+  delay (2000);  
+  Serial.begin (115200);
+  Serial.printf("Fossa Ground station Version to %d ", fs_version);
 
+  display.clear();
+  display.drawXbm(34, 0 , WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
+  display.setTextAlignment(TEXT_ALIGN_CENTER);
+  display.drawString(64 , 35 , "Connecting "+String(ssid));
+  display.display();
 
-
-
-
-
+  delay (500);  
+  
   //connect to WiFi
   Serial.printf("Connecting to %s ", ssid);
   WiFi.begin(ssid, password);
+  uint8_t waiting = 0;
   while (WiFi.status() != WL_CONNECTED) {
+
+      display.drawProgressBar(5,53,120,10,waiting ); 
+      waiting += 10 ;
+      if (waiting > 90) {
+        waiting=0;
+        display.setColor(BLACK);
+      // display.drawProgressBar(5,53,120,10,100);   seems that doesn't seem to follow setColor
+        display.fillRect(5, 53, 123, 12);
+        display.setColor(WHITE);
+        
+      }
+      display.display();
       delay(500);
       Serial.print(".");
+
   }
+
+  display.clear();
+  display.drawXbm(34, 0 , WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
+  
   Serial.println(" CONNECTED");
+  display.drawString(64 , 35 , "Connected "+String(ssid));
+  display.drawString(64 ,53 , (WiFi.localIP().toString()));
+  display.display();
+  delay (1000);  
 
   mqtt.init (MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS);
-  mqtt.setLastWill ("test/status");
+
+   char topic[64];
+   strcpy(topic,station);
+   strcat(topic,"/status");
+   
+  mqtt.setLastWill(topic);
   mqtt.onEvent (manageMQTTEvent);
   mqtt.onReceive (manageMQTTData);
-
   mqtt.begin ();
-
   
   //init and get the time
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   printLocalTime();
-
 
   // The ESP is capable of rendering 60fps in 80Mhz mode
   // but that won't give you much time for anything else
@@ -397,7 +438,6 @@ Serial.begin (115200);
   display.flipScreenVertically();
 
  
-  Serial.begin(115200);
   // initialize SX1278 with default settings
   Serial.print(F("[SX1278] Initializing ... "));
   // carrier frequency:           436.7 MHz
@@ -453,6 +493,10 @@ Serial.begin (115200);
   // lora.receive();
   // lora.readData();
   // lora.scanChannel();
+
+
+  welcome_message();
+
 }
 
 
@@ -673,6 +717,35 @@ void loop() {
 }
 
 
+void  welcome_message (void) {
+
+
+
+
+        const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(16);
+          DynamicJsonDocument doc(capacity);
+          doc["station"] = station;  // G4lile0
+          JsonArray station_location = doc.createNestedArray("station_location");
+          station_location.add(latitude);
+          station_location.add(longitude);
+          doc["version"] = fs_version;
+
+          
+//          doc["time"] = ;
+          serializeJson(doc, Serial);
+          char topic[64];
+          strcpy(topic,station);
+          strcat(topic,"/welcome");
+          char buffer[512];
+          serializeJson(doc, buffer);
+          size_t n = serializeJson(doc, buffer);
+          mqtt.publish(topic, buffer,n );
+
+  
+}
+
+
+
 
 void  json_system_info(void) {
           //// JSON
@@ -683,9 +756,9 @@ void  json_system_info(void) {
           JsonArray station_location = doc.createNestedArray("station_location");
           station_location.add(latitude);
           station_location.add(longitude);
-          doc["rssi"] = -34;
-          doc["snr"] = 9.5;
-          doc["frequency_error"] = 6406.27;
+          doc["rssi"] = last_packet_received_rssi;
+          doc["snr"] = last_packet_received_snr;
+          doc["frequency_error"] = last_packet_received_frequencyerror;
           doc["batteryChargingVoltage"] = batteryChargingVoltage;
           doc["batteryChargingCurrent"] = batteryChargingCurrent;
           doc["batteryVoltage"] = batteryVoltage;
@@ -698,18 +771,18 @@ void  json_system_info(void) {
           doc["resetCounter"] = resetCounter;
           doc["powerConfig"] = powerConfig;
           serializeJson(doc, Serial);
-//          mqtt.publish ("test/hello","1" , 1);
-
+          char topic[64];
+          strcpy(topic,station);
+          strcat(topic,"/sys_info");
           char buffer[512];
           serializeJson(doc, buffer);
           size_t n = serializeJson(doc, buffer);
-          mqtt.publish("test/fossa", buffer,n );
+          mqtt.publish(topic, buffer,n );
 
 
 /*
  * 
  * 
-
  * https://arduinojson.org/v6/assistant/
  * {
 "station":"g4lile0",
@@ -731,9 +804,5 @@ void  json_system_info(void) {
 
 }
  */
-
-
-
-
-  
+ 
 }
