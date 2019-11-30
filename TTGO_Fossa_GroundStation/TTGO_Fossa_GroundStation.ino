@@ -8,6 +8,7 @@
   */
 
 // include the library
+#include "config_manager.h"
 #include <RadioLib.h>
 #include <SPI.h>
 #include "Comms.h"
@@ -31,6 +32,13 @@
 
 #include "esp32_mqtt_client.h"
 #include <WiFi.h>
+#include <AsyncTCP.h>
+#include <FS.h>
+#include <SPIFFS.h>
+#include <DNSServer.h>
+#include <ESPAsyncWebServer.h>
+#include <ESPAsyncWiFiManager.h>
+
 
 Esp32_mqtt_clientClass mqtt;
 
@@ -49,7 +57,6 @@ const float longitude         =  -3.98 ;    // ** Beware this information is pub
 #define MQTT_PORT 8883
 #define MQTT_USER ""           // ask for user and password on the Telegram group
 #define MQTT_PASS ""           // https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q 
-
 
 // Oled board configuration  uncomment your board
 // SSD1306 display( address, OLED_SDA, OLED_SCL)
