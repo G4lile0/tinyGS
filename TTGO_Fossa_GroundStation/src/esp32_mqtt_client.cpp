@@ -24,13 +24,16 @@ void Esp32_mqtt_clientClass::init(const char* host, int32_t port, const char* us
 }
 
 bool Esp32_mqtt_clientClass::begin () {
+	esp_err_t err;
 #ifdef SECURE_MQTT
-	esp_err_t err = esp_tls_set_global_ca_store (DSTroot_CA, sizeof (DSTroot_CA));
+	err = esp_tls_set_global_ca_store (DSTroot_CA, sizeof (DSTroot_CA));
 	ESP_LOGI (MQTT_TAG, "CA store set. Error = %d %s", err, esp_err_to_name (err));
 #endif // SECURE_MQTT
 	client = esp_mqtt_client_init (&mqtt_cfg);
 	err = esp_mqtt_client_start (client);
 	ESP_LOGI (MQTT_TAG, "Client connect. Error = %d %s", err, esp_err_to_name (err));
+
+	return true;
 }
 
 bool Esp32_mqtt_clientClass::setLastWill (const char* topic) {
@@ -39,6 +42,8 @@ bool Esp32_mqtt_clientClass::setLastWill (const char* topic) {
 	mqtt_cfg.lwt_msg_len = 1;
 	//mqtt_cfg.lwt_qos = qos;
 	mqtt_cfg.lwt_retain = true;
+
+	return true;
 }
 
 bool Esp32_mqtt_clientClass::publish (const char* topic, const char* payload, size_t payload_lenght, int qos, bool retain) {
