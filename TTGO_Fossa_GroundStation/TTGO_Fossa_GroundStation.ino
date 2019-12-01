@@ -42,7 +42,9 @@
 
 Esp32_mqtt_clientClass mqtt;
 
-
+#define WAIT_FOR_BUTTON 3000
+#define RESET_BUTTON_TIME 5000
+#define PROG_BUTTON 0
 
 //**********************
 // User configuration //
@@ -335,7 +337,7 @@ OverlayCallback overlays[] = { msOverlay };
 int overlaysCount = 1;
 
 
-void APStarted (AsyncWiFiManager* wm) {
+void fossaAPStarted (AsyncWiFiManager* wm) {
 	String ssid;
 	if (wm) {
 		ssid = wm->getConfigPortalSSID ();
@@ -372,9 +374,10 @@ void setup() {
   display.drawString(20,52,"@gmag12 & @g4lile0");
   display.display();
 
-  delay (2000);  
+  delay (2000);
+
   Serial.begin (115200);
-  Serial.printf("Fossa Ground station Version to %d ", fs_version);
+  Serial.printf("Fossa Ground station Version to %d\n", fs_version);
 
   display.clear();
   display.drawXbm(34, 0 , WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
@@ -385,12 +388,39 @@ void setup() {
   delay (500);  
   
   //connect to WiFi
-  Serial.printf("Connecting to WiFi ", board_config.ssid);
-  config_manager.setAPStartedCallback (APStarted);
+  config_manager.setAPStartedCallback (fossaAPStarted);
   config_manager.setConfigSavedCallback (configSaved);
+  
+  // Check WiFi reset button
+  time_t start_waiting_for_button = millis ();
+  time_t button_pushed_at;
+  pinMode (PROG_BUTTON, INPUT_PULLUP);
+  ESP_LOGI (LOG_TAG, "Waiting for reset config button");
+  while (millis () - start_waiting_for_button < WAIT_FOR_BUTTON) {
+	  bool button_pushed = false;
+
+	  if (!digitalRead (PROG_BUTTON)) {
+		  button_pushed = true;
+		  button_pushed_at = millis ();
+		  ESP_LOGI (LOG_TAG, "Reset button pushed");
+		  while (millis () - button_pushed_at < RESET_BUTTON_TIME) {
+			  if (digitalRead (PROG_BUTTON)) {
+				  ESP_LOGI (LOG_TAG, "Reset button released");
+				  button_pushed = false;
+				  break;
+			  }
+		  }
+		  if (button_pushed) {
+			  ESP_LOGI (LOG_TAG, "Reset config triggered");
+			  WiFi.begin ("0", "0");
+			  WiFi.disconnect ();
+		  }
+	  }
+  }
+
+  ESP_LOGI (LOG_TAG, "Connecting to WiFi %s", board_config.ssid);
   if (config_manager.begin ()) {
-	  WiFi.mode (WIFI_STA);
-	  WiFi.begin ();
+
   }
   //WiFi.begin(ssid, password);
   //uint8_t waiting = 0;

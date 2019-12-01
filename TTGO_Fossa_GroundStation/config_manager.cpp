@@ -18,29 +18,33 @@ bool Config_managerClass::begin()
 
 	if (!SPIFFS.begin ()) {
 		ESP_LOGE (LOG_TAG,"Error mounting flash");
+		// todo callback
 		SPIFFS.format ();
-		return false;
+		//return false;
 	}
 	if (!loadFlashData ()) { // Load from flash
-		if (configWiFiManager ()) {
-			if (shouldSave) {
-				ESP_LOGD (LOG_TAG,"Got configuration. Storing");
-				if (saveFlashData ()) {
-					ESP_LOGD (LOG_TAG, "Configuration stored on flash");
-				} else {
-					ESP_LOGE (LOG_TAG, "Error saving data on flash");
-				}
-				ESP.restart ();
-			} else {
-				ESP_LOGI (LOG_TAG, "Configuration has not to be saved");
-			}
-		} else {
-			ESP_LOGE (LOG_TAG, "Configuration error. Restarting");
-			ESP.restart ();
-		}
+		ESP_LOGW (LOG_TAG, "Invalid configuration");
+		WiFi.begin ("0", "0"); // Reset Wifi credentials
 	} else {
 		ESP_LOGI (LOG_TAG, "Configuration loaded from flash");
+	}
+
+	if (configWiFiManager ()) {
+		if (shouldSave) {
+			ESP_LOGD (LOG_TAG,"Got configuration. Storing");
+			if (saveFlashData ()) {
+				ESP_LOGD (LOG_TAG, "Configuration stored on flash");
+			} else {
+				ESP_LOGE (LOG_TAG, "Error saving data on flash");
+			}
+			ESP.restart ();
+		} else {
+			ESP_LOGI (LOG_TAG, "Configuration has not to be saved");
+		}
 		return true;
+	} else {
+		ESP_LOGE (LOG_TAG, "Configuration error. Restarting");
+		ESP.restart ();
 	}
 }
 
@@ -159,8 +163,8 @@ bool Config_managerClass::configWiFiManager () {
 	boolean result = wifiManager->autoConnect ("FossaGroundStation");
 	ESP_LOGI (LOG_TAG, "==== Config Portal result ====");
 	ESP_LOGI (LOG_TAG, "Station Name: %s", stationNameParam.getValue ());
-	ESP_LOGI (LOG_TAG, "Latitude: %s", latitudeParam.getValue ());
-	ESP_LOGI (LOG_TAG, "Longitude: %s", longitudeParam.getValue ());
+	ESP_LOGI (LOG_TAG, "Latitude: %.*s", latitudeParam.getValueLength(), latitudeParam.getValue ());
+	ESP_LOGI (LOG_TAG, "Longitude: %.*s", longitudeParam.getValueLength (), longitudeParam.getValue ());
 	ESP_LOGI (LOG_TAG, "MQTT Server Name: %s", mqttServerNameParam.getValue ());
 	ESP_LOGI (LOG_TAG, "MQTT Server Port: %s", mqttServerPortParam.getValue ());
 	ESP_LOGI (LOG_TAG, "MQTT User: %s", mqttUserParam.getValue ());
