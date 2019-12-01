@@ -100,7 +100,7 @@ bool Config_managerClass::saveFlashData () {
 	ESP_LOGV (LOG_TAG, "Configuration saved to flash. %u bytes", filelen);
 	ESP_LOG_BUFFER_HEX_LEVEL (LOG_TAG, board_config, sizeof (boardconfig_t), ESP_LOG_VERBOSE);
 	if (notifyConfigSaved) {
-		//notifyConfigSaved (true);
+		notifyConfigSaved (true);
 	}
 	return true;
 }
@@ -166,7 +166,7 @@ bool Config_managerClass::configWiFiManager () {
 	ESP_LOGI (LOG_TAG, "MQTT User: %s", mqttUserParam.getValue ());
 	ESP_LOGI (LOG_TAG, "MQTT Password: %s", mqttPassParam.getValue ());
 	ESP_LOGI (LOG_TAG, "Status: %s", result ? "true" : "false");
-	// -> ESP_LOGI (LOG_TAG, "Save config: %s", shouldSave ? "yes" : "no");
+	ESP_LOGI (LOG_TAG, "Save config: %s", shouldSave ? "yes" : "no");
 	if (result) {
 		if (shouldSave) {
 			memcpy (board_config->station, stationNameParam.getValue (), stationNameParam.getValueLength ());
