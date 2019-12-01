@@ -353,6 +353,12 @@ void configSaved (bool result) {
 	// TODO: Show result to user
 }
 
+void flashFormatting () {
+	ESP_LOGI (LOG_TAG, "Formatting flash");
+
+	// TODO: Inform user that flash is being formatted
+}
+
 
 void setup() {
 
@@ -390,6 +396,7 @@ void setup() {
   //connect to WiFi
   config_manager.setAPStartedCallback (fossaAPStarted);
   config_manager.setConfigSavedCallback (configSaved);
+  config_manager.setFormatFlashCallback (flashFormatting);
   
   // Check WiFi reset button
   time_t start_waiting_for_button = millis ();

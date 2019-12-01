@@ -45,6 +45,7 @@ typedef struct {
 
 typedef void (*onAPStarted_t)(AsyncWiFiManager* wm);
 typedef void (*onConfigSaved_t)(bool result);
+typedef void (*onFormat_t)(void);
 
 class Config_managerClass
 {
@@ -57,6 +58,7 @@ class Config_managerClass
 
 	 onAPStarted_t notifyAPStarted;
 	 onConfigSaved_t notifyConfigSaved;
+	 onFormat_t notifyFormat;
 
 	 bool loadFlashData ();
 	 bool saveFlashData ();
@@ -70,6 +72,9 @@ class Config_managerClass
 	 }
 	 void setConfigSavedCallback (onConfigSaved_t cb) {
 		 notifyConfigSaved = cb;
+	 }
+	 void setFormatFlashCallback (onFormat_t cb) {
+		 notifyFormat = cb;
 	 }
 	 bool begin();
 };

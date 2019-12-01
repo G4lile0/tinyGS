@@ -18,9 +18,10 @@ bool Config_managerClass::begin()
 
 	if (!SPIFFS.begin ()) {
 		ESP_LOGE (LOG_TAG,"Error mounting flash");
-		// todo callback
+		if (notifyFormat) {
+			notifyFormat ();
+		}
 		SPIFFS.format ();
-		//return false;
 	}
 	if (!loadFlashData ()) { // Load from flash
 		ESP_LOGW (LOG_TAG, "Invalid configuration");
