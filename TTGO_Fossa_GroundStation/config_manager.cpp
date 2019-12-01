@@ -72,7 +72,17 @@ bool Config_managerClass::loadFlashData () {
 }
 
 bool Config_managerClass::saveFlashData () {
-	return false;
+	File configFile = SPIFFS.open (CONFIG_FILE, "w");
+	if (!configFile) {
+		ESP_LOGW (LOG_TAG, "failed to open config file %s for writing", CONFIG_FILE);
+		return false;
+	}
+	// TODO: Add CRC
+	configFile.write ((uint8_t*)(&board_config), sizeof (boardconfig_t));
+	configFile.close ();
+	ESP_LOGV (LOG_TAG, "Gateway configuration saved to flash: %s", printHexBuffer ((uint8_t*)(&gwConfig), sizeof (gateway_config_t)));
+	ESP_LOG_BUFFER_HEX_LEVEL (LOG_TAG, &board_config, sizeof (boardconfig_t), ESP_LOG_VERBOSE);
+	return true;
 }
 
 void Config_managerClass::doSave (void) {
@@ -143,6 +153,9 @@ bool Config_managerClass::configWiFiManager () {
 			board_config->mqtt_port = atoi (mqttServerPortParam.getValue ());
 			memcpy(board_config->mqtt_user, mqttServerNameParam.getValue (), mqttServerNameParam.getValueLength ());
 			memcpy(board_config->mqtt_pass, mqttServerNameParam.getValue (), mqttServerNameParam.getValueLength ());
+
+			String wifiSSID = WiFi.SSID ();
+			memcpy(board_config->ssid, wifiSSID.c_str (), wifiSSID.length() > SSID_LENGTH ? SSID_LENGTH : wifiSSID.length ());
 		} else {
 			ESP_LOGD (LOG_TAG, "Configuration does not need to be saved");
 		}
