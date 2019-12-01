@@ -16,6 +16,7 @@ bool Config_managerClass::begin()
 {
 	if (!SPIFFS.begin ()) {
 		ESP_LOGE (LOG_TAG,"Error mounting flash");
+		SPIFFS.format ();
 		return false;
 	}
 	if (!loadFlashData ()) { // Load from flash
@@ -80,7 +81,7 @@ bool Config_managerClass::saveFlashData () {
 	// TODO: Add CRC
 	configFile.write ((uint8_t*)(&board_config), sizeof (boardconfig_t));
 	configFile.close ();
-	ESP_LOGV (LOG_TAG, "Gateway configuration saved to flash: %s", printHexBuffer ((uint8_t*)(&gwConfig), sizeof (gateway_config_t)));
+	ESP_LOGV (LOG_TAG, "Gateway configuration saved to flash");
 	ESP_LOG_BUFFER_HEX_LEVEL (LOG_TAG, &board_config, sizeof (boardconfig_t), ESP_LOG_VERBOSE);
 	return true;
 }

@@ -371,26 +371,27 @@ void setup() {
   delay (500);  
   
   //connect to WiFi
-  Serial.printf("Connecting to %s ", board_config.ssid);
+  Serial.printf("Connecting to WiFi ", board_config.ssid);
+  config_manager.begin ();
   //WiFi.begin(ssid, password);
-  uint8_t waiting = 0;
-  while (WiFi.status() != WL_CONNECTED) {
+  //uint8_t waiting = 0;
+  //while (WiFi.status() != WL_CONNECTED) {
 
-      display.drawProgressBar(5,53,120,10,waiting ); 
-      waiting += 10 ;
-      if (waiting > 90) {
-        waiting=0;
-        display.setColor(BLACK);
-      // display.drawProgressBar(5,53,120,10,100);   seems that doesn't seem to follow setColor
-        display.fillRect(5, 53, 123, 12);
-        display.setColor(WHITE);
-        
-      }
-      display.display();
-      delay(500);
-      Serial.print(".");
+  //    display.drawProgressBar(5,53,120,10,waiting ); 
+  //    waiting += 10 ;
+  //    if (waiting > 90) {
+  //      waiting=0;
+  //      display.setColor(BLACK);
+  //    // display.drawProgressBar(5,53,120,10,100);   seems that doesn't seem to follow setColor
+  //      display.fillRect(5, 53, 123, 12);
+  //      display.setColor(WHITE);
+  //      
+  //    }
+  //    display.display();
+  //    delay(500);
+  //    Serial.print(".");
 
-  }
+  //}
 
   display.clear();
   display.drawXbm(34, 0 , WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
