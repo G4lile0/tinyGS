@@ -40,6 +40,7 @@ bool Config_managerClass::begin()
 		}
 	} else {
 		ESP_LOGI (LOG_TAG, "Configuration loaded from flash");
+		return true;
 	}
 }
 
@@ -175,7 +176,11 @@ bool Config_managerClass::configWiFiManager () {
 			memcpy(board_config->mqtt_server_name, mqttServerNameParam.getValue (), mqttServerNameParam.getValueLength ());
 			board_config->mqtt_port = atoi (mqttServerPortParam.getValue ());
 			memcpy(board_config->mqtt_user, mqttServerNameParam.getValue (), mqttServerNameParam.getValueLength ());
-			memcpy(board_config->mqtt_pass, mqttPassParam.getValue (), mqttPassParam.getValueLength ());
+			if (mqttPassParam.getValueLength () == 0) {
+				memcpy (board_config->mqtt_pass, mqttPassParam.getValue (), mqttPassParam.getValueLength ());
+			} else {
+				ESP_LOGI (LOG_TAG, "Password not changed");
+			}
 
 			String wifiSSID = WiFi.SSID ();
 			memcpy(board_config->ssid, wifiSSID.c_str (), wifiSSID.length() > SSID_LENGTH ? SSID_LENGTH : wifiSSID.length ());
@@ -184,7 +189,7 @@ bool Config_managerClass::configWiFiManager () {
 		}
 	} else {
 		ESP_LOGE (LOG_TAG, "WiFi connection unsuccessful. Restarting");
-		ESP.restart ();
+		//ESP.restart ();
 	}
 
 	//if (notifyWiFiManagerExit) {

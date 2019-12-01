@@ -388,7 +388,10 @@ void setup() {
   Serial.printf("Connecting to WiFi ", board_config.ssid);
   config_manager.setAPStartedCallback (APStarted);
   config_manager.setConfigSavedCallback (configSaved);
-  config_manager.begin ();
+  if (config_manager.begin ()) {
+	  WiFi.mode (WIFI_STA);
+	  WiFi.begin ();
+  }
   //WiFi.begin(ssid, password);
   //uint8_t waiting = 0;
   //while (WiFi.status() != WL_CONNECTED) {
