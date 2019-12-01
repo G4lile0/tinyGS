@@ -9,4 +9,4 @@ const char* MQTT_USER = "user";     // ask for user and password on the Telegram
 const char* MQTT_PASS = "password"; // https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q 
 
 const char* MQTT_SERVER = "fossa.apaluba.com"; // do not change this
-const uint8_t MQTT_PORT = 8883
+const uint16_t MQTT_PORT = 8883;
