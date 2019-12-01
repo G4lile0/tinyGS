@@ -51,7 +51,7 @@ bool Config_managerClass::loadFlashData () {
 			if (size != sizeof (board_config)) {
 				ESP_LOGW (LOG_TAG, "Config file is corrupted. Deleting and formatting");
 				SPIFFS.remove (CONFIG_FILE);
-				SPIFFS.format ();
+				//SPIFFS.format ();
 				WiFi.begin ("0", "0"); // Delete WiFi credentials
 				return false;
 			}
@@ -79,10 +79,14 @@ bool Config_managerClass::saveFlashData () {
 		return false;
 	}
 	// TODO: Add CRC
+	// TODO: Check successful save
 	configFile.write ((uint8_t*)(&board_config), sizeof (boardconfig_t));
 	configFile.close ();
 	ESP_LOGV (LOG_TAG, "Gateway configuration saved to flash");
 	ESP_LOG_BUFFER_HEX_LEVEL (LOG_TAG, &board_config, sizeof (boardconfig_t), ESP_LOG_VERBOSE);
+	if (notifyConfigSaved) {
+		notifyConfigSaved (true);
+	}
 	return true;
 }
 
@@ -132,6 +136,10 @@ bool Config_managerClass::configWiFiManager () {
 	wifiManager->setTryConnectDuringConfigPortal (false);
 	wifiManager->setSaveConfigCallback (doSave);
 	wifiManager->setConfigPortalTimeout (150);
+
+	if (notifyAPStarted) {
+		wifiManager->setAPCallback (notifyAPStarted);
+	}
 
 	boolean result = wifiManager->autoConnect ("FossaGroundStation");
 	ESP_LOGI (LOG_TAG, "==== Config Portal result ====");

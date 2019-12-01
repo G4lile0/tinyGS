@@ -16,6 +16,7 @@
 #include <ESPAsyncWebServer.h>
 #include <ESPAsyncWiFiManager.h>
 #include "esp32_mqtt_client.h"
+#include <functional>
 
 constexpr auto LOG_TAG = "WIFIMAN";
 
@@ -42,6 +43,8 @@ typedef struct {
 	char ssid[SSID_LENGTH];
 } boardconfig_t;
 
+typedef void (*onAPStarted_t)(AsyncWiFiManager* wm);
+typedef void (*onConfigSaved_t)(bool result);
 
 class Config_managerClass
 {
@@ -52,6 +55,9 @@ class Config_managerClass
 	 DNSServer* dns;
 	 AsyncWiFiManager* wifiManager;
 
+	 onAPStarted_t notifyAPStarted;
+	 onConfigSaved_t notifyConfigSaved;
+
 	 bool loadFlashData ();
 	 bool saveFlashData ();
 	 bool configWiFiManager ();
@@ -59,6 +65,12 @@ class Config_managerClass
 
  public:
 	 Config_managerClass (boardconfig_t* config);
+	 void setAPStartedCallback (onAPStarted_t cb) {
+		 notifyAPStarted = cb;
+	 }
+	 void setConfigSavedCallback (onConfigSaved_t cb) {
+		 notifyConfigSaved = cb;
+	 }
 	 bool begin();
 };
 

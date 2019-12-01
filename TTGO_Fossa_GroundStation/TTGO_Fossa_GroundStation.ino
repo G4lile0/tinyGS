@@ -335,7 +335,21 @@ OverlayCallback overlays[] = { msOverlay };
 int overlaysCount = 1;
 
 
+void APStarted (AsyncWiFiManager* wm) {
+	String ssid;
+	if (wm) {
+		ssid = wm->getConfigPortalSSID ();
+	}
+	ESP_LOGI (LOG_TAG, "AP started. Connect to %s", ssid.c_str ());
 
+	// TODO: Show message to user "Connect to <SSID> to configure board"
+}
+
+void configSaved (bool result) {
+	ESP_LOGI (LOG_TAG, "Config %ssaved", result? "": "not ");
+
+	// TODO: Show result to user
+}
 
 
 void setup() {
@@ -372,6 +386,8 @@ void setup() {
   
   //connect to WiFi
   Serial.printf("Connecting to WiFi ", board_config.ssid);
+  config_manager.setAPStartedCallback (APStarted);
+  config_manager.setConfigSavedCallback (configSaved);
   config_manager.begin ();
   //WiFi.begin(ssid, password);
   //uint8_t waiting = 0;
