@@ -767,9 +767,11 @@ void  welcome_message (void) {
           strcpy(topic, board_config.station);
           strcat(topic,"/welcome");
           char buffer[512];
-          serializeJson(doc, buffer);
+          //serializeJson(doc, buffer);
           size_t n = serializeJson(doc, buffer);
           mqtt.publish(topic, buffer,n );
+
+		  ESP_LOGI (LOG_TAG, "Wellcome sent");
 
   
 }
