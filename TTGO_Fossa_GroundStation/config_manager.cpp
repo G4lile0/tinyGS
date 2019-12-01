@@ -175,8 +175,8 @@ bool Config_managerClass::configWiFiManager () {
 
 			memcpy(board_config->mqtt_server_name, mqttServerNameParam.getValue (), mqttServerNameParam.getValueLength ());
 			board_config->mqtt_port = atoi (mqttServerPortParam.getValue ());
-			memcpy(board_config->mqtt_user, mqttServerNameParam.getValue (), mqttServerNameParam.getValueLength ());
-			if (mqttPassParam.getValueLength () == 0) {
+			memcpy(board_config->mqtt_user, mqttUserParam.getValue (), mqttUserParam.getValueLength ());
+			if (strcmp(mqttPassParam.getValue (),"")) {
 				memcpy (board_config->mqtt_pass, mqttPassParam.getValue (), mqttPassParam.getValueLength ());
 			} else {
 				ESP_LOGI (LOG_TAG, "Password not changed");
