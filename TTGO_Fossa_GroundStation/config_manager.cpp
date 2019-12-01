@@ -4,7 +4,7 @@
 
 #include "config_manager.h"
 
-const char CONFIG_FILE[] = "config.txt";
+const char CONFIG_FILE[] = "/config.txt";
 
 bool shouldSave = false;
 
@@ -14,6 +14,8 @@ Config_managerClass::Config_managerClass (boardconfig_t *config) {
 
 bool Config_managerClass::begin()
 {
+	// WiFi.begin ("0", "0"); // Only for test
+
 	if (!SPIFFS.begin ()) {
 		ESP_LOGE (LOG_TAG,"Error mounting flash");
 		SPIFFS.format ();
@@ -24,7 +26,7 @@ bool Config_managerClass::begin()
 			if (shouldSave) {
 				ESP_LOGD (LOG_TAG,"Got configuration. Storing");
 				if (saveFlashData ()) {
-					ESP_LOGD (LOG_TAG, "Network Key stored on flash");
+					ESP_LOGD (LOG_TAG, "Configuration stored on flash");
 				} else {
 					ESP_LOGE (LOG_TAG, "Error saving data on flash");
 				}
@@ -48,23 +50,35 @@ bool Config_managerClass::loadFlashData () {
 		if (configFile) {
 			ESP_LOGD (LOG_TAG, "%s opened", CONFIG_FILE);
 			size_t size = configFile.size ();
-			if (size != sizeof (board_config)) {
+			ESP_LOGD (LOG_TAG, "Config size: %d. File size %d", sizeof (boardconfig_t), configFile.size ());
+			if (size != sizeof (boardconfig_t)) {
 				ESP_LOGW (LOG_TAG, "Config file is corrupted. Deleting and formatting");
 				SPIFFS.remove (CONFIG_FILE);
 				//SPIFFS.format ();
 				WiFi.begin ("0", "0"); // Delete WiFi credentials
 				return false;
 			}
-			configFile.read ((uint8_t*)(&board_config), sizeof (boardconfig_t));
+			configFile.read ((uint8_t*)(board_config), sizeof (boardconfig_t));
 			ESP_LOGD (LOG_TAG, "Config file stored station name: %s", board_config->station);
 			configFile.close ();
 			ESP_LOGV (LOG_TAG, "Gateway configuration successfuly read");
-			ESP_LOG_BUFFER_HEX_LEVEL (LOG_TAG, &board_config, sizeof (boardconfig_t), ESP_LOG_VERBOSE);
+			ESP_LOG_BUFFER_HEX_LEVEL (LOG_TAG, board_config, sizeof (boardconfig_t), ESP_LOG_VERBOSE);
+
+			ESP_LOGI (LOG_TAG, "==== Configuration ====");
+			ESP_LOGI (LOG_TAG, "Station Name: %s", board_config->station);
+			ESP_LOGI (LOG_TAG, "Latitude: %f", board_config->latitude);
+			ESP_LOGI (LOG_TAG, "Longitude: %f", board_config->longitude);
+			ESP_LOGI (LOG_TAG, "MQTT Server Name: %s", board_config->mqtt_server_name);
+			ESP_LOGI (LOG_TAG, "MQTT Server Port: %u", board_config->mqtt_port);
+			ESP_LOGI (LOG_TAG, "MQTT User: %s", board_config->mqtt_user);
+			ESP_LOGI (LOG_TAG, "MQTT Password: %s", board_config->mqtt_pass);
+			ESP_LOGI (LOG_TAG, "SSID: %s", board_config->ssid);
+
 			return true;
 		}
 	} else {
-		ESP_LOGW (LOG_TAG, "%s do not exist. Formatting", CONFIG_FILE);
-		SPIFFS.format ();
+		ESP_LOGW (LOG_TAG, "%s do not exist", CONFIG_FILE);
+		//SPIFFS.format ();
 		WiFi.begin ("0", "0"); // Delete WiFi credentials
 		ESP_LOGW (LOG_TAG, "Dummy STA config loaded");
 		WiFi.begin ("0", "0"); // Delete WiFi credentials
@@ -80,12 +94,12 @@ bool Config_managerClass::saveFlashData () {
 	}
 	// TODO: Add CRC
 	// TODO: Check successful save
-	configFile.write ((uint8_t*)(&board_config), sizeof (boardconfig_t));
+	size_t filelen = configFile.write ((uint8_t*)board_config, sizeof (boardconfig_t));
 	configFile.close ();
-	ESP_LOGV (LOG_TAG, "Gateway configuration saved to flash");
-	ESP_LOG_BUFFER_HEX_LEVEL (LOG_TAG, &board_config, sizeof (boardconfig_t), ESP_LOG_VERBOSE);
+	ESP_LOGV (LOG_TAG, "Configuration saved to flash. %u bytes", filelen);
+	ESP_LOG_BUFFER_HEX_LEVEL (LOG_TAG, board_config, sizeof (boardconfig_t), ESP_LOG_VERBOSE);
 	if (notifyConfigSaved) {
-		notifyConfigSaved (true);
+		//notifyConfigSaved (true);
 	}
 	return true;
 }
@@ -161,7 +175,7 @@ bool Config_managerClass::configWiFiManager () {
 			memcpy(board_config->mqtt_server_name, mqttServerNameParam.getValue (), mqttServerNameParam.getValueLength ());
 			board_config->mqtt_port = atoi (mqttServerPortParam.getValue ());
 			memcpy(board_config->mqtt_user, mqttServerNameParam.getValue (), mqttServerNameParam.getValueLength ());
-			memcpy(board_config->mqtt_pass, mqttServerNameParam.getValue (), mqttServerNameParam.getValueLength ());
+			memcpy(board_config->mqtt_pass, mqttPassParam.getValue (), mqttPassParam.getValueLength ());
 
 			String wifiSSID = WiFi.SSID ();
 			memcpy(board_config->ssid, wifiSSID.c_str (), wifiSSID.length() > SSID_LENGTH ? SSID_LENGTH : wifiSSID.length ());
