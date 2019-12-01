@@ -123,9 +123,9 @@ bool Config_managerClass::configWiFiManager () {
 	char station[STATION_NAME_LENGTH] = "";
 	//char networkName[NETWORK_NAME_LENGTH] = "";
 	char latitude[10];
-	snprintf (latitude, sizeof (latitude), "%f", board_config->latitude);
+	snprintf (latitude, sizeof (latitude), "%.2f", board_config->latitude);
 	char longitude[10] = "0.0";
-	snprintf (longitude, sizeof (longitude), "%f", board_config->longitude);
+	snprintf (longitude, sizeof (longitude), "%.2f", board_config->longitude);
 	char mqtt_port[6];
 	snprintf (mqtt_port, sizeof (mqtt_port), "%u", board_config->mqtt_port);
 
@@ -135,7 +135,7 @@ bool Config_managerClass::configWiFiManager () {
 	AsyncWiFiManagerParameter mqttServerNameParam ("server_name", "MQTT Server Name", board_config->mqtt_server_name, MQTT_SERVER_LENGTH - 1, "required type=\"text\" maxlength=30");
 	AsyncWiFiManagerParameter mqttServerPortParam ("server_port", "MQTT Server Port", mqtt_port, 5, "required type=\"number\" min=\"0\" max=\"65536\" step=\"1\"");
 	AsyncWiFiManagerParameter mqttUserParam ("user", "MQTT User Name", board_config->mqtt_user, MQTT_USER_LENGTH - 1, "required type=\"text\" maxlength=30");
-	AsyncWiFiManagerParameter mqttPassParam ("pass", "MQTT Password", board_config->mqtt_pass, MQTT_PASS_LENGTH - 1, "required type=\"password\" maxlength=30");
+	AsyncWiFiManagerParameter mqttPassParam ("pass", "MQTT Password", "", MQTT_PASS_LENGTH - 1, "type=\"password\" maxlength=30");
 
 	wifiManager->addParameter (&stationNameParam);
 	wifiManager->addParameter (&latitudeParam);
