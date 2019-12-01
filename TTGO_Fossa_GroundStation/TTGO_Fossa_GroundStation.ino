@@ -71,7 +71,7 @@ SSD1306 display(0x3c, 4, 15);         // configuration for TTGO v1 and Heltec
 
 //*********************
 
-const int fs_version =   1911303;      // version year month day 
+const int fs_version =   1912012;      // version year month day 
 
 OLEDDisplayUi ui     ( &display );
 
@@ -344,6 +344,16 @@ void fossaAPStarted (AsyncWiFiManager* wm) {
 	}
 	ESP_LOGI (LOG_TAG, "AP started. Connect to %s", ssid.c_str ());
 
+  display.clear();
+  display.setFont(ArialMT_Plain_10);
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.drawString(0, 6,"Connect to AP:");
+  display.drawString(0,18,"->"+String(ssid));
+  display.drawString(5,32,"to configure your Station");
+  display.drawString(10,52,"IP:   192.168.4.1");
+  display.display();
+
+
 	// TODO: Show message to user "Connect to <SSID> to configure board"
 }
 
@@ -356,7 +366,19 @@ void configSaved (bool result) {
 void flashFormatting () {
 	ESP_LOGI (LOG_TAG, "Formatting flash");
 
-	// TODO: Inform user that flash is being formatted
+  display.clear();
+  display.setFont(ArialMT_Plain_16);
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.drawString(0,5,"FossaSAT-1 Sta");
+  display.setFont(ArialMT_Plain_10);
+  display.drawString(55,23,"ver. "+String(fs_version));
+  display.drawString(2,38,"Formatting Flash ");
+  display.drawString(2,52,"Please Wait Don't turn OFF");
+  display.display();
+
+	// Done TODO: Inform user that flash is being formatted
+
+
 }
 
 
