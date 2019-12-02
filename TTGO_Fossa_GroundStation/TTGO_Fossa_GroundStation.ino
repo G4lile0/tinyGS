@@ -83,7 +83,7 @@ bool mqtt_connected = false;
 
 
 void manageMQTTEvent (esp_mqtt_event_id_t event) {
-  Serial.printf ("MQTT event %d\n", event);
+  //Serial.printf ("MQTT event %d\n", event);
   if (event == MQTT_EVENT_CONNECTED) {
 	mqtt_connected = true;
     char topic[64];
