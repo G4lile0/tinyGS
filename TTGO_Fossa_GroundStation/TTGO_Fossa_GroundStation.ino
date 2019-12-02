@@ -75,7 +75,7 @@ const int fs_version =   1912012;      // version year month day
 
 OLEDDisplayUi ui     ( &display );
 
-
+bool mqtt_connected = false;
 
 
 
@@ -85,13 +85,17 @@ OLEDDisplayUi ui     ( &display );
 void manageMQTTEvent (esp_mqtt_event_id_t event) {
   Serial.printf ("MQTT event %d\n", event);
   if (event == MQTT_EVENT_CONNECTED) {
+	mqtt_connected = true;
     char topic[64];
     strcpy(topic,board_config.station);
     strcat(topic,"/data/#");
     mqtt.subscribe (topic);
     Serial.println (topic);
     
+  } else   if (event == MQTT_EVENT_DISCONNECTED) {
+	mqtt_connected = false;
   }
+
 }
 
 void manageMQTTData (char* topic, size_t topic_len, char* payload, size_t payload_len) {
@@ -583,6 +587,12 @@ void setup() {
   // lora.readData();
   // lora.scanChannel();
 
+  Serial.println ("Waiting for MQTT connection");
+  while (!mqtt_connected) {
+	  Serial.print ('.');
+	  delay (500);
+  }
+  Serial.println (" Connected !!!");
 
   welcome_message();
 
