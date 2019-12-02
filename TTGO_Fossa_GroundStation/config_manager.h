@@ -4,7 +4,7 @@
 #define _CONFIG_MANAGER_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
-	#include "arduino.h"
+	#include "Arduino.h"
 #else
 	#include "WProgram.h"
 #endif
@@ -80,4 +80,3 @@ class Config_managerClass
 };
 
 #endif
-

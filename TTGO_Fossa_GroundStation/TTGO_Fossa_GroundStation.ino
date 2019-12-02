@@ -296,10 +296,13 @@ void drawFrame4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 
 
 void drawFrame5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->drawXbm(x + 34, y + 4, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->drawString( x+100,  21+y, "MQTT:" );
+  if (mqtt_connected ) {display->drawString( x+105,  31+y, "ON" );}  else {display->drawString( x+102,  31+y, "OFF" );}
+     display->drawXbm(x + 34, y + 4, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
   // The coordinates define the center of the text
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString(64 + x, 42 + y, "Connected "+(WiFi.localIP().toString()));
+    display->drawString(64 + x, 42 + y, "Connected "+(WiFi.localIP().toString()));
 
 
 
