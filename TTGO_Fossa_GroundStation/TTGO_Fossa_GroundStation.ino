@@ -90,7 +90,8 @@ void manageMQTTEvent (esp_mqtt_event_id_t event) {
     strcpy(topic,board_config.station);
     strcat(topic,"/data/#");
     mqtt.subscribe (topic);
-    Serial.println (topic);
+    //Serial.println (topic);
+	welcome_message ();
     
   } else   if (event == MQTT_EVENT_DISCONNECTED) {
 	mqtt_connected = false;
@@ -597,7 +598,7 @@ void setup() {
   }
   Serial.println (" Connected !!!");
 
-  welcome_message();
+  //welcome_message();
 
 }
 
