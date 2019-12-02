@@ -595,7 +595,7 @@ void setup() {
   }
   Serial.println (" Connected !!!");
 
-  welcome_message();
+  //welcome_message();
 
 }
 
