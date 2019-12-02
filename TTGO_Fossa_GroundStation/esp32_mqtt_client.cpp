@@ -13,11 +13,11 @@ void Esp32_mqtt_clientClass::init(const char* host, int32_t port, const char* us
 	mqtt_cfg.username = user;
 	mqtt_cfg.password = password;
 	mqtt_cfg.keepalive = 15;
-	ESP_LOGI (LOG_TAG, "==== MQTT Configuration ====");
-	ESP_LOGI (LOG_TAG, "Host Name: %s", mqtt_cfg.host);
-	ESP_LOGI (LOG_TAG, "Port: %u", mqtt_cfg.port);
-	ESP_LOGI (LOG_TAG, "Username: %s", mqtt_cfg.username);
-	ESP_LOGI (LOG_TAG, "Password: %s", mqtt_cfg.password);
+	ESP_LOGI (MQTT_TAG, "==== MQTT Configuration ====");
+	ESP_LOGI (MQTT_TAG, "Host Name: %s", mqtt_cfg.host? mqtt_cfg.host:"none");
+	ESP_LOGI (MQTT_TAG, "Port: %u", mqtt_cfg.port);
+	ESP_LOGI (MQTT_TAG, "Username: %s", mqtt_cfg.username? mqtt_cfg.username:"none");
+	ESP_LOGI (MQTT_TAG, "Password: %s", mqtt_cfg.password? mqtt_cfg.password:"none");
 
 #ifdef SECURE_MQTT
 	mqtt_cfg.transport = MQTT_TRANSPORT_OVER_SSL;
