@@ -16,6 +16,9 @@
 #include <ArduinoJson.h>                                    //    https://github.com/bblanchon/ArduinoJson
 #include <WiFi.h>
 #include "time.h"
+#include <ESPmDNS.h>
+#include <Update.h>
+#include <ArduinoOTA.h>
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
