@@ -368,8 +368,8 @@ void setup() {
   display.setFont(ArialMT_Plain_10);
   display.drawString(55,23,"ver. "+String(fs_version));
   
-  display.drawString(5,38,"developed by");
-  display.drawString(20,52,"@gmag12 & @g4lile0");
+  display.drawString(5,38,"by @gmag12 @4m1g0");
+  display.drawString(40,52,"& @g4lile0");
   display.display();
 
   delay (2000);
@@ -567,6 +567,8 @@ void setup() {
 	  delay (500);
   }
   Serial.println (" Connected !!!");
+  
+  printControls();
 
 }
 
@@ -579,6 +581,80 @@ void loop() {
     // time budget.
     delay(remainingTimeBudget);
   }
+
+
+
+
+/// fossa station code
+  // check serial data
+  if(Serial.available()) {
+
+    // disable reception interrupt
+    enableInterrupt = false;
+   // detachInterrupt(digitalPinToInterrupt(DIO1));
+
+    // get the first character
+    char serialCmd = Serial.read();
+
+    // wait for a bit to receive any trailing characters
+    delay(50);
+
+    // dump the serial buffer
+    while(Serial.available()) {
+      Serial.read();
+    }
+
+    // process serial command
+    switch(serialCmd) {
+      case 'p':
+        sendPing();
+        break;
+      case 'i':
+        requestInfo();
+        break;
+      case 'l':
+        requestPacketInfo();
+        break;
+      case 'r':
+        requestRetransmit();
+        break;
+      default:
+        Serial.print(F("Unknown command: "));
+        Serial.println(serialCmd);
+        break;
+    }
+
+    // set radio mode to reception
+    #ifdef RADIO_SX126X
+ //   lora.setDio1Action(onInterrupt);
+    #else
+//    lora.setDio0Action(onInterrupt);
+    #endif
+    lora.startReceive();
+    enableInterrupt = true;
+  }
+//fossa station code
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // check if the flag is set (received interruption)
   if(receivedFlag) {
@@ -761,6 +837,7 @@ void loop() {
     last_connection_fail = millis();
   }
 
+
   ArduinoOTA.handle ();
 }
 
@@ -844,4 +921,144 @@ void  json_system_info(void) {
 }
  */
  
+}
+
+
+
+// function to print controls
+void printControls() {
+  Serial.println(F("------------- Controls -------------"));
+  Serial.println(F("p - send ping frame"));
+  Serial.println(F("i - request satellite info"));
+  Serial.println(F("l - request last packet info"));
+  Serial.println(F("r - send message to be retransmitted"));
+  Serial.println(F("------------------------------------"));
+}
+
+
+
+void sendPing() {
+  Serial.print(F("Sending ping frame ... "));
+
+  // data to transmit
+  uint8_t functionId = CMD_PING;
+
+  // build frame
+  uint8_t len = FCP_Get_Frame_Length(callsign);
+  uint8_t* frame = new uint8_t[len];
+  FCP_Encode(frame, callsign, functionId);
+
+  // send data
+  int state = lora.transmit(frame, len);
+  delete[] frame;
+
+  // check transmission success
+  if (state == ERR_NONE) {
+    Serial.println(F("sent successfully!"));
+  } else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+  }
+}
+
+
+void requestInfo() {
+  Serial.print(F("Requesting system info ... "));
+
+  // data to transmit
+  uint8_t functionId = CMD_TRANSMIT_SYSTEM_INFO;
+
+  // build frame
+  uint8_t len = FCP_Get_Frame_Length(callsign);
+  uint8_t* frame = new uint8_t[len];
+  FCP_Encode(frame, callsign, functionId);
+
+  // send data
+  int state = lora.transmit(frame, len);
+  delete[] frame;
+
+  // check transmission success
+  if (state == ERR_NONE) {
+    Serial.println(F("sent successfully!"));
+  } else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+  }
+}
+
+void requestPacketInfo() {
+  Serial.print(F("Requesting last packet info ... "));
+
+  // data to transmit
+  uint8_t functionId = CMD_GET_LAST_PACKET_INFO;
+
+  // build frame
+  uint8_t len = FCP_Get_Frame_Length(callsign);
+  uint8_t* frame = new uint8_t[len];
+  FCP_Encode(frame, callsign, functionId);
+
+  // send data
+  int state = lora.transmit(frame, len);
+  delete[] frame;
+
+  // check transmission success
+  if (state == ERR_NONE) {
+    Serial.println(F("sent successfully!"));
+  } else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+  }
+}
+
+void requestRetransmit() {
+  Serial.println(F("Enter message to be sent:"));
+  Serial.println(F("(max 32 characters, end with LF or CR+LF)"));
+
+  // get data to be retransmited
+  char optData[32];
+  uint8_t bufferPos = 0;
+  while(bufferPos < 32) {
+    while(!Serial.available());
+    char c = Serial.read();
+    Serial.print(c);
+    if((c != '\r') && (c != '\n')) {
+      optData[bufferPos] = c;
+      bufferPos++;
+    } else {
+      break;
+    }
+  }
+
+  // wait for a bit to receive any trailing characters
+  delay(100);
+
+  // dump the serial buffer
+  while(Serial.available()) {
+    Serial.read();
+  }
+
+  Serial.println();
+  Serial.print(F("Requesting retransmission ... "));
+
+  // data to transmit
+  uint8_t functionId = CMD_RETRANSMIT;
+  optData[bufferPos] = '\0';
+  uint8_t optDataLen = strlen(optData);
+
+  // build frame
+  uint8_t len = FCP_Get_Frame_Length(callsign, optDataLen);
+  uint8_t* frame = new uint8_t[len];
+  FCP_Encode(frame, callsign, functionId, optDataLen, (uint8_t*)optData);
+
+  // send data
+  int state = lora.transmit(frame, len);
+  delete[] frame;
+
+  // check transmission success
+  if (state == ERR_NONE) {
+    Serial.println(F("sent successfully!"));
+  } else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+  }
 }
