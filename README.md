@@ -63,3 +63,6 @@ This project uses the following dependencies:
 * **RadioLib** https://github.com/jgromes/RadioLib
 * **ArduinoJson** https://github.com/bblanchon/ArduinoJson
 * **ESP8266_SSD1306** https://github.com/ThingPulse/esp8266-oled-ssd1306
+* **AsyncTCP** https://github.com/me-no-dev/AsyncTCP.git
+* **ESPAsyncWebServer** https://github.com/me-no-dev/ESPAsyncWebServer.git
+* **ESPAsyncWiFiManager** https://github.com/alanswx/ESPAsyncWiFiManager.git
