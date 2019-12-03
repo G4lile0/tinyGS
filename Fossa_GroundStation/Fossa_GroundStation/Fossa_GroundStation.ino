@@ -58,8 +58,11 @@ Config_managerClass config_manager (&board_config);
 
 // Oled board configuration  uncomment your board
 // SSD1306 display( address, OLED_SDA, OLED_SCL)
-SSD1306 display(0x3c, 4, 15);         // configuration for TTGO v1 and Heltec
-// SSD1306 display(0x3c, 21, 22);      // configuration for TTGO v2 (SMA antenna connector)
+#ifdef HELTEC
+  SSD1306 display(0x3c, SDA_OLED, SCL_OLED);         // configuration for TTGO v1, Heltec v1 and 2
+#else
+  SSD1306 display(0x3c, 21, 22);      // configuration for TTGO v2 (SMA antenna connector)
+#endif
 #define OLED_RST  16                   // seems that all board until now use pin 16
 
 //*********************
