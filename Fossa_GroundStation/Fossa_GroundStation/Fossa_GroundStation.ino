@@ -422,7 +422,7 @@ void setup() {
 	  // Connected
   }
 
-  void arduino_ota_setup ();
+  arduino_ota_setup ();
 
   //WiFi.begin(ssid, password);
   //uint8_t waiting = 0;

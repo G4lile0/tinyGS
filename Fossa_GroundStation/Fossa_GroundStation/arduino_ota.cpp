@@ -20,9 +20,14 @@ void arduino_ota_setup () {
 		})
 		.onEnd ([]() {
 			ESP_LOGD (TAG, "End");
-		})
+				})
 		.onProgress ([](unsigned int progress, unsigned int total) {
-			ESP_LOGD (TAG, "Progress: %u%%\r", (progress / (total / 100)));
+			static uint8_t lastValue = 255;
+			uint8_t nextValue = progress / (total / 100);
+			if (lastValue != nextValue) {
+				ESP_LOGD (TAG, "Progress: %u%%\r", nextValue);
+				lastValue = nextValue;
+			}
 		})
 		.onError ([](ota_error_t error) {
 			ESP_LOGE (TAG, "Error[%u]: ", error);
@@ -32,6 +37,8 @@ void arduino_ota_setup () {
 			else if (error == OTA_RECEIVE_ERROR) ESP_LOGE (TAG, "Receive Failed");
 			else if (error == OTA_END_ERROR) ESP_LOGE (TAG, "End Failed");
 		});
+
+	ArduinoOTA.setHostname ("FossaStation");
 
 	ArduinoOTA.begin ();
 }
