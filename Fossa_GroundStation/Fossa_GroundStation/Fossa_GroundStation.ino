@@ -5,6 +5,7 @@
   */
 
 // include the library
+#include "arduino_ota.h"
 #include "config_manager.h"
 #include <RadioLib.h>
 #include <SPI.h>
@@ -28,12 +29,12 @@
 
 #include "esp32_mqtt_client.h"
 #include <WiFi.h>
-#include <AsyncTCP.h>
+#include <AsyncTCP.h>										// https://github.com/me-no-dev/AsyncTCP
 #include <FS.h>
 #include <SPIFFS.h>
 #include <DNSServer.h>
-#include <ESPAsyncWebServer.h>
-#include <ESPAsyncWiFiManager.h>
+#include <ESPAsyncWebServer.h>								// https://github.com/me-no-dev/ESPAsyncWebServer
+#include <ESPAsyncWiFiManager.h>							// https://github.com/alanswx/ESPAsyncWiFiManager
 
 
 Esp32_mqtt_clientClass mqtt;
@@ -418,8 +419,11 @@ void setup() {
 
   ESP_LOGI (LOG_TAG, "Connecting to WiFi %s", board_config.ssid);
   if (config_manager.begin ()) {
-
+	  // Connected
   }
+
+  void arduino_ota_setup ();
+
   //WiFi.begin(ssid, password);
   //uint8_t waiting = 0;
   //while (WiFi.status() != WL_CONNECTED) {
@@ -563,8 +567,6 @@ void setup() {
 	  delay (500);
   }
   Serial.println (" Connected !!!");
-
-  //welcome_message();
 
 }
 
@@ -758,6 +760,8 @@ void loop() {
   } else {
     last_connection_fail = millis();
   }
+
+  ArduinoOTA.handle ();
 }
 
 

@@ -41,6 +41,8 @@ typedef struct {
 	char mqtt_user[MQTT_USER_LENGTH];
 	char mqtt_pass[MQTT_PASS_LENGTH]; // https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q
 	char ssid[SSID_LENGTH];
+	uint32_t board_type;
+	char tz[40];
 } boardconfig_t;
 
 typedef void (*onAPStarted_t)(AsyncWiFiManager* wm);
