@@ -76,7 +76,7 @@ bool mqtt_connected = false;
 void manageMQTTEvent (esp_mqtt_event_id_t event) {
   //Serial.printf ("MQTT event %d\n", event);
   if (event == MQTT_EVENT_CONNECTED) {
-	mqtt_connected = true;
+	  mqtt_connected = true;
     char topic[64];
     strcpy(topic,board_config.station);
     strcat(topic,"/data/#");
@@ -85,7 +85,7 @@ void manageMQTTEvent (esp_mqtt_event_id_t event) {
 	welcome_message ();
     
   } else   if (event == MQTT_EVENT_DISCONNECTED) {
-	mqtt_connected = false;
+	  mqtt_connected = false;
   }
 
 }
@@ -349,7 +349,6 @@ void flashFormatting () {
 
 }
 
-
 void setup() {
   pinMode(OLED_RST,OUTPUT);
   digitalWrite(OLED_RST, LOW);      //    Reset the OLED    
@@ -448,14 +447,14 @@ void setup() {
 
   mqtt.init (board_config.mqtt_server_name, board_config.mqtt_port, board_config.mqtt_user, board_config.mqtt_pass);
 
-   char topic[64];
-   strcpy(topic, board_config.station);
-   strcat(topic,"/status");
+  char topic[64];
+  strcpy(topic, board_config.station);
+  strcat(topic,"/status");
    
   mqtt.setLastWill(topic);
   mqtt.onEvent (manageMQTTEvent);
   mqtt.onReceive (manageMQTTData);
-  mqtt.begin ();
+  mqtt.begin();
   
   //init and get the time
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
@@ -550,7 +549,12 @@ void setup() {
   // lora.scanChannel();
 
   Serial.println ("Waiting for MQTT connection");
+  int i = 0;
   while (!mqtt_connected) {
+    if (i++ > 150000) {// 5m
+      Serial.println (" MQTT unable to connect after 5m, restarting...");
+      ESP.restart();
+    }
 	  Serial.print ('.');
 	  delay (500);
   }
@@ -738,6 +742,17 @@ void loop() {
     // we're ready to receive more packets,
     // enable interrupt service routine
     enableInterrupt = true;
+  }
+  
+  static unsigned long last_connection_fail = millis();
+  if (!mqtt_connected){
+    Serial.println(millis() - last_connection_fail);
+    if (millis() - last_connection_fail > 300000){ // 5m
+      Serial.println("MQTT Disconnected, restarting...");
+      ESP.restart();
+    }
+  } else {
+    last_connection_fail = millis();
   }
 }
 
