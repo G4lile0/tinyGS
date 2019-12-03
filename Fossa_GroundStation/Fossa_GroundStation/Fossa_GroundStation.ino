@@ -72,7 +72,7 @@ Config_managerClass config_manager (&board_config);
 
 //*********************
 
-const int fs_version =   1912012;      // version year month day 
+const int fs_version =   1912042;      // version year month day 
 
 OLEDDisplayUi ui     ( &display );
 
@@ -728,6 +728,7 @@ void loop() {
     switch(functionId) {
       case RESP_PONG:
         Serial.println(F("Pong!"));
+        json_pong();
         break;
 
       case RESP_SYSTEM_INFO:
@@ -795,6 +796,7 @@ void loop() {
       case RESP_REPEATED_MESSAGE:
         Serial.println(F("Got repeated message:"));
         Serial.println((char*)respOptData);
+        json_message((char*)respOptData);
         break;
 
       default:
@@ -895,7 +897,6 @@ void  json_system_info(void) {
           size_t n = serializeJson(doc, buffer);
           mqtt.publish(topic, buffer,n );
 
-
 /*
  * 
  * 
@@ -922,6 +923,71 @@ void  json_system_info(void) {
  */
  
 }
+
+
+
+void  json_message(char* frame) {
+          //// JSON
+        //  int16_t frameLen = strlen(frame) + 1;
+           // check frame
+         //  if(frame == NULL) {
+         //         return(ERR_FRAME_INVALID);
+         //       }
+                    
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(16);
+          DynamicJsonDocument doc(capacity);
+          doc["station"] = board_config.station;  // G4lile0
+          JsonArray station_location = doc.createNestedArray("station_location");
+          station_location.add(board_config.latitude);
+          station_location.add(board_config.longitude);
+          doc["rssi"] = last_packet_received_rssi;
+          doc["snr"] = last_packet_received_snr;
+          doc["frequency_error"] = last_packet_received_frequencyerror;
+          doc["msg"] = String(frame);
+          serializeJson(doc, Serial);
+          char topic[64];
+          strcpy(topic, board_config.station);
+          strcat(topic,"/msg");
+          char buffer[256];
+          serializeJson(doc, buffer);
+          size_t n = serializeJson(doc, buffer);
+          mqtt.publish(topic, buffer,n );
+}
+
+
+
+void  json_pong(void) {
+          //// JSON
+          
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(16);
+          DynamicJsonDocument doc(capacity);
+          doc["station"] = board_config.station;  // G4lile0
+          JsonArray station_location = doc.createNestedArray("station_location");
+          station_location.add(board_config.latitude);
+          station_location.add(board_config.longitude);
+          doc["rssi"] = last_packet_received_rssi;
+          doc["snr"] = last_packet_received_snr;
+          doc["frequency_error"] = last_packet_received_frequencyerror;
+          doc["pong"] = 1;
+          serializeJson(doc, Serial);
+          char topic[64];
+          strcpy(topic, board_config.station);
+          strcat(topic,"/pong");
+          char buffer[256];
+          serializeJson(doc, buffer);
+          size_t n = serializeJson(doc, buffer);
+          mqtt.publish(topic, buffer,n );
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
