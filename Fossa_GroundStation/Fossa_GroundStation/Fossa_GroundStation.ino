@@ -4,7 +4,8 @@
      https://jgromes.github.io/RadioLib/
   */
 
-#include "Arduino.h"
+// include the library
+#include "config_manager.h"
 #include <RadioLib.h>
 #include <SPI.h>
 #include "Comms.h"
@@ -15,11 +16,45 @@
 #include <ArduinoJson.h>                                    //    https://github.com/bblanchon/ArduinoJson
 #include <WiFi.h>
 #include "time.h"
+
+#if defined(ARDUINO) && ARDUINO >= 100
+#include "Arduino.h"
+#else
+#include "WProgram.h"
+#endif
+
 #include "esp32_mqtt_client.h"
 #include <WiFi.h>
-#include "Config/Config.h"
+#include <AsyncTCP.h>
+#include <FS.h>
+#include <SPIFFS.h>
+#include <DNSServer.h>
+#include <ESPAsyncWebServer.h>
+#include <ESPAsyncWiFiManager.h>
+
 
 Esp32_mqtt_clientClass mqtt;
+
+#define WAIT_FOR_BUTTON 3000
+#define RESET_BUTTON_TIME 5000
+#define PROG_BUTTON 0
+
+//**********************
+// User configuration //
+
+boardconfig_t board_config;
+Config_managerClass config_manager (&board_config);
+
+//const char* ssid              = ""; //your WiFi SSID
+//const char* password          = ""; //your Wifi Password
+//const char*  station          = "your_station_name"   ;
+//const float latitude          =  40.64 ;    // ** Beware this information is publically available use max 3 decimals 
+//const float longitude         =  -3.98 ;    // ** Beware this information is publically available use max 3 decimals 
+//
+//#define MQTT_SERVER "fossa.apaluba.com"
+//#define MQTT_PORT 8883
+//#define MQTT_USER ""           // ask for user and password on the Telegram group
+//#define MQTT_PASS ""           // https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q 
 
 // Oled board configuration  uncomment your board
 // SSD1306 display( address, OLED_SDA, OLED_SCL)
@@ -29,19 +64,27 @@ SSD1306 display(0x3c, 4, 15);         // configuration for TTGO v1 and Heltec
 
 //*********************
 
-const int fs_version =   1911303;      // version year month day 
+const int fs_version =   1912012;      // version year month day 
 
 OLEDDisplayUi ui     ( &display );
 
+bool mqtt_connected = false;
+
 void manageMQTTEvent (esp_mqtt_event_id_t event) {
-  Serial.printf ("MQTT event %d\n", event);
+  //Serial.printf ("MQTT event %d\n", event);
   if (event == MQTT_EVENT_CONNECTED) {
+	mqtt_connected = true;
     char topic[64];
-    strcpy(topic,STATION_ID);
+    strcpy(topic,board_config.station);
     strcat(topic,"/data/#");
     mqtt.subscribe (topic);
-    Serial.println (topic);
+    //Serial.println (topic);
+	welcome_message ();
+    
+  } else   if (event == MQTT_EVENT_DISCONNECTED) {
+	mqtt_connected = false;
   }
+
 }
 
 void manageMQTTData (char* topic, size_t topic_len, char* payload, size_t payload_len) {
@@ -153,8 +196,8 @@ void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->drawXbm(x , y + 14, Fossa_Logo_width, Fossa_Logo_height, Fossa_Logo_bits);
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString( x+70, y + 40, "Sta: " + String(STATION_ID));
-}
+  display->drawString( x+70, y + 40, "Sta: "+ String(board_config.station));
+  }
 
 
 //Initial dummy System info:
@@ -211,11 +254,41 @@ void drawFrame4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 }
 
 void drawFrame5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->drawXbm(x + 34, y + 4, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->drawString( x+100,  21+y, "MQTT:" );
+  if (mqtt_connected ) {display->drawString( x+105,  31+y, "ON" );}  else {display->drawString( x+102,  31+y, "OFF" );}
+     display->drawXbm(x + 34, y + 4, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
   // The coordinates define the center of the text
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString(64 + x, 42 + y, "Connected "+(WiFi.localIP().toString()));
+    display->drawString(64 + x, 42 + y, "Connected "+(WiFi.localIP().toString()));
+
+
+
+/*  
+ *   
+  // Text alignment demo
+  display->setFont(ArialMT_Plain_10);
+
+  // The coordinates define the left starting point of the text
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->drawString(0 + x, 11 + y, "Left aligned (0,10)");
+
+  // The coordinates define the center of the text
+  display->setTextAlignment(TEXT_ALIGN_CENTER);
+  display->drawString(64 + x, 22 + y, "Center aligned (64,22)");
+
+  // The coordinates define the right end of the text
+  display->setTextAlignment(TEXT_ALIGN_RIGHT);
+  display->drawString(128 + x, 33 + y, "Right aligned (128,33)");
+
+ */
+
 }
+
+
+//void drawFrame4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+//
+//}
 
 // This array keeps function pointers to all frames
 // frames are the single views that slide in
@@ -228,56 +301,51 @@ int frameCount = 5;
 OverlayCallback overlays[] = { msOverlay };
 int overlaysCount = 1;
 
-void welcome_message (void) {
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(16);
-  DynamicJsonDocument doc(capacity);
-  doc["station"] = STATION_ID; 
-  JsonArray station_location = doc.createNestedArray("station_location");
-  station_location.add(LATITUDE);
-  station_location.add(LONGITUDE);
-  doc["version"] = fs_version;
 
-  //          doc["time"] = ;
-  serializeJson(doc, Serial);
-  char topic[64];
-  strcpy(topic,STATION_ID);
-  strcat(topic,"/welcome");
-  char buffer[512];
-  serializeJson(doc, buffer);
-  size_t n = serializeJson(doc, buffer);
-  mqtt.publish(topic, buffer,n );
+void fossaAPStarted (AsyncWiFiManager* wm) {
+	String ssid;
+	if (wm) {
+		ssid = wm->getConfigPortalSSID ();
+	}
+	ESP_LOGI (LOG_TAG, "AP started. Connect to %s", ssid.c_str ());
+
+  display.clear();
+  display.setFont(ArialMT_Plain_10);
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.drawString(0, 6,"Connect to AP:");
+  display.drawString(0,18,"->"+String(ssid));
+  display.drawString(5,32,"to configure your Station");
+  display.drawString(10,52,"IP:   192.168.4.1");
+  display.display();
+
+
+	// TODO: Show message to user "Connect to <SSID> to configure board"
 }
 
-void json_system_info(void) {
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(16);
-  DynamicJsonDocument doc(capacity);
-  doc["station"] = STATION_ID;  
-  JsonArray station_location = doc.createNestedArray("station_location");
-  station_location.add(LATITUDE);
-  station_location.add(LONGITUDE);
-  doc["rssi"] = last_packet_received_rssi;
-  doc["snr"] = last_packet_received_snr;
-  doc["frequency_error"] = last_packet_received_frequencyerror;
-  doc["batteryChargingVoltage"] = batteryChargingVoltage;
-  doc["batteryChargingCurrent"] = batteryChargingCurrent;
-  doc["batteryVoltage"] = batteryVoltage;
-  doc["solarCellAVoltage"] = solarCellAVoltage;
-  doc["solarCellBVoltage"] = solarCellBVoltage;
-  doc["solarCellCVoltage"] = solarCellCVoltage;
-  doc["batteryTemperature"] = batteryTemperature;
-  doc["boardTemperature"] = boardTemperature;
-  doc["mcuTemperature"] = mcuTemperature;
-  doc["resetCounter"] = resetCounter;
-  doc["powerConfig"] = powerConfig;
-  serializeJson(doc, Serial);
-  char topic[64];
-  strcpy(topic,STATION_ID);
-  strcat(topic,"/sys_info");
-  char buffer[512];
-  serializeJson(doc, buffer);
-  size_t n = serializeJson(doc, buffer);
-  mqtt.publish(topic, buffer,n );
+void configSaved (bool result) {
+	ESP_LOGI (LOG_TAG, "Config %ssaved", result? "": "not ");
+
+	// TODO: Show result to user
 }
+
+void flashFormatting () {
+	ESP_LOGI (LOG_TAG, "Formatting flash");
+
+  display.clear();
+  display.setFont(ArialMT_Plain_16);
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.drawString(0,5,"FossaSAT-1 Sta");
+  display.setFont(ArialMT_Plain_10);
+  display.drawString(55,23,"ver. "+String(fs_version));
+  display.drawString(2,38,"Formatting Flash ");
+  display.drawString(2,52,"Please Wait Don't turn OFF");
+  display.display();
+
+	// Done TODO: Inform user that flash is being formatted
+
+
+}
+
 
 void setup() {
   pinMode(OLED_RST,OUTPUT);
@@ -297,50 +365,88 @@ void setup() {
   display.drawString(20,52,"@gmag12 & @g4lile0");
   display.display();
 
-  delay (2000);  
+  delay (2000);
+
   Serial.begin (115200);
-  Serial.printf("Fossa Ground station Version to %d ", fs_version);
+  Serial.printf("Fossa Ground station Version to %d\n", fs_version);
 
   display.clear();
   display.drawXbm(34, 0 , WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
   display.setTextAlignment(TEXT_ALIGN_CENTER);
-  display.drawString(64 , 35 , "Connecting " + String(WIFI_SSID));
+  display.drawString(64 , 35 , "Connecting "+String(board_config.ssid));
   display.display();
 
   delay (500);  
   
   //connect to WiFi
-  Serial.printf("Connecting to %s ", WIFI_SSID);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  uint8_t waiting = 0;
-  while (WiFi.status() != WL_CONNECTED) {
-      display.drawProgressBar(5,53,120,10,waiting ); 
-      waiting += 10 ;
-      if (waiting > 90) {
-        waiting=0;
-        display.setColor(BLACK);
-        display.fillRect(5, 53, 123, 12);
-        display.setColor(WHITE);
-        
-      }
-      display.display();
-      delay(500);
-      Serial.print(".");
+  config_manager.setAPStartedCallback (fossaAPStarted);
+  config_manager.setConfigSavedCallback (configSaved);
+  config_manager.setFormatFlashCallback (flashFormatting);
+  
+  // Check WiFi reset button
+  time_t start_waiting_for_button = millis ();
+  time_t button_pushed_at;
+  pinMode (PROG_BUTTON, INPUT_PULLUP);
+  ESP_LOGI (LOG_TAG, "Waiting for reset config button");
+  while (millis () - start_waiting_for_button < WAIT_FOR_BUTTON) {
+	  bool button_pushed = false;
+
+	  if (!digitalRead (PROG_BUTTON)) {
+		  button_pushed = true;
+		  button_pushed_at = millis ();
+		  ESP_LOGI (LOG_TAG, "Reset button pushed");
+		  while (millis () - button_pushed_at < RESET_BUTTON_TIME) {
+			  if (digitalRead (PROG_BUTTON)) {
+				  ESP_LOGI (LOG_TAG, "Reset button released");
+				  button_pushed = false;
+				  break;
+			  }
+		  }
+		  if (button_pushed) {
+			  ESP_LOGI (LOG_TAG, "Reset config triggered");
+			  WiFi.begin ("0", "0");
+			  WiFi.disconnect ();
+		  }
+	  }
   }
+
+  ESP_LOGI (LOG_TAG, "Connecting to WiFi %s", board_config.ssid);
+  if (config_manager.begin ()) {
+
+  }
+  //WiFi.begin(ssid, password);
+  //uint8_t waiting = 0;
+  //while (WiFi.status() != WL_CONNECTED) {
+
+  //    display.drawProgressBar(5,53,120,10,waiting ); 
+  //    waiting += 10 ;
+  //    if (waiting > 90) {
+  //      waiting=0;
+  //      display.setColor(BLACK);
+  //    // display.drawProgressBar(5,53,120,10,100);   seems that doesn't seem to follow setColor
+  //      display.fillRect(5, 53, 123, 12);
+  //      display.setColor(WHITE);
+  //      
+  //    }
+  //    display.display();
+  //    delay(500);
+  //    Serial.print(".");
+
+  //}
 
   display.clear();
   display.drawXbm(34, 0 , WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
   
-  Serial.println("CONNECTED");
-  display.drawString(64 , 35 , "Connected " + String(WIFI_SSID));
+  Serial.println(" CONNECTED");
+  display.drawString(64 , 35 , "Connected "+String(board_config.ssid));
   display.drawString(64 ,53 , (WiFi.localIP().toString()));
   display.display();
   delay (1000);  
 
-  mqtt.init (MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS);
+  mqtt.init (board_config.mqtt_server_name, board_config.mqtt_port, board_config.mqtt_user, board_config.mqtt_pass);
 
    char topic[64];
-   strcpy(topic,STATION_ID);
+   strcpy(topic, board_config.station);
    strcat(topic,"/status");
    
   mqtt.setLastWill(topic);
@@ -440,7 +546,15 @@ void setup() {
   // lora.readData();
   // lora.scanChannel();
 
-  welcome_message();
+  Serial.println ("Waiting for MQTT connection");
+  while (!mqtt_connected) {
+	  Serial.print ('.');
+	  delay (500);
+  }
+  Serial.println (" Connected !!!");
+
+  //welcome_message();
+
 }
 
 void loop() {
@@ -466,9 +580,6 @@ void loop() {
     size_t respLen = lora.getPacketLength();
     uint8_t* respFrame = new uint8_t[respLen];
     int state = lora.readData(respFrame, respLen);
-
-    Serial.println("MSG RECEIVED!!");
-    Serial.println((char *)respFrame);
 
     // get function ID
     uint8_t functionId = FCP_Get_FunctionID(callsign, respFrame, respLen);
@@ -625,4 +736,86 @@ void loop() {
     // enable interrupt service routine
     enableInterrupt = true;
   }
+}
+
+
+void  welcome_message (void) {
+        const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(16);
+          DynamicJsonDocument doc(capacity);
+          doc["station"] = board_config.station;  // G4lile0
+          JsonArray station_location = doc.createNestedArray("station_location");
+          station_location.add(board_config.latitude);
+          station_location.add(board_config.longitude);
+          doc["version"] = fs_version;
+
+//          doc["time"] = ;
+          serializeJson(doc, Serial);
+          char topic[64];
+          strcpy(topic, board_config.station);
+          strcat(topic,"/welcome");
+          char buffer[512];
+          //serializeJson(doc, buffer);
+          size_t n = serializeJson(doc, buffer);
+          mqtt.publish(topic, buffer,n );
+          ESP_LOGI (LOG_TAG, "Wellcome sent");
+}
+
+void  json_system_info(void) {
+          //// JSON
+          
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(16);
+          DynamicJsonDocument doc(capacity);
+          doc["station"] = board_config.station;  // G4lile0
+          JsonArray station_location = doc.createNestedArray("station_location");
+          station_location.add(board_config.latitude);
+          station_location.add(board_config.longitude);
+          doc["rssi"] = last_packet_received_rssi;
+          doc["snr"] = last_packet_received_snr;
+          doc["frequency_error"] = last_packet_received_frequencyerror;
+          doc["batteryChargingVoltage"] = batteryChargingVoltage;
+          doc["batteryChargingCurrent"] = batteryChargingCurrent;
+          doc["batteryVoltage"] = batteryVoltage;
+          doc["solarCellAVoltage"] = solarCellAVoltage;
+          doc["solarCellBVoltage"] = solarCellBVoltage;
+          doc["solarCellCVoltage"] = solarCellCVoltage;
+          doc["batteryTemperature"] = batteryTemperature;
+          doc["boardTemperature"] = boardTemperature;
+          doc["mcuTemperature"] = mcuTemperature;
+          doc["resetCounter"] = resetCounter;
+          doc["powerConfig"] = powerConfig;
+          serializeJson(doc, Serial);
+          char topic[64];
+          strcpy(topic, board_config.station);
+          strcat(topic,"/sys_info");
+          char buffer[512];
+          serializeJson(doc, buffer);
+          size_t n = serializeJson(doc, buffer);
+          mqtt.publish(topic, buffer,n );
+
+
+/*
+ * 
+ * 
+ * https://arduinojson.org/v6/assistant/
+ * {
+"station":"g4lile0",
+"station_location":[48.756080,2.302038],
+"rssi":-34,
+"snr": 9.50,
+"frequency_error": 6406.27,
+"batteryChargingVoltage": 3.46,
+"batteryChargingCurrent":  -0.0110,
+"batteryVoltage" : 1.96,
+"solarCellAVoltage" : 0.92,
+"solarCellBVoltage" : 0.96,
+"solarCellCVoltage" : 0.96,
+"batteryTemperature" : -26.71,
+"boardTemperature" : 8.44,
+"mcuTemperature" : 3,
+"resetCounter" : 0,
+"powerConfig" : 255
+
+}
+ */
+ 
 }
