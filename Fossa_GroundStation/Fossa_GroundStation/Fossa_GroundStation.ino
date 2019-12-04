@@ -868,7 +868,7 @@ void  welcome_message (void) {
 void  json_system_info(void) {
           //// JSON
           
-          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(16);
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(17);
           DynamicJsonDocument doc(capacity);
           doc["station"] = board_config.station;  // G4lile0
           JsonArray station_location = doc.createNestedArray("station_location");
@@ -934,7 +934,7 @@ void  json_message(char* frame) {
          //         return(ERR_FRAME_INVALID);
          //       }
                     
-          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(16);
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(7);
           DynamicJsonDocument doc(capacity);
           doc["station"] = board_config.station;  // G4lile0
           JsonArray station_location = doc.createNestedArray("station_location");
@@ -959,7 +959,7 @@ void  json_message(char* frame) {
 void  json_pong(void) {
           //// JSON
           
-          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(16);
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(6);
           DynamicJsonDocument doc(capacity);
           doc["station"] = board_config.station;  // G4lile0
           JsonArray station_location = doc.createNestedArray("station_location");
