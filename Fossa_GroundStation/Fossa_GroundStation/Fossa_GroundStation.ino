@@ -296,16 +296,24 @@ void drawFrame5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 }
 
 
-//void drawFrame4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-//
-//}
+void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  display->drawXbm(x , y , earth_width, earth_height, earth_bits);
+  display->setColor(BLACK);
+  display->setTextAlignment(TEXT_ALIGN_CENTER);
+  display->fillRect(90,0,128,11);
+  display->drawString( 65+x,  51+y, "Waiting for FossaSat Pos" );
+    display->setColor(WHITE);
+  display->setFont(ArialMT_Plain_10);
+  display->drawString( 64+x,  50+y, "Waiting for FossaSat Pos" );
+  
+}
 
 // This array keeps function pointers to all frames
 // frames are the single views that slide in
-FrameCallback frames[] = { drawFrame1, drawFrame2, drawFrame3, drawFrame4, drawFrame5 };
+FrameCallback frames[] = { drawFrame1, drawFrame2, drawFrame3, drawFrame4, drawFrame5, drawFrame6 };
 
 // how many frames are there?
-int frameCount = 5;
+int frameCount = 6;
 
 // Overlays are statically drawn on top of a frame eg. a clock
 OverlayCallback overlays[] = { msOverlay };
