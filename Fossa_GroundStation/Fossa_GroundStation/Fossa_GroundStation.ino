@@ -289,11 +289,13 @@ void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->drawXbm(x , y , earth_width, earth_height, earth_bits);
   display->setColor(BLACK);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->fillRect(90,0,128,11);
-  display->drawString( 65+x,  51+y, "Waiting for FossaSat Pos" );
+  display->fillRect(83,0,128,11);
+  display->drawString( 65+x,  49+y+(x/2), "Waiting for FossaSat Pos" );
+  display->drawString( 63+x,  51+y+(x/2), "Waiting for FossaSat Pos" );
+  
     display->setColor(WHITE);
   display->setFont(ArialMT_Plain_10);
-  display->drawString( 64+x,  50+y, "Waiting for FossaSat Pos" );
+  display->drawString( 64+x,  50+y+(x/2), "Waiting for FossaSat Pos" );
   
 }
 
