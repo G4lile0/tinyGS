@@ -138,8 +138,14 @@ bool Config_managerClass::configWiFiManager () {
 	AsyncWiFiManagerParameter mqttServerPortParam ("server_port", "MQTT Server Port", mqtt_port, 5, "required type=\"number\" min=\"0\" max=\"65536\" step=\"1\"");
 	AsyncWiFiManagerParameter mqttUserParam ("user", "MQTT User Name", board_config->mqtt_user, MQTT_USER_LENGTH - 1, "required type=\"text\" maxlength=30");
 	AsyncWiFiManagerParameter mqttPassParam ("pass", "MQTT Password", "", MQTT_PASS_LENGTH - 1, "type=\"password\" maxlength=30");
-	AsyncWiFiManagerParameter mqttTzParam ("tz", "TimeZone", board_config->tz , TZ_LENGTH - 1,
-											 "type=\"text\" maxlength=40 pattrn=\"^[A-Z]{1,4}[-|+]?\\d{1,2}[A-Z]{0,4}(,M\\d{1,2}.\\d.\\d,M\\d{1,2}.\\d.\\d/\\d{1,2})?$\"");
+	AsyncWiFiManagerParameter tzParam ("tz", "TimeZone", board_config->tz , TZ_LENGTH - 1,
+											 "type=\"text\" maxlength=40 pattern=\"^[A-Z]{1,4}[-|+]?\\d{1,2}[A-Z]{0,4}(,M\\d{1,2}.\\d.\\d,M\\d{1,2}.\\d.\\d/\\d{1,2})?$\"");
+	AsyncWiFiManagerParameter tzHelp ("<p>Time Zone parameter can be configured as these examples: <br>\
+										 <code>CET-1</code><br>\
+										 <code>CET-1CEST</code><br>\
+										 <code>CET-1CEST,M3.5.0,M10.5.0/3</code><br>\
+										 Check <a href=\"https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv\">this list</a><link>\
+										 for reference </p>");
 	
 	wifiManager->addParameter (&stationNameParam);
 	wifiManager->addParameter (&latitudeParam);
@@ -149,13 +155,8 @@ bool Config_managerClass::configWiFiManager () {
 	wifiManager->addParameter (&mqttServerPortParam);
 	wifiManager->addParameter (&mqttUserParam);
 	wifiManager->addParameter (&mqttPassParam);
-	wifiManager->setCustomOptionsElement ("<p>Time Zone parameter can be configured as these examples: <br>\
-										 <code>CET-1</code><br>\
-										 <code>CET-1CEST</code><br>\
-										 <code>CET-1CEST,M3.5.0,M10.5.0/3</code><br>\
-										 Check <a href=\"https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv\">this list</a><link>\
-										 for reference </p>");
-	wifiManager->addParameter (&mqttTzParam);
+	wifiManager->addParameter (&tzHelp);
+	wifiManager->addParameter (&tzParam);
 
 	//if (notifyWiFiManagerStarted) {
 	//	notifyWiFiManagerStarted ();
@@ -181,7 +182,7 @@ bool Config_managerClass::configWiFiManager () {
 	ESP_LOGI (LOG_TAG, "MQTT Server Port: %s", mqttServerPortParam.getValue ());
 	ESP_LOGI (LOG_TAG, "MQTT User: %s", mqttUserParam.getValue ());
 	ESP_LOGI (LOG_TAG, "MQTT Password: %s", mqttPassParam.getValue ());
-	ESP_LOGI (LOG_TAG, "Time Zone: %s", mqttTzParam.getValue ());
+	ESP_LOGI (LOG_TAG, "Time Zone: %s", tzParam.getValue ());
 		ESP_LOGI (LOG_TAG, "Status: %s", result ? "true" : "false");
 	ESP_LOGI (LOG_TAG, "Save config: %s", shouldSave ? "yes" : "no");
 	if (result) {
@@ -198,7 +199,7 @@ bool Config_managerClass::configWiFiManager () {
 			} else {
 				ESP_LOGI (LOG_TAG, "Password not changed");
 			}
-			memcpy (board_config->tz, mqttTzParam.getValue (), mqttTzParam.getValueLength ());
+			memcpy (board_config->tz, tzParam.getValue (), tzParam.getValueLength ());
 
 			String wifiSSID = WiFi.SSID ();
 			memcpy(board_config->ssid, wifiSSID.c_str (), wifiSSID.length() > SSID_LENGTH ? SSID_LENGTH : wifiSSID.length ());

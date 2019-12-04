@@ -17,6 +17,7 @@
 #include <ArduinoJson.h>                                    //    https://github.com/bblanchon/ArduinoJson
 #include <WiFi.h>
 #include "time.h"
+#include <sys/time.h>
 #include <ESPmDNS.h>
 #include <Update.h>
 #include <ArduinoOTA.h>
@@ -93,8 +94,8 @@ void manageMQTTData (char* topic, size_t topic_len, char* payload, size_t payloa
 }
 
 const char* ntpServer = "pool.ntp.org";
-const long  gmtOffset_sec = 3600;         // 3600 for Spain
-const int   daylightOffset_sec = 3600;
+const long  gmtOffset_sec = 0; // 3600;         // 3600 for Spain
+const int   daylightOffset_sec = 0; // 3600;
 
 void printLocalTime()
 {
@@ -465,6 +466,12 @@ void setup() {
   
   //init and get the time
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  if (strcmp (board_config.tz, "")) {
+	  setenv ("TZ", board_config.tz, 1);
+	  ESP_LOGD (LOG_TAG, "Set timezone value as %s", board_config.tz);
+	  tzset ();
+  }
+
   printLocalTime();
 
   // The ESP is capable of rendering 60fps in 80Mhz mode
