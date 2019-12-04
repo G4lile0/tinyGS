@@ -163,7 +163,7 @@ bool Config_managerClass::configWiFiManager () {
 
 	wifiManager->setDebugOutput (true);
 	//wifiManager->setBreakAfterConfig (true);
-	wifiManager->setConnectTimeout (60);
+	//wifiManager->setConnectTimeout (60);
 	wifiManager->setTryConnectDuringConfigPortal (false);
 	wifiManager->setSaveConfigCallback (doSave);
 	wifiManager->setConfigPortalTimeout (300);

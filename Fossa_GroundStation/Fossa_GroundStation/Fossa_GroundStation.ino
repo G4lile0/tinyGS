@@ -49,17 +49,6 @@ Esp32_mqtt_clientClass mqtt;
 boardconfig_t board_config;
 Config_managerClass config_manager (&board_config);
 
-//const char* ssid              = ""; //your WiFi SSID
-//const char* password          = ""; //your Wifi Password
-//const char*  station          = "your_station_name"   ;
-//const float latitude          =  40.64 ;    // ** Beware this information is publically available use max 3 decimals 
-//const float longitude         =  -3.98 ;    // ** Beware this information is publically available use max 3 decimals 
-//
-//#define MQTT_SERVER "fossa.apaluba.com"
-//#define MQTT_PORT 8883
-//#define MQTT_USER ""           // ask for user and password on the Telegram group
-//#define MQTT_PASS ""           // https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q 
-
 // Oled board configuration  uncomment your board
 // SSD1306 display( address, OLED_SDA, OLED_SCL)
 
@@ -72,7 +61,9 @@ Config_managerClass config_manager (&board_config);
 
 //*********************
 
-const int fs_version =   1912012;      // version year month day 
+const int fs_version =   1912042;      // version year month day 
+
+const char*  message[32];
 
 OLEDDisplayUi ui     ( &display );
 
@@ -294,16 +285,24 @@ void drawFrame5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 }
 
 
-//void drawFrame4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-//
-//}
+void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  display->drawXbm(x , y , earth_width, earth_height, earth_bits);
+  display->setColor(BLACK);
+  display->setTextAlignment(TEXT_ALIGN_CENTER);
+  display->fillRect(90,0,128,11);
+  display->drawString( 65+x,  51+y, "Waiting for FossaSat Pos" );
+    display->setColor(WHITE);
+  display->setFont(ArialMT_Plain_10);
+  display->drawString( 64+x,  50+y, "Waiting for FossaSat Pos" );
+  
+}
 
 // This array keeps function pointers to all frames
 // frames are the single views that slide in
-FrameCallback frames[] = { drawFrame1, drawFrame2, drawFrame3, drawFrame4, drawFrame5 };
+FrameCallback frames[] = { drawFrame1, drawFrame2, drawFrame3, drawFrame4, drawFrame5, drawFrame6 };
 
 // how many frames are there?
-int frameCount = 5;
+int frameCount = 6;
 
 // Overlays are statically drawn on top of a frame eg. a clock
 OverlayCallback overlays[] = { msOverlay };
@@ -368,8 +367,8 @@ void setup() {
   display.setFont(ArialMT_Plain_10);
   display.drawString(55,23,"ver. "+String(fs_version));
   
-  display.drawString(5,38,"developed by");
-  display.drawString(20,52,"@gmag12 & @g4lile0");
+  display.drawString(5,38,"by @gmag12 @4m1g0");
+  display.drawString(40,52,"& @g4lile0");
   display.display();
 
   delay (2000);
@@ -422,7 +421,7 @@ void setup() {
 	  // Connected
   }
 
-  void arduino_ota_setup ();
+  arduino_ota_setup ();
 
   //WiFi.begin(ssid, password);
   //uint8_t waiting = 0;
@@ -567,6 +566,8 @@ void setup() {
 	  delay (500);
   }
   Serial.println (" Connected !!!");
+  
+  printControls();
 
 }
 
@@ -579,6 +580,80 @@ void loop() {
     // time budget.
     delay(remainingTimeBudget);
   }
+
+
+
+
+/// fossa station code
+  // check serial data
+  if(Serial.available()) {
+
+    // disable reception interrupt
+    enableInterrupt = false;
+   // detachInterrupt(digitalPinToInterrupt(DIO1));
+
+    // get the first character
+    char serialCmd = Serial.read();
+
+    // wait for a bit to receive any trailing characters
+    delay(50);
+
+    // dump the serial buffer
+    while(Serial.available()) {
+      Serial.read();
+    }
+
+    // process serial command
+    switch(serialCmd) {
+      case 'p':
+        sendPing();
+        break;
+      case 'i':
+        requestInfo();
+        break;
+      case 'l':
+        requestPacketInfo();
+        break;
+      case 'r':
+        requestRetransmit();
+        break;
+      default:
+        Serial.print(F("Unknown command: "));
+        Serial.println(serialCmd);
+        break;
+    }
+
+    // set radio mode to reception
+    #ifdef RADIO_SX126X
+ //   lora.setDio1Action(onInterrupt);
+    #else
+//    lora.setDio0Action(onInterrupt);
+    #endif
+    lora.startReceive();
+    enableInterrupt = true;
+  }
+//fossa station code
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // check if the flag is set (received interruption)
   if(receivedFlag) {
@@ -610,6 +685,7 @@ void loop() {
       respOptData = new uint8_t[respOptDataLen];
       FCP_Get_OptData(callsign, respFrame, respLen, respOptData);
       PRINT_BUFF(respFrame, respLen);
+      
     }
 
     struct tm timeinfo;
@@ -652,6 +728,7 @@ void loop() {
     switch(functionId) {
       case RESP_PONG:
         Serial.println(F("Pong!"));
+        json_pong();
         break;
 
       case RESP_SYSTEM_INFO:
@@ -719,6 +796,7 @@ void loop() {
       case RESP_REPEATED_MESSAGE:
         Serial.println(F("Got repeated message:"));
         Serial.println((char*)respOptData);
+        json_message((char*)respOptData,respLen);
         break;
 
       default:
@@ -761,6 +839,7 @@ void loop() {
     last_connection_fail = millis();
   }
 
+
   ArduinoOTA.handle ();
 }
 
@@ -789,7 +868,7 @@ void  welcome_message (void) {
 void  json_system_info(void) {
           //// JSON
           
-          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(16);
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(17);
           DynamicJsonDocument doc(capacity);
           doc["station"] = board_config.station;  // G4lile0
           JsonArray station_location = doc.createNestedArray("station_location");
@@ -818,7 +897,6 @@ void  json_system_info(void) {
           size_t n = serializeJson(doc, buffer);
           mqtt.publish(topic, buffer,n );
 
-
 /*
  * 
  * 
@@ -844,4 +922,211 @@ void  json_system_info(void) {
 }
  */
  
+}
+
+
+void  json_message(char* frame, size_t respLen) {
+          Serial.println(String(respLen));
+          
+          char tmp[respLen+1];
+          memcpy(tmp, frame, respLen);
+          tmp[respLen-12] = '\0';
+                    
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(10);
+          DynamicJsonDocument doc(capacity);
+          doc["station"] = board_config.station;  // G4lile0
+          JsonArray station_location = doc.createNestedArray("station_location");
+          station_location.add(board_config.latitude);
+          station_location.add(board_config.longitude);
+          doc["rssi"] = last_packet_received_rssi;
+          doc["snr"] = last_packet_received_snr;
+          doc["frequency_error"] = last_packet_received_frequencyerror;
+//          doc["len"] = respLen;
+          doc["msg"] = String(tmp);
+//          doc["msg"] = String(frame);
+ 
+          
+          serializeJson(doc, Serial);
+          char topic[64];
+          strcpy(topic, board_config.station);
+          strcat(topic,"/msg");
+          char buffer[256];
+          serializeJson(doc, buffer);
+          size_t n = serializeJson(doc, buffer);
+          mqtt.publish(topic, buffer,n );
+}
+
+
+
+void  json_pong(void) {
+          //// JSON
+          
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(6);
+          DynamicJsonDocument doc(capacity);
+          doc["station"] = board_config.station;  // G4lile0
+          JsonArray station_location = doc.createNestedArray("station_location");
+          station_location.add(board_config.latitude);
+          station_location.add(board_config.longitude);
+          doc["rssi"] = last_packet_received_rssi;
+          doc["snr"] = last_packet_received_snr;
+          doc["frequency_error"] = last_packet_received_frequencyerror;
+          doc["pong"] = 1;
+          serializeJson(doc, Serial);
+          char topic[64];
+          strcpy(topic, board_config.station);
+          strcat(topic,"/pong");
+          char buffer[256];
+          serializeJson(doc, buffer);
+          size_t n = serializeJson(doc, buffer);
+          mqtt.publish(topic, buffer,n );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+// function to print controls
+void printControls() {
+  Serial.println(F("------------- Controls -------------"));
+  Serial.println(F("p - send ping frame"));
+  Serial.println(F("i - request satellite info"));
+  Serial.println(F("l - request last packet info"));
+  Serial.println(F("r - send message to be retransmitted"));
+  Serial.println(F("------------------------------------"));
+}
+
+
+
+void sendPing() {
+  Serial.print(F("Sending ping frame ... "));
+
+  // data to transmit
+  uint8_t functionId = CMD_PING;
+
+  // build frame
+  uint8_t len = FCP_Get_Frame_Length(callsign);
+  uint8_t* frame = new uint8_t[len];
+  FCP_Encode(frame, callsign, functionId);
+
+  // send data
+  int state = lora.transmit(frame, len);
+  delete[] frame;
+
+  // check transmission success
+  if (state == ERR_NONE) {
+    Serial.println(F("sent successfully!"));
+  } else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+  }
+}
+
+
+void requestInfo() {
+  Serial.print(F("Requesting system info ... "));
+
+  // data to transmit
+  uint8_t functionId = CMD_TRANSMIT_SYSTEM_INFO;
+
+  // build frame
+  uint8_t len = FCP_Get_Frame_Length(callsign);
+  uint8_t* frame = new uint8_t[len];
+  FCP_Encode(frame, callsign, functionId);
+
+  // send data
+  int state = lora.transmit(frame, len);
+  delete[] frame;
+
+  // check transmission success
+  if (state == ERR_NONE) {
+    Serial.println(F("sent successfully!"));
+  } else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+  }
+}
+
+void requestPacketInfo() {
+  Serial.print(F("Requesting last packet info ... "));
+
+  // data to transmit
+  uint8_t functionId = CMD_GET_LAST_PACKET_INFO;
+
+  // build frame
+  uint8_t len = FCP_Get_Frame_Length(callsign);
+  uint8_t* frame = new uint8_t[len];
+  FCP_Encode(frame, callsign, functionId);
+
+  // send data
+  int state = lora.transmit(frame, len);
+  delete[] frame;
+
+  // check transmission success
+  if (state == ERR_NONE) {
+    Serial.println(F("sent successfully!"));
+  } else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+  }
+}
+
+void requestRetransmit() {
+  Serial.println(F("Enter message to be sent:"));
+  Serial.println(F("(max 32 characters, end with LF or CR+LF)"));
+
+  // get data to be retransmited
+  char optData[32];
+  uint8_t bufferPos = 0;
+  while(bufferPos < 32) {
+    while(!Serial.available());
+    char c = Serial.read();
+    Serial.print(c);
+    if((c != '\r') && (c != '\n')) {
+      optData[bufferPos] = c;
+      bufferPos++;
+    } else {
+      break;
+    }
+  }
+
+  // wait for a bit to receive any trailing characters
+  delay(100);
+
+  // dump the serial buffer
+  while(Serial.available()) {
+    Serial.read();
+  }
+
+  Serial.println();
+  Serial.print(F("Requesting retransmission ... "));
+
+  // data to transmit
+  uint8_t functionId = CMD_RETRANSMIT;
+  optData[bufferPos] = '\0';
+  uint8_t optDataLen = strlen(optData);
+
+  // build frame
+  uint8_t len = FCP_Get_Frame_Length(callsign, optDataLen);
+  uint8_t* frame = new uint8_t[len];
+  FCP_Encode(frame, callsign, functionId, optDataLen, (uint8_t*)optData);
+
+  // send data
+  int state = lora.transmit(frame, len);
+  delete[] frame;
+
+  // check transmission success
+  if (state == ERR_NONE) {
+    Serial.println(F("sent successfully!"));
+  } else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+  }
 }
