@@ -25,6 +25,7 @@ constexpr auto MQTT_SERVER_LENGTH = 31;
 constexpr auto MQTT_USER_LENGTH = 31;
 constexpr auto MQTT_PASS_LENGTH = 31;
 constexpr auto SSID_LENGTH = 30;
+constexpr auto TZ_LENGTH = 40;
 
 typedef struct {
 	uint32_t crc32;
@@ -42,7 +43,7 @@ typedef struct {
 	char mqtt_pass[MQTT_PASS_LENGTH]; // https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q
 	char ssid[SSID_LENGTH];
 	uint32_t board_type;
-	char tz[40];
+	char tz[TZ_LENGTH];
 } boardconfig_t;
 
 typedef void (*onAPStarted_t)(AsyncWiFiManager* wm);
