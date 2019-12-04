@@ -74,6 +74,8 @@ Config_managerClass config_manager (&board_config);
 
 const int fs_version =   1912042;      // version year month day 
 
+const char*  message[32];
+
 OLEDDisplayUi ui     ( &display );
 
 bool mqtt_connected = false;
@@ -686,6 +688,7 @@ void loop() {
       respOptData = new uint8_t[respOptDataLen];
       FCP_Get_OptData(callsign, respFrame, respLen, respOptData);
       PRINT_BUFF(respFrame, respLen);
+      
     }
 
     struct tm timeinfo;
@@ -796,7 +799,7 @@ void loop() {
       case RESP_REPEATED_MESSAGE:
         Serial.println(F("Got repeated message:"));
         Serial.println((char*)respOptData);
-        json_message((char*)respOptData);
+        json_message((char*)respOptData,respLen);
         break;
 
       default:
@@ -925,16 +928,14 @@ void  json_system_info(void) {
 }
 
 
-
-void  json_message(char* frame) {
-          //// JSON
-        //  int16_t frameLen = strlen(frame) + 1;
-           // check frame
-         //  if(frame == NULL) {
-         //         return(ERR_FRAME_INVALID);
-         //       }
+void  json_message(char* frame, size_t respLen) {
+          Serial.println(String(respLen));
+          
+          char tmp[respLen+1];
+          memcpy(tmp, frame, respLen);
+          tmp[respLen-12] = '\0';
                     
-          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(7);
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(10);
           DynamicJsonDocument doc(capacity);
           doc["station"] = board_config.station;  // G4lile0
           JsonArray station_location = doc.createNestedArray("station_location");
@@ -943,7 +944,11 @@ void  json_message(char* frame) {
           doc["rssi"] = last_packet_received_rssi;
           doc["snr"] = last_packet_received_snr;
           doc["frequency_error"] = last_packet_received_frequencyerror;
-          doc["msg"] = String(frame);
+//          doc["len"] = respLen;
+          doc["msg"] = String(tmp);
+//          doc["msg"] = String(frame);
+ 
+          
           serializeJson(doc, Serial);
           char topic[64];
           strcpy(topic, board_config.station);
