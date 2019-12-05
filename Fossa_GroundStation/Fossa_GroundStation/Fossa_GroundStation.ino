@@ -472,38 +472,6 @@ void setup() {
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   printLocalTime();
 
-  // The ESP is capable of rendering 60fps in 80Mhz mode
-  // but that won't give you much time for anything else
-  // run it in 160Mhz mode or just set it to 30 fps
-  ui.setTargetFPS(60);
-
-  // Customize the active and inactive symbol
-  ui.setActiveSymbol(activeSymbol);
-  ui.setInactiveSymbol(inactiveSymbol);
-
-  // You can change this to
-  // TOP, LEFT, BOTTOM, RIGHT
-  ui.setIndicatorPosition(BOTTOM);
-
-  // Defines where the first frame is located in the bar.
-  ui.setIndicatorDirection(LEFT_RIGHT);
-
-  // You can change the transition that is used
-  // SLIDE_LEFT, SLIDE_RIGHT, SLIDE_UP, SLIDE_DOWN
-  ui.setFrameAnimation(SLIDE_LEFT);
-
-  // Add frames
-  ui.setFrames(frames, frameCount);
-
-  // Add overlays
-  ui.setOverlays(overlays, overlaysCount);
-
-  // Initialising the UI will init the display too.
-  ui.init();
-
-  display.flipScreenVertically();
-
- 
   // initialize SX1278 with default settings
   Serial.print(F("[SX1278] Initializing ... "));
   // carrier frequency:           436.7 MHz
@@ -560,7 +528,15 @@ void setup() {
   // lora.readData();
   // lora.scanChannel();
 
-  Serial.println ("Waiting for MQTT connection");
+  // TODO: Make this beautiful
+  display.clear();
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.drawString(20 ,10 , "Waiting for MQTT"); 
+  display.drawString(35 ,24 , "Connection...");
+  display.drawString(3 ,38 , "Press PROG butt. or send");
+  display.drawString(3 ,52 , "e in serial to reset conf.");
+  display.display();
+  Serial.println ("Waiting for MQTT connection. Send 'e' or press the PROG button to erase board config and return to the config manager AP");
   int i = 0;
   while (!mqtt_connected) {
     if (i++ > 150000) {// 5m
@@ -569,10 +545,52 @@ void setup() {
     }
 	  Serial.print ('.');
 	  delay (500);
+    if (Serial.available()){
+      char byte = Serial.read();
+      if (byte == 'e') {
+        config_manager.eraseConfig();
+        ESP.restart();
+      }
+    }
+    if (!digitalRead (PROG_BUTTON)){
+      config_manager.eraseConfig();
+      ESP.restart();
+    }
   }
   Serial.println (" Connected !!!");
   
   printControls();
+
+  // The ESP is capable of rendering 60fps in 80Mhz mode
+  // but that won't give you much time for anything else
+  // run it in 160Mhz mode or just set it to 30 fps
+  ui.setTargetFPS(60);
+
+  // Customize the active and inactive symbol
+  ui.setActiveSymbol(activeSymbol);
+  ui.setInactiveSymbol(inactiveSymbol);
+
+  // You can change this to
+  // TOP, LEFT, BOTTOM, RIGHT
+  ui.setIndicatorPosition(BOTTOM);
+
+  // Defines where the first frame is located in the bar.
+  ui.setIndicatorDirection(LEFT_RIGHT);
+
+  // You can change the transition that is used
+  // SLIDE_LEFT, SLIDE_RIGHT, SLIDE_UP, SLIDE_DOWN
+  ui.setFrameAnimation(SLIDE_LEFT);
+
+  // Add frames
+  ui.setFrames(frames, frameCount);
+
+  // Add overlays
+  ui.setOverlays(overlays, overlaysCount);
+
+  // Initialising the UI will init the display too.
+  ui.init();
+
+  display.flipScreenVertically();
 
 }
 
@@ -622,6 +640,10 @@ void loop() {
       case 'r':
         requestRetransmit();
         break;
+      case 'e':
+        config_manager.eraseConfig();
+        ESP.restart();
+        break;
       default:
         Serial.print(F("Unknown command: "));
         Serial.println(serialCmd);
@@ -638,27 +660,6 @@ void loop() {
     enableInterrupt = true;
   }
 //fossa station code
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   // check if the flag is set (received interruption)
   if(receivedFlag) {
@@ -987,17 +988,6 @@ void  json_pong(void) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
 // function to print controls
 void printControls() {
   Serial.println(F("------------- Controls -------------"));
@@ -1005,6 +995,7 @@ void printControls() {
   Serial.println(F("i - request satellite info"));
   Serial.println(F("l - request last packet info"));
   Serial.println(F("r - send message to be retransmitted"));
+  Serial.println(F("e - erase board config and reset"));
   Serial.println(F("------------------------------------"));
 }
 
