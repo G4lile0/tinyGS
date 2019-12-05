@@ -29,7 +29,7 @@ Once you have cloned this project to a local directory, you can open it on Visua
 
 ![Add folder to workspace VSCode](/doc/images/add_folder_to_workspace.png "Add folder to workspace VSCode")
 
-Then select the ESP32-OLED-Fossa-GroundStation folder inside the repository and click open.
+Then select the `src` folder inside the repository and click open.
 
 ![Select folder](/doc/images/Select_folder.png "Select folder")
 
@@ -136,4 +136,5 @@ To upload a new version through OTA un Arduino, you have to navigate to `Tools >
 
 Once this is done, the new firmware can be uploaded normally using the upload button or navigating to `Program > upload`
 Arduino 
+
 
