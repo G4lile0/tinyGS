@@ -38,6 +38,7 @@
 #include <ESPAsyncWiFiManager.h>							// https://github.com/alanswx/ESPAsyncWiFiManager
 #include "BoardConfig.h"
 
+constexpr auto LOG_TAG = "FOSSAGS";
 
 Esp32_mqtt_clientClass mqtt;
 
@@ -92,7 +93,7 @@ void manageMQTTEvent (esp_mqtt_event_id_t event) {
 
 void manageMQTTData (char* topic, size_t topic_len, char* payload, size_t payload_len) {
   // Don't use Serial.print here. It will not work. Use ESP_LOG or printf instead.
-  ESP_LOGI ("TEST","Received MQTT message: %.*s : %.*s", topic_len, topic, payload_len, payload);
+  ESP_LOGI (LOG_TAG,"Received MQTT message: %.*s : %.*s", topic_len, topic, payload_len, payload);
   printf ("RRRRReceived MQTT message: %.*s : %.*s", topic_len, topic, payload_len, payload);
 }
 

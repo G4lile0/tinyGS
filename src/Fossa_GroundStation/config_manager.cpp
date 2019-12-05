@@ -5,6 +5,8 @@
 #include "config_manager.h"
 #define WIFI_CONNECT_TIMEOUT 10000
 
+constexpr auto WIFIMAN_TAG = "WIFIMAN";
+
 const char CONFIG_FILE[] = "/config.json";
 
 bool shouldSave = false;
@@ -19,18 +21,18 @@ bool Config_managerClass::begin(bool invalidate_config)
 	//SPIFFS.format (); // Only for test
 
 	if (!SPIFFS.begin ()) {
-		ESP_LOGE (LOG_TAG,"Error mounting flash");
+		ESP_LOGE (WIFIMAN_TAG,"Error mounting flash");
 		if (notifyFormat) {
 			notifyFormat ();
 		}
 		SPIFFS.format ();
 	}
 	if (!loadFlashData (!invalidate_config)) { // Load from flash
-		ESP_LOGW (LOG_TAG, "Invalid configuration");
+		ESP_LOGW (WIFIMAN_TAG, "Invalid configuration");
 		strlcpy(board_config->ssid, "0\0", 2);
 		WiFi.begin ("0"); // Reset Wifi credentials
 	} else {
-		ESP_LOGI (LOG_TAG, "Configuration loaded from flash");
+		ESP_LOGI (WIFIMAN_TAG, "Configuration loaded from flash");
 		if (invalidate_config)
 			WiFi.begin ("0"); // Reset Wifi credentials
 		else
@@ -44,19 +46,19 @@ bool Config_managerClass::begin(bool invalidate_config)
 
 	if (configWiFiManager ()) {
 		if (shouldSave) {
-			ESP_LOGD (LOG_TAG,"Got configuration. Storing");
+			ESP_LOGD (WIFIMAN_TAG,"Got configuration. Storing");
 			if (saveFlashData ()) {
-				ESP_LOGD (LOG_TAG, "Configuration stored on flash");
+				ESP_LOGD (WIFIMAN_TAG, "Configuration stored on flash");
 			} else {
-				ESP_LOGE (LOG_TAG, "Error saving data on flash");
+				ESP_LOGE (WIFIMAN_TAG, "Error saving data on flash");
 			}
 			ESP.restart ();
 		} else {
-			ESP_LOGI (LOG_TAG, "Configuration has not to be saved");
+			ESP_LOGI (WIFIMAN_TAG, "Configuration has not to be saved");
 		}
 		return true;
 	} else {
-		ESP_LOGE (LOG_TAG, "Configuration error. Restarting");
+		ESP_LOGE (WIFIMAN_TAG, "Configuration error. Restarting");
 		ESP.restart ();
 	}
 }
@@ -65,12 +67,12 @@ bool Config_managerClass::loadFlashData (bool load_wifi_data) {
 	if (SPIFFS.exists (CONFIG_FILE)) {
 		bool json_correct = false;
 
-		ESP_LOGD (LOG_TAG, "Opening %s file", CONFIG_FILE);
+		ESP_LOGD (WIFIMAN_TAG, "Opening %s file", CONFIG_FILE);
 		File configFile = SPIFFS.open (CONFIG_FILE, "r");
 		if (configFile) {
-			ESP_LOGD (LOG_TAG, "%s opened", CONFIG_FILE);
+			ESP_LOGD (WIFIMAN_TAG, "%s opened", CONFIG_FILE);
 			size_t size = configFile.size ();
-			ESP_LOGD (LOG_TAG, "Config file size %d", configFile.size ());
+			ESP_LOGD (WIFIMAN_TAG, "Config file size %d", configFile.size ());
 			// Allocate a buffer to store contents of the file.
 			std::unique_ptr<char[]> buf (new char[size]);
 			DynamicJsonDocument doc (512);
@@ -109,34 +111,34 @@ bool Config_managerClass::loadFlashData (bool load_wifi_data) {
 			String output;
 			serializeJsonPretty (doc, output);
 
-			ESP_LOGD (LOG_TAG, "JSON file %s", output.c_str ());
+			ESP_LOGD (WIFIMAN_TAG, "JSON file %s", output.c_str ());
 #endif
 
-			ESP_LOGI (LOG_TAG, "Config file stored station name: %s", board_config->station);
+			ESP_LOGI (WIFIMAN_TAG, "Config file stored station name: %s", board_config->station);
 			configFile.close ();
 
-			ESP_LOGI (LOG_TAG, "Gateway configuration successfuly read");
-			ESP_LOG_BUFFER_HEX_LEVEL (LOG_TAG, board_config, sizeof (boardconfig_t), ESP_LOG_VERBOSE);
+			ESP_LOGI (WIFIMAN_TAG, "Gateway configuration successfuly read");
+			ESP_LOG_BUFFER_HEX_LEVEL (WIFIMAN_TAG, board_config, sizeof (boardconfig_t), ESP_LOG_VERBOSE);
 
-			ESP_LOGD (LOG_TAG, "==== Configuration ====");
-			ESP_LOGD (LOG_TAG, "Station Name: %s", board_config->station);
-			ESP_LOGD (LOG_TAG, "Latitude: %f", board_config->latitude);
-			ESP_LOGD (LOG_TAG, "Longitude: %f", board_config->longitude);
-			ESP_LOGD (LOG_TAG, "MQTT Server Name: %s", board_config->mqtt_server_name);
-			ESP_LOGD (LOG_TAG, "MQTT Server Port: %u", board_config->mqtt_port);
-			ESP_LOGD (LOG_TAG, "MQTT User: %s", board_config->mqtt_user);
-			ESP_LOGD (LOG_TAG, "MQTT Password: %s", board_config->mqtt_pass);
-			ESP_LOGD (LOG_TAG, "Time Zone: %s", board_config->tz);
-			ESP_LOGD (LOG_TAG, "SSID: %s", board_config->ssid);
-			ESP_LOGD (LOG_TAG, "Pass: %s", board_config->pass);
+			ESP_LOGD (WIFIMAN_TAG, "==== Configuration ====");
+			ESP_LOGD (WIFIMAN_TAG, "Station Name: %s", board_config->station);
+			ESP_LOGD (WIFIMAN_TAG, "Latitude: %f", board_config->latitude);
+			ESP_LOGD (WIFIMAN_TAG, "Longitude: %f", board_config->longitude);
+			ESP_LOGD (WIFIMAN_TAG, "MQTT Server Name: %s", board_config->mqtt_server_name);
+			ESP_LOGD (WIFIMAN_TAG, "MQTT Server Port: %u", board_config->mqtt_port);
+			ESP_LOGD (WIFIMAN_TAG, "MQTT User: %s", board_config->mqtt_user);
+			ESP_LOGD (WIFIMAN_TAG, "MQTT Password: %s", board_config->mqtt_pass);
+			ESP_LOGD (WIFIMAN_TAG, "Time Zone: %s", board_config->tz);
+			ESP_LOGD (WIFIMAN_TAG, "SSID: %s", board_config->ssid);
+			ESP_LOGD (WIFIMAN_TAG, "Pass: %s", board_config->pass);
 
 			return json_correct;
 		}
 	} else {
-		ESP_LOGW (LOG_TAG, "%s do not exist", CONFIG_FILE);
+		ESP_LOGW (WIFIMAN_TAG, "%s do not exist", CONFIG_FILE);
 		//SPIFFS.format ();
 		WiFi.begin ("0", "0"); // Delete WiFi credentials
-		ESP_LOGW (LOG_TAG, "Dummy STA config loaded");
+		ESP_LOGW (WIFIMAN_TAG, "Dummy STA config loaded");
 		return false;
 	}
 }
@@ -145,7 +147,7 @@ bool Config_managerClass::saveFlashData () {
 	SPIFFS.remove (CONFIG_FILE); // Delete existing file, otherwise the configuration is appended to the file
 	File configFile = SPIFFS.open (CONFIG_FILE, "w");
 	if (!configFile) {
-		ESP_LOGW (LOG_TAG, "failed to open config file %s for writing", CONFIG_FILE);
+		ESP_LOGW (WIFIMAN_TAG, "failed to open config file %s for writing", CONFIG_FILE);
 		return false;
 	}
 
@@ -164,20 +166,20 @@ bool Config_managerClass::saveFlashData () {
 	doc["wifi_pass"] = board_config->pass;
 
 	if (serializeJson (doc, configFile) == 0) {
-		ESP_LOGE (LOG_TAG, "Failed to write to file");
+		ESP_LOGE (WIFIMAN_TAG, "Failed to write to file");
 	}
 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
 	String output;
 	serializeJsonPretty (doc, output);
 
-	ESP_LOGD (LOG_TAG, "%s", output.c_str ());
+	ESP_LOGD (WIFIMAN_TAG, "%s", output.c_str ());
 #endif
 
 	size_t size = configFile.size ();
 	configFile.flush ();
 	configFile.close ();
-	ESP_LOGV (LOG_TAG, "Configuration saved to flash. %u bytes", size);
+	ESP_LOGV (WIFIMAN_TAG, "Configuration saved to flash. %u bytes", size);
 
 	if (notifyConfigSaved) {
 		notifyConfigSaved (true);
@@ -187,7 +189,7 @@ bool Config_managerClass::saveFlashData () {
 }
 
 void Config_managerClass::doSave (void) {
-	ESP_LOGI (LOG_TAG, "Configuration saving activated");
+	ESP_LOGI (WIFIMAN_TAG, "Configuration saving activated");
 	shouldSave = true;
 }
 
@@ -249,19 +251,19 @@ bool Config_managerClass::configWiFiManager () {
 	}
 
 	boolean result = wifiManager->autoConnect ("FossaGroundStation"/*, NULL, 10, 1000*/);
-	ESP_LOGI (LOG_TAG, "==== Config Portal result ====");
-	ESP_LOGI (LOG_TAG, "Station Name: %s", stationNameParam.getValue ());
-	ESP_LOGI (LOG_TAG, "Latitude: %.*s", latitudeParam.getValueLength(), latitudeParam.getValue ());
-	ESP_LOGI (LOG_TAG, "Longitude: %.*s", longitudeParam.getValueLength (), longitudeParam.getValue ());
-	ESP_LOGI (LOG_TAG, "MQTT Server Name: %s", mqttServerNameParam.getValue ());
-	ESP_LOGI (LOG_TAG, "MQTT Server Port: %s", mqttServerPortParam.getValue ());
-	ESP_LOGI (LOG_TAG, "MQTT User: %s", mqttUserParam.getValue ());
-	ESP_LOGI (LOG_TAG, "MQTT Password: %s", mqttPassParam.getValue ());
-	ESP_LOGI (LOG_TAG, "WIFI SSID: %s", WiFi.SSID().c_str());
-	ESP_LOGI (LOG_TAG, "WIFI Password: %s", WiFi.psk().c_str());
-	ESP_LOGI (LOG_TAG, "Time Zone: %s", tzParam.getValue ());
-		ESP_LOGI (LOG_TAG, "Status: %s", result ? "true" : "false");
-	ESP_LOGI (LOG_TAG, "Save config: %s", shouldSave ? "yes" : "no");
+	ESP_LOGI (WIFIMAN_TAG, "==== Config Portal result ====");
+	ESP_LOGI (WIFIMAN_TAG, "Station Name: %s", stationNameParam.getValue ());
+	ESP_LOGI (WIFIMAN_TAG, "Latitude: %.*s", latitudeParam.getValueLength(), latitudeParam.getValue ());
+	ESP_LOGI (WIFIMAN_TAG, "Longitude: %.*s", longitudeParam.getValueLength (), longitudeParam.getValue ());
+	ESP_LOGI (WIFIMAN_TAG, "MQTT Server Name: %s", mqttServerNameParam.getValue ());
+	ESP_LOGI (WIFIMAN_TAG, "MQTT Server Port: %s", mqttServerPortParam.getValue ());
+	ESP_LOGI (WIFIMAN_TAG, "MQTT User: %s", mqttUserParam.getValue ());
+	ESP_LOGI (WIFIMAN_TAG, "MQTT Password: %s", mqttPassParam.getValue ());
+	ESP_LOGI (WIFIMAN_TAG, "WIFI SSID: %s", WiFi.SSID().c_str());
+	ESP_LOGI (WIFIMAN_TAG, "WIFI Password: %s", WiFi.psk().c_str());
+	ESP_LOGI (WIFIMAN_TAG, "Time Zone: %s", tzParam.getValue ());
+		ESP_LOGI (WIFIMAN_TAG, "Status: %s", result ? "true" : "false");
+	ESP_LOGI (WIFIMAN_TAG, "Save config: %s", shouldSave ? "yes" : "no");
 	if (result) {
 		if (shouldSave) {
 			memcpy (board_config->station, stationNameParam.getValue (), stationNameParam.getValueLength ());
@@ -274,7 +276,7 @@ bool Config_managerClass::configWiFiManager () {
 			if (strcmp(mqttPassParam.getValue (),"")) {
 				memcpy (board_config->mqtt_pass, mqttPassParam.getValue (), mqttPassParam.getValueLength ());
 			} else {
-				ESP_LOGI (LOG_TAG, "Password not changed");
+				ESP_LOGI (WIFIMAN_TAG, "Password not changed");
 			}
 			memcpy (board_config->tz, tzParam.getValue (), tzParam.getValueLength ());
 
@@ -283,10 +285,10 @@ bool Config_managerClass::configWiFiManager () {
 			String wifiPass = WiFi.psk ();
 			memcpy (board_config->pass, wifiPass.c_str (), wifiPass.length () > PASS_LENGTH ? PASS_LENGTH : wifiPass.length ());
 		} else {
-			ESP_LOGD (LOG_TAG, "Configuration does not need to be saved");
+			ESP_LOGD (WIFIMAN_TAG, "Configuration does not need to be saved");
 		}
 	} else {
-		ESP_LOGE (LOG_TAG, "WiFi connection unsuccessful. Restarting");
+		ESP_LOGE (WIFIMAN_TAG, "WiFi connection unsuccessful. Restarting");
 		//ESP.restart ();
 	}
 

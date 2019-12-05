@@ -19,8 +19,6 @@
 #include <functional>
 #include <ArduinoJson.h>
 
-constexpr auto LOG_TAG = "WIFIMAN";
-
 constexpr auto STATION_NAME_LENGTH = 21;
 constexpr auto MQTT_SERVER_LENGTH = 31;
 constexpr auto MQTT_USER_LENGTH = 31;
