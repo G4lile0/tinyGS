@@ -839,7 +839,6 @@ void loop() {
   
   static unsigned long last_connection_fail = millis();
   if (!mqtt_connected){
-    Serial.println(millis() - last_connection_fail);
     if (millis() - last_connection_fail > 300000){ // 5m
       Serial.println("MQTT Disconnected, restarting...");
       ESP.restart();
