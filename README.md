@@ -71,12 +71,12 @@ Credit to [ESPurna](https://github.com/xoseperez/espurna/wiki/ArduinoIDE) for th
 ### Installing dependencies
 This project relies on several third party dependencies that must be installed in order to be able to build the binaries you can find the dependencies list below:
 
-* **RadioLib** https://github.com/jgromes/RadioLib
-* **ArduinoJson** https://github.com/bblanchon/ArduinoJson
-* **ESP8266_SSD1306** https://github.com/ThingPulse/esp8266-oled-ssd1306
-* **AsyncTCP** https://github.com/me-no-dev/AsyncTCP.git
-* **ESPAsyncWebServer** https://github.com/me-no-dev/ESPAsyncWebServer.git
-* **ESPAsyncWiFiManager** https://github.com/alanswx/ESPAsyncWiFiManager.git
+* **RadioLib** (recomended v2.0.1) https://github.com/jgromes/RadioLib
+* **ArduinoJson** (recomended v6.13.0 **Required** >v6.0) https://github.com/bblanchon/ArduinoJson
+* **ESP8266_SSD1306** (recomended v4.1.0) https://github.com/ThingPulse/esp8266-oled-ssd1306
+* **AsyncTCP** (recomended v1.1.1) https://github.com/me-no-dev/AsyncTCP.git
+* **ESPAsyncWebServer** (recomended v1.2.3) https://github.com/me-no-dev/ESPAsyncWebServer.git
+* **ESPAsyncWiFiManager** (recomended v0.22) https://github.com/alanswx/ESPAsyncWiFiManager.git
 
 ### Open the project in Arduino IDE
 Once you have cloned this project to a local directory, you can open it from the Arduino IDE in `File > Add folder` to workspace. And select the .ino file which is located in `Fossa_GroundStation > Fossa_GroundStation > Fossa_GroundStation.ino`
@@ -106,3 +106,23 @@ The parameters that has to be filled are the following:
 * **LATITUDE and LONGITUDE:** The geographical coordinates of the ground station. This serves the purpose of locating your ground station when you receive a package from the satellite.
 * **MQTT_SERVER and MQTT_PORT:** These are the address and port of the MQTT server of the project you should not change them if you want the Ground Station to be able to connect the main server. 
 * **MQTT_USER and MQTT_PASS:** These are the credentials of the project MQTT server, the purpose is to be able to collect the most packets from the satellite and manage all groundStations from this central server. You can ask for user and password in this telegram group: https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q 
+
+# OTA Update
+This project implements OTA updates with both Arduino IDE and Platformio. To use this method the board and the computer have to be connected to the same network and be visible to each other.
+
+## Platformio
+In order to upload a new version through OTA in platformio, the `platformio.ide` file has to be edited uncommenting two lines to enable OTA and set the current IP Address of the station (it can be see on the OLED display).
+
+```
+# Uncomment these 2 lines by deleting ";" and edit as needed to upload through OTA
+;upload_protocol = espota
+;upload_port = IP_OF_THE_BOARD
+```
+
+Once this is done, the new firmware can be uploaded using the upload button normally as if the board were connected through USB.
+
+## Arduino IDE
+To upload a new version through OTA un Arduino, you have to navigate to `Tools > port` and, if the computer is in the same network it should detect a network port for the ESP32. If that is the case, select the network port.
+
+Once this is done, the new firmware can be uploaded normally using the upload button or navigating to `Program > upload`
+Arduino 
