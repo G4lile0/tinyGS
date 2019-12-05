@@ -59,9 +59,7 @@ bool Config_managerClass::loadFlashData () {
 			ESP_LOGD (LOG_TAG, "Config size: %d. File size %d", sizeof (boardconfig_t), configFile.size ());
 			if (size != sizeof (boardconfig_t)) {
 				ESP_LOGW (LOG_TAG, "Config file is corrupted. Deleting and formatting");
-				SPIFFS.remove (CONFIG_FILE);
-				//SPIFFS.format ();
-				WiFi.begin ("0", "0"); // Delete WiFi credentials
+				eraseConfig();
 				return false;
 			}
 			configFile.read ((uint8_t*)(board_config), sizeof (boardconfig_t));
@@ -207,4 +205,9 @@ bool Config_managerClass::configWiFiManager () {
 	free (wifiManager);
 
 	return result;
+}
+
+void Config_managerClass::eraseConfig(){
+	SPIFFS.remove (CONFIG_FILE);
+	WiFi.begin ("0", "0"); // Delete WiFi credentials
 }

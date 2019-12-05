@@ -79,6 +79,7 @@ class Config_managerClass
 		 notifyFormat = cb;
 	 }
 	 bool begin();
+	 void eraseConfig();
 };
 
 #endif
