@@ -4,9 +4,9 @@
 #define _CONFIG_MANAGER_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
-	#include "Arduino.h"
+#include "Arduino.h"
 #else
-	#include "WProgram.h"
+#include "WProgram.h"
 #endif
 
 #include <AsyncTCP.h>
@@ -50,36 +50,35 @@ typedef void (*onAPStarted_t)(AsyncWiFiManager* wm);
 typedef void (*onConfigSaved_t)(bool result);
 typedef void (*onFormat_t)(void);
 
-class Config_managerClass
-{
- protected:
-	 boardconfig_t* board_config;
+class Config_managerClass {
+protected:
+	boardconfig_t* board_config;
 
-	 AsyncWebServer* server;
-	 DNSServer* dns;
-	 AsyncWiFiManager* wifiManager;
+	AsyncWebServer* server;
+	DNSServer* dns;
+	AsyncWiFiManager* wifiManager;
 
-	 onAPStarted_t notifyAPStarted;
-	 onConfigSaved_t notifyConfigSaved;
-	 onFormat_t notifyFormat;
+	onAPStarted_t notifyAPStarted;
+	onConfigSaved_t notifyConfigSaved;
+	onFormat_t notifyFormat;
 
-	 bool loadFlashData ();
-	 bool saveFlashData ();
-	 bool configWiFiManager ();
-	 static void doSave (void);
+	bool loadFlashData ();
+	bool saveFlashData ();
+	bool configWiFiManager ();
+	static void doSave (void);
 
- public:
-	 Config_managerClass (boardconfig_t* config);
-	 void setAPStartedCallback (onAPStarted_t cb) {
-		 notifyAPStarted = cb;
-	 }
-	 void setConfigSavedCallback (onConfigSaved_t cb) {
-		 notifyConfigSaved = cb;
-	 }
-	 void setFormatFlashCallback (onFormat_t cb) {
-		 notifyFormat = cb;
-	 }
-	 bool begin();
+public:
+	Config_managerClass (boardconfig_t* config);
+	void setAPStartedCallback (onAPStarted_t cb) {
+		notifyAPStarted = cb;
+	}
+	void setConfigSavedCallback (onConfigSaved_t cb) {
+		notifyConfigSaved = cb;
+	}
+	void setFormatFlashCallback (onFormat_t cb) {
+		notifyFormat = cb;
+	}
+	bool begin ();
 };
 
 #endif
