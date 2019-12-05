@@ -35,6 +35,7 @@
 #include <DNSServer.h>
 #include <ESPAsyncWebServer.h>								// https://github.com/me-no-dev/ESPAsyncWebServer
 #include <ESPAsyncWiFiManager.h>							// https://github.com/alanswx/ESPAsyncWiFiManager
+#include "BoardConfig.h"
 
 
 Esp32_mqtt_clientClass mqtt;
@@ -52,8 +53,10 @@ Config_managerClass config_manager (&board_config);
 // Oled board configuration  uncomment your board
 // SSD1306 display( address, OLED_SDA, OLED_SCL)
 
-#ifdef OLED_SDA // TTGO
-  SSD1306 display(0x3c, OLED_SDA, OLED_SCL);      // configuration for TTGO v2 (SMA antenna connector)
+#ifdef TTGO_V2
+  SSD1306 display(0x3c, 21, 22); // configuration for TTGO v2 (SMA antenna connector)
+#elif OLED_SDA // TTGO
+  SSD1306 display(0x3c, OLED_SDA, OLED_SCL);      
 #else
   SSD1306 display(0x3c, SDA_OLED, SCL_OLED);         // configuration for TTGO v1, Heltec v1 and 2  
 #endif
