@@ -139,7 +139,7 @@ bool Config_managerClass::configWiFiManager () {
 	AsyncWiFiManagerParameter mqttUserParam ("user", "MQTT User Name", board_config->mqtt_user, MQTT_USER_LENGTH - 1, "required type=\"text\" maxlength=30");
 	AsyncWiFiManagerParameter mqttPassParam ("pass", "MQTT Password", "", MQTT_PASS_LENGTH - 1, "type=\"password\" maxlength=30");
 	AsyncWiFiManagerParameter tzParam ("tz", "TimeZone", board_config->tz , TZ_LENGTH - 1,
-											 "type=\"text\" maxlength=40 pattern=\"^[A-Z]{1,4}[-|+]?\\d{1,2}[A-Z]{0,4}(,M\\d{1,2}.\\d.\\d,M\\d{1,2}.\\d.\\d/\\d{1,2})?$\"");
+		"type=\"text\" maxlength=40 pattern=\"^[A-Z]{1,4}[-|+]?\\d{1,2}[A-Z]{0,5}(,[JM]\\d{1,3}(\\.\\d\\.\\d)?(\\/\\d{1,2})?(,[JM]\\d{1,3}(\\.\\d\\.\\d)?(\\/\\d{1,2})?)?)?$\"");
 	AsyncWiFiManagerParameter tzHelp ("<p>Time Zone parameter can be configured as these examples: <br>\
 										 <code>CET-1</code><br>\
 										 <code>CET-1CEST</code><br>\
