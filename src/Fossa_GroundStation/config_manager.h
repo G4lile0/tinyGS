@@ -67,18 +67,19 @@ protected:
 	bool configWiFiManager ();
 	static void doSave (void);
 
-public:
-	Config_managerClass (boardconfig_t* config);
-	void setAPStartedCallback (onAPStarted_t cb) {
-		notifyAPStarted = cb;
-	}
-	void setConfigSavedCallback (onConfigSaved_t cb) {
-		notifyConfigSaved = cb;
-	}
-	void setFormatFlashCallback (onFormat_t cb) {
-		notifyFormat = cb;
-	}
-	bool begin ();
+ public:
+	 Config_managerClass (boardconfig_t* config);
+	 void setAPStartedCallback (onAPStarted_t cb) {
+		 notifyAPStarted = cb;
+	 }
+	 void setConfigSavedCallback (onConfigSaved_t cb) {
+		 notifyConfigSaved = cb;
+	 }
+	 void setFormatFlashCallback (onFormat_t cb) {
+		 notifyFormat = cb;
+	 }
+	 bool begin();
+	 void eraseConfig();
 };
 
 #endif
