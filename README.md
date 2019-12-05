@@ -36,7 +36,7 @@ Then select the ESP32-OLED-Fossa-GroundStation folder inside the repository and 
 After that, the project should be loaded in visual studio and ready to configure and build.
 
 ### Configure the project
-First we need to select the board. To do so, open the `Fossa_GroundStation/platformio.ini` file and uncomment one of the lines at the beggining of the file depending on the board you are going to use TTGO ot Heltec.
+First we need to select the board. To do so, open the `src/Fossa_GroundStation/platformio.ini` file and uncomment one of the lines at the beggining of the file depending on the board you are going to use TTGO ot Heltec.
 
 ```
 default_envs = 
@@ -79,12 +79,22 @@ This project relies on several third party dependencies that must be installed i
 * **ESPAsyncWiFiManager** (recomended v0.22) https://github.com/alanswx/ESPAsyncWiFiManager.git
 
 ### Open the project in Arduino IDE
-Once you have cloned this project to a local directory, you can open it from the Arduino IDE in `File > Add folder` to workspace. And select the .ino file which is located in `Fossa_GroundStation > Fossa_GroundStation > Fossa_GroundStation.ino`
+Once you have cloned this project to a local directory, you can open it from the Arduino IDE in `File > Add folder` to workspace. And select the .ino file which is located in `src > Fossa_GroundStation > Fossa_GroundStation.ino`
 
 ![Open on Arduino IDE](/doc/images/open_arduino.png "Open on Arduino IDE")
 
 ### Build and upload the project
-The next step is to connect the board to the computer, select your board in the board manager of the Arduino IDE `Tools > Boards `
+The next step is to open the project file ` src/Fossa_GroundStation/BoardConfig.h and uncomment the line matching your board by removing the leading `//`
+
+```
+// uncomment the line matching your board by removing the //
+
+//#define TTGO_V1
+//#define TTGO_V2
+//#define HELTEC
+```
+
+Connect the board to the computer, select your board in the board manager of the Arduino IDE `Tools > Boards `
 
 ![Select board on Arduino IDE](/doc/images/select_board_arduino.png "Select board on Arduino IDE")
 
@@ -126,3 +136,4 @@ To upload a new version through OTA un Arduino, you have to navigate to `Tools >
 
 Once this is done, the new firmware can be uploaded normally using the upload button or navigating to `Program > upload`
 Arduino 
+
