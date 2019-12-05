@@ -17,6 +17,7 @@
 #include <ESPAsyncWiFiManager.h>
 #include "esp32_mqtt_client.h"
 #include <functional>
+#include <ArduinoJson.h>
 
 constexpr auto LOG_TAG = "WIFIMAN";
 
@@ -24,7 +25,8 @@ constexpr auto STATION_NAME_LENGTH = 21;
 constexpr auto MQTT_SERVER_LENGTH = 31;
 constexpr auto MQTT_USER_LENGTH = 31;
 constexpr auto MQTT_PASS_LENGTH = 31;
-constexpr auto SSID_LENGTH = 30;
+constexpr auto SSID_LENGTH = 32;
+constexpr auto PASS_LENGTH = 64;
 constexpr auto TZ_LENGTH = 40;
 
 typedef struct {
@@ -42,6 +44,7 @@ typedef struct {
 	char mqtt_user[MQTT_USER_LENGTH];
 	char mqtt_pass[MQTT_PASS_LENGTH]; // https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q
 	char ssid[SSID_LENGTH];
+	char pass[PASS_LENGTH];
 	uint32_t board_type;
 	char tz[TZ_LENGTH];
 } boardconfig_t;
@@ -62,7 +65,7 @@ protected:
 	onConfigSaved_t notifyConfigSaved;
 	onFormat_t notifyFormat;
 
-	bool loadFlashData ();
+	bool loadFlashData (bool load_wifi_data = true);
 	bool saveFlashData ();
 	bool configWiFiManager ();
 	static void doSave (void);
@@ -78,7 +81,7 @@ protected:
 	 void setFormatFlashCallback (onFormat_t cb) {
 		 notifyFormat = cb;
 	 }
-	 bool begin();
+	 bool begin(bool invalidate_config=false);
 	 void eraseConfig();
 };
 

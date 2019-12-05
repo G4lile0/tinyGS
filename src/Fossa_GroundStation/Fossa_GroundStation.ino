@@ -400,8 +400,9 @@ void setup() {
   time_t button_pushed_at;
   pinMode (PROG_BUTTON, INPUT_PULLUP);
   ESP_LOGI (LOG_TAG, "Waiting for reset config button");
+
+  bool button_pushed = false;
   while (millis () - start_waiting_for_button < WAIT_FOR_BUTTON) {
-	  bool button_pushed = false;
 
 	  if (!digitalRead (PROG_BUTTON)) {
 		  button_pushed = true;
@@ -423,7 +424,7 @@ void setup() {
   }
 
   ESP_LOGI (LOG_TAG, "Connecting to WiFi %s", board_config.ssid);
-  if (config_manager.begin ()) {
+  if (config_manager.begin (button_pushed)) {
 	  // Connected
   }
 
