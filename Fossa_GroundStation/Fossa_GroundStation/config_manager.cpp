@@ -173,7 +173,7 @@ bool Config_managerClass::configWiFiManager () {
 		wifiManager->setAPCallback (notifyAPStarted);
 	}
 
-	boolean result = wifiManager->autoConnect ("FossaGroundStation", NULL, 10, 1000);
+	boolean result = wifiManager->autoConnect ("FossaGroundStation"/*, NULL, 10, 1000*/);
 	ESP_LOGI (LOG_TAG, "==== Config Portal result ====");
 	ESP_LOGI (LOG_TAG, "Station Name: %s", stationNameParam.getValue ());
 	ESP_LOGI (LOG_TAG, "Latitude: %.*s", latitudeParam.getValueLength(), latitudeParam.getValue ());
