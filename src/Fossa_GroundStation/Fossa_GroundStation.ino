@@ -66,7 +66,7 @@ Config_managerClass config_manager (&board_config);
 
 //*********************
 
-const int fs_version =   1912042;      // version year month day 
+const int fs_version =   1912061;      // version year month day release
 
 const char*  message[32];
 
@@ -941,11 +941,64 @@ void  json_system_info(void) {
 
 void  json_message(char* frame, size_t respLen) {
           Serial.println(String(respLen));
-          
           char tmp[respLen+1];
           memcpy(tmp, frame, respLen);
           tmp[respLen-12] = '\0';
-                    
+
+
+              // if special miniTTN message   
+          Serial.println(String(frame[0]));
+          Serial.println(String(frame[1]));
+          Serial.println(String(frame[2]));
+//          if ((frame[0]=='0x54') &&  (frame[1]=='0x30') && (frame[2]=='0x40'))
+          if ((frame[0]=='T') &&  (frame[1]=='0') && (frame[2]=='@'))
+          {
+          Serial.println("mensaje miniTTN");
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(10) +JSON_ARRAY_SIZE(respLen-12);
+          DynamicJsonDocument doc(capacity);
+          doc["station"] = board_config.station;  // G4lile0
+          JsonArray station_location = doc.createNestedArray("station_location");
+          station_location.add(board_config.latitude);
+          station_location.add(board_config.longitude);
+          doc["rssi"] = last_packet_received_rssi;
+          doc["snr"] = last_packet_received_snr;
+          doc["frequency_error"] = last_packet_received_frequencyerror;
+          JsonArray msgTTN = doc.createNestedArray("msgTTN");
+
+          
+          for (byte i=0 ; i<  (respLen-12);i++) {
+
+                msgTTN.add(String(tmp[i], HEX));
+
+            }
+          
+          
+//          doc["len"] = respLen;
+//          doc["msg"] = String(tmp);
+//          doc["msg"] = String(frame);
+ 
+          
+          serializeJson(doc, Serial);
+          char topic[64];
+          strcpy(topic, board_config.station);
+          strcat(topic,"/miniTTN");
+
+          
+
+        
+          char buffer[256];
+          serializeJson(doc, buffer);
+          size_t n = serializeJson(doc, buffer);
+          mqtt.publish(topic, buffer,n );
+
+            
+            }
+
+            else
+
+            {
+              
+          
           const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(10);
           DynamicJsonDocument doc(capacity);
           doc["station"] = board_config.station;  // G4lile0
@@ -964,10 +1017,21 @@ void  json_message(char* frame, size_t respLen) {
           char topic[64];
           strcpy(topic, board_config.station);
           strcat(topic,"/msg");
+          
           char buffer[256];
           serializeJson(doc, buffer);
           size_t n = serializeJson(doc, buffer);
           mqtt.publish(topic, buffer,n );
+              
+              }
+            
+          
+
+
+          
+          
+          
+         
 }
 
 
