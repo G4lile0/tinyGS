@@ -176,8 +176,8 @@ bool Config_managerClass::saveFlashData () {
 	ESP_LOGD (WIFIMAN_TAG, "%s", output.c_str ());
 #endif
 
-	size_t size = configFile.size ();
 	configFile.flush ();
+	size_t size = configFile.size ();
 	configFile.close ();
 	ESP_LOGV (WIFIMAN_TAG, "Configuration saved to flash. %u bytes", size);
 
