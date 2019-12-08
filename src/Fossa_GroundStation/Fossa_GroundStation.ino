@@ -82,6 +82,7 @@ void manageMQTTEvent (esp_mqtt_event_id_t event) {
     strcpy(topic,board_config.station);
     strcat(topic,"/data/#");
     mqtt.subscribe (topic);
+    mqtt.subscribe ("global/sat_pos_oled");
     //Serial.println (topic);
 	welcome_message ();
     
@@ -91,10 +92,26 @@ void manageMQTTEvent (esp_mqtt_event_id_t event) {
 
 }
 
+uint8_t sat_pos_oled[2] = {0,0};
+void manageSatPosOled(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  sat_pos_oled[0] = doc[0];
+  sat_pos_oled[1] = doc[1];
+}
+
 void manageMQTTData (char* topic, size_t topic_len, char* payload, size_t payload_len) {
   // Don't use Serial.print here. It will not work. Use ESP_LOG or printf instead.
-  ESP_LOGI (LOG_TAG,"Received MQTT message: %.*s : %.*s", topic_len, topic, payload_len, payload);
-  printf ("RRRRReceived MQTT message: %.*s : %.*s", topic_len, topic, payload_len, payload);
+  ESP_LOGI (LOG_TAG,"Received MQTT message: %.*s : %.*s\n", topic_len, topic, payload_len, payload);
+  char topicStr[topic_len+1];
+  memcpy(topicStr, topic, topic_len);
+  topicStr[topic_len] = '\0';
+  if (!strcmp(topicStr, "global/sat_pos_oled")) {
+    manageSatPosOled(payload, payload_len);
+  }
 }
 
 const char* ntpServer = "pool.ntp.org";
@@ -297,10 +314,21 @@ void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->fillRect(83,0,128,11);
   display->drawString( 65+x,  49+y+(x/2), "Waiting for FossaSat Pos" );
   display->drawString( 63+x,  51+y+(x/2), "Waiting for FossaSat Pos" );
+  display->fillCircle(sat_pos_oled[0], sat_pos_oled[1], 6);
   
+  
+  display->setColor(WHITE);
+  if (sat_pos_oled[0] == 0 && sat_pos_oled[1] == 0) {
+    display->setFont(ArialMT_Plain_10);
+    display->drawString( 64+x,  50+y+(x/2), "Waiting for FossaSat Pos" );
+  }
+  else {
+    display->drawCircle(sat_pos_oled[0], sat_pos_oled[1], 5);
+    display->setColor(BLACK);
+    display->drawCircle(sat_pos_oled[0], sat_pos_oled[1], 2);
     display->setColor(WHITE);
-  display->setFont(ArialMT_Plain_10);
-  display->drawString( 64+x,  50+y+(x/2), "Waiting for FossaSat Pos" );
+    display->drawCircle(sat_pos_oled[0], sat_pos_oled[1], 1);
+  }
   
 }
 
