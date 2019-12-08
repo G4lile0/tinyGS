@@ -67,7 +67,7 @@ Config_managerClass config_manager (&board_config);
 
 //*********************
 
-const int fs_version = 1912081;      // version year month day release
+const int fs_version =   1912081;      // version year month day release
 
 const char*  message[32];
 
