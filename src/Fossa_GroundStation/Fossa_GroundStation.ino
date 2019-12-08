@@ -313,22 +313,22 @@ void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->setColor(BLACK);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
   display->fillRect(83,0,128,11);
-  display->drawString( 65+x,  49+y+(x/2), "Waiting for FossaSat Pos" );
-  display->drawString( 63+x,  51+y+(x/2), "Waiting for FossaSat Pos" );
-  display->fillCircle(sat_pos_oled[0], sat_pos_oled[1], 6);
-  
-  
-  display->setColor(WHITE);
+  display->setFont(ArialMT_Plain_10);
+ 
   if (sat_pos_oled[0] == 0 && sat_pos_oled[1] == 0) {
-    display->setFont(ArialMT_Plain_10);
+    display->drawString( 65+x,  49+y+(x/2), "Waiting for FossaSat Pos" );
+    display->drawString( 63+x,  51+y+(x/2), "Waiting for FossaSat Pos" );
+    display->fillCircle(sat_pos_oled[0], sat_pos_oled[1], 6);
+    display->setColor(WHITE);
     display->drawString( 64+x,  50+y+(x/2), "Waiting for FossaSat Pos" );
   }
   else {
-    display->drawCircle(sat_pos_oled[0], sat_pos_oled[1], 5);
-    display->setColor(BLACK);
-    display->drawCircle(sat_pos_oled[0], sat_pos_oled[1], 2);
     display->setColor(WHITE);
-    display->drawCircle(sat_pos_oled[0], sat_pos_oled[1], 1);
+    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, 5);
+    display->setColor(BLACK);
+    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, 2);
+    display->setColor(WHITE);
+    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, 1);
   }
   
 }
