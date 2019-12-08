@@ -29,7 +29,7 @@ constexpr auto TZ_LENGTH = 40;
 
 typedef struct {
 	uint32_t crc32;
-	char station[STATION_NAME_LENGTH];
+	char station[STATION_NAME_LENGTH] = "test_";
 	float latitude = 0.0;    // ** Beware this information is publically available use max 3 decimals 
 	float longitude = 0.0;    // ** Beware this information is publically available use max 3 decimals 
 
