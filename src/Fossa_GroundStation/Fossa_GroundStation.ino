@@ -516,7 +516,7 @@ void setup() {
   // bandwidth:                   125.0 kHz
   // spreading factor:            11
   // coding rate:                 8
-  // sync word:                   0xff
+  // sync word:                   0x00
   // output power:                17 dBm
   // current limit:               100 mA
   // preamble length:             8 symbols
@@ -527,7 +527,7 @@ void setup() {
                             LORA_BANDWIDTH,
                             LORA_SPREADING_FACTOR,
                             LORA_CODING_RATE,
-                            0xff,
+                            0x00,
                             17,
                             (uint8_t)LORA_CURRENT_LIMIT);
                             Serial.println(LORA_CARRIER_FREQUENCY);
