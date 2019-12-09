@@ -39,6 +39,11 @@
 #include <ESPAsyncWiFiManager.h>							// https://github.com/alanswx/ESPAsyncWiFiManager
 #include "BoardConfig.h"
 
+
+#define RADIO_TYPE        SX1278  // type of radio module to be used
+//#define RADIO_SX126X            // also uncomment this line when using SX126x!!!
+
+
 constexpr auto LOG_TAG = "FOSSAGS";
 
 Esp32_mqtt_clientClass mqtt;
@@ -141,12 +146,24 @@ void printLocalTime()
 // GPIO14 — SX1278’s RESET
 // GPIO26 — SX1278’s IRQ(Interrupt Request)
 
-// SX1278 has the following connections:
-SX1278 lora = new Module(18, 26, 12);
-// NSS pin:   18
-// DIO0 pin:  26
-// DIO1 pin:  12 (not used as isn't connected in the TTGo) 
+// SX1278 - SX1268 has the following connections:
 
+// pin definitions
+#define CS                18
+#define DIO0              26
+#define DIO1              12      // not connected on the ESP32 - TTGO
+#define BUSY              12
+
+
+
+
+#ifdef RADIO_SX126X
+  RADIO_TYPE lora = new Module(CS, DIO0, BUSY);
+#else
+  RADIO_TYPE lora = new Module(CS, DIO0, DIO1);
+#endif
+
+// modem configuration
 #define LORA_CARRIER_FREQUENCY                          436.7f  // MHz
 #define LORA_BANDWIDTH                                  125.0f  // kHz dual sideband
 #define LORA_SPREADING_FACTOR                           11
@@ -154,6 +171,11 @@ SX1278 lora = new Module(18, 26, 12);
 #define LORA_CODING_RATE                                8       // 4/8, Extended Hamming
 #define LORA_OUTPUT_POWER                               21      // dBm
 #define LORA_CURRENT_LIMIT                              120     // mA
+#define SYNC_WORD_7X                                    0xFF    // sync word when using SX127x
+#define SYNC_WORD_6X                                    0x0F0F  //                      SX126x
+
+
+
 
 // satellite callsign
 char callsign[] = "FOSSASAT-1";
@@ -511,28 +533,43 @@ void setup() {
   printLocalTime();
 
   // initialize SX1278 with default settings
-  Serial.print(F("[SX1278] Initializing ... "));
+  Serial.print(F("[SX12x8] Initializing ... "));
   // carrier frequency:           436.7 MHz
   // bandwidth:                   125.0 kHz
   // spreading factor:            11
   // coding rate:                 8
-  // sync word:                   0xff
+  // sync word:                   0xff  for SX1278 and   0x0F0F for SX1268
   // output power:                17 dBm
   // current limit:               100 mA
   // preamble length:             8 symbols
   // amplifier gain:              0 (automatic gain control)
   //  int state = lora.begin();
  
-     int state = lora.begin(LORA_CARRIER_FREQUENCY,
-                            LORA_BANDWIDTH,
-                            LORA_SPREADING_FACTOR,
-                            LORA_CODING_RATE,
-                            0xff,
-                            17,
-                            (uint8_t)LORA_CURRENT_LIMIT);
+ #ifdef RADIO_SX126X
+  int state = lora.begin(LORA_CARRIER_FREQUENCY,
+                          LORA_BANDWIDTH,
+                          LORA_SPREADING_FACTOR,
+                          LORA_CODING_RATE,
+                          SYNC_WORD_6X,
+                          17,
+                          (uint8_t)LORA_CURRENT_LIMIT);
+  #else
+  int state = lora.begin(LORA_CARRIER_FREQUENCY,
+                          LORA_BANDWIDTH,
+                          LORA_SPREADING_FACTOR,
+                          LORA_CODING_RATE,
+                          SYNC_WORD_7X,
+                          17,
+                          (uint8_t)LORA_CURRENT_LIMIT);
+  #endif
+
                             Serial.println(LORA_CARRIER_FREQUENCY);
                             Serial.println(LORA_SPREADING_FACTOR);
                             Serial.println(LORA_CODING_RATE);
+
+
+
+
   if (state == ERR_NONE) {
     Serial.println(F("success!"));
   } else {
@@ -543,10 +580,15 @@ void setup() {
 
   // set the function that will be called
   // when new packet is received
+  // attach the ISR to radio interrupt
+  #ifdef RADIO_SX126X
+  lora.setDio1Action(setFlag);
+  #else
   lora.setDio0Action(setFlag);
+  #endif
 
   // start listening for LoRa packets
-  Serial.print(F("[SX1278] Starting to listen ... "));
+  Serial.print(F("[SX12x8] Starting to listen ... "));
   state = lora.startReceive();
   if (state == ERR_NONE) {
     Serial.println(F("success!"));
@@ -690,10 +732,11 @@ void loop() {
 
     // set radio mode to reception
     #ifdef RADIO_SX126X
- //   lora.setDio1Action(onInterrupt);
+    lora.setDio1Action(setFlag);
     #else
-//    lora.setDio0Action(onInterrupt);
+    lora.setDio0Action(setFlag);
     #endif
+
     lora.startReceive();
     enableInterrupt = true;
   }
@@ -754,17 +797,17 @@ void loop() {
     last_packet_received_frequencyerror=lora.getFrequencyError();
 
     // print RSSI (Received Signal Strength Indicator)
-    Serial.print(F("[SX1278] RSSI:\t\t"));
+    Serial.print(F("[SX12x8] RSSI:\t\t"));
     Serial.print(lora.getRSSI());
     Serial.println(F(" dBm"));
 
     // print SNR (Signal-to-Noise Ratio)
-    Serial.print(F("[SX1278] SNR:\t\t"));
+    Serial.print(F("[SX12x8] SNR:\t\t"));
     Serial.print(lora.getSNR());
     Serial.println(F(" dB"));
 
     // print frequency error
-    Serial.print(F("[SX1278] Frequency error:\t"));
+    Serial.print(F("[SX12x8] Frequency error:\t"));
     Serial.print(lora.getFrequencyError());
     Serial.println(F(" Hz"));
 
@@ -850,17 +893,17 @@ void loop() {
 
     if (state == ERR_NONE) {
       // packet was successfully received
-  //     Serial.println(F("[SX1278] Received packet!"));
+  //     Serial.println(F("[SX12x8] Received packet!"));
 
       // print data of the packet
- //     Serial.print(F("[SX1278] Data:\t\t"));
+ //     Serial.print(F("[SX12x8] Data:\t\t"));
  //      Serial.println(str);
     } else if (state == ERR_CRC_MISMATCH) {
       // packet was received, but is malformed
-      Serial.println(F("[SX1278] CRC error!"));
+      Serial.println(F("[SX12x8] CRC error!"));
     } else {
       // some other error occurred
-      Serial.print(F("[SX1278] Failed, code "));
+      Serial.print(F("[SX12x8] Failed, code "));
       Serial.println(state);
     }
 
