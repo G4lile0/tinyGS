@@ -1,5 +1,5 @@
 # ESP32-OLED-Fossa-GroundStation for Platformio
-Groundstation for the the Fossasat-1 Satellite 
+Groundstation for the Fossasat-1 Satellite 
 
 ## Supported boards
 * **Heltec WiFi LoRa 32 V1** 
@@ -14,7 +14,7 @@ Groundstation for the the Fossasat-1 Satellite
 # Quick Install
 This project is ready to use with [Platformio](https://platformio.org/). It will take care of all dependencies automatically when building the project. It can also be used with Arduino IDE.
 
-## Platformio (recomended)
+## Platformio (recommended)
 Arduino ide instructions bellow.
 ### Installing platformio
 Platformio can be installed as a plugin for many IDEs. You can find a complete list here: https://docs.platformio.org/en/latest/ide.html#desktop-ide
@@ -36,7 +36,7 @@ Then select the `src` folder inside the repository and click open.
 After that, the project should be loaded in visual studio and ready to configure and build.
 
 ### Configure the project
-First we need to select the board. To do so, open the `src/Fossa_GroundStation/platformio.ini` file and uncomment one of the lines at the beggining of the file depending on the board you are going to use TTGO ot Heltec.
+First we need to select the board. To do so, open the `src/Fossa_GroundStation/platformio.ini` file and uncomment one of the lines at the beggining of the file depending on the board you are going to use TTGO or Heltec.
 
 ```
 default_envs = 
@@ -52,7 +52,7 @@ Once the configuration is done, connect the board to the computer and click on t
 
 All the dependencies will be downloaded and installed automatically.
 
-Note that if you are a Linux used like me and it is your first time using platformio, you will have to install the udev rules to grant permissions to platformio to upload the progrm to the board. You can follow the instructions here: https://docs.platformio.org/en/latest/faq.html#platformio-udev-rules
+Note that if you are a Linux used like me and it is your first time using platformio, you will have to install the udev rules to grant permissions to platformio to upload the program to the board. You can follow the instructions here: https://docs.platformio.org/en/latest/faq.html#platformio-udev-rules
 
 ## Arduino IDE
 You can install the Arduino IDE by downloading it from [arduino.cc](https://www.arduino.cc/en/Main/Software), we recommend the last version, but you should use v1.6 or above.
@@ -101,14 +101,14 @@ Then select the port where the board is connected to the computer in `Tools > Po
 And finally click on the rounded arrow button on the top to upload the project to the board or go to `Program > Upload (Ctl+U)`
 
 # Configure Station parameters
-The first time the board boot it will generate an AP with the name: FossaGroundStation. Once connected to that network you should be prompted with a web panel to confiure the basic parameters of your station. If that were not the case you can access the web panel using a web browser and going to the url 192.168.4.1.
+The first time the board boot it will generate an AP with the name: FossaGroundStation. Once connected to that network you should be prompted with a web panel to configure the basic parameters of your station. If that were not the case, you can access the web panel using a web browser and going to the url 192.168.4.1.
 
 <p float="left" align="center">
   <img src="/doc/images/config_ap.jpg" width="400" />
   <img src="/doc/images/config_wifimanager.jpg" width="400" /> 
 </p>
 
-The parameters that has to be filled are the following:
+The parameters that must be filled are the following:
 * **SSID and PASSWORD:** The configuration parameters of you home WiFi AP so that the ground station can connect to internet.
 * **STATION NAME:** The name of your ground station. If you have registered yours in the [Fossa Ground Station Database](http://groundstationdatabase.com/database.php), the name should match.
 * **LATITUDE and LONGITUDE:** The geographical coordinates of the ground station. This serves the purpose of locating your ground station when you receive a package from the satellite.
@@ -119,7 +119,7 @@ The parameters that has to be filled are the following:
 This project implements OTA updates with both Arduino IDE and Platformio. To use this method the board and the computer have to be connected to the same network and be visible to each other.
 
 ## Platformio
-In order to upload a new version through OTA in platformio, the `platformio.ide` file has to be edited uncommenting two lines to enable OTA and set the current IP Address of the station (it can be see on the OLED display).
+In order to upload a new version through OTA in platformio, the `platformio.ide` file has to be edited uncommenting two lines to enable OTA and set the current IP Address of the station (it can be seen on the OLED display).
 
 ```
 # Uncomment these 2 lines by deleting ";" and edit as needed to upload through OTA
