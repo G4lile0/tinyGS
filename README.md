@@ -57,16 +57,14 @@ Note that if you are a Linux used like me and it is your first time using platfo
 ## Arduino IDE
 You can install the Arduino IDE by downloading it from [arduino.cc](https://www.arduino.cc/en/Main/Software), we recommend the last version, but you should use v1.6 or above.
 
-### Install the Arduino Core for ESP8266
-First step is to install support for ESP8266 based boards on the Arduino IDE through the Board Manager. These instruction are copied and adapted from the Arduino Core for ESP8266 documentation here: [https://github.com/esp8266/Arduino/](https://github.com/esp8266/Arduino/).
+### Install the Arduino Core for ESP32
+First step is to install support for ESP32 based boards on the Arduino IDE through the Board Manager.
 
 * Start Arduino and open Preferences window.
 * Enter `https://dl.espressif.com/dl/package_esp32_index.json` into *Additional Board Manager URLs* field. You can add multiple URLs, separating them with commas. 
-* Open Boards Manager from Tools > Board menu and find *esp8266* platform (and don't forget to select your ESP8266 board from Tools > Board menu after installation).
+* Open Boards Manager from Tools > Board menu and find *esp32* platform.
 * Select the version you need from a drop-down box.
 * Click *install* button.
-
-Credit to [ESPurna](https://github.com/xoseperez/espurna/wiki/ArduinoIDE) for this section
 
 ### Installing dependencies
 This project relies on several third party dependencies that must be installed in order to be able to build the binaries you can find the dependencies list below:
@@ -84,7 +82,7 @@ Once you have cloned this project to a local directory, you can open it from the
 ![Open on Arduino IDE](/doc/images/open_arduino.png "Open on Arduino IDE")
 
 ### Build and upload the project
-The next step is to open the project file ` src/Fossa_GroundStation/BoardConfig.h and uncomment the line matching your board by removing the leading `//`
+The next step is to open the project file ` src/Fossa_GroundStation/BoardConfig.h` and uncomment the line matching your board by removing the leading `//`
 
 ```
 // uncomment the line matching your board by removing the //
@@ -94,7 +92,7 @@ The next step is to open the project file ` src/Fossa_GroundStation/BoardConfig.
 //#define HELTEC
 ```
 
-Connect the board to the computer, select your board in the board manager of the Arduino IDE `Tools > Boards `
+Connect the board to the computer, select your board in the Arduino IDE `Tools > Boards `
 
 ![Select board on Arduino IDE](/doc/images/select_board_arduino.png "Select board on Arduino IDE")
 
