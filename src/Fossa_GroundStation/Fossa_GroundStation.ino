@@ -218,15 +218,15 @@ void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 
 
 //Initial dummy System info:
-float batteryChargingVoltage = 3.50;
-float batteryChargingCurrent = 0.0204;
-float batteryVoltage = 1.90;
-float solarCellAVoltage = 0.96;
-float solarCellBVoltage = 1.00;
-float solarCellCVoltage = 1.06;
-float batteryTemperature = 83.17;
-float boardTemperature = 107.59;
-int mcuTemperature = 42;
+float batteryChargingVoltage = 0.0f;
+float batteryChargingCurrent = 0.0f;
+float batteryVoltage = 0.0f;
+float solarCellAVoltage = 0.0f;
+float solarCellBVoltage = 0.0f;
+float solarCellCVoltage = 0.0f;
+float batteryTemperature = 0.0f;
+float boardTemperature = 0.0f;
+int mcuTemperature = 0;
 int resetCounter = 0;
 byte powerConfig = 0b11111111;
 
