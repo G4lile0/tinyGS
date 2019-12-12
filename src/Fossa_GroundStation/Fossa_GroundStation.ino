@@ -911,7 +911,9 @@ void  welcome_message (void) {
 void  json_system_info(void) {
           //// JSON
           
-          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(17);
+          time_t now;
+          time(&now);
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(18);
           DynamicJsonDocument doc(capacity);
           doc["station"] = board_config.station;  // G4lile0
           JsonArray station_location = doc.createNestedArray("station_location");
@@ -920,6 +922,7 @@ void  json_system_info(void) {
           doc["rssi"] = last_packet_received_rssi;
           doc["snr"] = last_packet_received_snr;
           doc["frequency_error"] = last_packet_received_frequencyerror;
+          doc["unix_GS_time"] = now;
           doc["batteryChargingVoltage"] = batteryChargingVoltage;
           doc["batteryChargingCurrent"] = batteryChargingCurrent;
           doc["batteryVoltage"] = batteryVoltage;
@@ -969,6 +972,8 @@ void  json_system_info(void) {
 
 
 void  json_message(char* frame, size_t respLen) {
+          time_t now;
+          time(&now);
           Serial.println(String(respLen));
           char tmp[respLen+1];
           memcpy(tmp, frame, respLen);
@@ -983,7 +988,7 @@ void  json_message(char* frame, size_t respLen) {
           if ((frame[0]=='T') &&  (frame[1]=='0') && (frame[2]=='@'))
           {
           Serial.println("mensaje miniTTN");
-          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(10) +JSON_ARRAY_SIZE(respLen-12);
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(11) +JSON_ARRAY_SIZE(respLen-12);
           DynamicJsonDocument doc(capacity);
           doc["station"] = board_config.station;  // G4lile0
           JsonArray station_location = doc.createNestedArray("station_location");
@@ -992,6 +997,7 @@ void  json_message(char* frame, size_t respLen) {
           doc["rssi"] = last_packet_received_rssi;
           doc["snr"] = last_packet_received_snr;
           doc["frequency_error"] = last_packet_received_frequencyerror;
+          doc["unix_GS_time"] = now;
           JsonArray msgTTN = doc.createNestedArray("msgTTN");
 
           
@@ -1001,6 +1007,7 @@ void  json_message(char* frame, size_t respLen) {
 
             }
           
+
           
 //          doc["len"] = respLen;
 //          doc["msg"] = String(tmp);
@@ -1028,7 +1035,7 @@ void  json_message(char* frame, size_t respLen) {
             {
               
           
-          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(10);
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(11);
           DynamicJsonDocument doc(capacity);
           doc["station"] = board_config.station;  // G4lile0
           JsonArray station_location = doc.createNestedArray("station_location");
@@ -1037,6 +1044,7 @@ void  json_message(char* frame, size_t respLen) {
           doc["rssi"] = last_packet_received_rssi;
           doc["snr"] = last_packet_received_snr;
           doc["frequency_error"] = last_packet_received_frequencyerror;
+          doc["unix_GS_time"] = now;
 //          doc["len"] = respLen;
           doc["msg"] = String(tmp);
 //          doc["msg"] = String(frame);
@@ -1067,7 +1075,8 @@ void  json_message(char* frame, size_t respLen) {
 
 void  json_pong(void) {
           //// JSON
-          
+          time_t now;
+          time(&now);
           const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(6);
           DynamicJsonDocument doc(capacity);
           doc["station"] = board_config.station;  // G4lile0
@@ -1077,6 +1086,7 @@ void  json_pong(void) {
           doc["rssi"] = last_packet_received_rssi;
           doc["snr"] = last_packet_received_snr;
           doc["frequency_error"] = last_packet_received_frequencyerror;
+          doc["unix_GS_time"] = now;
           doc["pong"] = 1;
           serializeJson(doc, Serial);
           char topic[64];
