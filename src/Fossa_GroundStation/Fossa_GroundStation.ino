@@ -682,6 +682,11 @@ void loop() {
         config_manager.eraseConfig();
         ESP.restart();
         break;
+      case 't':
+        switchTestmode();
+        //ESP.restart();
+        break;
+       
       default:
         Serial.print(F("Unknown command: "));
         Serial.println(serialCmd);
@@ -1106,6 +1111,7 @@ void printControls() {
   Serial.println(F("i - request satellite info"));
   Serial.println(F("l - request last packet info"));
   Serial.println(F("r - send message to be retransmitted"));
+  Serial.println(F("t - change the test mode and restart"));
   Serial.println(F("e - erase board config and reset"));
   Serial.println(F("------------------------------------"));
 }
@@ -1135,6 +1141,31 @@ void sendPing() {
     Serial.println(state);
   }
 }
+
+
+void  switchTestmode() {
+
+char temp_station[32];
+if ((board_config.station[0]=='t') &&  (board_config.station[1]=='e') && (board_config.station[2]=='s') && (board_config.station[4]=='_')) {
+    Serial.println(F("User test"));
+    for (byte a=5; a<=strlen(board_config.station); a++ ) {
+//      Serial.println(board_config.station[a]);
+      board_config.station[a-5]=board_config.station[a];
+    }
+
+}
+else
+{
+    strcpy(temp_station,"test_");
+    strcat(temp_station,board_config.station);
+    strcpy(board_config.station,temp_station);
+    
+}
+
+//config_manager.saveFlashData();
+
+}
+
 
 
 void requestInfo() {
