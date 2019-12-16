@@ -76,21 +76,16 @@ OLEDDisplayUi ui     ( &display );
 bool mqtt_connected = false;
 
 void manageMQTTEvent (esp_mqtt_event_id_t event) {
-  //Serial.printf ("MQTT event %d\n", event);
   if (event == MQTT_EVENT_CONNECTED) {
 	  mqtt_connected = true;
-    char topic[64];
-    strcpy(topic,board_config.station);
-    strcat(topic,"/data/#");
-    mqtt.subscribe (topic);
-    mqtt.subscribe ("global/sat_pos_oled");
-    //Serial.println (topic);
-	welcome_message ();
+    String topic = "fossa/" + String(board_config.mqtt_user) + "/" + String(board_config.station) + "/data/#";
+    mqtt.subscribe (topic.c_str());
+    mqtt.subscribe ("fossa/global/sat_pos_oled");
+	  welcome_message ();
     
   } else   if (event == MQTT_EVENT_DISCONNECTED) {
-	  mqtt_connected = false;
+    mqtt_connected = false;
   }
-
 }
 
 uint8_t sat_pos_oled[2] = {0,0};
@@ -110,7 +105,7 @@ void manageMQTTData (char* topic, size_t topic_len, char* payload, size_t payloa
   char topicStr[topic_len+1];
   memcpy(topicStr, topic, topic_len);
   topicStr[topic_len] = '\0';
-  if (!strcmp(topicStr, "global/sat_pos_oled")) {
+  if (!strcmp(topicStr, "fossa/global/sat_pos_oled")) {
     manageSatPosOled(payload, payload_len);
   }
 }
@@ -223,15 +218,15 @@ void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 
 
 //Initial dummy System info:
-float batteryChargingVoltage = 3.50;
-float batteryChargingCurrent = 0.0204;
-float batteryVoltage = 1.90;
-float solarCellAVoltage = 0.96;
-float solarCellBVoltage = 1.00;
-float solarCellCVoltage = 1.06;
-float batteryTemperature = 83.17;
-float boardTemperature = 107.59;
-int mcuTemperature = 42;
+float batteryChargingVoltage = 0.0f;
+float batteryChargingCurrent = 0.0f;
+float batteryVoltage = 0.0f;
+float solarCellAVoltage = 0.0f;
+float solarCellBVoltage = 0.0f;
+float solarCellCVoltage = 0.0f;
+float batteryTemperature = 0.0f;
+float boardTemperature = 0.0f;
+int mcuTemperature = 0;
 int resetCounter = 0;
 byte powerConfig = 0b11111111;
 
@@ -491,11 +486,9 @@ void setup() {
 
   mqtt.init (board_config.mqtt_server_name, board_config.mqtt_port, board_config.mqtt_user, board_config.mqtt_pass);
 
-  char topic[64];
-  strcpy(topic, board_config.station);
-  strcat(topic,"/status");
+  String topic = "fossa/" + String(board_config.mqtt_user) + "/" + String(board_config.station) + "/status";
    
-  mqtt.setLastWill(topic);
+  mqtt.setLastWill(topic.c_str());
   mqtt.onEvent (manageMQTTEvent);
   mqtt.onReceive (manageMQTTData);
   mqtt.begin();
@@ -903,13 +896,10 @@ void  welcome_message (void) {
 
 //          doc["time"] = ;
           serializeJson(doc, Serial);
-          char topic[64];
-          strcpy(topic, board_config.station);
-          strcat(topic,"/welcome");
+          String topic = "fossa/" + String(board_config.mqtt_user) + "/" + String(board_config.station) + "/welcome";
           char buffer[512];
-          //serializeJson(doc, buffer);
           size_t n = serializeJson(doc, buffer);
-          mqtt.publish(topic, buffer,n );
+          mqtt.publish(topic.c_str(), buffer,n );
           ESP_LOGI (LOG_TAG, "Wellcome sent");
 }
 
@@ -940,13 +930,11 @@ void  json_system_info(void) {
           doc["resetCounter"] = resetCounter;
           doc["powerConfig"] = powerConfig;
           serializeJson(doc, Serial);
-          char topic[64];
-          strcpy(topic, board_config.station);
-          strcat(topic,"/sys_info");
+          String topic = "fossa/" + String(board_config.mqtt_user) + "/" + String(board_config.station) + "/sys_info";
           char buffer[512];
           serializeJson(doc, buffer);
           size_t n = serializeJson(doc, buffer);
-          mqtt.publish(topic, buffer,n );
+          mqtt.publish(topic.c_str(), buffer,n );
 
 /*
  * 
@@ -1020,17 +1008,12 @@ void  json_message(char* frame, size_t respLen) {
  
           
           serializeJson(doc, Serial);
-          char topic[64];
-          strcpy(topic, board_config.station);
-          strcat(topic,"/miniTTN");
-
-          
-
+          String topic = "fossa/" + String(board_config.mqtt_user) + "/" + String(board_config.station) + "/miniTTN";
         
           char buffer[256];
           serializeJson(doc, buffer);
           size_t n = serializeJson(doc, buffer);
-          mqtt.publish(topic, buffer,n );
+          mqtt.publish(topic.c_str(), buffer,n );
 
             
             }
@@ -1056,14 +1039,12 @@ void  json_message(char* frame, size_t respLen) {
  
           
           serializeJson(doc, Serial);
-          char topic[64];
-          strcpy(topic, board_config.station);
-          strcat(topic,"/msg");
+          String topic = "fossa/" + String(board_config.mqtt_user) + "/" + String(board_config.station) + "/msg";
           
           char buffer[256];
           serializeJson(doc, buffer);
           size_t n = serializeJson(doc, buffer);
-          mqtt.publish(topic, buffer,n );
+          mqtt.publish(topic.c_str(), buffer,n );
               
               }
             
@@ -1094,13 +1075,11 @@ void  json_pong(void) {
           doc["unix_GS_time"] = now;
           doc["pong"] = 1;
           serializeJson(doc, Serial);
-          char topic[64];
-          strcpy(topic, board_config.station);
-          strcat(topic,"/pong");
+          String topic = "fossa/" + String(board_config.mqtt_user) + "/" + String(board_config.station) + "/pong";
           char buffer[256];
           serializeJson(doc, buffer);
           size_t n = serializeJson(doc, buffer);
-          mqtt.publish(topic, buffer,n );
+          mqtt.publish(topic.c_str(), buffer,n );
 }
 
 
