@@ -679,6 +679,9 @@ void loop() {
         switchTestmode();
         //ESP.restart();
         break;
+      case 'b':
+        ESP.restart();
+        break;
        
       default:
         Serial.print(F("Unknown command: "));
@@ -1092,6 +1095,7 @@ void printControls() {
   Serial.println(F("r - send message to be retransmitted"));
   Serial.println(F("t - change the test mode and restart"));
   Serial.println(F("e - erase board config and reset"));
+  Serial.println(F("b - reboot the board"));
   Serial.println(F("------------------------------------"));
 }
 
