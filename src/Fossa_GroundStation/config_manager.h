@@ -64,7 +64,6 @@ protected:
 	onFormat_t notifyFormat;
 
 	bool loadFlashData (bool load_wifi_data = true);
-	bool saveFlashData ();
 	bool configWiFiManager ();
 	static void doSave (void);
 
@@ -81,6 +80,7 @@ protected:
 	 }
 	 bool begin(bool invalidate_config=false);
 	 void eraseConfig();
+	 bool saveFlashData();
 };
 
 #endif
