@@ -6,7 +6,7 @@ This project is based on ESP32 boards and is compatible with sx126x and sx127x y
 The developers of this project have no relation with the Fossa team in charge of the mission, we are passionate about space and created this project to be able to track and use the satellites as well as supporting the mission.
 
 ## [IMPORTANT] Status of the project
-Currently we are at an early stage of development (just a cuople of weeks of work), the current version is functional but not fully stable and we are actively developing new changes so you will have to update the firmware quite regularly if you want to stay updated.
+Currently we are at an early stage of development (just a couple of weeks of work), the current version is functional but not fully stable and we are actively developing new changes so you will have to update the firmware quite regularly if you want to stay updated.
 
 The first Fossa satellite, FossaSat-1 was launched on December 12, 2019 and it is still in evaluation stage by the Fossa team, so it is important **not to communicate to the satellity and only listen** until the Fossa team says otherwise. 
 
@@ -155,7 +155,7 @@ In order to upload a new version through OTA in platformio, the `platformio.ide`
 Once this is done, the new firmware can be uploaded using the upload button normally as if the board were connected through USB.
 
 ## Arduino IDE
-To upload a new version through OTA un Arduino, you have to navigate to `Tools > port` and, if the computer is in the same network it should detect a network port for the ESP32. If that is the case, select the network port.
+To upload a new version through OTA on Arduino, you have to navigate to `Tools > port` and, if the computer is in the same network it should detect a network port for the ESP32. If that is the case, select the network port.
 
 Once this is done, the new firmware can be uploaded normally using the upload button or navigating to `Program > upload`
 Arduino 
