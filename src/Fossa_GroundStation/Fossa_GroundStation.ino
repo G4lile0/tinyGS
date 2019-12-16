@@ -677,7 +677,7 @@ void loop() {
         break;
       case 't':
         switchTestmode();
-        //ESP.restart();
+        ESP.restart();
         break;
       case 'b':
         ESP.restart();
@@ -1127,26 +1127,22 @@ void sendPing() {
 
 
 void  switchTestmode() {
-
-char temp_station[32];
-if ((board_config.station[0]=='t') &&  (board_config.station[1]=='e') && (board_config.station[2]=='s') && (board_config.station[4]=='_')) {
-    Serial.println(F("User test"));
+  char temp_station[32];
+  if ((board_config.station[0]=='t') &&  (board_config.station[1]=='e') && (board_config.station[2]=='s') && (board_config.station[4]=='_')) {
+    Serial.println(F("Changed from test mode to normal mode"));
     for (byte a=5; a<=strlen(board_config.station); a++ ) {
-//      Serial.println(board_config.station[a]);
       board_config.station[a-5]=board_config.station[a];
     }
-
-}
-else
-{
+  }
+  else
+  {
     strcpy(temp_station,"test_");
     strcat(temp_station,board_config.station);
     strcpy(board_config.station,temp_station);
-    
-}
+    Serial.println(F("Changed from normal mode to test mode"));
+  }
 
-//config_manager.saveFlashData();
-
+  config_manager.saveFlashData();
 }
 
 
