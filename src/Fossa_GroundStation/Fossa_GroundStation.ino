@@ -252,6 +252,12 @@ int mcuTemperature = 0;
 int resetCounter = 0;
 byte powerConfig = 0b11111111;
 
+// on frame animation
+int graphVal = 1;
+int delta = 1;
+unsigned long tick_interval;
+int tick_timing = 100;
+
 
 void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   // Demo for drawStringMaxWidth:
@@ -271,7 +277,20 @@ void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->drawString( x+13,  22+y,  String(batteryChargingVoltage));
   display->drawString( x+13,  35+y,  String(batteryChargingCurrent));
   display->drawString( x+80,  32+y,  String(batteryTemperature) + "ºC" );
+
+
+  if ((millis()-tick_interval)>200) {
+              // Change the value to plot
+                  graphVal-=1;
+                  tick_interval=millis();
+                  if (graphVal <= 1) {graphVal = 8; } // ramp up value
+       }
+
+
+  display->fillRect(x+48, y+32+graphVal, 25 , 13-graphVal);
+  
 }
+
 
 void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->setTextAlignment(TEXT_ALIGN_LEFT);
@@ -324,7 +343,6 @@ void drawFrame5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 
 }
 
-
 void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->drawXbm(x , y , earth_width, earth_height, earth_bits);
   display->setColor(BLACK);
@@ -339,13 +357,21 @@ void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
     display->drawString( 64+x,  50+y+(x/2), "Waiting for FossaSat Pos" );
   }
   else {
-    display->fillCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, 6);
+       if ((millis()-tick_interval)>tick_timing) {
+              // Change the value to plot
+                  graphVal+=delta;
+                  tick_interval=millis();
+              // If the value reaches a limit, then change delta of value
+                    if (graphVal >= 6)     {delta = -1;  tick_timing=50; }// ramp down value
+                    else if (graphVal <= 1) {delta = +1; tick_timing=100;} // ramp up value
+       }
+    display->fillCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, graphVal+1);
     display->setColor(WHITE);
-    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, 5);
+    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, graphVal);
     display->setColor(BLACK);
-    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, 2);
+    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, (graphVal/3)+1);
     display->setColor(WHITE);
-    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, 1);
+    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, graphVal/3);
   }
   
 }
