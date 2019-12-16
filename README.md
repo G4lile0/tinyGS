@@ -155,7 +155,7 @@ In order to upload a new version through OTA in platformio, the `platformio.ide`
 Once this is done, the new firmware can be uploaded using the upload button normally as if the board were connected through USB.
 
 ## Arduino IDE
-To upload a new version through OTA un Arduino, you have to navigate to `Tools > port` and, if the computer is in the same network it should detect a network port for the ESP32. If that is the case, select the network port.
+To upload a new version through OTA on Arduino, you have to navigate to `Tools > port` and, if the computer is in the same network it should detect a network port for the ESP32. If that is the case, select the network port.
 
 Once this is done, the new firmware can be uploaded normally using the upload button or navigating to `Program > upload`
 Arduino 
