@@ -469,8 +469,8 @@ void setup() {
   config_manager.setFormatFlashCallback (flashFormatting);
   
   // Check WiFi reset button
-  time_t start_waiting_for_button = millis ();
-  time_t button_pushed_at;
+  unsigned long start_waiting_for_button = millis ();
+  unsigned long button_pushed_at;
   pinMode (PROG_BUTTON, INPUT_PULLUP);
   ESP_LOGI (LOG_TAG, "Waiting for reset config button");
 

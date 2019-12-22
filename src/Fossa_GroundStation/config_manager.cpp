@@ -37,7 +37,7 @@ bool Config_managerClass::begin(bool invalidate_config)
 			WiFi.begin ("0"); // Reset Wifi credentials
 		else
 			WiFi.begin (board_config->ssid, board_config->pass);
-		time_t start_connect = millis ();
+		unsigned long start_connect = millis ();
 		while (millis () - start_connect > WIFI_CONNECT_TIMEOUT) {
 			Serial.print ('.');
 			delay (250);
