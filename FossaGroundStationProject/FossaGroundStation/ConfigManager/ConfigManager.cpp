@@ -11,7 +11,8 @@ ConfigManager::ConfigManager()
   setConfigPin(LED_BUILTIN);
   setupUpdateServer(&httpUpdater);
   setHtmlFormatProvider(&gsConfigHtmlFormatProvider);
-  setFormValidator(&formValidator);
+  formValidatorStd = std::bind(&ConfigManager::formValidator, this);
+  setFormValidator(formValidatorStd);
 
   addParameter(&stringParam);
   addParameter(&separator1);

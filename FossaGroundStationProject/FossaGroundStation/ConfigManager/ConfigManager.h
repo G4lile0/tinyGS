@@ -48,7 +48,8 @@ public:
 private:
   void handleRoot();
   void handleDashboard();
-  static bool formValidator();
+  bool formValidator();
+  std::function<boolean()> formValidatorStd;
   DNSServer dnsServer;
   WebServer server;
   HTTPUpdateServer httpUpdater;
