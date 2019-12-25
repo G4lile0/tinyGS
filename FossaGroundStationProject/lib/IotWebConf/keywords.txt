@@ -1,0 +1,43 @@
+# Datatypes (KEYWORD1)
+# Methods and Functions (KEYWORD2)
+# Constants (LITERAL1)
+
+IotWebConfParameter	KEYWORD1
+label	KEYWORD3
+id	KEYWORD3
+valueBuffer	KEYWORD3
+length	KEYWORD3
+type	KEYWORD3
+placeholder	KEYWORD3
+defaultValue	KEYWORD3
+customHtml	KEYWORD3
+visible	KEYWORD3
+
+IotWebConfSeparator	KEYWORD1
+
+IotWebConf	KEYWORD1
+setConfigPin	KEYWORD2
+setStatusPin	KEYWORD2
+setupUpdateServer	KEYWORD2
+init	KEYWORD2
+doLoop	KEYWORD2
+handleCaptivePortal	KEYWORD2
+handleConfig	KEYWORD2
+handleNotFound	KEYWORD2
+setWifiConnectionCallback	KEYWORD2
+setConfigSavedCallback	KEYWORD2
+setFormValidator	KEYWORD2
+addParameter	KEYWORD2
+getThingName	KEYWORD2
+delay	KEYWORD2
+setWifiConnectionTimeoutMs	KEYWORD2
+blink	KEYWORD2
+getState	KEYWORD2
+setApTimeoutMs	KEYWORD2
+getApTimeoutMs	KEYWORD2
+getThingNameParameter	KEYWORD2
+getApPasswordParameter	KEYWORD2
+getWifiSsidParameter	KEYWORD2
+getWifiPasswordParameter	KEYWORD2
+getApTimeoutParameter	KEYWORD2
+configSave	KEYWORD2
