@@ -47,7 +47,7 @@
 #define IOTWEBCONF_DEBUG_TO_SERIAL
 
 // -- Logs passwords to Serial if enabled.
-#define IOTWEBCONF_DEBUG_PWD_TO_SERIAL
+//#define IOTWEBCONF_DEBUG_PWD_TO_SERIAL
 
 // -- Helper define for serial debug
 #ifdef IOTWEBCONF_DEBUG_TO_SERIAL
