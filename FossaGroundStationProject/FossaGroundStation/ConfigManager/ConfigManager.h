@@ -23,8 +23,19 @@ const char TITLE_TEXT[] PROGMEM = "FOSSA Ground Satation Configuration";
 constexpr auto thingName = "test_GroundStation";
 constexpr auto initialApPassword = "";
 constexpr auto configVersion = "v0.0.1";
-constexpr auto MQTT_DEFAULT_SERVER = "fossa.apaluba.com";
-constexpr auto MQTT_DEFAULT_PORT = "8883";
+
+#define MQTT_DEFAULT_SERVER "fossa.apaluba.com"
+#define MQTT_DEFAULT_PORT  "8883"
+
+constexpr auto AP_TIMEOUT_MS = "300000";
+
+enum boards {
+  HELTEC_V1 = 0,
+  HELTEC_V2,
+  TTGO_V1,
+  TTGO_V2,
+  ESP32_SX126X
+};
 
 #include "htmlOptions.h"
 
@@ -65,7 +76,15 @@ public:
   ConfigManager();
   void resetAPConfig();
   void resetAllConfig();
-  // boolean init();
+  boolean init();
+
+  uint16_t getMqttPort();
+  const char* getMqttServer();
+  const char* getMqttPass();
+  float getLatitude();
+  float getLongitude();
+  const char* getTZ();
+  uint8_t getBoard();
 
 private:
   void handleRoot();
@@ -81,8 +100,8 @@ private:
   char latitude[COORDINATE_LENGTH] = "";
   char longitude[COORDINATE_LENGTH] = "";
   char tz[TZ_LENGTH] = "";
-  char mqttServer[MQTT_SERVER_LENGTH] = "";
-  char mqttPort[MQTT_PORT_LENGTH] = "";
+  char mqttServer[MQTT_SERVER_LENGTH] = MQTT_DEFAULT_SERVER;
+  char mqttPort[MQTT_PORT_LENGTH] = MQTT_DEFAULT_PORT;
   char mqttUser[MQTT_USER_LENGTH] = "";
   char mqttPass[MQTT_PASS_LENGTH] = "";
   char board[BOARD_LENGTH] = "";

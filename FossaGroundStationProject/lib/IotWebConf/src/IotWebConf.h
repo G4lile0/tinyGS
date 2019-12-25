@@ -47,7 +47,7 @@
 #define IOTWEBCONF_DEBUG_TO_SERIAL
 
 // -- Logs passwords to Serial if enabled.
-//#define IOTWEBCONF_DEBUG_PWD_TO_SERIAL
+#define IOTWEBCONF_DEBUG_PWD_TO_SERIAL
 
 // -- Helper define for serial debug
 #ifdef IOTWEBCONF_DEBUG_TO_SERIAL
@@ -80,6 +80,7 @@ const char IOTWEBCONF_HTML_CONFIG_VER[] PROGMEM   = "<div style='font-size: .6em
 #define IOTWEBCONF_STATE_AP_MODE 2
 #define IOTWEBCONF_STATE_CONNECTING 3
 #define IOTWEBCONF_STATE_ONLINE 4
+#define IOTWEBCONF_STATE_CONFIG_FAILED 5
 
 // -- AP connection state
 // -- No connection on AP.

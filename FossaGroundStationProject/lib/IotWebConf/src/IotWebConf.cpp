@@ -574,18 +574,25 @@ void IotWebConf::handleConfig()
       page += F("You must provide the local wifi settings to continue. Return "
                 "to <a href=''>configuration page</a>.");
     }
-    else if (this->_state == IOTWEBCONF_STATE_NOT_CONFIGURED)
+    else if ((this->_state == IOTWEBCONF_STATE_NOT_CONFIGURED) ||
+      (this->_state == IOTWEBCONF_STATE_CONFIG_FAILED))
     {
-      page += F("Please disconnect from WiFi AP to continue!");
+      page += F("Connecting to the configured WiFi AP!");
     }
     else
     {
       page += F("Return to <a href='/'>home page</a>.");
     }
-    page += htmlFormatProvider->getHeadEnd();
+    page += htmlFormatProvider->getEnd();
 
     this->_server->sendHeader("Content-Length", String(page.length()));
     this->_server->send(200, "text/html; charset=UTF-8", page);
+
+    if ((this->_state == IOTWEBCONF_STATE_NOT_CONFIGURED) ||
+      (this->_state == IOTWEBCONF_STATE_CONFIG_FAILED))
+    {
+      this->changeState(IOTWEBCONF_STATE_CONNECTING);
+    }
   }
 }
 
@@ -779,7 +786,8 @@ void IotWebConf::doLoop()
   }
   else if (
       (this->_state == IOTWEBCONF_STATE_NOT_CONFIGURED) ||
-      (this->_state == IOTWEBCONF_STATE_AP_MODE))
+      (this->_state == IOTWEBCONF_STATE_AP_MODE) ||
+      (this->_state == IOTWEBCONF_STATE_CONFIG_FAILED))
   {
     // -- We must only leave the AP mode, when no slaves are connected.
     // -- Other than that AP mode has a timeout. E.g. after boot, or when retry
@@ -868,6 +876,7 @@ void IotWebConf::stateChanged(byte oldState, byte newState)
   {
     case IOTWEBCONF_STATE_AP_MODE:
     case IOTWEBCONF_STATE_NOT_CONFIGURED:
+    case IOTWEBCONF_STATE_CONFIG_FAILED:
       if (newState == IOTWEBCONF_STATE_AP_MODE)
       {
         this->blinkInternal(300, 90);
@@ -887,10 +896,17 @@ void IotWebConf::stateChanged(byte oldState, byte newState)
       break;
     case IOTWEBCONF_STATE_CONNECTING:
       if ((oldState == IOTWEBCONF_STATE_AP_MODE) ||
-          (oldState == IOTWEBCONF_STATE_NOT_CONFIGURED))
+          (oldState == IOTWEBCONF_STATE_NOT_CONFIGURED) ||
+          (oldState == IOTWEBCONF_STATE_CONFIG_FAILED))
       {
         stopAp();
       }
+      if (this->_forceDefaultPassword)
+      {
+        IOTWEBCONF_DEBUG_LINE(F("Releasing forced AP mode."));
+        this->_forceDefaultPassword = false;
+      }
+
       this->blinkInternal(1000, 50);
 #ifdef IOTWEBCONF_DEBUG_TO_SERIAL
       Serial.print("Connecting to [");
@@ -928,13 +944,13 @@ void IotWebConf::stateChanged(byte oldState, byte newState)
 
 void IotWebConf::checkApTimeout()
 {
+  // -- Only move on, when we have a valid Wifi and AP configured.
   if ((this->_wifiSsid[0] != '\0') && (this->_apPassword[0] != '\0') &&
       (!this->_forceDefaultPassword))
   {
-    // -- Only move on, when we have a valid WifF and AP configured.
-    if ((this->_apConnectionStatus == IOTWEBCONF_AP_CONNECTION_STATE_DC) ||
-        ((this->_apTimeoutMs < millis() - this->_apStartTimeMs) &&
-         (this->_apConnectionStatus != IOTWEBCONF_AP_CONNECTION_STATE_C)))
+    // -- Only timeout when no client is connected
+    if ((this->_apTimeoutMs < millis() - this->_apStartTimeMs) &&
+         (this->_apConnectionStatus != IOTWEBCONF_AP_CONNECTION_STATE_C))
     {
       this->changeState(IOTWEBCONF_STATE_CONNECTING);
     }
@@ -958,13 +974,9 @@ void IotWebConf::checkConnection()
       (this->_apConnectionStatus == IOTWEBCONF_AP_CONNECTION_STATE_C) &&
       (WiFi.softAPgetStationNum() == 0))
   {
-    this->_apConnectionStatus = IOTWEBCONF_AP_CONNECTION_STATE_DC;
+    this->_apConnectionStatus = IOTWEBCONF_AP_CONNECTION_STATE_NC;
+
     IOTWEBCONF_DEBUG_LINE(F("Disconnected from AP."));
-    if (this->_forceDefaultPassword)
-    {
-      IOTWEBCONF_DEBUG_LINE(F("Releasing forced AP mode."));
-      this->_forceDefaultPassword = false;
-    }
   }
 }
 
@@ -987,7 +999,7 @@ boolean IotWebConf::checkWifiConnection()
       }
       else
       {
-        this->changeState(IOTWEBCONF_STATE_AP_MODE);
+        this->changeState(IOTWEBCONF_STATE_CONFIG_FAILED);
       }
     }
     return false;

@@ -20,9 +20,6 @@ ConfigManager::ConfigManager()
   getThingNameParameter()->label = "GroundStation Name";
   getApPasswordParameter()->label = "GroundStation password";
 
-  
-
-
   addParameter(&latitudeParam);
   addParameter(&longitudeParam);
   addParameter(&tzParam);
@@ -33,6 +30,8 @@ ConfigManager::ConfigManager()
   addParameter(&mqttPassParam);
   addParameter(&separatorBoard);
   addParameter(&boardParam);
+
+
 }
 
 
@@ -112,9 +111,47 @@ void ConfigManager::resetAllConfig(){
   strncpy(mqttServerParam.valueBuffer, MQTT_DEFAULT_SERVER, MQTT_SERVER_LENGTH);
   mqttUserParam.valueBuffer[0] = '\0';
   mqttPassParam.valueBuffer[0] = '\0';
+
+  configSave();
 }
 
-/*boolean ConfigManager::init() {
-  IotWebConf::init();
-  resetAllConfig();
-}*/
+boolean ConfigManager::init() {
+  boolean validConfig = IotWebConf::init();
+
+  // when wifi credentials are set but we are not able to connect (maybe wrong credentials)
+  // we fall back to AP mode during 2 minutes after which we try to connect again and repeat.
+  setApTimeoutMs(atoi(AP_TIMEOUT_MS));
+
+  //resetAllConfig();
+
+  return validConfig;
+}
+
+uint16_t ConfigManager::getMqttPort() {
+  return (uint16_t) atoi(mqttPort);
+}
+
+const char* ConfigManager::getMqttServer() {
+  return mqttServer;
+}
+
+
+const char* ConfigManager::getMqttPass() {
+  return mqttPass;
+}
+
+float ConfigManager::getLatitude() {
+  return atof(latitude);
+}
+
+float ConfigManager::getLongitude() {
+  return atof(longitude);
+}
+
+const char* ConfigManager::getTZ() {
+  return tz;
+}
+
+uint8_t ConfigManager::getBoard() {
+  return atoi(board);
+}
