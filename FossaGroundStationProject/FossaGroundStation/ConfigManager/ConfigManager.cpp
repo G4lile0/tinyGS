@@ -49,8 +49,6 @@ ConfigManager::ConfigManager()
   addParameter(&mqttPassParam);
   addParameter(&separatorBoard);
   addParameter(&boardParam);
-
-
 }
 
 
@@ -144,33 +142,4 @@ boolean ConfigManager::init() {
   //resetAllConfig();
 
   return validConfig;
-}
-
-uint16_t ConfigManager::getMqttPort() {
-  return (uint16_t) atoi(mqttPort);
-}
-
-const char* ConfigManager::getMqttServer() {
-  return mqttServer;
-}
-
-
-const char* ConfigManager::getMqttPass() {
-  return mqttPass;
-}
-
-float ConfigManager::getLatitude() {
-  return atof(latitude);
-}
-
-float ConfigManager::getLongitude() {
-  return atof(longitude);
-}
-
-const char* ConfigManager::getTZ() {
-  return tz;
-}
-
-uint8_t ConfigManager::getBoard() {
-  return atoi(board);
 }

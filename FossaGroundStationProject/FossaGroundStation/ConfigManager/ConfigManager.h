@@ -97,13 +97,19 @@ public:
   void resetAllConfig();
   boolean init();
 
-  uint16_t getMqttPort();
-  const char* getMqttServer();
-  const char* getMqttPass();
-  float getLatitude();
-  float getLongitude();
-  const char* getTZ();
-  uint8_t getBoard();
+  uint16_t getMqttPort() { return (uint16_t) atoi(mqttPort); }
+  const char* getMqttServer() { return mqttServer; }
+  const char* getMqttUser() { return mqttUser; }
+  const char* getMqttPass() { return mqttPass; }
+  float getLatitude() { return atof(latitude); }
+  float getLongitude() { return atof(longitude); }
+  const char* getTZ() { return tz; }
+  uint8_t getBoard() { return atoi(board); }
+  const char* getWiFiSSID() { return getWifiSsidParameter()->valueBuffer; }
+
+  bool isApMode() { return (getState() != IOTWEBCONF_STATE_CONNECTING && getState() != IOTWEBCONF_STATE_ONLINE); }
+  bool isConnected() { return getState() == IOTWEBCONF_STATE_ONLINE; };
+
 
 private:
   void handleRoot();
