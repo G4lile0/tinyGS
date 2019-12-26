@@ -11,9 +11,9 @@ Currently we are at an early stage of development (just a couple of weeks of wor
 The first Fossa satellite, FossaSat-1 was launched on December 12, 2019 and it is still in evaluation stage by the Fossa team, so it is important **not to communicate to the satellity and only listen** until the Fossa team says otherwise. 
 
 FossaSat-1 is currently in a healthy state and sending packets, however several issues were found and are being evaluated:
-* Satellite antenna and solar panels might not be properly deployed. Received signals from the satellite were too weak compared with theoretical values and simulations which could indicate an improper deployment of the antenna or no deployment at all. Currently the team is trying to command an emergency deployment. It will be not possible to receive satellite signals without huge antennas until this is done.
-* It was discovered a misconfiguration on FossaSat-1 LoRa module. The syncWord parameter used is `0x0F0F` which is not documented and not compatible with sx127x receivers. This means that even if the antenna deployment works, **it will be difficult to communicate with FossaSat-1 with a sx127x modules** although not impossible as [this was already achieved](https://twitter.com/G4lile0/status/1204311425025486848) with antenna 4 x 23 el (DK7ZB) with tracking, 20 cable, preamp 20 dB, 2 way splitter and module RFM98.
-* The satellite might be rotating. The satellite has a Passive Magnetic Stabilization (PMS) system and the Fossa team pointed out that it seems to be stabilizing gradually, so signal quality should improve.
+* Satellite antenna and solar panels might not be properly deployed. Received signals from the satellite were too weak compared with theoretical values and simulations which could indicate an improper deployment of the antenna or no deployment at all. The team has tried to command an emergency deployment using high gain antennas during several days with no success.  The dyneema wire holding the solar panels and the anntena is expected to degrade in the orbit atmosphere over the next weeks or months. However it will be highly unlikely to be able to communicate by then as it has been transmitting in short circuit for a long time. Due to this it is not possible to receive FossaSat-1 signals without huge antennas.
+* It was discovered a misconfiguration on FossaSat-1 LoRa module. The syncWord parameter used is `0x0F0F` which is not documented and not compatible with sx127x receivers. This means that even with high gain antennas, **it is really difficult to communicate with FossaSat-1 with a sx127x modules** although not impossible as [this was already achieved](https://twitter.com/G4lile0/status/1204311425025486848) with antenna 4 x 23 el (DK7ZB) with tracking, 20 cable, preamp 20 dB, 2 way splitter and module RFM98.
+* The satellite might be rotating. The satellite has a Passive Magnetic Stabilization (PMS) system and the Fossa team pointed out that it seems to be stabilizing gradually.
 
 The Fossa team has announced that **two new satellites will be launched on March 2020 and those will be 100% compatible** with all the boards including sx127x, so at this moment the priority is keep improving the project, try to receive communications form FossaSat-1 with high gain antenas and be prepared for the next launch on March when all bords will be compatible. 
 
@@ -39,7 +39,7 @@ We are using Telegram as the mean of communication for the project, there are al
 # Quick Install
 This project is ready to use with [Platformio](https://platformio.org/). It will take care of all dependencies automatically when building the project. It can also be used with Arduino IDE.
 
-## Platformio (recommended)
+## Platformio (strongly recommended)
 Arduino ide instructions bellow.
 ### Installing platformio
 Platformio can be installed as a plugin for many IDEs. You can find a complete list here: https://docs.platformio.org/en/latest/ide.html#desktop-ide
@@ -54,20 +54,21 @@ Once you have cloned this project to a local directory, you can open it on Visua
 
 ![Add folder to workspace VSCode](/doc/images/add_folder_to_workspace.png "Add folder to workspace VSCode")
 
-Then select the `src` folder inside the repository and click open.
+Then select the `ESP32-OLED-Fossa-GroundStation` folder inside the repository and click open, make sure it is the root folder and that it has the platformio.ino inside.
 
 ![Select folder](/doc/images/Select_folder.png "Select folder")
 
 After that, the project should be loaded in visual studio and ready to configure and build.
 
 ### Configure the project
-First we need to select the board. To do so, open the `src/Fossa_GroundStation/platformio.ini` file and uncomment one of the lines at the beggining of the file depending on the board you are going to use TTGO or Heltec.
+First we need to select the board. To do so, open the `platformio.ini` file and uncomment one of the lines at the beggining of the file depending on the board you are going to use.
 
 ```
 default_envs = 
 ; Uncomment by deleting ";" in the line below to select the board
 ;   heltec_wifi_lora_32
 ;   ttgo-lora32-v1
+;   ttgo-lora32-v2
 ```
 
 ## Build and upload the project
@@ -80,6 +81,8 @@ All the dependencies will be downloaded and installed automatically.
 Note that if you are a Linux used like me and it is your first time using platformio, you will have to install the udev rules to grant permissions to platformio to upload the program to the board. You can follow the instructions here: https://docs.platformio.org/en/latest/faq.html#platformio-udev-rules
 
 ## Arduino IDE
+We strongly recommend using platformio, the build process is simpler and it is less likely to have compilation error.
+
 You can install the Arduino IDE by downloading it from [arduino.cc](https://www.arduino.cc/en/Main/Software), we recommend the last version, but you should use v1.6 or above.
 
 ### Install the Arduino Core for ESP32
@@ -97,17 +100,15 @@ This project relies on several third party dependencies that must be installed i
 * **RadioLib** (recomended v2.0.1) https://github.com/jgromes/RadioLib
 * **ArduinoJson** (recomended v6.13.0 **Required** >v6.0) https://github.com/bblanchon/ArduinoJson
 * **ESP8266_SSD1306** (recomended v4.1.0) https://github.com/ThingPulse/esp8266-oled-ssd1306
-* **AsyncTCP** (recomended v1.1.1) https://github.com/me-no-dev/AsyncTCP.git
-* **ESPAsyncWebServer** (recomended v1.2.3) https://github.com/me-no-dev/ESPAsyncWebServer.git
-* **ESPAsyncWiFiManager** (recomended v0.22) https://github.com/alanswx/ESPAsyncWiFiManager.git
+* **IoTWebConf** (**Required:** 2.3.0@4m1g0) https://github.com/4m1g0/IotWebConf
 
 ### Open the project in Arduino IDE
-Once you have cloned this project to a local directory, you can open it from the Arduino IDE in `File > Add folder` to workspace. And select the .ino file which is located in `src > Fossa_GroundStation > Fossa_GroundStation.ino`
+Once you have cloned this project to a local directory, you can open it from the Arduino IDE in `File > Add folder` to workspace. And select the .ino file which is located in `FossaGroundStation > Fossa_GroundStation.ino`
 
 ![Open on Arduino IDE](/doc/images/open_arduino.png "Open on Arduino IDE")
 
 ### Build and upload the project
-The next step is to open the project file ` src/Fossa_GroundStation/BoardConfig.h` and uncomment the line matching your board by removing the leading `//`
+The next step is to open the project file ` FossaGroundStation/BoardConfig.h` and uncomment the line matching your board by removing the leading `//`
 
 ```
 // uncomment the line matching your board by removing the //
