@@ -55,7 +55,7 @@ bool Esp32_mqtt_clientClass::begin () {
 	err = esp_mqtt_client_start (client);
 	ESP_LOGI (MQTT_TAG, "Client connect. Error = %d %s", err, esp_err_to_name (err));
 
-	return true;
+	return err == ESP_OK;
 }
 
 bool Esp32_mqtt_clientClass::setLastWill (const char* topic) {
