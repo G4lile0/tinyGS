@@ -59,17 +59,17 @@
 #else
 #include "WProgram.h"
 #endif
-#include "ConfigManager/ConfigManager.h"
+#include "src/ConfigManager/ConfigManager.h"
 #include <RadioLib.h>
-#include "Comms/Comms.h"
+#include "src/Comms/Comms.h"
 #include "SSD1306.h"                         // https://github.com/ThingPulse/esp8266-oled-ssd1306
 #include "OLEDDisplayUi.h"                   // https://github.com/ThingPulse/esp8266-oled-ssd1306
-#include "Mqtt/esp32_mqtt_client.h"
+#include "src/Mqtt/esp32_mqtt_client.h"
 #include "ArduinoJson.h"
 
 #include "BoardConfig.h"
-#include "Oled/graphics.h"
-#include "ArduinoOTA/ArduinoOTA.h"
+#include "src/Oled/graphics.h"
+#include "src/ArduinoOTA/ArduinoOTA.h"
 
 const uint32_t version = 1912161;      // version year month day release
 
