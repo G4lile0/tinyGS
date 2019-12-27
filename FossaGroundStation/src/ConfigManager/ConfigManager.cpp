@@ -20,7 +20,7 @@
 #include "ConfigManager.h"
 
 ConfigManager::ConfigManager()
-: IotWebConf(thingName, &dnsServer, &server, initialApPassword, configVersion)
+: IotWebConf2(thingName, &dnsServer, &server, initialApPassword, configVersion)
 , server(80)
 {
   server.on(ROOT_URL, [this]{ handleRoot(); });
@@ -133,7 +133,7 @@ void ConfigManager::resetAllConfig(){
 }
 
 boolean ConfigManager::init() {
-  boolean validConfig = IotWebConf::init();
+  boolean validConfig = IotWebConf2::init();
 
   // when wifi credentials are set but we are not able to connect (maybe wrong credentials)
   // we fall back to AP mode during 2 minutes after which we try to connect again and repeat.

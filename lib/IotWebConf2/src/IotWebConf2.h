@@ -1,5 +1,5 @@
 /**
- * IotWebConf.h -- IotWebConf is an ESP8266/ESP32
+ * IotWebConf2.h -- IotWebConf is an ESP8266/ESP32
  *   non blocking WiFi/AP web configuration library for Arduino.
  *   https://github.com/prampec/IotWebConf
  *
@@ -9,8 +9,8 @@
  * of the MIT license.  See the LICENSE file for details.
  */
 
-#ifndef IotWebConf_h
-#define IotWebConf_h
+#ifndef IotWebConf2_h
+#define IotWebConf2_h
 
 #include <IotWebConfCompatibility.h>
 
@@ -207,7 +207,7 @@ protected:
 /**
  * Main class of the module.
  */
-class IotWebConf
+class IotWebConf2
 {
 public:
   /**
@@ -219,7 +219,7 @@ public:
    *   @configVersion - When the software is updated and the configuration is changing, this key should also be changed,
    *     so that the config portal will force the user to reenter all the configuration values.
    */
-  IotWebConf(
+  IotWebConf2(
       const char* thingName, DNSServer* dnsServer, WebServer* server,
       const char* initialApPassword, const char* configVersion = "init");
 
@@ -507,11 +507,11 @@ private:
   std::function<void()> _configSavedCallback = NULL;
   std::function<boolean()> _formValidator = NULL;
   std::function<void(const char*, const char*)> _apConnectionHandler =
-      &(IotWebConf::connectAp);
+      &(IotWebConf2::connectAp);
   std::function<void(const char*, const char*)> _wifiConnectionHandler =
-      &(IotWebConf::connectWifi);
+      &(IotWebConf2::connectWifi);
   std::function<IotWebConfWifiAuthInfo*()> _wifiConnectionFailureHandler =
-      &(IotWebConf::handleConnectWifiFailure);
+      &(IotWebConf2::handleConnectWifiFailure);
   unsigned long _internalBlinkOnMs = 500;
   unsigned long _internalBlinkOffMs = 500;
   unsigned long _blinkOnMs = 500;

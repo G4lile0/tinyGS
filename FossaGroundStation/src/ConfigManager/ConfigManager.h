@@ -17,7 +17,7 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "IotWebConf.h"
+#include "IotWebConf2.h"
 #include "logos.h"
 
 constexpr auto STATION_NAME_LENGTH = 21;
@@ -89,7 +89,7 @@ protected:
 };
 
 
-class ConfigManager : public IotWebConf
+class ConfigManager : public IotWebConf2
 {
 public:
   ConfigManager();
