@@ -35,10 +35,12 @@ bool Config_managerClass::begin(bool invalidate_config)
 		ESP_LOGI (WIFIMAN_TAG, "Configuration loaded from flash");
 		if (invalidate_config)
 			WiFi.begin ("0"); // Reset Wifi credentials
-		else
+		else{
+			WiFi.enableSTA(true);
 			WiFi.begin (board_config->ssid, board_config->pass);
+		}
 		unsigned long start_connect = millis ();
-		while (millis () - start_connect > WIFI_CONNECT_TIMEOUT) {
+		while (millis () - start_connect < WIFI_CONNECT_TIMEOUT) {
 			Serial.print ('.');
 			delay (250);
 		}

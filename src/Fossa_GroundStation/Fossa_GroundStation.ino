@@ -1290,12 +1290,12 @@ void requestPacketInfo() {
 
 void requestRetransmit() {
   Serial.println(F("Enter message to be sent:"));
-  Serial.println(F("(max 32 characters, end with LF or CR+LF)"));
+  Serial.println(F("(max 30 characters, end with LF or CR+LF)"));
 
   // get data to be retransmited
   char optData[32];
   uint8_t bufferPos = 0;
-  while(bufferPos < 32) {
+  while(bufferPos < 31) {
     while(!Serial.available());
     char c = Serial.read();
     Serial.print(c);
