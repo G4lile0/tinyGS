@@ -71,7 +71,7 @@
 #include "src/Oled/graphics.h"
 #include "src/ArduinoOTA/ArduinoOTA.h"
 
-const uint32_t version = 1912161;      // version year month day release
+const uint32_t version = 1912281;      // version year month day release
 
 ConfigManager configManager;
 Esp32_mqtt_clientClass mqtt;
@@ -731,7 +731,7 @@ void  json_system_info(void) {
           
           time_t now;
           time(&now);
-          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(18);
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(19);
           DynamicJsonDocument doc(capacity);
           doc["station"] = configManager.getThingName();  // G4lile0
           JsonArray station_location = doc.createNestedArray("station_location");
@@ -878,7 +878,7 @@ void  json_pong(void) {
           //// JSON
           time_t now;
           time(&now);
-          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(6);
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(7);
           DynamicJsonDocument doc(capacity);
           doc["station"] = configManager.getThingName();  // G4lile0
           JsonArray station_location = doc.createNestedArray("station_location");
