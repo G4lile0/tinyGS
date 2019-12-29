@@ -66,12 +66,14 @@
 #include "OLEDDisplayUi.h"                   // https://github.com/ThingPulse/esp8266-oled-ssd1306
 #include "src/Mqtt/esp32_mqtt_client.h"
 #include "ArduinoJson.h"
+#include "src/SysInfo.h"
 
 #include "BoardConfig.h"
 #include "src/Oled/graphics.h"
 #include "src/ArduinoOTA/ArduinoOTA.h"
 
-const uint32_t version = 1912281;      // version year month day release
+
+const uint32_t version = 1912282;      // version year month day release
 
 ConfigManager configManager;
 Esp32_mqtt_clientClass mqtt;
@@ -149,17 +151,7 @@ void setFlag(void) {
 }
 
 //Initial dummy System info:
-float batteryChargingVoltage = 0.0f;
-float batteryChargingCurrent = 0.0f;
-float batteryVoltage = 0.0f;
-float solarCellAVoltage = 0.0f;
-float solarCellBVoltage = 0.0f;
-float solarCellCVoltage = 0.0f;
-float batteryTemperature = 0.0f;
-float boardTemperature = 0.0f;
-int mcuTemperature = 0;
-int resetCounter = 0;
-byte powerConfig = 0b11111111;
+SysInfo sysInfo;
 
 // on frame animation
 int graphVal = 1;
@@ -601,47 +593,47 @@ void loop() {
         Serial.println(F("System info:"));
 
         Serial.print(F("batteryChargingVoltage = "));
-        batteryChargingVoltage = FCP_Get_Battery_Charging_Voltage(respOptData);
+        sysInfo.batteryChargingVoltage = FCP_Get_Battery_Charging_Voltage(respOptData);
         Serial.println(FCP_Get_Battery_Charging_Voltage(respOptData));
         
         Serial.print(F("batteryChargingCurrent = "));
-        batteryChargingCurrent = (FCP_Get_Battery_Charging_Current(respOptData), 4);
+        sysInfo.batteryChargingCurrent = (FCP_Get_Battery_Charging_Current(respOptData), 4);
         Serial.println(FCP_Get_Battery_Charging_Current(respOptData), 4);
 
         Serial.print(F("batteryVoltage = "));
-        batteryVoltage=FCP_Get_Battery_Voltage(respOptData);
+        sysInfo.batteryVoltage=FCP_Get_Battery_Voltage(respOptData);
         Serial.println(FCP_Get_Battery_Voltage(respOptData));          
 
         Serial.print(F("solarCellAVoltage = "));
-        solarCellAVoltage= FCP_Get_Solar_Cell_Voltage(0, respOptData);
+        sysInfo.solarCellAVoltage= FCP_Get_Solar_Cell_Voltage(0, respOptData);
         Serial.println(FCP_Get_Solar_Cell_Voltage(0, respOptData));
 
         Serial.print(F("solarCellBVoltage = "));
-        solarCellBVoltage= FCP_Get_Solar_Cell_Voltage(1, respOptData);
+        sysInfo.solarCellBVoltage= FCP_Get_Solar_Cell_Voltage(1, respOptData);
         Serial.println(FCP_Get_Solar_Cell_Voltage(1, respOptData));
 
         Serial.print(F("solarCellCVoltage = "));
-        solarCellCVoltage= FCP_Get_Solar_Cell_Voltage(2, respOptData);
+        sysInfo.solarCellCVoltage= FCP_Get_Solar_Cell_Voltage(2, respOptData);
         Serial.println(FCP_Get_Solar_Cell_Voltage(2, respOptData));
 
         Serial.print(F("batteryTemperature = "));
-        batteryTemperature=FCP_Get_Battery_Temperature(respOptData);
+        sysInfo.batteryTemperature=FCP_Get_Battery_Temperature(respOptData);
         Serial.println(FCP_Get_Battery_Temperature(respOptData));
 
         Serial.print(F("boardTemperature = "));
-        boardTemperature=FCP_Get_Board_Temperature(respOptData);
+        sysInfo.boardTemperature=FCP_Get_Board_Temperature(respOptData);
         Serial.println(FCP_Get_Board_Temperature(respOptData));
 
         Serial.print(F("mcuTemperature = "));
-        mcuTemperature =FCP_Get_MCU_Temperature(respOptData);
+        sysInfo.mcuTemperature =FCP_Get_MCU_Temperature(respOptData);
         Serial.println(FCP_Get_MCU_Temperature(respOptData));
 
         Serial.print(F("resetCounter = "));
-        resetCounter=FCP_Get_Reset_Counter(respOptData);
+        sysInfo.resetCounter=FCP_Get_Reset_Counter(respOptData);
         Serial.println(FCP_Get_Reset_Counter(respOptData));
 
         Serial.print(F("powerConfig = 0b"));
-        powerConfig=FCP_Get_Power_Configuration(respOptData);
+        sysInfo.powerConfig=FCP_Get_Power_Configuration(respOptData);
         Serial.println(FCP_Get_Power_Configuration(respOptData), BIN);
         json_system_info();
         break;
@@ -741,17 +733,17 @@ void  json_system_info(void) {
           doc["snr"] = last_packet_received_snr;
           doc["frequency_error"] = last_packet_received_frequencyerror;
           doc["unix_GS_time"] = now;
-          doc["batteryChargingVoltage"] = batteryChargingVoltage;
-          doc["batteryChargingCurrent"] = batteryChargingCurrent;
-          doc["batteryVoltage"] = batteryVoltage;
-          doc["solarCellAVoltage"] = solarCellAVoltage;
-          doc["solarCellBVoltage"] = solarCellBVoltage;
-          doc["solarCellCVoltage"] = solarCellCVoltage;
-          doc["batteryTemperature"] = batteryTemperature;
-          doc["boardTemperature"] = boardTemperature;
-          doc["mcuTemperature"] = mcuTemperature;
-          doc["resetCounter"] = resetCounter;
-          doc["powerConfig"] = powerConfig;
+          doc["batteryChargingVoltage"] = sysInfo.batteryChargingVoltage;
+          doc["batteryChargingCurrent"] = sysInfo.batteryChargingCurrent;
+          doc["batteryVoltage"] = sysInfo.batteryVoltage;
+          doc["solarCellAVoltage"] = sysInfo.solarCellAVoltage;
+          doc["solarCellBVoltage"] = sysInfo.solarCellBVoltage;
+          doc["solarCellCVoltage"] = sysInfo.solarCellCVoltage;
+          doc["batteryTemperature"] = sysInfo.batteryTemperature;
+          doc["boardTemperature"] = sysInfo.boardTemperature;
+          doc["mcuTemperature"] = sysInfo.mcuTemperature;
+          doc["resetCounter"] = sysInfo.resetCounter;
+          doc["powerConfig"] = sysInfo.powerConfig;
           serializeJson(doc, Serial);
           String topic = "fossa/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/sys_info";
           char buffer[512];
@@ -1204,10 +1196,10 @@ void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_10);
   display->drawXbm(x + 34, y + 22, bat_width, bat_height, bat_bits);
-  display->drawString( x+44, y + 10, String(batteryVoltage) + "V");
-  display->drawString( x+13,  22+y,  String(batteryChargingVoltage));
-  display->drawString( x+13,  35+y,  String(batteryChargingCurrent));
-  display->drawString( x+80,  32+y,  String(batteryTemperature) + "ºC" );
+  display->drawString( x+44, y + 10, String(sysInfo.batteryVoltage) + "V");
+  display->drawString( x+13,  22+y,  String(sysInfo.batteryChargingVoltage));
+  display->drawString( x+13,  35+y,  String(sysInfo.batteryChargingCurrent));
+  display->drawString( x+80,  32+y,  String(sysInfo.batteryTemperature) + "ºC" );
 
 
   if ((millis()-tick_interval)>200) {
@@ -1228,8 +1220,8 @@ void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->setFont(ArialMT_Plain_10);
   display->drawString(0 + x,  10+ y, "Solar panels:");
   //display->drawString( x,  12 +y, "Bat:" + String(batteryVoltage) + "V Ch:" + String(batteryChargingVoltage) + "V " + String(batteryChargingCurrent)+ "A"  );
-  display->drawString( x,  21+y, "A:" + String(solarCellAVoltage) + "V  B:" + String(solarCellBVoltage) + "V  C:" + String(solarCellCVoltage)+ "V"  );
-  display->drawString( x,  38+y, "T uC: " + String(boardTemperature) + "ºC   Reset: " + String(resetCounter)  );
+  display->drawString( x,  21+y, "A:" + String(sysInfo.solarCellAVoltage) + "V  B:" + String(sysInfo.solarCellBVoltage) + "V  C:" + String(sysInfo.solarCellCVoltage)+ "V"  );
+  display->drawString( x,  38+y, "T uC: " + String(sysInfo.boardTemperature) + "ºC   Reset: " + String(sysInfo.resetCounter)  );
 
 }
 
