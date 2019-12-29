@@ -62,33 +62,29 @@
 #include "src/ConfigManager/ConfigManager.h"
 #include <RadioLib.h>
 #include "src/Comms/Comms.h"
-#include "SSD1306.h"                         // https://github.com/ThingPulse/esp8266-oled-ssd1306
-#include "OLEDDisplayUi.h"                   // https://github.com/ThingPulse/esp8266-oled-ssd1306
+#include "src/Display/Display.h"
+
 #include "src/Mqtt/esp32_mqtt_client.h"
 #include "ArduinoJson.h"
-#include "src/SysInfo.h"
+#include "src/Status.h"
 
 #include "BoardConfig.h"
-#include "src/Oled/graphics.h"
 #include "src/ArduinoOTA/ArduinoOTA.h"
+#include <Wire.h>
 
 
-const uint32_t version = 1912282;      // version year month day release
+
 
 ConfigManager configManager;
 Esp32_mqtt_clientClass mqtt;
-SSD1306* display;
-OLEDDisplayUi* ui;
+
 
 #define PROG_BUTTON 0
 
 const char* message[32];
-bool mqtt_connected = false;
 
 void manageMQTTEvent (esp_mqtt_event_id_t event);
 void manageMQTTData (char* topic, size_t topic_len, char* payload, size_t payload_len);
-
-int8_t sat_pos_oled[2] = {0,0};
 void manageSatPosOled(char* payload, size_t payload_len);
 
 const char* ntpServer = "pool.ntp.org";
@@ -125,10 +121,7 @@ void printLocalTime();
 // satellite callsign
 char callsign[] = "FOSSASAT-1";
 
-String last_packet_received_time = " Waiting      ";
-float last_packet_received_rssi;
-float last_packet_received_snr;
-float last_packet_received_frequencyerror;
+
 
 // flag to indicate that a packet was received
 volatile bool receivedFlag = false;
@@ -150,31 +143,11 @@ void setFlag(void) {
   receivedFlag = true;
 }
 
-//Initial dummy System info:
-SysInfo sysInfo;
+// Global status
+Status status;
 
-// on frame animation
-int graphVal = 1;
-int delta = 1;
-unsigned long tick_interval;
-int tick_timing = 100;
 
-/////// OLED ANIMATION //////
-void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state);
-void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void drawFrame4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void drawFrame5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 
-// This array keeps function pointers to all frames
-// frames are the single views that slide in
-FrameCallback frames[] = { drawFrame1, drawFrame2, drawFrame3, drawFrame4, drawFrame5, drawFrame6 };
-int frameCount = 6;
-// Overlays are statically drawn on top of a frame eg. a clock
-OverlayCallback overlays[] = { msOverlay };
-int overlaysCount = 1;
 
 void printControls();
 
@@ -213,19 +186,11 @@ void wifiConnected() {
 
   arduino_ota_setup();
 
-  display->clear();
-  display->drawXbm(34, 0 , WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
-  
-  Serial.println(" CONNECTED");
-  display->drawString(64 , 35 , "Connected " + String(configManager.getWiFiSSID()));
-  display->drawString(64 ,53 , (WiFi.localIP().toString()));
-  display->display();
-  delay (1000);  
+  displayShowConnected();
+  delay (1000);
 
   mqtt.init(configManager.getMqttServer(), configManager.getMqttPort(), configManager.getMqttUser(), configManager.getMqttPass());
-
   String topic = "fossa/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/status";
-   
   mqtt.setLastWill(topic.c_str());
   mqtt.onEvent(manageMQTTEvent);
   mqtt.onReceive(manageMQTTData);
@@ -274,7 +239,7 @@ void wifiConnected() {
     ESP.restart();
   }
 
-    // set the function that will be called
+  // set the function that will be called
   // when new packet is received
   // attach the ISR to radio interrupt
   #ifdef RADIO_SX126X
@@ -296,16 +261,10 @@ void wifiConnected() {
   }
 
   // TODO: Make this beautiful
-  display->clear();
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->drawString(20 ,10 , "Waiting for MQTT"); 
-  display->drawString(35 ,24 , "Connection...");
-  display->drawString(3 ,38 , "Press PROG butt. or send");
-  display->drawString(3 ,52 , "e in serial to reset conf.");
-  display->display();
+  displayShowWaitingMqttConnection();
   Serial.println ("Waiting for MQTT connection. Connect to the config panel on the ip: " + WiFi.localIP().toString() + " to review the MQTT connection credentials.");
   int i = 0;
-  while (!mqtt_connected) {
+  while (!status.mqtt_connected) {
     if (i++ > 150000) {// 5m
       Serial.println (" MQTT unable to connect after 5m, restarting...");
       ESP.restart();
@@ -318,67 +277,17 @@ void wifiConnected() {
   Serial.println (" Connected !!!");
   
   printControls();
-
-  // The ESP is capable of rendering 60fps in 80Mhz mode
-  // but that won't give you much time for anything else
-  // run it in 160Mhz mode or just set it to 30 fps
-  ui->setTargetFPS(60);
-  // Customize the active and inactive symbol
-  ui->setActiveSymbol(activeSymbol);
-  ui->setInactiveSymbol(inactiveSymbol);
-
-  // You can change this to
-  // TOP, LEFT, BOTTOM, RIGHT
-  ui->setIndicatorPosition(BOTTOM);
-
-  // Defines where the first frame is located in the bar.
-  ui->setIndicatorDirection(LEFT_RIGHT);
-
-  // You can change the transition that is used
-  // SLIDE_LEFT, SLIDE_RIGHT, SLIDE_UP, SLIDE_DOWN
-  ui->setFrameAnimation(SLIDE_LEFT);
-
-  // Add frames
-  ui->setFrames(frames, frameCount);
-
-  // Add overlays
-  ui->setOverlays(overlays, overlaysCount);
-
-  // Initialising the UI will init the display too.
-  ui->init();
-  display->flipScreenVertically();
 }
 
 void setup() {
   pinMode (PROG_BUTTON, INPUT_PULLUP);
   Serial.begin(115200);
-  Serial.printf("Fossa Ground station Version %d\n", version);
+  delay(299);
+  Serial.printf("Fossa Ground station Version %d\n", status.version);
 
-  // TODO: move to a different file
+  displayInit();
   boardDetection();
-
-#ifdef TTGO_V2
-  display = new SSD1306(0x3c, 21, 22); // configuration for TTGO v2 (SMA antenna connector)
-#elif OLED_SDA // TTGO
-  display = new SSD1306(0x3c, OLED_SDA, OLED_SCL);      
-#else
-  display = new SSD1306(0x3c, SDA_OLED, SCL_OLED);         // configuration for TTGO v1, Heltec v1 and 2  
-#endif
-#define OLED_RST  16                   // seems that all board until now use pin 16
-
-  ui = new OLEDDisplayUi(display);
-
-  display->init();
-  display->flipScreenVertically();
-  display->setFont(ArialMT_Plain_16);
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->drawString(0,5,"FossaSAT-1 Sta");
-  display->setFont(ArialMT_Plain_10);
-  display->drawString(55,23,"ver. "+String(version));
-
-  display->drawString(5,38,"by @gmag12 @4m1g0");
-  display->drawString(40,52,"& @g4lile0");
-  display->display();
+  displayShowInitialCredits();
 
 #define WAIT_FOR_BUTTON 3000
 #define RESET_BUTTON_TIME 5000
@@ -417,23 +326,12 @@ void setup() {
   delay (500);
 
   if (configManager.isApMode()) {
-    display->clear();
-    display->setFont(ArialMT_Plain_10);
-    display->setTextAlignment(TEXT_ALIGN_LEFT);
-    display->drawString(0, 6,"Connect to AP:");
-    display->drawString(0,18,"->"+String(configManager.getThingName()));
-    display->drawString(5,32,"to configure your Station");
-    display->drawString(10,52,"IP:   192.168.4.1");
-    display->display();
+    displayShowApMode();
   } 
   else {
-    display->clear();
-    display->drawXbm(34, 0 , WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
-    display->setTextAlignment(TEXT_ALIGN_CENTER);
-    display->drawString(64 , 35 , "Connecting " + String(configManager.getWiFiSSID()));
-    display->display();
+    displayShowStaMode();
   }
-  delay (500);  
+  delay(500);  
 }
 
 void loop() {
@@ -443,14 +341,8 @@ void loop() {
     return;
   }
 
-  int remainingTimeBudget = ui->update();
-  if (remainingTimeBudget > 0) {
-    // You can do some work here
-    // Don't do stuff if you are below your
-    // time budget.
-    delay(remainingTimeBudget);
-  }
-
+  displayUpdate();
+  
   if(Serial.available()) {
 
     // disable reception interrupt
@@ -561,10 +453,10 @@ void loop() {
     thisTime=thisTime + String(timeinfo.tm_sec);
     // const char* newTime = (const char*) thisTime.c_str();
     
-    last_packet_received_time=  thisTime;
-    last_packet_received_rssi= lora.getRSSI();
-    last_packet_received_snr=lora.getSNR();
-    last_packet_received_frequencyerror=lora.getFrequencyError();
+    status.lastPacketInfo.time=  thisTime;
+    status.lastPacketInfo.rssi= lora.getRSSI();
+    status.lastPacketInfo.snr=lora.getSNR();
+    status.lastPacketInfo.frequencyerror=lora.getFrequencyError();
 
     // print RSSI (Received Signal Strength Indicator)
     Serial.print(F("[SX12x8] RSSI:\t\t"));
@@ -593,47 +485,47 @@ void loop() {
         Serial.println(F("System info:"));
 
         Serial.print(F("batteryChargingVoltage = "));
-        sysInfo.batteryChargingVoltage = FCP_Get_Battery_Charging_Voltage(respOptData);
+        status.sysInfo.batteryChargingVoltage = FCP_Get_Battery_Charging_Voltage(respOptData);
         Serial.println(FCP_Get_Battery_Charging_Voltage(respOptData));
         
         Serial.print(F("batteryChargingCurrent = "));
-        sysInfo.batteryChargingCurrent = (FCP_Get_Battery_Charging_Current(respOptData), 4);
+        status.sysInfo.batteryChargingCurrent = (FCP_Get_Battery_Charging_Current(respOptData), 4);
         Serial.println(FCP_Get_Battery_Charging_Current(respOptData), 4);
 
         Serial.print(F("batteryVoltage = "));
-        sysInfo.batteryVoltage=FCP_Get_Battery_Voltage(respOptData);
+        status.sysInfo.batteryVoltage=FCP_Get_Battery_Voltage(respOptData);
         Serial.println(FCP_Get_Battery_Voltage(respOptData));          
 
         Serial.print(F("solarCellAVoltage = "));
-        sysInfo.solarCellAVoltage= FCP_Get_Solar_Cell_Voltage(0, respOptData);
+        status.sysInfo.solarCellAVoltage= FCP_Get_Solar_Cell_Voltage(0, respOptData);
         Serial.println(FCP_Get_Solar_Cell_Voltage(0, respOptData));
 
         Serial.print(F("solarCellBVoltage = "));
-        sysInfo.solarCellBVoltage= FCP_Get_Solar_Cell_Voltage(1, respOptData);
+        status.sysInfo.solarCellBVoltage= FCP_Get_Solar_Cell_Voltage(1, respOptData);
         Serial.println(FCP_Get_Solar_Cell_Voltage(1, respOptData));
 
         Serial.print(F("solarCellCVoltage = "));
-        sysInfo.solarCellCVoltage= FCP_Get_Solar_Cell_Voltage(2, respOptData);
+        status.sysInfo.solarCellCVoltage= FCP_Get_Solar_Cell_Voltage(2, respOptData);
         Serial.println(FCP_Get_Solar_Cell_Voltage(2, respOptData));
 
         Serial.print(F("batteryTemperature = "));
-        sysInfo.batteryTemperature=FCP_Get_Battery_Temperature(respOptData);
+        status.sysInfo.batteryTemperature=FCP_Get_Battery_Temperature(respOptData);
         Serial.println(FCP_Get_Battery_Temperature(respOptData));
 
         Serial.print(F("boardTemperature = "));
-        sysInfo.boardTemperature=FCP_Get_Board_Temperature(respOptData);
+        status.sysInfo.boardTemperature=FCP_Get_Board_Temperature(respOptData);
         Serial.println(FCP_Get_Board_Temperature(respOptData));
 
         Serial.print(F("mcuTemperature = "));
-        sysInfo.mcuTemperature =FCP_Get_MCU_Temperature(respOptData);
+        status.sysInfo.mcuTemperature =FCP_Get_MCU_Temperature(respOptData);
         Serial.println(FCP_Get_MCU_Temperature(respOptData));
 
         Serial.print(F("resetCounter = "));
-        sysInfo.resetCounter=FCP_Get_Reset_Counter(respOptData);
+        status.sysInfo.resetCounter=FCP_Get_Reset_Counter(respOptData);
         Serial.println(FCP_Get_Reset_Counter(respOptData));
 
         Serial.print(F("powerConfig = 0b"));
-        sysInfo.powerConfig=FCP_Get_Power_Configuration(respOptData);
+        status.sysInfo.powerConfig=FCP_Get_Power_Configuration(respOptData);
         Serial.println(FCP_Get_Power_Configuration(respOptData), BIN);
         json_system_info();
         break;
@@ -686,7 +578,7 @@ void loop() {
   }
   
   static unsigned long last_connection_fail = millis();
-  if (!mqtt_connected){
+  if (!status.mqtt_connected){
     if (millis() - last_connection_fail > 300000){ // 5m
       Serial.println("MQTT Disconnected, restarting...");
       ESP.restart();
@@ -707,7 +599,7 @@ void  welcome_message (void) {
           JsonArray station_location = doc.createNestedArray("station_location");
           station_location.add(configManager.getLatitude());
           station_location.add(configManager.getLongitude());
-          doc["version"] = version;
+          doc["version"] = status.version;
 
 //          doc["time"] = ;
           serializeJson(doc, Serial);
@@ -729,21 +621,21 @@ void  json_system_info(void) {
           JsonArray station_location = doc.createNestedArray("station_location");
           station_location.add(configManager.getLatitude());
           station_location.add(configManager.getLongitude());
-          doc["rssi"] = last_packet_received_rssi;
-          doc["snr"] = last_packet_received_snr;
-          doc["frequency_error"] = last_packet_received_frequencyerror;
+          doc["rssi"] = status.lastPacketInfo.rssi;
+          doc["snr"] = status.lastPacketInfo.snr;
+          doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
           doc["unix_GS_time"] = now;
-          doc["batteryChargingVoltage"] = sysInfo.batteryChargingVoltage;
-          doc["batteryChargingCurrent"] = sysInfo.batteryChargingCurrent;
-          doc["batteryVoltage"] = sysInfo.batteryVoltage;
-          doc["solarCellAVoltage"] = sysInfo.solarCellAVoltage;
-          doc["solarCellBVoltage"] = sysInfo.solarCellBVoltage;
-          doc["solarCellCVoltage"] = sysInfo.solarCellCVoltage;
-          doc["batteryTemperature"] = sysInfo.batteryTemperature;
-          doc["boardTemperature"] = sysInfo.boardTemperature;
-          doc["mcuTemperature"] = sysInfo.mcuTemperature;
-          doc["resetCounter"] = sysInfo.resetCounter;
-          doc["powerConfig"] = sysInfo.powerConfig;
+          doc["batteryChargingVoltage"] = status.sysInfo.batteryChargingVoltage;
+          doc["batteryChargingCurrent"] = status.sysInfo.batteryChargingCurrent;
+          doc["batteryVoltage"] = status.sysInfo.batteryVoltage;
+          doc["solarCellAVoltage"] = status.sysInfo.solarCellAVoltage;
+          doc["solarCellBVoltage"] = status.sysInfo.solarCellBVoltage;
+          doc["solarCellCVoltage"] = status.sysInfo.solarCellCVoltage;
+          doc["batteryTemperature"] = status.sysInfo.batteryTemperature;
+          doc["boardTemperature"] = status.sysInfo.boardTemperature;
+          doc["mcuTemperature"] = status.sysInfo.mcuTemperature;
+          doc["resetCounter"] = status.sysInfo.resetCounter;
+          doc["powerConfig"] = status.sysInfo.powerConfig;
           serializeJson(doc, Serial);
           String topic = "fossa/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/sys_info";
           char buffer[512];
@@ -802,9 +694,9 @@ void  json_message(char* frame, size_t respLen) {
           JsonArray station_location = doc.createNestedArray("station_location");
           station_location.add(configManager.getLongitude());
           station_location.add(configManager.getLongitude());
-          doc["rssi"] = last_packet_received_rssi;
-          doc["snr"] = last_packet_received_snr;
-          doc["frequency_error"] = last_packet_received_frequencyerror;
+          doc["rssi"] = status.lastPacketInfo.rssi;
+          doc["snr"] = status.lastPacketInfo.snr;
+          doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
           doc["unix_GS_time"] = now;
           JsonArray msgTTN = doc.createNestedArray("msgTTN");
 
@@ -844,9 +736,9 @@ void  json_message(char* frame, size_t respLen) {
           JsonArray station_location = doc.createNestedArray("station_location");
           station_location.add(configManager.getLatitude());
           station_location.add(configManager.getLongitude());
-          doc["rssi"] = last_packet_received_rssi;
-          doc["snr"] = last_packet_received_snr;
-          doc["frequency_error"] = last_packet_received_frequencyerror;
+          doc["rssi"] = status.lastPacketInfo.rssi;
+          doc["snr"] = status.lastPacketInfo.snr;
+          doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
           doc["unix_GS_time"] = now;
 //          doc["len"] = respLen;
           doc["msg"] = String(tmp);
@@ -876,9 +768,9 @@ void  json_pong(void) {
           JsonArray station_location = doc.createNestedArray("station_location");
           station_location.add(configManager.getLatitude());
           station_location.add(configManager.getLongitude());
-          doc["rssi"] = last_packet_received_rssi;
-          doc["snr"] = last_packet_received_snr;
-          doc["frequency_error"] = last_packet_received_frequencyerror;
+          doc["rssi"] = status.lastPacketInfo.rssi;
+          doc["snr"] = status.lastPacketInfo.snr;
+          doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
           doc["unix_GS_time"] = now;
           doc["pong"] = 1;
           serializeJson(doc, Serial);
@@ -1102,14 +994,14 @@ void boardDetection() {
 
 void manageMQTTEvent (esp_mqtt_event_id_t event) {
   if (event == MQTT_EVENT_CONNECTED) {
-	  mqtt_connected = true;
+	  status.mqtt_connected = true;
     String topic = "fossa/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/data/#";
     mqtt.subscribe (topic.c_str());
     mqtt.subscribe ("fossa/global/sat_pos_oled");
 	  welcome_message ();
     
   } else   if (event == MQTT_EVENT_DISCONNECTED) {
-    mqtt_connected = false;
+    status.mqtt_connected = false;
   }
 }
 void manageSatPosOled(char* payload, size_t payload_len) {
@@ -1118,8 +1010,8 @@ void manageSatPosOled(char* payload, size_t payload_len) {
   memcpy(payloadStr, payload, payload_len);
   payloadStr[payload_len] = '\0';
   deserializeJson(doc, payload);
-  sat_pos_oled[0] = doc[0];
-  sat_pos_oled[1] = doc[1];
+  status.satPos[0] = doc[0];
+  status.satPos[1] = doc[1];
 }
 
 void manageMQTTData (char* topic, size_t topic_len, char* payload, size_t payload_len) {
@@ -1143,161 +1035,6 @@ void printLocalTime()
   Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
 }
 
-
-/////// OLED ANIMATION //////
-
-void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
-  display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  display->setFont(ArialMT_Plain_10);
- // display->drawString(128, 0, String(millis()));
-
-  struct tm timeinfo;
-  if(!getLocalTime(&timeinfo)){
-    Serial.println("Failed to obtain time");
-    return;
-  }
-
-   // ********************* 
-  // display time in digital format
-  String thisTime="";
-  if (timeinfo.tm_hour < 10){ thisTime=thisTime + " ";} // add leading space if required
-  thisTime=String(timeinfo.tm_hour) + ":";
-  if (timeinfo.tm_min < 10){ thisTime=thisTime + "0";} // add leading zero if required
-  thisTime=thisTime + String(timeinfo.tm_min) + ":";
-  if (timeinfo.tm_sec < 10){ thisTime=thisTime + "0";} // add leading zero if required
-  thisTime=thisTime + String(timeinfo.tm_sec);
-  const char* newTime = (const char*) thisTime.c_str();
-  display->drawString(128, 0,  newTime  );
-}
-
-void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  // draw an xbm image.
-  // Please note that everything that should be transitioned
-  // needs to be drawn relative to x and y
-
-  display->drawXbm(x , y + 14, Fossa_Logo_width, Fossa_Logo_height, Fossa_Logo_bits);
-  display->setFont(ArialMT_Plain_10);
-  display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString( x+70, y + 40, "Sta: "+ String(configManager.getThingName()));
-}
-
-
-void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  // Demo for drawStringMaxWidth:
-  // with the third parameter you can define the width after which words will be wrapped.
-  // Currently only spaces and "-" are allowed for wrapping
- // display->setTextAlignment(TEXT_ALIGN_LEFT);
- // display->setFont(ArialMT_Plain_10);
- // display->drawStringMaxWidth(0 + x, 10 + y, 128, "Lorem ipsum\n dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore.");
-
-  // draw an xbm image.
-  // Please note that everything that should be transitioned
-  // needs to be drawn relative to x and y
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->setFont(ArialMT_Plain_10);
-  display->drawXbm(x + 34, y + 22, bat_width, bat_height, bat_bits);
-  display->drawString( x+44, y + 10, String(sysInfo.batteryVoltage) + "V");
-  display->drawString( x+13,  22+y,  String(sysInfo.batteryChargingVoltage));
-  display->drawString( x+13,  35+y,  String(sysInfo.batteryChargingCurrent));
-  display->drawString( x+80,  32+y,  String(sysInfo.batteryTemperature) + "ºC" );
-
-
-  if ((millis()-tick_interval)>200) {
-              // Change the value to plot
-                  graphVal-=1;
-                  tick_interval=millis();
-                  if (graphVal <= 1) {graphVal = 8; } // ramp up value
-       }
-
-
-  display->fillRect(x+48, y+32+graphVal, 25 , 13-graphVal);
-  
-}
-
-
-void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->setFont(ArialMT_Plain_10);
-  display->drawString(0 + x,  10+ y, "Solar panels:");
-  //display->drawString( x,  12 +y, "Bat:" + String(batteryVoltage) + "V Ch:" + String(batteryChargingVoltage) + "V " + String(batteryChargingCurrent)+ "A"  );
-  display->drawString( x,  21+y, "A:" + String(sysInfo.solarCellAVoltage) + "V  B:" + String(sysInfo.solarCellBVoltage) + "V  C:" + String(sysInfo.solarCellCVoltage)+ "V"  );
-  display->drawString( x,  38+y, "T uC: " + String(sysInfo.boardTemperature) + "ºC   Reset: " + String(sysInfo.resetCounter)  );
-
-}
-
-void drawFrame4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->setFont(ArialMT_Plain_10);
-  display->drawString(0 + x,  11+ y, "Last Packet: "+last_packet_received_time);
-  display->drawString( x,  23+y, "RSSI:" + String(last_packet_received_rssi) + "dBm" );
-  display->drawString( x,  34+y, "SNR: "+ String(last_packet_received_snr) +"dB" );
-  display->drawString( x, 45+ y, "Freq error: " + String(last_packet_received_frequencyerror) +" Hz");
-}
-
-void drawFrame5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->drawString( x+100,  21+y, "MQTT:" );
-  if (mqtt_connected ) {display->drawString( x+105,  31+y, "ON" );}  else {display->drawString( x+102,  31+y, "OFF" );}
-     display->drawXbm(x + 34, y + 4, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
-  // The coordinates define the center of the text
-  display->setTextAlignment(TEXT_ALIGN_CENTER);
-    display->drawString(64 + x, 42 + y, "Connected "+(WiFi.localIP().toString()));
-
-
-
-/*  
- *   
-  // Text alignment demo
-  display->setFont(ArialMT_Plain_10);
-
-  // The coordinates define the left starting point of the text
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->drawString(0 + x, 11 + y, "Left aligned (0,10)");
-
-  // The coordinates define the center of the text
-  display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString(64 + x, 22 + y, "Center aligned (64,22)");
-
-  // The coordinates define the right end of the text
-  display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  display->drawString(128 + x, 33 + y, "Right aligned (128,33)");
-
- */
-
-}
-
-void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->drawXbm(x , y , earth_width, earth_height, earth_bits);
-  display->setColor(BLACK);
-  display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->fillRect(83,0,128,11);
-  display->setFont(ArialMT_Plain_10);
- 
-  if (sat_pos_oled[0] == 0 && sat_pos_oled[1] == 0) {
-    display->drawString( 65+x,  49+y+(x/2), "Waiting for FossaSat Pos" );
-    display->drawString( 63+x,  51+y+(x/2), "Waiting for FossaSat Pos" );
-    display->setColor(WHITE);
-    display->drawString( 64+x,  50+y+(x/2), "Waiting for FossaSat Pos" );
-  }
-  else {
-       if ((millis()-tick_interval)>tick_timing) {
-              // Change the value to plot
-                  graphVal+=delta;
-                  tick_interval=millis();
-              // If the value reaches a limit, then change delta of value
-                    if (graphVal >= 6)     {delta = -1;  tick_timing=50; }// ramp down value
-                    else if (graphVal <= 1) {delta = +1; tick_timing=100;} // ramp up value
-       }
-    display->fillCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, graphVal+1);
-    display->setColor(WHITE);
-    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, graphVal);
-    display->setColor(BLACK);
-    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, (graphVal/3)+1);
-    display->setColor(WHITE);
-    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, graphVal/3);
-  }
-  
-}
 
 void configSaved (bool result) {
 	ESP_LOGI (LOG_TAG, "Config %ssaved", result? "": "not ");

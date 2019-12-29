@@ -16,6 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+#ifndef ConfigManager_h
+#define ConfigManager_h
 
 #include "IotWebConf2.h"
 #include "logos.h"
@@ -145,3 +147,4 @@ private:
   IotWebConfParameter boardParam = IotWebConfParameter("Board type", "board", board, BOARD_LENGTH, "board", NULL, NULL);
 };
 
+#endif
