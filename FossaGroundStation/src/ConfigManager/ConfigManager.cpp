@@ -22,6 +22,16 @@
 ConfigManager::ConfigManager()
 : IotWebConf2(thingName, &dnsServer, &server, initialApPassword, configVersion)
 , server(80)
+, gsConfigHtmlFormatProvider(*this)
+, boards({
+  //OLED_add, OLED_SDA,  OLED_SCL, OLED_RST, PROG_BUTTON, BOARD_LED, L_SX1278?, L_NSS, L_DI00, L_DI01, L_DI02, L_RST,  L_MISO, L_MOSI, L_SCK, BOARD 
+  {      0x3c,        4,        15,       16,           0,        25,      true,    18,     33,     32,      0,    14,      19,     27,     5, "HELTEC WiFi LoRA 32 V1" },
+  {      0x3c,        4,        15,       16,           0,        25,      true,    18,     35,     34,      0,    14,      19,     27,     5, "HELTEC WiFi LoRA 32 V2" }, 
+  {      0x3c,        4,        15,       16,           0,         2,      true,    18,     26,      0,      0,    14,      19,     27,     5 ,"TTGO LoRa 32 v1"        },  
+  {      0x3c,       21,        22,       16,           0,        22,      true,    18,     26,      0,      0,    14,      19,     27,     5 ,"TTGO LoRA 32 v2"        }, // 3  ((SMA antenna connector))
+  {      0x3c,       21,        22,       16,          39,        22,      true,    18,     26,     33,     32,    14,      19,     27,     5 ,"T-BEAM + OLED"        }, 
+  {      0x3c,       21,        22,       16,           0,        25,     false,     2,     26,      0,      0,    14,      19,     27,     5 ,"Custom ESP32 + SX126x"  },   
+  })
 {
   server.on(ROOT_URL, [this]{ handleRoot(); });
   server.on(CONFIG_URL, [this]{ handleConfig(); });
@@ -139,7 +149,55 @@ boolean ConfigManager::init() {
   // we fall back to AP mode during 2 minutes after which we try to connect again and repeat.
   setApTimeoutMs(atoi(AP_TIMEOUT_MS));
 
-  //resetAllConfig();
+  // no board selected
+  if (!strcmp(board, "")){
+    boardDetection();
+  }
 
   return validConfig;
+}
+
+void ConfigManager::boardDetection() {
+  // List all compatible boards configuration
+  Serial.println(F("\nSupported boards:"));
+  for (uint8_t ite=0; ite<((sizeof(boards)/sizeof(boards[0])));ite++) {
+    Serial.println("");
+    Serial.println(boards[ite].BOARD);
+    Serial.print(F(" OLED: Adrs 0x"));    Serial.print(boards[ite].OLED__address,HEX);
+    Serial.print(F(" SDA:"));      Serial.print(boards[ite].OLED__SDA);
+    Serial.print(F(" SCL:"));      Serial.print(boards[ite].OLED__SCL);
+    Serial.print(F(" RST:"));      Serial.print(boards[ite].OLED__RST);
+    Serial.print(F(" BUTTON:"));   Serial.println(boards[ite].PROG__BUTTON);
+    Serial.print(F(" Lora Module "));
+    if (boards[ite].L_SX1278) {Serial.print(F("SX1278 ")); } else {Serial.print(F("SX1268:"));} ;
+    Serial.print(F(" NSS:"));      Serial.print(boards[ite].L_NSS);
+    Serial.print(F(" MOSI:"));     Serial.print(boards[ite].L_MOSI);
+    Serial.print(F(" MISO:"));     Serial.print(boards[ite].L_MISO);
+    Serial.print(F(" SCK:"));      Serial.print(boards[ite].L_SCK);
+      
+    if (boards[ite].L_DI00) {Serial.print(F(" DI00:")); Serial.print(boards[ite].L_DI00);}
+    if (boards[ite].L_DI01) {Serial.print(F(" DI01:")); Serial.print(boards[ite].L_DI01);}
+    if (boards[ite].L_DI02) {Serial.print(F(" DI02:")); Serial.print(boards[ite].L_DI02);}
+    Serial.println("");   
+  }
+  
+  // test OLED configuration
+  Serial.println(F("Seaching for a compatible BOARD"));
+  for (uint8_t ite=0; ite<((sizeof(boards)/sizeof(boards[0])));ite++) {
+    Serial.print(boards[ite].BOARD);
+    pinMode(boards[ite].OLED__RST,OUTPUT);
+    digitalWrite(boards[ite].OLED__RST, LOW);     
+    delay(50);
+    digitalWrite(boards[ite].OLED__RST, HIGH);
+    Wire.begin (boards[ite].OLED__SDA, boards[ite].OLED__SCL);
+    Wire.beginTransmission(boards[ite].OLED__address);
+    if (!Wire.endTransmission()) { 
+      Serial.println(F("  Compatible OLED FOUND")); 
+      itoa(ite, board, 10);
+      break;
+    }
+    else {
+      Serial.println(F("  Not Compatible"));
+    } 
+  }
 }

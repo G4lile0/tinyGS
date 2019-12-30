@@ -152,9 +152,7 @@ Status status;
 void printControls();
 
 void fossaAPStarted();
-void configSaved (bool result); 
 
-void boardDetection();
 
 void welcome_message();
 void json_system_info();
@@ -286,7 +284,6 @@ void setup() {
   Serial.printf("Fossa Ground station Version %d\n", status.version);
 
   displayInit();
-  boardDetection();
   displayShowInitialCredits();
 
 #define WAIT_FOR_BUTTON 3000
@@ -937,61 +934,6 @@ void requestRetransmit() {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void boardDetection() {
-  // List all compatible boards configuration
-  Serial.println(F("\nSupported boards:"));
-  for (uint8_t ite=0; ite<((sizeof(boards)/sizeof(boards[0])));ite++) {
-   Serial.println("");
-   Serial.println(boards[ite].BOARD);
-   Serial.print(F(" OLED: Adrs 0x"));    Serial.print(boards[ite].OLED__address,HEX);
-   Serial.print(F(" SDA:"));      Serial.print(boards[ite].OLED__SDA);
-   Serial.print(F(" SCL:"));      Serial.print(boards[ite].OLED__SCL);
-   Serial.print(F(" RST:"));      Serial.print(boards[ite].OLED__RST);
-   Serial.print(F(" BUTTON:"));   Serial.println(boards[ite].PROG__BUTTON);
-   Serial.print(F(" Lora Module "));
-   if (boards[ite].L_SX1278) {Serial.print(F("SX1278 ")); } else {Serial.print(F("SX1268:"));} ;
-   Serial.print(F(" NSS:"));        Serial.print(boards[ite].L_NSS);
-   Serial.print(F(" MOSI:"));      Serial.print(boards[ite].L_MOSI);
-   Serial.print(F(" MISO:"));      Serial.print(boards[ite].L_MISO);
-   Serial.print(F(" SCK:"));       Serial.print(boards[ite].L_SCK);
-     
-   if (boards[ite].L_DI00) {Serial.print(F(" DI00:")); Serial.print(boards[ite].L_DI00);}
-   if (boards[ite].L_DI01) {Serial.print(F(" DI01:")); Serial.print(boards[ite].L_DI01);}
-   if (boards[ite].L_DI02) {Serial.print(F(" DI02:")); Serial.print(boards[ite].L_DI02);}
-   Serial.println("");
-   
-     
-  }
-  
-    // test OLED configuration
-    Serial.println(F("Seaching for a compatible BOARD"));
-  for (uint8_t ite=0; ite<((sizeof(boards)/sizeof(boards[0])));ite++) {
-  Serial.print(boards[ite].BOARD);
-  pinMode(boards[ite].OLED__RST,OUTPUT);
-  digitalWrite(boards[ite].OLED__RST, LOW);     
-  delay(50);
-  digitalWrite(boards[ite].OLED__RST, HIGH);
-  Wire.begin (boards[ite].OLED__SDA, boards[ite].OLED__SCL);
-  Wire.beginTransmission(boards[ite].OLED__address);
-    if (!Wire.endTransmission()) { Serial.println(F("  Compatible OLED FOUND")); break;} else {Serial.println(F("  Not Compatible"));} ;
-   }
-}
-
 void manageMQTTEvent (esp_mqtt_event_id_t event) {
   if (event == MQTT_EVENT_CONNECTED) {
 	  status.mqtt_connected = true;
@@ -1033,13 +975,6 @@ void printLocalTime()
     return;
   }
   Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-}
-
-
-void configSaved (bool result) {
-	ESP_LOGI (LOG_TAG, "Config %ssaved", result? "": "not ");
-
-	// TODO: Show result to user
 }
 
 // function to print controls

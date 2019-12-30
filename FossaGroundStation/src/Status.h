@@ -42,7 +42,7 @@ struct PacketInfo {
 };
 
 struct Status {
-  const uint32_t version = 1912282; // version year month day release
+  const uint32_t version = 1912300; // version year month day release
   bool mqtt_connected = false;
   SysInfo sysInfo;
   PacketInfo lastPacketInfo;

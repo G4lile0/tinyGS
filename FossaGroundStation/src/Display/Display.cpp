@@ -42,7 +42,7 @@ int graphVal = 1;
 int delta = 1;
 
 void displayInit(){
-  #ifdef TTGO_V2
+#ifdef TTGO_V2
   display = new SSD1306(0x3c, 21, 22); // configuration for TTGO v2 (SMA antenna connector)
 #elif OLED_SDA // TTGO
   display = new SSD1306(0x3c, OLED_SDA, OLED_SCL);      
@@ -51,7 +51,7 @@ void displayInit(){
 #endif
 
   ui = new OLEDDisplayUi(display);
-
+  
   ui->setTargetFPS(60);
   ui->setActiveSymbol(activeSymbol);
   ui->setInactiveSymbol(inactiveSymbol);
@@ -62,6 +62,11 @@ void displayInit(){
   ui->setOverlays(overlays, overlaysCount);
   ui->init();
   display->flipScreenVertically();
+
+  pinMode(configManager.getBoardConfig().OLED__RST,OUTPUT);
+  digitalWrite(configManager.getBoardConfig().OLED__RST, LOW);     
+  delay(50);
+  digitalWrite(configManager.getBoardConfig().OLED__RST, HIGH);
 }
 
 void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {

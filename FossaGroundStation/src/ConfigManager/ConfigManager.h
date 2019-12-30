@@ -21,6 +21,8 @@
 
 #include "IotWebConf2.h"
 #include "logos.h"
+#include <Wire.h>
+#include "htmlOptions.h"
 
 constexpr auto STATION_NAME_LENGTH = 21;
 constexpr auto COORDINATE_LENGTH = 10;
@@ -50,46 +52,35 @@ constexpr auto configVersion = "v0.0.1";
 
 constexpr auto AP_TIMEOUT_MS = "300000";
 
-enum boards {
+enum boardNum {
   HELTEC_V1 = 0,
   HELTEC_V2,
   TTGO_V1,
   TTGO_V2,
-  ESP32_SX126X
+  TBEAM_OLED,
+  ESP32_SX126X,
+
+  NUM_BOARDS //this line alwasys has to be the last one
 };
 
-#include "htmlOptions.h"
-
-class GSConfigHtmlFormatProvider : public IotWebConfHtmlFormatProvider
-{
-protected:
-  String getScriptInner() override
-  {
-    return
-      IotWebConfHtmlFormatProvider::getScriptInner();
-      //String(FPSTR(CUSTOMHTML_SCRIPT_INNER));
-  }
-  String getBodyInner() override
-  {
-    return
-      String(FPSTR(LOGO)) +
-      IotWebConfHtmlFormatProvider::getBodyInner();
-  }
-
-  String getFormParam(const char* type) override
-  {
-    if (!strcmp(type, "TZ")) {
-      return FPSTR(IOTWEBCONF_HTML_FORM_TZ_PARAM);
-    }
-
-    if (!strcmp(type, "board")) {
-      return FPSTR(IOTWEBCONF_HTML_FORM_BOARD_PARAM);
-    }
-
-    return IotWebConfHtmlFormatProvider::getFormParam(type);
-  }
-};
-
+typedef struct {
+   uint8_t  OLED__address;
+   uint8_t  OLED__SDA;
+   uint8_t  OLED__SCL;
+   uint8_t  OLED__RST;
+   uint8_t  PROG__BUTTON;
+   uint8_t  BOARD_LED;
+   bool     L_SX1278;
+   uint8_t  L_NSS;        // CS
+   uint8_t  L_DI00;        
+   uint8_t  L_DI01;
+   uint8_t  L_DI02;        
+   uint8_t  L_RST;
+   uint8_t  L_MISO;
+   uint8_t  L_MOSI;        
+   uint8_t  L_SCK;
+   String   BOARD;
+} board_type;
 
 class ConfigManager : public IotWebConf2
 {
@@ -111,18 +102,61 @@ public:
 
   bool isApMode() { return (getState() != IOTWEBCONF_STATE_CONNECTING && getState() != IOTWEBCONF_STATE_ONLINE); }
   bool isConnected() { return getState() == IOTWEBCONF_STATE_ONLINE; };
-
+  board_type getBoardConfig(){ return boards[getBoard()]; }
 
 private:
+  class GSConfigHtmlFormatProvider : public IotWebConfHtmlFormatProvider
+  {
+  public:
+    GSConfigHtmlFormatProvider(ConfigManager& x) : configManager(x) { }
+  protected:
+    String getScriptInner() override
+    {
+      return
+        IotWebConfHtmlFormatProvider::getScriptInner();
+        //String(FPSTR(CUSTOMHTML_SCRIPT_INNER));
+    }
+    String getBodyInner() override
+    {
+      return
+        String(FPSTR(LOGO)) +
+        IotWebConfHtmlFormatProvider::getBodyInner();
+    }
+
+    String getFormParam(const char* type) override
+    {
+      if (!strcmp(type, "TZ")) {
+        String select = String(FPSTR(IOTWEBCONF_HTML_FORM_TZ_PARAM));
+        String find = "value='" + String(configManager.tz) + "'";
+        select.replace(find, find + " selected");
+        Serial.println(find);
+        return select;
+      }
+
+      if (!strcmp(type, "board")) {
+        String select = String(FPSTR(IOTWEBCONF_HTML_FORM_BOARD_PARAM));
+        String find = "value='" + String(configManager.board) + "'";
+        select.replace(find, find + " selected");
+        return select;
+      }
+
+      return IotWebConfHtmlFormatProvider::getFormParam(type);
+    }
+
+    ConfigManager& configManager;
+  };
+
   void handleRoot();
   void handleDashboard();
   bool formValidator();
+  void boardDetection();
   
   std::function<boolean()> formValidatorStd;
   DNSServer dnsServer;
   WebServer server;
   HTTPUpdateServer httpUpdater;
   GSConfigHtmlFormatProvider gsConfigHtmlFormatProvider;
+  board_type boards[NUM_BOARDS]; 
 
   char latitude[COORDINATE_LENGTH] = "";
   char longitude[COORDINATE_LENGTH] = "";
