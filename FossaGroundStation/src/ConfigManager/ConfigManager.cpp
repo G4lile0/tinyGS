@@ -28,7 +28,7 @@ ConfigManager::ConfigManager()
   {      0x3c,        4,        15,       16,           0,        25,      true,    18,     26,     12,      0,    14,      19,     27,     5, "HELTEC WiFi LoRA 32 V1" },
   {      0x3c,        4,        15,       16,           0,        25,      true,    18,     35,     34,      0,    14,      19,     27,     5, "HELTEC WiFi LoRA 32 V2" }, 
   {      0x3c,        4,        15,       16,           0,         2,      true,    18,     26,      0,      0,    14,      19,     27,     5 ,"TTGO LoRa 32 v1"        },  
-  {      0x3c,       21,        22,       16,           0,        22,      false,   18,     26,     33,      0,    14,      19,     27,     5 ,"TTGO LoRA 32 v2"        }, // 3  ((SMA antenna connector))
+  {      0x3c,       21,        22,       16,           0,        22,      true,    18,     26,     33,      0,    14,      19,     27,     5 ,"TTGO LoRA 32 v2"        }, // 3  ((SMA antenna connector))
   {      0x3c,       21,        22,       16,          39,        22,      true,    18,     26,     33,     32,    14,      19,     27,     5 ,"T-BEAM + OLED"        }, 
   {      0x3c,       21,        22,       16,           0,        25,     false,     2,     26,      0,      0,    14,      19,     27,     5 ,"Custom ESP32 + SX126x"  },   
   })
