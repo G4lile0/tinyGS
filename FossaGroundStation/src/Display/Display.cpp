@@ -42,13 +42,8 @@ int graphVal = 1;
 int delta = 1;
 
 void displayInit(){
-#ifdef TTGO_V2
-  display = new SSD1306(0x3c, 21, 22); // configuration for TTGO v2 (SMA antenna connector)
-#elif OLED_SDA // TTGO
-  display = new SSD1306(0x3c, OLED_SDA, OLED_SCL);      
-#else
-  display = new SSD1306(0x3c, SDA_OLED, SCL_OLED);         // configuration for TTGO v1, Heltec v1 and 2  
-#endif
+  board_type board = configManager.getBoardConfig();
+  display = new SSD1306(board.OLED__address, board.OLED__SDA, board.OLED__SCL);
 
   ui = new OLEDDisplayUi(display);
   
@@ -63,10 +58,10 @@ void displayInit(){
   ui->init();
   display->flipScreenVertically();
 
-  pinMode(configManager.getBoardConfig().OLED__RST,OUTPUT);
-  digitalWrite(configManager.getBoardConfig().OLED__RST, LOW);     
+  pinMode(board.OLED__RST,OUTPUT);
+  digitalWrite(board.OLED__RST, LOW);     
   delay(50);
-  digitalWrite(configManager.getBoardConfig().OLED__RST, HIGH);
+  digitalWrite(board.OLED__RST, HIGH);
 }
 
 void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {

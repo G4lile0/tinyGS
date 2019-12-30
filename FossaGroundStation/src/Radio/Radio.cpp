@@ -44,10 +44,10 @@ Radio::Radio(ConfigManager& x)
 void Radio::init(){
   Serial.print(F("[SX12xx] Initializing ... "));
   board_type board = configManager.getBoardConfig();
-  lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01));
-
+  
   int state = 0;
   if (board.L_SX127X) {
+    lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01));
     state = ((SX1278*)lora)->begin(LORA_CARRIER_FREQUENCY,
                                       LORA_BANDWIDTH,
                                       LORA_SPREADING_FACTOR,
@@ -57,6 +57,7 @@ void Radio::init(){
                                       (uint8_t)LORA_CURRENT_LIMIT);
   }
   else {
+    lora = new SX1268(new Module(board.L_NSS, board.L_DI00, board.L_DI01));
     state = ((SX1268*)lora)->begin(LORA_CARRIER_FREQUENCY,
                                       LORA_BANDWIDTH,
                                       LORA_SPREADING_FACTOR,
@@ -189,7 +190,7 @@ void Radio::requestPacketInfo() {
 
 void Radio::requestRetransmit(char* data) {
   Serial.print(F("Requesting retransmission ... "));
-  int state = sendFrame(CMD_GET_LAST_PACKET_INFO);
+  int state = sendFrame(CMD_GET_LAST_PACKET_INFO, data);
   // check transmission success
   if (state == ERR_NONE) {
     Serial.println(F("sent successfully!"));
