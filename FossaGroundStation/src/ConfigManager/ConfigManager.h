@@ -70,7 +70,7 @@ typedef struct {
    uint8_t  OLED__RST;
    uint8_t  PROG__BUTTON;
    uint8_t  BOARD_LED;
-   bool     L_SX1278;
+   bool     L_SX127X;
    uint8_t  L_NSS;        // CS
    uint8_t  L_DI00;        
    uint8_t  L_DI01;
@@ -89,6 +89,7 @@ public:
   void resetAPConfig();
   void resetAllConfig();
   boolean init();
+  void printConfig();
 
   uint16_t getMqttPort() { return (uint16_t) atoi(mqttPort); }
   const char* getMqttServer() { return mqttServer; }

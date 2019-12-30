@@ -24,8 +24,8 @@ ConfigManager::ConfigManager()
 , server(80)
 , gsConfigHtmlFormatProvider(*this)
 , boards({
-  //OLED_add, OLED_SDA,  OLED_SCL, OLED_RST, PROG_BUTTON, BOARD_LED, L_SX1278?, L_NSS, L_DI00, L_DI01, L_DI02, L_RST,  L_MISO, L_MOSI, L_SCK, BOARD 
-  {      0x3c,        4,        15,       16,           0,        25,      true,    18,     33,     32,      0,    14,      19,     27,     5, "HELTEC WiFi LoRA 32 V1" },
+  //OLED_add, OLED_SDA,  OLED_SCL, OLED_RST, PROG_BUTTON, BOARD_LED, L_SX127X?, L_NSS, L_DI00, L_DI01, L_DI02, L_RST,  L_MISO, L_MOSI, L_SCK, BOARD 
+  {      0x3c,        4,        15,       16,           0,        25,      true,    18,     26,     12,      0,    14,      19,     27,     5, "HELTEC WiFi LoRA 32 V1" },
   {      0x3c,        4,        15,       16,           0,        25,      true,    18,     35,     34,      0,    14,      19,     27,     5, "HELTEC WiFi LoRA 32 V2" }, 
   {      0x3c,        4,        15,       16,           0,         2,      true,    18,     26,      0,      0,    14,      19,     27,     5 ,"TTGO LoRa 32 v1"        },  
   {      0x3c,       21,        22,       16,           0,        22,      true,    18,     26,      0,      0,    14,      19,     27,     5 ,"TTGO LoRA 32 v2"        }, // 3  ((SMA antenna connector))
@@ -169,7 +169,7 @@ void ConfigManager::boardDetection() {
     Serial.print(F(" RST:"));      Serial.print(boards[ite].OLED__RST);
     Serial.print(F(" BUTTON:"));   Serial.println(boards[ite].PROG__BUTTON);
     Serial.print(F(" Lora Module "));
-    if (boards[ite].L_SX1278) {Serial.print(F("SX1278 ")); } else {Serial.print(F("SX1268:"));} ;
+    if (boards[ite].L_SX127X) {Serial.print(F("SX1278 ")); } else {Serial.print(F("SX1268:"));} ;
     Serial.print(F(" NSS:"));      Serial.print(boards[ite].L_NSS);
     Serial.print(F(" MOSI:"));     Serial.print(boards[ite].L_MOSI);
     Serial.print(F(" MISO:"));     Serial.print(boards[ite].L_MISO);
@@ -200,4 +200,21 @@ void ConfigManager::boardDetection() {
       Serial.println(F("  Not Compatible"));
     } 
   }
+}
+
+void ConfigManager::printConfig() {
+  Serial.print("MQTT Port: ");
+  Serial.println(getMqttPort());
+  Serial.print("MQTT Server: ");
+  Serial.println(getMqttServer());
+  Serial.print("MQTT Pass: ");
+  Serial.println(getMqttPass());
+  Serial.print("Latitude: ");
+  Serial.println(getLatitude());
+  Serial.print("Longitude: ");
+  Serial.println(getLongitude());
+  Serial.print("tz: ");
+  Serial.println(getTZ());
+  Serial.print("board: ");
+  Serial.println(getBoard());
 }
