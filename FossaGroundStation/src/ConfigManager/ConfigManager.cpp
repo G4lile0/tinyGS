@@ -202,18 +202,22 @@ void ConfigManager::boardDetection() {
 }
 
 void ConfigManager::printConfig() {
-  Serial.print("MQTT Port: ");
+  Serial.print(F("MQTT Port: "));
   Serial.println(getMqttPort());
-  Serial.print("MQTT Server: ");
+  Serial.print(F("MQTT Server: "));
   Serial.println(getMqttServer());
-  Serial.print("MQTT Pass: ");
+  Serial.print(F("MQTT Pass: "));
   Serial.println(getMqttPass());
-  Serial.print("Latitude: ");
+  Serial.print(F("Latitude: "));
   Serial.println(getLatitude());
-  Serial.print("Longitude: ");
+  Serial.print(F("Longitude: "));
   Serial.println(getLongitude());
-  Serial.print("tz: ");
+  Serial.print(F("tz: "));
   Serial.println(getTZ());
-  Serial.print("board: ");
-  Serial.println(getBoard());
+  Serial.print(F("board: "));
+  Serial.print(getBoard());
+  Serial.print(F(" -->  "));
+  Serial.println(boards[getBoard()].BOARD);
+  
+  
 }
