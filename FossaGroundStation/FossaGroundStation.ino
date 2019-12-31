@@ -291,7 +291,9 @@ void loop() {
   uint8_t error = radio.listen(respOptData, respLen, functionId);
   if (!error)
     processReceivedFrame(functionId, respOptData, respLen);
+
   delete[] respOptData;
+  respOptData = nullptr;
   
   static unsigned long last_connection_fail = millis();
   if (!status.mqtt_connected){
@@ -314,7 +316,6 @@ void processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_t respL
       break;
 
     case RESP_SYSTEM_INFO:
-      
       Serial.println(F("System info:"));
 
       Serial.print(F("batteryChargingVoltage = "));
@@ -360,6 +361,7 @@ void processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_t respL
       Serial.print(F("powerConfig = 0b"));
       status.sysInfo.powerConfig=FCP_Get_Power_Configuration(respOptData);
       Serial.println(FCP_Get_Power_Configuration(respOptData), BIN);
+
       json_system_info();
       break;
 

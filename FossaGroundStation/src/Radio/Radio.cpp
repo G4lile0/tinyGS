@@ -127,7 +127,10 @@ int Radio::sendFrame(uint8_t functionId, const char* data) {
   // build frame
   uint8_t len = FCP_Get_Frame_Length(callsign, optDataLen);
   uint8_t* frame = new uint8_t[len];
-  FCP_Encode(frame, callsign, functionId, optDataLen, (uint8_t*)data);
+  if (optDataLen > 0)
+    FCP_Encode(frame, callsign, functionId, optDataLen, (uint8_t*)data);
+  else
+    FCP_Encode(frame, callsign, functionId);
 
   // send data
   int state = 0;

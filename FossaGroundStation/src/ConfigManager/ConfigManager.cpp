@@ -37,8 +37,6 @@ ConfigManager::ConfigManager()
   server.on(ROOT_URL, [this]{ handleRoot(); });
   server.on(CONFIG_URL, [this]{ handleConfig(); });
   server.on(DASHBOARD_URL, [this]{ handleDashboard(); });
-  setStatusPin(0);
-  setConfigPin(LED_BUILTIN);
   setupUpdateServer(&httpUpdater);
   setHtmlFormatProvider(&gsConfigHtmlFormatProvider);
   formValidatorStd = std::bind(&ConfigManager::formValidator, this);
