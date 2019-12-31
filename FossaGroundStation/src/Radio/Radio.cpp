@@ -193,7 +193,7 @@ void Radio::requestPacketInfo() {
 
 void Radio::requestRetransmit(char* data) {
   Serial.print(F("Requesting retransmission ... "));
-  int state = sendFrame(CMD_GET_LAST_PACKET_INFO, data);
+  int state = sendFrame(CMD_RETRANSMIT, data);
   // check transmission success
   if (state == ERR_NONE) {
     Serial.println(F("sent successfully!"));
