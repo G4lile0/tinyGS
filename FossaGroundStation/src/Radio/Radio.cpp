@@ -57,7 +57,7 @@ void Radio::init(){
                                       (uint8_t)LORA_CURRENT_LIMIT);
   }
   else {
-    lora = new SX1268(new Module(board.L_NSS, board.L_DI00, board.L_DI01));
+    lora = new SX1268(new Module(board.L_NSS, board.L_DI00, board.L_BUSSY));
     state = ((SX1268*)lora)->begin(LORA_CARRIER_FREQUENCY,
                                       LORA_BANDWIDTH,
                                       LORA_SPREADING_FACTOR,

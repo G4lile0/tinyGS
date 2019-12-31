@@ -75,7 +75,7 @@ typedef struct {
    uint8_t  L_NSS;        // CS
    uint8_t  L_DI00;        
    uint8_t  L_DI01;
-   uint8_t  L_DI02;        
+   uint8_t  L_BUSSY;        
    uint8_t  L_RST;
    uint8_t  L_MISO;
    uint8_t  L_MOSI;        

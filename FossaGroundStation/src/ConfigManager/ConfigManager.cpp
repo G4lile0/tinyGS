@@ -24,7 +24,7 @@ ConfigManager::ConfigManager()
 , server(80)
 , gsConfigHtmlFormatProvider(*this)
 , boards({
-  //OLED_add, OLED_SDA,  OLED_SCL, OLED_RST, PROG_BUTTON, BOARD_LED, L_SX127X?, L_NSS, L_DI00, L_DI01, L_DI02, L_RST,  L_MISO, L_MOSI, L_SCK, BOARD 
+  //OLED_add, OLED_SDA,  OLED_SCL, OLED_RST, PROG_BUTTON, BOARD_LED, L_SX127X?, L_NSS, L_DI00, L_DI01, L_BUSSY, L_RST,  L_MISO, L_MOSI, L_SCK, BOARD 
   {      0x3c,        4,        15,       16,           0,        25,      true,    18,     26,     12,      0,    14,      19,     27,     5, "HELTEC WiFi LoRA 32 V1" },
   {      0x3c,        4,        15,       16,           0,        25,      true,    18,     35,     34,      0,    14,      19,     27,     5, "HELTEC WiFi LoRA 32 V2" }, 
   {      0x3c,        4,        15,       16,           0,         2,      true,    18,     26,      0,      0,    14,      19,     27,     5 ,"TTGO LoRa 32 v1"        },  
@@ -176,7 +176,7 @@ void ConfigManager::boardDetection() {
       
     if (boards[ite].L_DI00) {Serial.print(F(" DI00:")); Serial.print(boards[ite].L_DI00);}
     if (boards[ite].L_DI01) {Serial.print(F(" DI01:")); Serial.print(boards[ite].L_DI01);}
-    if (boards[ite].L_DI02) {Serial.print(F(" DI02:")); Serial.print(boards[ite].L_DI02);}
+    if (boards[ite].L_BUSSY) {Serial.print(F(" BUSSY:")); Serial.print(boards[ite].L_BUSSY);}
     Serial.println("");   
   }
   
