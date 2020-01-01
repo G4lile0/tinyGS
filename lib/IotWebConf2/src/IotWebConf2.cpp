@@ -81,7 +81,7 @@ IotWebConf2::IotWebConf2(
   this->_thingNameParameter = IotWebConfParameter("Thing name", "iwcThingName", this->_thingName, IOTWEBCONF_WORD_LEN);
   this->_apPasswordParameter = IotWebConfParameter("AP password", "iwcApPassword", this->_apPassword, IOTWEBCONF_WORD_LEN, "password");
   this->_wifiSsidParameter = IotWebConfParameter("WiFi SSID", "iwcWifiSsid", this->_wifiSsid, IOTWEBCONF_WORD_LEN);
-  this->_wifiPasswordParameter = IotWebConfParameter("WiFi password", "iwcWifiPassword", this->_wifiPassword, IOTWEBCONF_WORD_LEN, "password");
+  this->_wifiPasswordParameter = IotWebConfParameter("WiFi password", "iwcWifiPassword", this->_wifiPassword, IOTWEBCONF_WIFI_PASSWORD_LEN, "password");
   this->_apTimeoutParameter = IotWebConfParameter("Startup delay (seconds)", "iwcApTimeout", this->_apTimeoutStr, IOTWEBCONF_WORD_LEN, "number", NULL, NULL, "min='1' max='600'", false);
   this->addParameter(&this->_thingNameParameter);
   this->addParameter(&this->_apPasswordParameter);
@@ -438,7 +438,7 @@ void IotWebConf2::handleConfig()
           pitem.replace("{t}", current->type);
           pitem.replace("{i}", current->getId());
           pitem.replace("{p}", current->placeholder == NULL ? "" : current->placeholder);
-          snprintf(parLength, 5, "%d", current->getLength());
+          snprintf(parLength, 5, "%d", current->getLength()-1);
           pitem.replace("{l}", parLength);
           if (strcmp("password", current->type) == 0)
           {
@@ -499,17 +499,15 @@ void IotWebConf2::handleConfig()
   {
     // -- Save config
     IOTWEBCONF_DEBUG_LINE(F("Updating configuration"));
-    char temp[IOTWEBCONF_WORD_LEN];
 
     IotWebConfParameter* current = this->_firstParameter;
     while (current != NULL)
     {
       if ((current->getId() != NULL) && (current->visible))
       {
-        if ((strcmp("password", current->type) == 0) &&
-            (current->getLength() <= IOTWEBCONF_WORD_LEN))
+        if (strcmp("password", current->type) == 0)
         {
-          // TODO: Passwords longer than IOTWEBCONF_WORD_LEN not supported.
+          char temp[current->getLength()];
           this->readParamValue(current->getId(), temp, current->getLength());
           if (temp[0] != '\0')
           {
@@ -535,18 +533,7 @@ void IotWebConf2::handleConfig()
 #ifdef IOTWEBCONF_DEBUG_TO_SERIAL
           Serial.print(current->getId());
           Serial.print("='");
-# ifdef IOTWEBCONF_DEBUG_PWD_TO_SERIAL
           Serial.print(current->valueBuffer);
-# else
-          if (strcmp("password", current->type) == 0)
-          {
-            Serial.print(F("<hidden>"));
-          }
-          else
-          {
-            Serial.print(current->valueBuffer);
-          }
-# endif
           Serial.println("'");
 #endif
         }

@@ -31,6 +31,9 @@
 // ssid, password).
 #define IOTWEBCONF_WORD_LEN 33
 
+// -- Maximal length of string used as WiFi password in IotWebConfig
+#define IOTWEBCONF_WIFI_PASSWORD_LEN 65
+
 // -- IotWebConf tries to connect to the local network for an amount of time
 // before falling back to AP mode.
 #define IOTWEBCONF_DEFAULT_WIFI_CONNECTION_TIMEOUT_MS 30000
@@ -120,8 +123,7 @@ public:
    *   @length - The buffer should have a length provided here.
    *   @type (optional, default="text") - The type of the html input field.
    *       The type="password" has a special handling, as the value will be overwritten in the EEPROM
-   *       only if value was provided on the config portal. Because of this logic, "password" type field with
-   *       length more then IOTWEBCONF_WORD_LEN characters are not supported.
+   *       only if value was provided on the config portal.
    *   @placeholder (optional) - Text appear in an empty input box.
    *   @defaultValue (optional) - Value should be pre-filled if none was specified before.
    *   @customHtml (optional) - The text of this parameter will be added into the HTML INPUT field.
@@ -495,7 +497,7 @@ private:
   char _thingName[IOTWEBCONF_WORD_LEN];
   char _apPassword[IOTWEBCONF_WORD_LEN];
   char _wifiSsid[IOTWEBCONF_WORD_LEN];
-  char _wifiPassword[IOTWEBCONF_WORD_LEN];
+  char _wifiPassword[IOTWEBCONF_WIFI_PASSWORD_LEN];
   char _apTimeoutStr[IOTWEBCONF_WORD_LEN];
   unsigned long _apTimeoutMs = IOTWEBCONF_DEFAULT_AP_MODE_TIMEOUT_MS;
   unsigned long _wifiConnectionTimeoutMs =
