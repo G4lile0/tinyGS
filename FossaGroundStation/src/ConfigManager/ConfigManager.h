@@ -39,6 +39,7 @@ constexpr auto ROOT_URL = "/";
 constexpr auto CONFIG_URL = "/config";
 constexpr auto DASHBOARD_URL = "/dashboard";
 constexpr auto UPDATE_URL = "/firmware";
+constexpr auto RESTART_URL = "/restart";
 
 const char TITLE_TEXT[] PROGMEM = "FOSSA Ground Satation Configuration";
 
@@ -150,6 +151,7 @@ private:
 
   void handleRoot();
   void handleDashboard();
+  void handleRestart();
   bool formValidator();
   void boardDetection();
   

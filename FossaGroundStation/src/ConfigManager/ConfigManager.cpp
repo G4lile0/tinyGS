@@ -37,6 +37,7 @@ ConfigManager::ConfigManager()
   server.on(ROOT_URL, [this]{ handleRoot(); });
   server.on(CONFIG_URL, [this]{ handleConfig(); });
   server.on(DASHBOARD_URL, [this]{ handleDashboard(); });
+  server.on(RESTART_URL, [this]{ handleRestart(); });
   setupUpdateServer(&httpUpdater);
   setHtmlFormatProvider(&gsConfigHtmlFormatProvider);
   formValidatorStd = std::bind(&ConfigManager::formValidator, this);
@@ -77,6 +78,7 @@ void ConfigManager::handleRoot()
   s += "<button onclick=\"window.location.href='" + String(DASHBOARD_URL) + "';\">Station dashboard</button><br /><br />";
   s += "<button onclick=\"window.location.href='" + String(CONFIG_URL) + "';\">Configure parameters</button><br /><br />";
   s += "<button onclick=\"window.location.href='" + String(UPDATE_URL) + "';\">Upload new version</button><br /><br />";
+  s += "<button onclick=\"window.location.href='" + String(RESTART_URL) + "';\">Restart Station</button><br /><br />";
   s += FPSTR(IOTWEBCONF_HTML_END);
 
   s.replace("{v}", FPSTR(TITLE_TEXT));
@@ -100,6 +102,37 @@ void ConfigManager::handleDashboard()
 
   server.sendHeader("Content-Length", String(s.length()));
   server.send(200, "text/html; charset=UTF-8", s);
+}
+
+void ConfigManager::handleRestart() {
+  if (getState() == IOTWEBCONF_STATE_ONLINE)
+  {
+    // -- Authenticate
+    if (!server.authenticate(
+            IOTWEBCONF_ADMIN_USER_NAME, getApPasswordParameter()->valueBuffer))
+    {
+      IOTWEBCONF_DEBUG_LINE(F("Requesting authentication."));
+      server.requestAuthentication();
+      return;
+    }
+  }
+
+
+  String s = String(FPSTR(IOTWEBCONF_HTML_HEAD));
+  s += "<style>" + String(FPSTR(IOTWEBCONF_HTML_STYLE_INNER)) + "</style>";
+  s += "<meta http-equiv=\"refresh\" content=\"8; url=/\">";
+  s += FPSTR(IOTWEBCONF_HTML_HEAD_END);
+  s += FPSTR(IOTWEBCONF_HTML_BODY_INNER);
+  s += String(FPSTR(LOGO)) + "<br />";
+  s += "Ground Station is restarting...<br /><br/>";
+  s += FPSTR(IOTWEBCONF_HTML_END);
+
+  s.replace("{v}", FPSTR(TITLE_TEXT));
+
+  server.sendHeader("Content-Length", String(s.length()));
+  server.send(200, "text/html; charset=UTF-8", s);
+  delay(100);
+  ESP.restart();
 }
 
 
