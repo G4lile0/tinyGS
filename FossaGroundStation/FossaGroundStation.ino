@@ -136,7 +136,7 @@ void wifiConnected() {
   int i = 0;
   while (!status.mqtt_connected) {
     if (i++ > 120) {// 1m
-      Serial.println (" MQTT unable to connect after 5m, restarting...");
+      Serial.println (" MQTT unable to connect after 30s, restarting...");
       ESP.restart();
     }
 	  Serial.print ('.');
