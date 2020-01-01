@@ -10,7 +10,7 @@ XBee::XBee(Module* mod) {
 int16_t XBee::begin(long speed) {
   // set module properties
   _mod->baudrate = speed;
-  _mod->init(RADIOLIB_USE_UART);
+  _mod->init(RADIOLIB_USE_UART, RADIOLIB_INT_1);
 
   // reset module
   reset();
@@ -52,11 +52,11 @@ int16_t XBee::begin(long speed) {
 }
 
 void XBee::reset() {
-  pinMode(_mod->getRst(), OUTPUT);
-  digitalWrite(_mod->getRst(), LOW);
+  pinMode(_mod->getInt1(), OUTPUT);
+  digitalWrite(_mod->getInt1(), LOW);
   delayMicroseconds(200);
-  digitalWrite(_mod->getRst(), HIGH);
-  pinMode(_mod->getRst(), INPUT);
+  digitalWrite(_mod->getInt1(), HIGH);
+  pinMode(_mod->getInt1(), INPUT);
 }
 
 int16_t XBee::transmit(uint8_t* dest, const char* payload, uint8_t radius) {
@@ -189,10 +189,7 @@ int16_t XBeeSerial::begin(long speed) {
   // set module properties
   _mod->AtLineFeed = "\r";
   _mod->baudrate = speed;
-  _mod->init(RADIOLIB_USE_UART);
-
-  // reset module
-  reset();
+  _mod->init(RADIOLIB_USE_UART, RADIOLIB_INT_NONE);
 
   // empty UART buffer (garbage data)
   _mod->ATemptyBuffer();
@@ -219,11 +216,11 @@ int16_t XBeeSerial::begin(long speed) {
 }
 
 void XBeeSerial::reset() {
-  pinMode(_mod->getRst(), OUTPUT);
-  digitalWrite(_mod->getRst(), LOW);
+  pinMode(_mod->getInt1(), OUTPUT);
+  digitalWrite(_mod->getInt1(), LOW);
   delayMicroseconds(200);
-  digitalWrite(_mod->getRst(), HIGH);
-  pinMode(_mod->getRst(), INPUT);
+  digitalWrite(_mod->getInt1(), HIGH);
+  pinMode(_mod->getInt1(), INPUT);
 }
 
 int16_t XBeeSerial::setDestinationAddress(const char* destinationAddressHigh, const char* destinationAddressLow) {

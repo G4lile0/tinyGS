@@ -19,15 +19,15 @@
 #include <RadioLib.h>
 
 // RF69 has the following connections:
-// CS pin:    10
+// NSS pin:   10
 // DIO0 pin:  2
-// RESET pin: 3
+// DIO1 pin:  3
 RF69 rf1 = new Module(10, 2, 3);
 
 // second CC1101 has different connections:
-// CS pin:    9
+// NSS pin:   9
 // DIO0 pin:  4
-// RESET pin: 5
+// DIO1 pin:  5
 RF69 rf2 = new Module(9, 4, 5);
 
 // or using RadioShield

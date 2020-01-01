@@ -19,9 +19,8 @@
 // SX1262 has the following connections:
 // NSS pin:   10
 // DIO1 pin:  2
-// NRST pin:  3
 // BUSY pin:  9
-SX1262 lora = new Module(10, 2, 3, 9);
+SX1262 lora = new Module(10, 2, 9);
 
 // or using RadioShield
 // https://github.com/jgromes/RadioShield
@@ -36,7 +35,7 @@ void setup() {
   // bandwidth:                   125.0 kHz
   // spreading factor:            9
   // coding rate:                 7
-  // sync word:                   0x12 (private network)
+  // sync word:                   0x1424 (private network)
   // output power:                14 dBm
   // current limit:               60 mA
   // preamble length:             8 symbols

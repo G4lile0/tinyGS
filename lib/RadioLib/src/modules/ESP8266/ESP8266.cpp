@@ -9,7 +9,7 @@ int16_t ESP8266::begin(long speed) {
   // set module properties
   _mod->AtLineFeed = "\r\n";
   _mod->baudrate = speed;
-  _mod->init(RADIOLIB_USE_UART);
+  _mod->init(RADIOLIB_USE_UART, RADIOLIB_INT_NONE);
 
   // empty UART buffer (garbage data)
   _mod->ATemptyBuffer();

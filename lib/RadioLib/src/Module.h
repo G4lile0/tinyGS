@@ -25,14 +25,12 @@ class Module {
 
       \param rx Arduino pin to be used as Rx pin for SoftwareSerial communication.
 
-      \param serial HardwareSerial to be used on platforms that do not support SoftwareSerial. Defaults to Serial1.
-
-      \param rst Arduino pin to be used as hardware reset for the module. Defaults to -1 (unused).
+      \param serial HardwareSerial to be used on ESP32 and SAMD. Defaults to 1
     */
 #ifdef RADIOLIB_SOFTWARE_SERIAL_UNSUPPORTED
-    Module(int16_t tx, int16_t rx, HardwareSerial* serial = &Serial1, int16_t rst = -1);
+    Module(int tx, int rx, HardwareSerial* useSer = &Serial1);
 #else
-    Module(int16_t tx, int16_t rx, HardwareSerial* serial = nullptr, int16_t rst = -1);
+    Module(int tx, int rx, HardwareSerial* useSer = nullptr);
 #endif
 
     /*!
@@ -40,41 +38,41 @@ class Module {
 
       \param cs Arduino pin to be used as chip select.
 
-      \param irq Arduino pin to be used as interrupt/GPIO.
+      \param int0 Arduino pin to be used as interrupt/GPIO 0.
 
-      \param rst Arduino pin to be used as hardware reset for the module.
+      \param int1 Arduino pin to be used as interrupt/GPIO 1.
 
       \param spi SPI interface to be used. Defaults to Arduino hardware SPI interface, can also use software SPI implementations.
 
       \param spiSettings SPI interface settings. Defaults to 2 MHz clock, MSB first, mode 0.
     */
-    Module(int16_t cs, int16_t irq, int16_t rst, SPIClass& spi = SPI, SPISettings spiSettings = SPISettings(2000000, MSBFIRST, SPI_MODE0));
+    Module(int cs, int int0, int int1, SPIClass& spi = SPI, SPISettings spiSettings = SPISettings(2000000, MSBFIRST, SPI_MODE0));
 
     /*!
       \brief Extended SPI-based module constructor.
 
       \param cs Arduino pin to be used as chip select.
 
-      \param irq Arduino pin to be used as interrupt/GPIO.
+      \param int0 Arduino pin to be used as interrupt/GPIO 0.
 
-      \param rst Arduino pin to be used as hardware reset for the module.
+      \param int1 Arduino pin to be used as interrupt/GPIO 1.
 
-      \param gpio Arduino pin to be used as additional interrupt/GPIO.
+      \param int2 Arduino pin to be used as interrupt/GPIO 2.
 
       \param spi SPI interface to be used. Defaults to Arduino hardware SPI interface, can also use software SPI implementations.
 
       \param spiSettings SPI interface settings. Defaults to 2 MHz clock, MSB first, mode 0.
     */
-    Module(int16_t cs, int16_t irq, int16_t rst, int16_t gpio, SPIClass& spi = SPI, SPISettings spiSettings = SPISettings(2000000, MSBFIRST, SPI_MODE0));
+    Module(int cs, int int0, int int1, int int2, SPIClass& spi = SPI, SPISettings spiSettings = SPISettings(2000000, MSBFIRST, SPI_MODE0));
 
     /*!
       \brief Generic module constructor.
 
       \param cs Arduino pin to be used as chip select.
 
-      \param irq Arduino pin to be used as interrupt/GPIO.
+      \param int0 Arduino pin to be used as interrupt/GPIO 0.
 
-      \param rst Arduino pin to be used as hardware reset for the module.
+      \param int1 Arduino pin to be used as interrupt/GPIO 1.
 
       \param tx Arduino pin to be used as Tx pin for SoftwareSerial communication.
 
@@ -87,9 +85,9 @@ class Module {
       \param serial HardwareSerial to be used on ESP32 and SAMD. Defaults to 1
     */
 #ifdef RADIOLIB_SOFTWARE_SERIAL_UNSUPPORTED
-    Module(int16_t cs, int16_t irq, int16_t rst, int16_t rx, int16_t tx, SPIClass& spi = SPI, SPISettings spiSettings = SPISettings(2000000, MSBFIRST, SPI_MODE0), HardwareSerial* serial = &Serial1);
+    Module(int cs, int int0, int int1, int rx, int tx, SPIClass& spi = SPI, SPISettings spiSettings = SPISettings(2000000, MSBFIRST, SPI_MODE0), HardwareSerial* useSer = &Serial1);
 #else
-    Module(int16_t cs, int16_t irq, int16_t rst, int16_t rx, int16_t tx, SPIClass& spi = SPI, SPISettings spiSettings = SPISettings(2000000, MSBFIRST, SPI_MODE0), HardwareSerial* serial = nullptr);
+    Module(int cs, int int0, int int1, int rx, int tx, SPIClass& spi = SPI, SPISettings spiSettings = SPISettings(2000000, MSBFIRST, SPI_MODE0), HardwareSerial* useSer = nullptr);
 #endif
 
 
@@ -130,8 +128,10 @@ class Module {
       \brief Initialize low-level module control.
 
       \param interface Interface to be used on the module. See \ref shield_config for details.
+
+      \param gpio GPIO/interrupt pins to be used on the module. See \ref uart_config for details.
     */
-    void init(uint8_t interface);
+    void init(uint8_t interface, uint8_t gpio);
 
     /*!
       \brief Terminate low-level module control.
@@ -266,42 +266,35 @@ class Module {
 
       \returns Pin number of SPI chip select configured in the constructor.
     */
-    int16_t getCs() const { return(_cs); }
+    int getCs() const { return(_cs); }
 
     /*!
-      \brief Access method to get the pin number of interrupt/GPIO.
+      \brief Access method to get the pin number of interrupt/GPIO 0.
 
-      \returns Pin number of interrupt/GPIO configured in the constructor.
+      \returns Pin number of interrupt/GPIO 0 configured in the constructor.
     */
-    int16_t getIrq() const { return(_irq); }
+    int getInt0() const { return(_int0); }
 
     /*!
-      \brief Access method to get the pin number of hardware reset pin.
+      \brief Access method to get the pin number of interrupt/GPIO 1.
 
-      \returns Pin number of hardware reset pin configured in the constructor.
+      \returns Pin number of interrupt/GPIO 1 configured in the constructor.
     */
-    int16_t getRst() const { return(_rst); }
-
-    /*!
-      \brief Access method to get the pin number of second interrupt/GPIO.
-
-      \returns Pin number of second interrupt/GPIO configured in the constructor.
-    */
-    int16_t getGpio() const { return(_rx); }
+    int getInt1() const { return(_int1); }
 
     /*!
       \brief Access method to get the pin number of UART Rx.
 
       \returns Pin number of UART Rx configured in the constructor.
     */
-    int16_t getRx() const { return(_rx); }
+    int getRx() const { return(_rx); }
 
     /*!
       \brief Access method to get the pin number of UART Rx.
 
       \returns Pin number of UART Rx configured in the constructor.
     */
-    int16_t getTx() const { return(_tx); }
+    int getTx() const { return(_tx); }
 
     /*!
       \brief Access method to get the SPI interface.
@@ -317,37 +310,21 @@ class Module {
     */
     SPISettings getSpiSettings() const { return(_spiSettings); }
 
-    /*!
-      \brief Arduino core pinMode override that checks -1 as alias for unused pin.
-
-      \param pin Pin to change the mode of.
-
-      \param mode Which mode to set.
-    */
-    static void pinMode(int16_t pin, uint8_t mode);
-
-    /*!
-      \brief Arduino core digitalWrite override that checks -1 as alias for unused pin.
-
-      \param pin Pin to write to.
-
-      \param value Whether to set the pin high or low.
-    */
-    static void digitalWrite(int16_t pin, uint8_t value);
-
 #ifndef RADIOLIB_GODMODE
   private:
 #endif
-    int16_t _cs;
-    int16_t _tx;
-    int16_t _rx;
-    int16_t _irq;
-    int16_t _rst;
+    int _cs;
+    int _tx;
+    int _rx;
+    int _int0;
+    int _int1;
 
     SPIClass* _spi;
     SPISettings _spiSettings;
 
     uint32_t _ATtimeout = 15000;
+
+    void setPin(int16_t pin, uint8_t mode);
 };
 
 #endif

@@ -1,11 +1,11 @@
 #include "Module.h"
 
-Module::Module(int16_t rx, int16_t tx, HardwareSerial* useSer, int16_t rst) {
-  _cs = RADIOLIB_PIN_UNUSED;
+Module::Module(int rx, int tx, HardwareSerial* useSer) {
+  _cs = -1;
   _rx = rx;
   _tx = tx;
-  _irq = RADIOLIB_PIN_UNUSED;
-  _rst = rst;
+  _int0 = -1;
+  _int1 = -1;
 
 #ifdef RADIOLIB_SOFTWARE_SERIAL_UNSUPPORTED
   ModuleSerial = useSer;
@@ -15,32 +15,22 @@ Module::Module(int16_t rx, int16_t tx, HardwareSerial* useSer, int16_t rst) {
 #endif
 }
 
-Module::Module(int16_t cs, int16_t irq, int16_t rst, SPIClass& spi, SPISettings spiSettings) {
+Module::Module(int cs, int int0, int int1, SPIClass& spi, SPISettings spiSettings) {
   _cs = cs;
-  _rx = RADIOLIB_PIN_UNUSED;
-  _tx = RADIOLIB_PIN_UNUSED;
-  _irq = irq;
-  _rst = rst;
+  _rx = -1;
+  _tx = -1;
+  _int0 = int0;
+  _int1 = int1;
   _spi = &spi;
   _spiSettings = spiSettings;
 }
 
-Module::Module(int16_t cs, int16_t irq, int16_t rst, int16_t gpio, SPIClass& spi, SPISettings spiSettings) {
-  _cs = cs;
-  _rx = gpio;
-  _tx = RADIOLIB_PIN_UNUSED;
-  _irq = irq;
-  _rst = rst;
-  _spi = &spi;
-  _spiSettings = spiSettings;
-}
-
-Module::Module(int16_t cs, int16_t irq, int16_t rst, int16_t rx, int16_t tx, SPIClass& spi, SPISettings spiSettings, HardwareSerial* useSer) {
+Module::Module(int cs, int int0, int int1, int rx, int tx, SPIClass& spi, SPISettings spiSettings, HardwareSerial* useSer) {
   _cs = cs;
   _rx = rx;
   _tx = tx;
-  _irq = irq;
-  _rst = rst;
+  _int0 = int0;
+  _int1 = int1;
   _spi = &spi;
   _spiSettings = spiSettings;
 
@@ -52,12 +42,22 @@ Module::Module(int16_t cs, int16_t irq, int16_t rst, int16_t rx, int16_t tx, SPI
 #endif
 }
 
-void Module::init(uint8_t interface) {
+Module::Module(int cs, int int0, int int1, int int2, SPIClass& spi, SPISettings spiSettings) {
+  _cs = cs;
+  _rx = int2;
+  _tx = -1;
+  _int0 = int0;
+  _int1 = int1;
+  _spi = &spi;
+  _spiSettings = spiSettings;
+}
+
+void Module::init(uint8_t interface, uint8_t gpio) {
   // select interface
   switch(interface) {
     case RADIOLIB_USE_SPI:
-      Module::pinMode(_cs, OUTPUT);
-      Module::digitalWrite(_cs, HIGH);
+      setPin(_cs, OUTPUT);
+      digitalWrite(_cs, HIGH);
       _spi->begin();
       break;
     case RADIOLIB_USE_UART:
@@ -68,6 +68,22 @@ void Module::init(uint8_t interface) {
 #endif
       break;
     case RADIOLIB_USE_I2C:
+      break;
+  }
+
+  // select GPIO
+  switch(gpio) {
+    case RADIOLIB_INT_NONE:
+      break;
+    case RADIOLIB_INT_0:
+      setPin(_int0, INPUT);
+      break;
+    case RADIOLIB_INT_1:
+      setPin(_int1, INPUT);
+      break;
+    case RADIOLIB_INT_BOTH:
+      setPin(_int0, INPUT);
+      setPin(_int1, INPUT);
       break;
   }
 }
@@ -201,7 +217,7 @@ void Module::SPItransfer(uint8_t cmd, uint8_t reg, uint8_t* dataOut, uint8_t* da
   _spi->beginTransaction(_spiSettings);
 
   // pull CS low
-  Module::digitalWrite(_cs, LOW);
+  digitalWrite(_cs, LOW);
 
   // send SPI register address with access command
   _spi->transfer(reg | cmd);
@@ -231,20 +247,14 @@ void Module::SPItransfer(uint8_t cmd, uint8_t reg, uint8_t* dataOut, uint8_t* da
   RADIOLIB_VERBOSE_PRINTLN();
 
   // release CS
-  Module::digitalWrite(_cs, HIGH);
+  digitalWrite(_cs, HIGH);
 
   // end SPI transaction
   _spi->endTransaction();
 }
 
-void Module::pinMode(int16_t pin, uint8_t mode) {
-  if(pin != RADIOLIB_PIN_UNUSED) {
-    ::pinMode(pin, mode);
-  }
-}
-
-void Module::digitalWrite(int16_t pin, uint8_t value) {
-  if(pin != RADIOLIB_PIN_UNUSED) {
-    ::digitalWrite(pin, value);
+void Module::setPin(int16_t pin, uint8_t mode) {
+  if(pin != -1) {
+    pinMode(pin, mode);
   }
 }
