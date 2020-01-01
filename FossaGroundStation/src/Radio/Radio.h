@@ -37,6 +37,7 @@ public:
   void enableInterrupt();
   void disableInterrupt();
   uint8_t listen(uint8_t *&respOptData, size_t &respLen, uint8_t &functionId);
+  bool isReady() { return ready; }
 
 private:
   PhysicalLayer* lora;
@@ -44,6 +45,7 @@ private:
   
   static void setFlag();
   int sendFrame(uint8_t functionId, const char* data = "");
+  bool ready = false;
 };
 
 #endif

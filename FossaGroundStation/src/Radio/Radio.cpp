@@ -73,8 +73,7 @@ void Radio::init(){
   else {
     Serial.print(F("failed, code "));
     Serial.println(state);
-    delay(5000);
-    ESP.restart();
+    return;
   }
 
   // set the function that will be called
@@ -101,8 +100,10 @@ void Radio::init(){
   else {
     Serial.print(F("failed, code "));
     Serial.println(state);
-    while (true);
+    return;
   }
+
+  ready = true;
 }
 
 void Radio::setFlag() {

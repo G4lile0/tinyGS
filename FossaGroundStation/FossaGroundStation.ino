@@ -106,6 +106,12 @@ void wifiConnected() {
   arduino_ota_setup();
   displayShowConnected();
 
+  radio.init();
+  if (!radio.isReady()){
+    Serial.println("LoRa initialization failed. Please connect to " + WiFi.localIP().toString() + " and make sure the board selected matches your hardware.");
+    displayShowLoRaError();
+  }
+
   mqtt.init(configManager.getMqttServer(), configManager.getMqttPort(), configManager.getMqttUser(), configManager.getMqttPass());
   String topic = "fossa/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/status";
   mqtt.setLastWill(topic.c_str());
@@ -129,7 +135,7 @@ void wifiConnected() {
   Serial.println ("Waiting for MQTT connection. Connect to the config panel on the ip: " + WiFi.localIP().toString() + " to review the MQTT connection credentials.");
   int i = 0;
   while (!status.mqtt_connected) {
-    if (i++ > 150000) {// 5m
+    if (i++ > 120) {// 1m
       Serial.println (" MQTT unable to connect after 5m, restarting...");
       ESP.restart();
     }
@@ -186,8 +192,6 @@ void setup() {
     configManager.resetAPConfig();
     ESP.restart();
   }
-
-  radio.init();
   
   if (configManager.isApMode()) {
     displayShowApMode();
@@ -201,7 +205,19 @@ void setup() {
 void loop() {
   configManager.doLoop();
 
+  static bool wasConnected = false;
   if (!configManager.isConnected()){
+    if (wasConnected){
+      if (configManager.isApMode())
+        displayShowApMode();
+      else 
+        displayShowStaMode();
+    }
+    return;
+  }
+  wasConnected = true;
+
+  if (!radio.isReady()) {
     return;
   }
 

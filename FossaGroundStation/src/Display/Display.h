@@ -30,6 +30,8 @@ void displayShowInitialCredits();
 void displayShowApMode();
 void displayShowStaMode();
 void displayUpdate();
+void displayShowLoRaError();
+
 extern ConfigManager configManager;
 extern Status status;
 
