@@ -21,10 +21,23 @@
 #define MQTT_TAG "ESP32_MQTT"
 
 #include "esp32_mqtt_client.h"
+#include <WiFi.h>
 
 void Esp32_mqtt_clientClass::init(const char* host, int32_t port, const char* user, const char* password)
 {
-	mqtt_cfg.host = host;
+	IPAddress ip;
+	int result = 0;
+
+	if(WiFi.isConnected()){
+		result = WiFi.hostByName(host,ip);
+	}
+
+	if (result){
+		mqtt_cfg.host = ip.toString().c_str();
+	} else {
+		mqtt_cfg.host = host;
+	}
+
 	mqtt_cfg.port = port;
 	mqtt_cfg.username = user;
 	mqtt_cfg.password = password;
