@@ -38,6 +38,8 @@ void Esp32_mqtt_clientClass::init(const char* host, int32_t port, const char* us
 		mqtt_cfg.host = host;
 	}
 
+	ESP_LOGI (MQTT_TAG, "MQTT Host: %s", mqtt_cfg.host);
+	
 	mqtt_cfg.port = port;
 	mqtt_cfg.username = user;
 	mqtt_cfg.password = password;
