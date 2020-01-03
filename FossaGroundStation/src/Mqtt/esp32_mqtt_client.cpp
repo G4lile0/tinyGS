@@ -51,6 +51,31 @@ void Esp32_mqtt_clientClass::init(const char* host, int32_t port, const char* us
 	client = new PubSubClient(espClient);
 }
 
+void Esp32_mqtt_clientClass::reconnect() {
+  // Loop until we're reconnected
+  while (!client->connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Create a random client ID
+    String clientId = "ESP8266Client-";
+    clientId += String(random(0xffff), HEX);
+    setClock();
+    // Attempt to connect
+    if (client.connect(clientId.c_str(), mqtt_user, mqtt_pass)) {
+      Serial.println("connected");
+      // Once connected, publish an announcement...
+      client.publish("test/outTopic", "hello world");
+      // ... and resubscribe
+      client.subscribe("test/#");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}
+
 void Esp32_mqtt_clientClass::data_handler(char* topic, byte* payload, unsigned int length) {
 	ESP_LOGI (MQTT_TAG, "MQTT data %s %.*s", topic, length, payload);
 	if (_onData) {
