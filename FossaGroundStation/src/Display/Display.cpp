@@ -229,10 +229,10 @@ void displayShowStaMode() {
 void displayShowLoRaError() {
   display->clear();
   display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->drawString(0, 5, "LoRa initialization failed.");
-  display->drawString(20, 5, "Please connect to " + WiFi.localIP().toString());
-  display->drawString(40, 5, "and make sure the board selected");
-  display->drawString(40, 5, "matches your hardware");
+  display->drawString(0, 0, "LoRa initialization failed.");
+  display->drawString(0, 14, "Browse " + WiFi.localIP().toString());
+  display->drawString(0, 28, "Ensure board selected");
+  display->drawString(0, 42, "matches your hardware");
   display->display();
 }
 
