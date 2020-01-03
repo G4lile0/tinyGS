@@ -63,6 +63,7 @@
 #include "src/Comms/Comms.h"
 #include "src/Display/Display.h"
 
+#include <PubSubClient.h>
 #include "src/Mqtt/esp32_mqtt_client.h"
 #include "ArduinoJson.h"
 #include "src/Status.h"

@@ -22,24 +22,13 @@
 
 #include "esp32_mqtt_client.h"
 #include <WiFi.h>
+#include <functional>
+using namespace std;
+using namespace placeholders;
 
 void Esp32_mqtt_clientClass::init(const char* host, int32_t port, const char* user, const char* password)
 {
-	IPAddress ip;
-	int result = 0;
-
-	if(WiFi.isConnected()){
-		result = WiFi.hostByName(host,ip);
-	}
-
-	if (result){
-		mqtt_cfg.host = ip.toString().c_str();
-	} else {
-		mqtt_cfg.host = host;
-	}
-
-	ESP_LOGI (MQTT_TAG, "MQTT Host: %s", mqtt_cfg.host);
-	
+	mqtt_cfg.host = host;
 	mqtt_cfg.port = port;
 	mqtt_cfg.username = user;
 	mqtt_cfg.password = password;
@@ -51,88 +40,44 @@ void Esp32_mqtt_clientClass::init(const char* host, int32_t port, const char* us
 	ESP_LOGI (MQTT_TAG, "Password: %s", mqtt_cfg.password? mqtt_cfg.password:"none");
 
 #ifdef SECURE_MQTT
-	mqtt_cfg.transport = MQTT_TRANSPORT_OVER_SSL;
+	//mqtt_cfg.transport = MQTT_TRANSPORT_OVER_SSL;
 #else
-	mqtt_cfg.transport = MQTT_TRANSPORT_OVER_TCP;
+	//mqtt_cfg.transport = MQTT_TRANSPORT_OVER_TCP;
 #endif // SECURE_MQTT
-	mqtt_cfg.event_handle = mqtt_event_handler;
 	mqtt_cfg.user_context = this;
-	//ESP_LOGI (MQTT_TAG, "this = %p", this);
+#ifdef SECURE_MQTT
+	espClient.setCACert(DSTroot_CA);
+#endif // SECURE_MQTT
+	client = new PubSubClient(espClient);
+}
+
+void Esp32_mqtt_clientClass::data_handler(char* topic, byte* payload, unsigned int length) {
+	ESP_LOGI (MQTT_TAG, "MQTT data %s %.*s", topic, length, payload);
+	if (_onData) {
+		ESP_LOGI (MQTT_TAG,"Data event!!!");
+		_onData (topic, strlen(topic), (char*)payload, length);
+	}
+
 }
 
 bool Esp32_mqtt_clientClass::begin () {
-	esp_err_t err;
-#ifdef SECURE_MQTT
-	err = esp_tls_set_global_ca_store (DSTroot_CA, sizeof (DSTroot_CA));
-	ESP_LOGI (MQTT_TAG, "CA store set. Error = %d %s", err, esp_err_to_name (err));
-#endif // SECURE_MQTT
-	client = esp_mqtt_client_init (&mqtt_cfg);
-	err = esp_mqtt_client_start (client);
-	ESP_LOGI (MQTT_TAG, "Client connect. Error = %d %s", err, esp_err_to_name (err));
+	client->setServer(mqtt_cfg.host,mqtt_cfg.port);
+	client->setCallback(std::bind(&Esp32_mqtt_clientClass::data_handler, this, _1, _2, _3));
 
-	return err == ESP_OK;
+	return true;
 }
 
 bool Esp32_mqtt_clientClass::setLastWill (const char* topic) {
 	mqtt_cfg.lwt_topic = topic;
 	mqtt_cfg.lwt_msg = "0";
 	mqtt_cfg.lwt_msg_len = 1;
-	//mqtt_cfg.lwt_qos = qos;
 	mqtt_cfg.lwt_retain = true;
 
 	return true;
 }
 
 bool Esp32_mqtt_clientClass::publish (const char* topic, const char* payload, size_t payload_lenght, int qos, bool retain) {
-	return esp_mqtt_client_publish (client, topic, (char*)payload, payload_lenght, qos, retain);
-}
-
-esp_err_t Esp32_mqtt_clientClass::mqtt_event_handler (esp_mqtt_event_handle_t event) {
-	Esp32_mqtt_clientClass* client = (Esp32_mqtt_clientClass*)(event->user_context);
-
-	if (event->event_id == MQTT_EVENT_CONNECTED) {
-		ESP_LOGI (MQTT_TAG, "MQTT msgid= %d event: %d. MQTT_EVENT_CONNECTED", event->msg_id, event->event_id);
-		//esp_mqtt_client_subscribe (((Esp32_mqtt_clientClass*)event)->client, "test/hello", 0);
-		if (client->mqtt_cfg.lwt_topic) {
-			esp_mqtt_client_publish (
-				client->client, client->mqtt_cfg.lwt_topic, "1", 1, 0, true);
-		}
-	} else if (event->event_id == MQTT_EVENT_DISCONNECTED) {
-		ESP_LOGI (MQTT_TAG, "MQTT event: %d. MQTT_EVENT_DISCONNECTED", event->event_id);
-		//esp_mqtt_client_reconnect (event->client); //not needed if autoconnect is enabled
-	} else  if (event->event_id == MQTT_EVENT_SUBSCRIBED) {
-		ESP_LOGI (MQTT_TAG, "MQTT msgid= %d event: %d. MQTT_EVENT_SUBSCRIBED", event->msg_id, event->event_id);
-	} else  if (event->event_id == MQTT_EVENT_UNSUBSCRIBED) {
-		ESP_LOGI (MQTT_TAG, "MQTT msgid= %d event: %d. MQTT_EVENT_UNSUBSCRIBED", event->msg_id, event->event_id);
-	} else  if (event->event_id == MQTT_EVENT_PUBLISHED) {
-		ESP_LOGI (MQTT_TAG, "MQTT event: %d. MQTT_EVENT_PUBLISHED", event->event_id);
-	} else  if (event->event_id == MQTT_EVENT_DATA) {
-		ESP_LOGI (MQTT_TAG, "MQTT msgid= %d event: %d. MQTT_EVENT_DATA", event->msg_id, event->event_id);
-		ESP_LOGI (MQTT_TAG, "Topic length %d. Data length %d", event->topic_len, event->data_len);
-		ESP_LOGI (MQTT_TAG, "Incoming data: %.*s %.*s", event->topic_len, event->topic, event->data_len, event->data);
-		//ESP_LOGI (MQTT_TAG, "client->_onData %p", client->_onData);
-		if (client->_onData) {
-			ESP_LOGI (MQTT_TAG,"Data event!!!");
-			client->_onData (event->topic, event->topic_len, event->data, event->data_len);
-		}
-	} else  if (event->event_id == MQTT_EVENT_BEFORE_CONNECT) {
-		ESP_LOGI (MQTT_TAG, "MQTT event: %d. MQTT_EVENT_BEFORE_CONNECT", event->event_id);
-	}
-	if (event->event_id != MQTT_EVENT_DATA) {
-		if (client->_onEvent) {
-			//ESP_LOGI (MQTT_TAG, "Event!");
-			//ESP_LOGI (MQTT_TAG, "event->user_context = %p", client);
-			//ESP_LOGI (MQTT_TAG, "event->user_context->_onevent = %p", client->_onEvent);
-
-			client->_onEvent (event->event_id);
-		}
-	}
-	return ESP_OK;
-}
-
-void Esp32_mqtt_clientClass::onEvent (onMQTTevent_t event_callback) {
-	_onEvent = event_callback;
-	//ESP_LOGI (MQTT_TAG,"Event callback %p %p", _onEvent, event_callback);
+	return client->publish (topic, (uint8_t*)payload, payload_lenght, retain);
 }
 
 void Esp32_mqtt_clientClass::onReceive (onMQTTdata_t data_callback) {
@@ -141,9 +86,30 @@ void Esp32_mqtt_clientClass::onReceive (onMQTTdata_t data_callback) {
 }
 
 
-bool Esp32_mqtt_clientClass::subscribe (const char* topic, int32_t qos) {
-	return esp_mqtt_client_subscribe (client, topic, qos) >= 0;
+bool Esp32_mqtt_clientClass::subscribe (const char* topic) {
+	String new_topic (topic);
+	subs_topics.push_back(new_topic);
+	if (client->connected()){
+		client->subscribe(topic);
+	}
+	//return esp_mqtt_client_subscribe (client, topic, qos) >= 0;
+	return true;
 }
 
+bool Esp32_mqtt_clientClass::unsubscribe (const char* topic) {
+	String new_topic (topic);
+	for (auto it = subs_topics.begin();it!=subs_topics.end();++it){
+		if (it->equals(topic)){
+			subs_topics.erase(it);
+		}
+	}
+	return true;
+}
 
+Esp32_mqtt_clientClass::~Esp32_mqtt_clientClass(){
+	if (client) {
+		client->disconnect();
+	}
+	delete client;
+}
 //Esp32_mqtt_clientClass Esp32_mqtt_client;
