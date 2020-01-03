@@ -113,13 +113,6 @@ void wifiConnected() {
     displayShowLoRaError();
   }
 
-  mqtt.init(configManager.getMqttServer(), configManager.getMqttPort(), configManager.getMqttUser(), configManager.getMqttPass());
-  String topic = "fossa/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/status";
-  mqtt.setLastWill(topic.c_str());
-  mqtt.onEvent(manageMQTTEvent);
-  mqtt.onReceive(manageMQTTData);
-  mqtt.begin();
-
   //init and get the time
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   if (strcmp (configManager.getTZ(), "")) {
@@ -130,6 +123,13 @@ void wifiConnected() {
 
   printLocalTime();
   delay (1000); // wait to show the connected screen
+
+  mqtt.init(configManager.getMqttServer(), configManager.getMqttPort(), configManager.getMqttUser(), configManager.getMqttPass());
+  String topic = "fossa/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/status";
+  mqtt.setLastWill(topic.c_str());
+  //mqtt.onEvent(manageMQTTEvent);
+  mqtt.onReceive(manageMQTTData);
+  mqtt.begin();
 
   // TODO: Make this beautiful
   displayShowWaitingMqttConnection();

@@ -28,11 +28,14 @@ using namespace placeholders;
 
 void Esp32_mqtt_clientClass::init(const char* host, int32_t port, const char* user, const char* password)
 {
+	uint64_t chipId = ESP.getEfuseMac();
+	String clientId = String ((uint32_t)chipId, HEX);
 	mqtt_cfg.host = host;
 	mqtt_cfg.port = port;
 	mqtt_cfg.username = user;
 	mqtt_cfg.password = password;
 	mqtt_cfg.keepalive = 15;
+	mqtt_cfg.client_id = clientId.c_str();
 	ESP_LOGI (MQTT_TAG, "==== MQTT Configuration ====");
 	ESP_LOGI (MQTT_TAG, "Host Name: %s", mqtt_cfg.host? mqtt_cfg.host:"none");
 	ESP_LOGI (MQTT_TAG, "Port: %u", mqtt_cfg.port);
@@ -51,29 +54,47 @@ void Esp32_mqtt_clientClass::init(const char* host, int32_t port, const char* us
 	client = new PubSubClient(espClient);
 }
 
-void Esp32_mqtt_clientClass::reconnect() {
-  // Loop until we're reconnected
-  while (!client->connected()) {
-    Serial.print("Attempting MQTT connection...");
-    // Create a random client ID
-    String clientId = "ESP8266Client-";
-    clientId += String(random(0xffff), HEX);
-    setClock();
-    // Attempt to connect
-    if (client.connect(clientId.c_str(), mqtt_user, mqtt_pass)) {
-      Serial.println("connected");
-      // Once connected, publish an announcement...
-      client.publish("test/outTopic", "hello world");
-      // ... and resubscribe
-      client.subscribe("test/#");
-    } else {
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
+void Esp32_mqtt_clientClass::mqtt_task (Esp32_mqtt_clientClass* mqtt_client){
+    while (true){
+        mqtt_client->reconnect();
     }
-  }
+}
+
+void Esp32_mqtt_clientClass::reconnect() {
+  	// Loop until we're reconnected
+  	while (!client->connected()) {
+    	ESP_LOGI (MQTT_TAG,"Attempting MQTT connection...");
+    	// Create a random client ID
+    	String clientId = mqtt_cfg.client_id;
+    	// Attempt to connect
+    	if (client->connect(
+							mqtt_cfg.client_id, 
+							mqtt_cfg.username, 
+							mqtt_cfg.password,
+							mqtt_cfg.lwt_topic ,
+							0,
+							mqtt_cfg.lwt_retain,
+							mqtt_cfg.lwt_msg,
+							true)) {
+      	    ESP_LOGI (MQTT_TAG,"MQTT connected");
+      	    // Once connected, publish an announcement...
+      	    client->publish(mqtt_cfg.lwt_topic, (uint8_t*)mqtt_cfg.lwt_msg, mqtt_cfg.lwt_msg_len,mqtt_cfg.lwt_retain);
+      	    // ... and resubscribe
+            for (auto& topic: subs_topics){
+                client->subscribe(topic.c_str());
+            }
+        } else {
+#ifdef SECURE_MQTT
+            char error[100];
+            espClient.lastError(error, sizeof(error));
+            ESP_LOGE (MQTT_TAG,"failed, MQTT client state = %d error: %s", client->state(), error);
+#else
+            ESP_LOGE (MQTT_TAG,"failed, MQTT client state = %d", client->state());
+#endif
+            // Wait 5 seconds before retrying
+            delay(5000);
+        }
+    }
 }
 
 void Esp32_mqtt_clientClass::data_handler(char* topic, byte* payload, unsigned int length) {
@@ -88,7 +109,7 @@ void Esp32_mqtt_clientClass::data_handler(char* topic, byte* payload, unsigned i
 bool Esp32_mqtt_clientClass::begin () {
 	client->setServer(mqtt_cfg.host,mqtt_cfg.port);
 	client->setCallback(std::bind(&Esp32_mqtt_clientClass::data_handler, this, _1, _2, _3));
-
+	//xTaskCreate()
 	return true;
 }
 

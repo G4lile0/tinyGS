@@ -84,7 +84,8 @@ class Esp32_mqtt_clientClass
 #endif
 	PubSubClient *client;
 	void data_handler(char* topic, byte* payload, unsigned int length);
-	void Esp32_mqtt_clientClass::reconnect ();
+	void reconnect ();
+	static void mqtt_task (Esp32_mqtt_clientClass* mqtt_client);
 
  public:
 	void init(const char* host, int32_t port, const char* user, const char* password);
