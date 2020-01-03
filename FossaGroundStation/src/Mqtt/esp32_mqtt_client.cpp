@@ -54,7 +54,9 @@ void Esp32_mqtt_clientClass::init(const char* host, int32_t port, const char* us
 	client = new PubSubClient(espClient);
 }
 
-void Esp32_mqtt_clientClass::mqtt_task (Esp32_mqtt_clientClass* mqtt_client){
+void Esp32_mqtt_clientClass::mqtt_task (void* arg){
+
+    Esp32_mqtt_clientClass* mqtt_client = (Esp32_mqtt_clientClass*)arg;
     while (true){
         mqtt_client->reconnect();
     }
@@ -107,9 +109,9 @@ void Esp32_mqtt_clientClass::data_handler(char* topic, byte* payload, unsigned i
 }
 
 bool Esp32_mqtt_clientClass::begin () {
-	client->setServer(mqtt_cfg.host,mqtt_cfg.port);
-	client->setCallback(std::bind(&Esp32_mqtt_clientClass::data_handler, this, _1, _2, _3));
-	//xTaskCreate()
+	client->setServer (mqtt_cfg.host, mqtt_cfg.port);
+	client->setCallback (std::bind(&Esp32_mqtt_clientClass::data_handler, this, _1, _2, _3));
+	xTaskCreate (mqtt_task, "MQTT Client", 2048, this, 2, &xHandle);
 	return true;
 }
 
