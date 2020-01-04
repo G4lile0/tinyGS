@@ -205,6 +205,7 @@ void setup() {
 
 void loop() {
   configManager.doLoop();
+  mqtt.loop();
 
   static bool wasConnected = false;
   if (!configManager.isConnected()){
