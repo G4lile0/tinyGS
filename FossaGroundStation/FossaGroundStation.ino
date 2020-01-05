@@ -135,7 +135,7 @@ void wifiConnected() {
   displayShowWaitingMqttConnection();
   Serial.println ("Waiting for MQTT connection. Connect to the config panel on the ip: " + WiFi.localIP().toString() + " to review the MQTT connection credentials.");
   int i = 0;
-  while (!status.mqtt_connected) {
+  /*while (!status.mqtt_connected) {
     if (i++ > 120) {// 1m
       Serial.println (" MQTT unable to connect after 30s, restarting...");
       ESP.restart();
@@ -145,7 +145,7 @@ void wifiConnected() {
     // in the meantime we call the config loop to make it alive.
     configManager.delay(500);
   }
-  Serial.println (" Connected !!!");
+  Serial.println (" Connected !!!");*/
   
   printControls();
 }
@@ -205,7 +205,6 @@ void setup() {
 
 void loop() {
   configManager.doLoop();
-  mqtt.loop();
 
   static bool wasConnected = false;
   if (!configManager.isConnected()){
@@ -218,6 +217,7 @@ void loop() {
     return;
   }
   wasConnected = true;
+  mqtt.loop();
 
   if (!radio.isReady()) {
     return;

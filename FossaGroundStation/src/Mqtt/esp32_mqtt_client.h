@@ -87,6 +87,7 @@ class Esp32_mqtt_clientClass
 	void reconnect ();
 	//static void mqtt_task (void* mqtt_client);
 	TaskHandle_t xHandle = NULL;
+	String lwtopic;
 
  public:
 	void init(const char* host, int32_t port, const char* user, const char* password);

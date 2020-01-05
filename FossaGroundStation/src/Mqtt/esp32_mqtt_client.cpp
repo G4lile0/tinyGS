@@ -28,14 +28,11 @@ using namespace placeholders;
 
 void Esp32_mqtt_clientClass::init(const char* host, int32_t port, const char* user, const char* password)
 {
-	uint64_t chipId = ESP.getEfuseMac();
-	String clientId = String ((uint32_t)chipId, HEX);
 	mqtt_cfg.host = host;
 	mqtt_cfg.port = port;
 	mqtt_cfg.username = user;
 	mqtt_cfg.password = password;
 	mqtt_cfg.keepalive = 15;
-	mqtt_cfg.client_id = clientId.c_str();
 	ESP_LOGI (MQTT_TAG, "==== MQTT Configuration ====");
 	ESP_LOGI (MQTT_TAG, "Host Name: %s", mqtt_cfg.host? mqtt_cfg.host:"none");
 	ESP_LOGI (MQTT_TAG, "Port: %u", mqtt_cfg.port);
@@ -77,13 +74,14 @@ void Esp32_mqtt_clientClass::reconnect() {
 		if (!WiFi.isConnected())
 			WiFi.begin(); // Shouldn't esp32 connect automatically???
 			
-		String clientId = mqtt_cfg.client_id;
+		uint64_t chipId = ESP.getEfuseMac();
+		String clientId = String ((uint32_t)chipId, HEX);
     	// Attempt to connect
     	if (client->connect(
-							mqtt_cfg.client_id, 
+							clientId.c_str(), 
 							mqtt_cfg.username, 
 							mqtt_cfg.password,
-							mqtt_cfg.lwt_topic ,
+							lwtopic.c_str() ,
 							0,
 							mqtt_cfg.lwt_retain,
 							mqtt_cfg.lwt_msg,
@@ -91,7 +89,7 @@ void Esp32_mqtt_clientClass::reconnect() {
       	    ESP_LOGI (MQTT_TAG,"MQTT connected");
       	    // Once connected, publish an announcement...
 			char lw_msg_ok[] = "1";
-			client->publish(mqtt_cfg.lwt_topic, (uint8_t*)lw_msg_ok, 1,mqtt_cfg.lwt_retain);
+			client->publish(lwtopic.c_str(), (uint8_t*)lw_msg_ok, 1,mqtt_cfg.lwt_retain);
       	    // ... and resubscribe
             for (auto& topic: subs_topics){
 				ESP_LOGI(MQTT_TAG, "Subscribed to %s", topic.c_str());
@@ -130,7 +128,7 @@ bool Esp32_mqtt_clientClass::begin () {
 }
 
 bool Esp32_mqtt_clientClass::setLastWill (const char* topic) {
-	mqtt_cfg.lwt_topic = topic;
+	lwtopic = String(topic);
 	mqtt_cfg.lwt_msg = "0";
 	mqtt_cfg.lwt_msg_len = 1;
 	mqtt_cfg.lwt_retain = true;
