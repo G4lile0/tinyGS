@@ -63,6 +63,7 @@
 #include "src/Comms/Comms.h"
 #include "src/Display/Display.h"
 
+#include <PubSubClient.h>
 #include "src/Mqtt/esp32_mqtt_client.h"
 #include "ArduinoJson.h"
 #include "src/Status.h"
@@ -112,13 +113,6 @@ void wifiConnected() {
     displayShowLoRaError();
   }
 
-  mqtt.init(configManager.getMqttServer(), configManager.getMqttPort(), configManager.getMqttUser(), configManager.getMqttPass());
-  String topic = "fossa/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/status";
-  mqtt.setLastWill(topic.c_str());
-  mqtt.onEvent(manageMQTTEvent);
-  mqtt.onReceive(manageMQTTData);
-  mqtt.begin();
-
   //init and get the time
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   if (strcmp (configManager.getTZ(), "")) {
@@ -130,11 +124,18 @@ void wifiConnected() {
   printLocalTime();
   delay (1000); // wait to show the connected screen
 
+  mqtt.init(configManager.getMqttServer(), configManager.getMqttPort(), configManager.getMqttUser(), configManager.getMqttPass());
+  String topic = "fossa/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/status";
+  mqtt.setLastWill(topic.c_str());
+  //mqtt.onEvent(manageMQTTEvent);
+  mqtt.onReceive(manageMQTTData);
+  mqtt.begin();
+
   // TODO: Make this beautiful
   displayShowWaitingMqttConnection();
   Serial.println ("Waiting for MQTT connection. Connect to the config panel on the ip: " + WiFi.localIP().toString() + " to review the MQTT connection credentials.");
   int i = 0;
-  while (!status.mqtt_connected) {
+  /*while (!status.mqtt_connected) {
     if (i++ > 120) {// 1m
       Serial.println (" MQTT unable to connect after 30s, restarting...");
       ESP.restart();
@@ -144,7 +145,7 @@ void wifiConnected() {
     // in the meantime we call the config loop to make it alive.
     configManager.delay(500);
   }
-  Serial.println (" Connected !!!");
+  Serial.println (" Connected !!!");*/
   
   printControls();
 }
@@ -216,6 +217,7 @@ void loop() {
     return;
   }
   wasConnected = true;
+  mqtt.loop();
 
   if (!radio.isReady()) {
     return;

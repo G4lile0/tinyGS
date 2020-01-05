@@ -26,6 +26,9 @@
 	#include "WProgram.h"
 #endif
 
+#include <PubSubClient.h>
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_event.h"
@@ -33,6 +36,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <list>
 
 #define SECURE_MQTT // Comment this line if you are not using MQTT over SSL
 
@@ -40,7 +44,7 @@
 #include "esp_tls.h"
 
 // Let's Encrypt CA certificate. Change with the one you need
-static const unsigned char DSTroot_CA[] PROGMEM = R"EOF(
+static const char DSTroot_CA[] PROGMEM = R"EOF(
 -----BEGIN CERTIFICATE-----
 MIIDSjCCAjKgAwIBAgIQRK+wgNajJ7qJMDmGLvhAazANBgkqhkiG9w0BAQUFADA/
 MSQwIgYDVQQKExtEaWdpdGFsIFNpZ25hdHVyZSBUcnVzdCBDby4xFzAVBgNVBAMT
@@ -70,23 +74,33 @@ typedef std::function<void (char* topic, size_t topic_len, char* payload, size_t
 class Esp32_mqtt_clientClass
 {
  protected:
-	 esp_mqtt_client_config_t mqtt_cfg;
-	 esp_mqtt_client_handle_t client;
-
-	 onMQTTevent_t _onEvent = NULL;
-	 onMQTTdata_t _onData = NULL;
-
-	 static esp_err_t mqtt_event_handler (esp_mqtt_event_handle_t event);
+	esp_mqtt_client_config_t mqtt_cfg;
+	std::list<String> subs_topics;
+	onMQTTdata_t _onData = NULL;
+#ifdef SECURE_MQTT
+	WiFiClientSecure espClient;
+#else
+	WiFiClient espClient;
+#endif
+	PubSubClient *client;
+	void data_handler(char* topic, byte* payload, unsigned int length);
+	void reconnect ();
+	//static void mqtt_task (void* mqtt_client);
+	TaskHandle_t xHandle = NULL;
+	String lwtopic;
 
  public:
 	void init(const char* host, int32_t port, const char* user, const char* password);
 	bool begin ();
+	void loop();
 	bool publish (const char* topic, const char* payload, size_t payload_lenght, int qos = 0, bool retain = false);
-	bool subscribe (const char* topic, int32_t qos = 0);
+	bool subscribe (const char* topic);
+	bool unsubscribe (const char* topic);
 	void onReceive (onMQTTdata_t callback);
-	void onEvent (onMQTTevent_t callback);
+	//void onEvent (onMQTTevent_t callback);
 	//bool setLastWill (const char* topic, const char* payload, size_t payload_lenght, bool retain = false, int qos = 0);
 	bool setLastWill (const char* topic);
+	~Esp32_mqtt_clientClass ();
 };
 
 //extern Esp32_mqtt_clientClass MQTT_client;
