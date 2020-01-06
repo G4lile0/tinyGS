@@ -61,7 +61,7 @@ Then select the `src` folder inside the repository and click open.
 After that, the project should be loaded in visual studio and ready to configure and build.
 
 ### Configure the project
-First we need to select the board. To do so, open the `src/Fossa_GroundStation/platformio.ini` file and uncomment one of the lines at the beggining of the file depending on the board you are going to use TTGO or Heltec.
+First we need to select the board. To do so, open the `src/platformio.ini` file and uncomment one of the lines at the beggining of the file depending on the board you are going to use TTGO or Heltec.
 
 ```
 default_envs = 

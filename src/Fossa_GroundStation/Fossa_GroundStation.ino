@@ -1,8 +1,32 @@
 /*
-    Based on theRadioLib SX127x Receive with Interrupts Example
-    For full API reference, see the GitHub Pages
-     https://jgromes.github.io/RadioLib/
-     
+The aim of this project is to create an open network of ground stations for the Fossa Satellites distributed all over the world and connected through Internet.
+This project is based on ESP32 boards and is compatible with sx126x and sx127x you can build you own board using one of these modules but most of us use a development 
+board like the ones listed in the Supported boards section.
+The developers of this project have no relation with the Fossa team in charge of the mission, we are passionate about space and created this project to be able to track
+and use the satellites as well as supporting the mission.
+
+Supported boards
+    Heltec WiFi LoRa 32 V1 (433MHz SX1278)
+    Heltec WiFi LoRa 32 V2 (433MHz SX1278) 
+    TTGO LoRa32 V1 (433MHz SX1278)
+    TTGO LoRa32 V2 (433MHz SX1278)
+
+Supported modules
+    sx126x
+    sx127x
+
+    World Map with active Ground Stations and satellite stimated possition 
+    Main community chat: https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q
+      In order to onfigure your Ground Station please open a private chat to get your credentials https://t.me/fossa_updates_bot
+    Data channel (station status and received packets): https://t.me/FOSSASAT_DATA
+    Test channel (simulator packets received by test groundstations): https://t.me/FOSSASAT_TEST
+
+    Developers:
+              @gmag12       https://twitter.com/gmag12
+              @dev_4m1g0    https://twitter.com/dev_4m1g0
+              @g4lile0       https://twitter.com/G4lile0
+
+    LICENSE 	GNU General Public License v3.0 
   */
 
 // include the library
@@ -39,6 +63,11 @@
 #include <ESPAsyncWiFiManager.h>							// https://github.com/alanswx/ESPAsyncWiFiManager
 #include "BoardConfig.h"
 
+
+#define RADIO_TYPE        SX1278  // type of radio module to be used
+//#define RADIO_SX126X            // also uncomment this line when using SX126x!!!
+
+
 constexpr auto LOG_TAG = "FOSSAGS";
 
 Esp32_mqtt_clientClass mqtt;
@@ -67,7 +96,7 @@ Config_managerClass config_manager (&board_config);
 
 //*********************
 
-const int fs_version =   1912081;      // version year month day release
+const int fs_version = 1912161;      // version year month day release
 
 const char*  message[32];
 
@@ -76,21 +105,16 @@ OLEDDisplayUi ui     ( &display );
 bool mqtt_connected = false;
 
 void manageMQTTEvent (esp_mqtt_event_id_t event) {
-  //Serial.printf ("MQTT event %d\n", event);
   if (event == MQTT_EVENT_CONNECTED) {
 	  mqtt_connected = true;
-    char topic[64];
-    strcpy(topic,board_config.station);
-    strcat(topic,"/data/#");
-    mqtt.subscribe (topic);
-    mqtt.subscribe ("global/sat_pos_oled");
-    //Serial.println (topic);
-	welcome_message ();
+    String topic = "fossa/" + String(board_config.mqtt_user) + "/" + String(board_config.station) + "/data/#";
+    mqtt.subscribe (topic.c_str());
+    mqtt.subscribe ("fossa/global/sat_pos_oled");
+	  welcome_message ();
     
   } else   if (event == MQTT_EVENT_DISCONNECTED) {
-	  mqtt_connected = false;
+    mqtt_connected = false;
   }
-
 }
 
 uint8_t sat_pos_oled[2] = {0,0};
@@ -110,7 +134,7 @@ void manageMQTTData (char* topic, size_t topic_len, char* payload, size_t payloa
   char topicStr[topic_len+1];
   memcpy(topicStr, topic, topic_len);
   topicStr[topic_len] = '\0';
-  if (!strcmp(topicStr, "global/sat_pos_oled")) {
+  if (!strcmp(topicStr, "fossa/global/sat_pos_oled")) {
     manageSatPosOled(payload, payload_len);
   }
 }
@@ -141,12 +165,24 @@ void printLocalTime()
 // GPIO14 — SX1278’s RESET
 // GPIO26 — SX1278’s IRQ(Interrupt Request)
 
-// SX1278 has the following connections:
-SX1278 lora = new Module(18, 26, 12);
-// NSS pin:   18
-// DIO0 pin:  26
-// DIO1 pin:  12 (not used as isn't connected in the TTGo) 
+// SX1278 - SX1268 has the following connections:
 
+// pin definitions
+#define CS                18
+#define DIO0              26
+#define DIO1              12      // not connected on the ESP32 - TTGO
+#define BUSY              12
+
+
+
+
+#ifdef RADIO_SX126X
+  RADIO_TYPE lora = new Module(CS, DIO0, BUSY);
+#else
+  RADIO_TYPE lora = new Module(CS, DIO0, DIO1);
+#endif
+
+// modem configuration
 #define LORA_CARRIER_FREQUENCY                          436.7f  // MHz
 #define LORA_BANDWIDTH                                  125.0f  // kHz dual sideband
 #define LORA_SPREADING_FACTOR                           11
@@ -154,6 +190,11 @@ SX1278 lora = new Module(18, 26, 12);
 #define LORA_CODING_RATE                                8       // 4/8, Extended Hamming
 #define LORA_OUTPUT_POWER                               21      // dBm
 #define LORA_CURRENT_LIMIT                              120     // mA
+#define SYNC_WORD_7X                                    0xFF    // sync word when using SX127x
+#define SYNC_WORD_6X                                    0x0F0F  //                      SX126x
+
+
+
 
 // satellite callsign
 char callsign[] = "FOSSASAT-1";
@@ -223,17 +264,23 @@ void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 
 
 //Initial dummy System info:
-float batteryChargingVoltage = 3.50;
-float batteryChargingCurrent = 0.0204;
-float batteryVoltage = 1.90;
-float solarCellAVoltage = 0.96;
-float solarCellBVoltage = 1.00;
-float solarCellCVoltage = 1.06;
-float batteryTemperature = 83.17;
-float boardTemperature = 107.59;
-int mcuTemperature = 42;
+float batteryChargingVoltage = 0.0f;
+float batteryChargingCurrent = 0.0f;
+float batteryVoltage = 0.0f;
+float solarCellAVoltage = 0.0f;
+float solarCellBVoltage = 0.0f;
+float solarCellCVoltage = 0.0f;
+float batteryTemperature = 0.0f;
+float boardTemperature = 0.0f;
+int mcuTemperature = 0;
 int resetCounter = 0;
 byte powerConfig = 0b11111111;
+
+// on frame animation
+int graphVal = 1;
+int delta = 1;
+unsigned long tick_interval;
+int tick_timing = 100;
 
 
 void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
@@ -254,7 +301,20 @@ void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->drawString( x+13,  22+y,  String(batteryChargingVoltage));
   display->drawString( x+13,  35+y,  String(batteryChargingCurrent));
   display->drawString( x+80,  32+y,  String(batteryTemperature) + "ºC" );
+
+
+  if ((millis()-tick_interval)>200) {
+              // Change the value to plot
+                  graphVal-=1;
+                  tick_interval=millis();
+                  if (graphVal <= 1) {graphVal = 8; } // ramp up value
+       }
+
+
+  display->fillRect(x+48, y+32+graphVal, 25 , 13-graphVal);
+  
 }
+
 
 void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->setTextAlignment(TEXT_ALIGN_LEFT);
@@ -307,7 +367,6 @@ void drawFrame5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 
 }
 
-
 void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->drawXbm(x , y , earth_width, earth_height, earth_bits);
   display->setColor(BLACK);
@@ -322,13 +381,21 @@ void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
     display->drawString( 64+x,  50+y+(x/2), "Waiting for FossaSat Pos" );
   }
   else {
-    display->fillCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, 6);
+       if ((millis()-tick_interval)>tick_timing) {
+              // Change the value to plot
+                  graphVal+=delta;
+                  tick_interval=millis();
+              // If the value reaches a limit, then change delta of value
+                    if (graphVal >= 6)     {delta = -1;  tick_timing=50; }// ramp down value
+                    else if (graphVal <= 1) {delta = +1; tick_timing=100;} // ramp up value
+       }
+    display->fillCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, graphVal+1);
     display->setColor(WHITE);
-    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, 5);
+    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, graphVal);
     display->setColor(BLACK);
-    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, 2);
+    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, (graphVal/3)+1);
     display->setColor(WHITE);
-    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, 1);
+    display->drawCircle(sat_pos_oled[0]+x, sat_pos_oled[1]+y, graphVal/3);
   }
   
 }
@@ -426,8 +493,8 @@ void setup() {
   config_manager.setFormatFlashCallback (flashFormatting);
   
   // Check WiFi reset button
-  time_t start_waiting_for_button = millis ();
-  time_t button_pushed_at;
+  unsigned long start_waiting_for_button = millis ();
+  unsigned long button_pushed_at;
   pinMode (PROG_BUTTON, INPUT_PULLUP);
   ESP_LOGI (LOG_TAG, "Waiting for reset config button");
 
@@ -491,11 +558,9 @@ void setup() {
 
   mqtt.init (board_config.mqtt_server_name, board_config.mqtt_port, board_config.mqtt_user, board_config.mqtt_pass);
 
-  char topic[64];
-  strcpy(topic, board_config.station);
-  strcat(topic,"/status");
+  String topic = "fossa/" + String(board_config.mqtt_user) + "/" + String(board_config.station) + "/status";
    
-  mqtt.setLastWill(topic);
+  mqtt.setLastWill(topic.c_str());
   mqtt.onEvent (manageMQTTEvent);
   mqtt.onReceive (manageMQTTData);
   mqtt.begin();
@@ -511,28 +576,43 @@ void setup() {
   printLocalTime();
 
   // initialize SX1278 with default settings
-  Serial.print(F("[SX1278] Initializing ... "));
+  Serial.print(F("[SX12x8] Initializing ... "));
   // carrier frequency:           436.7 MHz
   // bandwidth:                   125.0 kHz
   // spreading factor:            11
   // coding rate:                 8
-  // sync word:                   0xff
+  // sync word:                   0xff  for SX1278 and   0x0F0F for SX1268
   // output power:                17 dBm
   // current limit:               100 mA
   // preamble length:             8 symbols
   // amplifier gain:              0 (automatic gain control)
   //  int state = lora.begin();
  
-     int state = lora.begin(LORA_CARRIER_FREQUENCY,
-                            LORA_BANDWIDTH,
-                            LORA_SPREADING_FACTOR,
-                            LORA_CODING_RATE,
-                            0xff,
-                            17,
-                            (uint8_t)LORA_CURRENT_LIMIT);
+ #ifdef RADIO_SX126X
+  int state = lora.begin(LORA_CARRIER_FREQUENCY,
+                          LORA_BANDWIDTH,
+                          LORA_SPREADING_FACTOR,
+                          LORA_CODING_RATE,
+                          SYNC_WORD_6X,
+                          17,
+                          (uint8_t)LORA_CURRENT_LIMIT);
+  #else
+  int state = lora.begin(LORA_CARRIER_FREQUENCY,
+                          LORA_BANDWIDTH,
+                          LORA_SPREADING_FACTOR,
+                          LORA_CODING_RATE,
+                          SYNC_WORD_7X,
+                          17,
+                          (uint8_t)LORA_CURRENT_LIMIT);
+  #endif
+
                             Serial.println(LORA_CARRIER_FREQUENCY);
                             Serial.println(LORA_SPREADING_FACTOR);
                             Serial.println(LORA_CODING_RATE);
+
+
+
+
   if (state == ERR_NONE) {
     Serial.println(F("success!"));
   } else {
@@ -543,10 +623,15 @@ void setup() {
 
   // set the function that will be called
   // when new packet is received
+  // attach the ISR to radio interrupt
+  #ifdef RADIO_SX126X
+  lora.setDio1Action(setFlag);
+  #else
   lora.setDio0Action(setFlag);
+  #endif
 
   // start listening for LoRa packets
-  Serial.print(F("[SX1278] Starting to listen ... "));
+  Serial.print(F("[SX12x8] Starting to listen ... "));
   state = lora.startReceive();
   if (state == ERR_NONE) {
     Serial.println(F("success!"));
@@ -682,6 +767,14 @@ void loop() {
         config_manager.eraseConfig();
         ESP.restart();
         break;
+      case 't':
+        switchTestmode();
+        ESP.restart();
+        break;
+      case 'b':
+        ESP.restart();
+        break;
+       
       default:
         Serial.print(F("Unknown command: "));
         Serial.println(serialCmd);
@@ -690,10 +783,11 @@ void loop() {
 
     // set radio mode to reception
     #ifdef RADIO_SX126X
- //   lora.setDio1Action(onInterrupt);
+    lora.setDio1Action(setFlag);
     #else
-//    lora.setDio0Action(onInterrupt);
+    lora.setDio0Action(setFlag);
     #endif
+
     lora.startReceive();
     enableInterrupt = true;
   }
@@ -754,17 +848,17 @@ void loop() {
     last_packet_received_frequencyerror=lora.getFrequencyError();
 
     // print RSSI (Received Signal Strength Indicator)
-    Serial.print(F("[SX1278] RSSI:\t\t"));
+    Serial.print(F("[SX12x8] RSSI:\t\t"));
     Serial.print(lora.getRSSI());
     Serial.println(F(" dBm"));
 
     // print SNR (Signal-to-Noise Ratio)
-    Serial.print(F("[SX1278] SNR:\t\t"));
+    Serial.print(F("[SX12x8] SNR:\t\t"));
     Serial.print(lora.getSNR());
     Serial.println(F(" dB"));
 
     // print frequency error
-    Serial.print(F("[SX1278] Frequency error:\t"));
+    Serial.print(F("[SX12x8] Frequency error:\t"));
     Serial.print(lora.getFrequencyError());
     Serial.println(F(" Hz"));
 
@@ -850,17 +944,17 @@ void loop() {
 
     if (state == ERR_NONE) {
       // packet was successfully received
-  //     Serial.println(F("[SX1278] Received packet!"));
+  //     Serial.println(F("[SX12x8] Received packet!"));
 
       // print data of the packet
- //     Serial.print(F("[SX1278] Data:\t\t"));
+ //     Serial.print(F("[SX12x8] Data:\t\t"));
  //      Serial.println(str);
     } else if (state == ERR_CRC_MISMATCH) {
       // packet was received, but is malformed
-      Serial.println(F("[SX1278] CRC error!"));
+      Serial.println(F("[SX12x8] CRC error!"));
     } else {
       // some other error occurred
-      Serial.print(F("[SX1278] Failed, code "));
+      Serial.print(F("[SX12x8] Failed, code "));
       Serial.println(state);
     }
 
@@ -898,20 +992,19 @@ void  welcome_message (void) {
 
 //          doc["time"] = ;
           serializeJson(doc, Serial);
-          char topic[64];
-          strcpy(topic, board_config.station);
-          strcat(topic,"/welcome");
+          String topic = "fossa/" + String(board_config.mqtt_user) + "/" + String(board_config.station) + "/welcome";
           char buffer[512];
-          //serializeJson(doc, buffer);
           size_t n = serializeJson(doc, buffer);
-          mqtt.publish(topic, buffer,n );
+          mqtt.publish(topic.c_str(), buffer,n );
           ESP_LOGI (LOG_TAG, "Wellcome sent");
 }
 
 void  json_system_info(void) {
           //// JSON
           
-          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(17);
+          time_t now;
+          time(&now);
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(18);
           DynamicJsonDocument doc(capacity);
           doc["station"] = board_config.station;  // G4lile0
           JsonArray station_location = doc.createNestedArray("station_location");
@@ -920,6 +1013,7 @@ void  json_system_info(void) {
           doc["rssi"] = last_packet_received_rssi;
           doc["snr"] = last_packet_received_snr;
           doc["frequency_error"] = last_packet_received_frequencyerror;
+          doc["unix_GS_time"] = now;
           doc["batteryChargingVoltage"] = batteryChargingVoltage;
           doc["batteryChargingCurrent"] = batteryChargingCurrent;
           doc["batteryVoltage"] = batteryVoltage;
@@ -932,13 +1026,11 @@ void  json_system_info(void) {
           doc["resetCounter"] = resetCounter;
           doc["powerConfig"] = powerConfig;
           serializeJson(doc, Serial);
-          char topic[64];
-          strcpy(topic, board_config.station);
-          strcat(topic,"/sys_info");
+          String topic = "fossa/" + String(board_config.mqtt_user) + "/" + String(board_config.station) + "/sys_info";
           char buffer[512];
           serializeJson(doc, buffer);
           size_t n = serializeJson(doc, buffer);
-          mqtt.publish(topic, buffer,n );
+          mqtt.publish(topic.c_str(), buffer,n );
 
 /*
  * 
@@ -969,6 +1061,8 @@ void  json_system_info(void) {
 
 
 void  json_message(char* frame, size_t respLen) {
+          time_t now;
+          time(&now);
           Serial.println(String(respLen));
           char tmp[respLen+1];
           memcpy(tmp, frame, respLen);
@@ -983,7 +1077,7 @@ void  json_message(char* frame, size_t respLen) {
           if ((frame[0]=='T') &&  (frame[1]=='0') && (frame[2]=='@'))
           {
           Serial.println("mensaje miniTTN");
-          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(10) +JSON_ARRAY_SIZE(respLen-12);
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(11) +JSON_ARRAY_SIZE(respLen-12);
           DynamicJsonDocument doc(capacity);
           doc["station"] = board_config.station;  // G4lile0
           JsonArray station_location = doc.createNestedArray("station_location");
@@ -992,6 +1086,7 @@ void  json_message(char* frame, size_t respLen) {
           doc["rssi"] = last_packet_received_rssi;
           doc["snr"] = last_packet_received_snr;
           doc["frequency_error"] = last_packet_received_frequencyerror;
+          doc["unix_GS_time"] = now;
           JsonArray msgTTN = doc.createNestedArray("msgTTN");
 
           
@@ -1001,6 +1096,7 @@ void  json_message(char* frame, size_t respLen) {
 
             }
           
+
           
 //          doc["len"] = respLen;
 //          doc["msg"] = String(tmp);
@@ -1008,17 +1104,12 @@ void  json_message(char* frame, size_t respLen) {
  
           
           serializeJson(doc, Serial);
-          char topic[64];
-          strcpy(topic, board_config.station);
-          strcat(topic,"/miniTTN");
-
-          
-
+          String topic = "fossa/" + String(board_config.mqtt_user) + "/" + String(board_config.station) + "/miniTTN";
         
           char buffer[256];
           serializeJson(doc, buffer);
           size_t n = serializeJson(doc, buffer);
-          mqtt.publish(topic, buffer,n );
+          mqtt.publish(topic.c_str(), buffer,n );
 
             
             }
@@ -1028,7 +1119,7 @@ void  json_message(char* frame, size_t respLen) {
             {
               
           
-          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(10);
+          const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(11);
           DynamicJsonDocument doc(capacity);
           doc["station"] = board_config.station;  // G4lile0
           JsonArray station_location = doc.createNestedArray("station_location");
@@ -1037,20 +1128,19 @@ void  json_message(char* frame, size_t respLen) {
           doc["rssi"] = last_packet_received_rssi;
           doc["snr"] = last_packet_received_snr;
           doc["frequency_error"] = last_packet_received_frequencyerror;
+          doc["unix_GS_time"] = now;
 //          doc["len"] = respLen;
           doc["msg"] = String(tmp);
 //          doc["msg"] = String(frame);
  
           
           serializeJson(doc, Serial);
-          char topic[64];
-          strcpy(topic, board_config.station);
-          strcat(topic,"/msg");
+          String topic = "fossa/" + String(board_config.mqtt_user) + "/" + String(board_config.station) + "/msg";
           
           char buffer[256];
           serializeJson(doc, buffer);
           size_t n = serializeJson(doc, buffer);
-          mqtt.publish(topic, buffer,n );
+          mqtt.publish(topic.c_str(), buffer,n );
               
               }
             
@@ -1067,7 +1157,8 @@ void  json_message(char* frame, size_t respLen) {
 
 void  json_pong(void) {
           //// JSON
-          
+          time_t now;
+          time(&now);
           const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(6);
           DynamicJsonDocument doc(capacity);
           doc["station"] = board_config.station;  // G4lile0
@@ -1077,15 +1168,14 @@ void  json_pong(void) {
           doc["rssi"] = last_packet_received_rssi;
           doc["snr"] = last_packet_received_snr;
           doc["frequency_error"] = last_packet_received_frequencyerror;
+          doc["unix_GS_time"] = now;
           doc["pong"] = 1;
           serializeJson(doc, Serial);
-          char topic[64];
-          strcpy(topic, board_config.station);
-          strcat(topic,"/pong");
+          String topic = "fossa/" + String(board_config.mqtt_user) + "/" + String(board_config.station) + "/pong";
           char buffer[256];
           serializeJson(doc, buffer);
           size_t n = serializeJson(doc, buffer);
-          mqtt.publish(topic, buffer,n );
+          mqtt.publish(topic.c_str(), buffer,n );
 }
 
 
@@ -1096,7 +1186,9 @@ void printControls() {
   Serial.println(F("i - request satellite info"));
   Serial.println(F("l - request last packet info"));
   Serial.println(F("r - send message to be retransmitted"));
+  Serial.println(F("t - change the test mode and restart"));
   Serial.println(F("e - erase board config and reset"));
+  Serial.println(F("b - reboot the board"));
   Serial.println(F("------------------------------------"));
 }
 
@@ -1125,6 +1217,27 @@ void sendPing() {
     Serial.println(state);
   }
 }
+
+
+void  switchTestmode() {
+  char temp_station[32];
+  if ((board_config.station[0]=='t') &&  (board_config.station[1]=='e') && (board_config.station[2]=='s') && (board_config.station[4]=='_')) {
+    Serial.println(F("Changed from test mode to normal mode"));
+    for (byte a=5; a<=strlen(board_config.station); a++ ) {
+      board_config.station[a-5]=board_config.station[a];
+    }
+  }
+  else
+  {
+    strcpy(temp_station,"test_");
+    strcat(temp_station,board_config.station);
+    strcpy(board_config.station,temp_station);
+    Serial.println(F("Changed from normal mode to test mode"));
+  }
+
+  config_manager.saveFlashData();
+}
+
 
 
 void requestInfo() {
@@ -1177,12 +1290,12 @@ void requestPacketInfo() {
 
 void requestRetransmit() {
   Serial.println(F("Enter message to be sent:"));
-  Serial.println(F("(max 32 characters, end with LF or CR+LF)"));
+  Serial.println(F("(max 30 characters, end with LF or CR+LF)"));
 
   // get data to be retransmited
   char optData[32];
   uint8_t bufferPos = 0;
-  while(bufferPos < 32) {
+  while(bufferPos < 31) {
     while(!Serial.available());
     char c = Serial.read();
     Serial.print(c);
