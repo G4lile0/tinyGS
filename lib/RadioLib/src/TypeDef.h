@@ -10,6 +10,7 @@
  * Uncomment to enable static-only memory management: no dynamic allocation will be performed.
  * Warning: Large static arrays will be created in some methods. It is not advised to send large packets in this mode.
  */
+#define RADIOLIB_VERSION_EXTRA  (0x16)
 
 //#define RADIOLIB_STATIC_ONLY
 

@@ -72,6 +72,16 @@
 #include "src/Radio/Radio.h"
 #include "src/ArduinoOTA/ArduinoOTA.h"
 
+#if MQTT_MAX_PACKET_SIZE != 1000
+"Remeber to change libraries/PubSubClient/src/PubSubClient.h"
+        "#define MQTT_MAX_PACKET_SIZE 1000"
+#endif
+
+#if  RADIOLIB_VERSION_EXTRA != (0x16)
+"We are using a patched version of RadioLib please copy ESP32-OLED-Fossa-GroundStation/lib/RadioLib on Arduino/libraries"
+#endif
+
+
 ConfigManager configManager;
 MQTT_Client mqtt(configManager);
 Radio radio(configManager, mqtt);
