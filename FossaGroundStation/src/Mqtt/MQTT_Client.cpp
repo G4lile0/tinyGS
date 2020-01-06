@@ -32,10 +32,12 @@ void MQTT_Client::loop() {
   if (!connected() && millis() - lastConnectionAtempt > reconnectionInterval) {
     lastConnectionAtempt = millis();
     connectionAtempts++;
+    status.mqtt_connected = false;
     reconnect();
   }
   else {
     connectionAtempts = 0;
+    status.mqtt_connected = true;
   }
 
   if (connectionAtempts > connectionTimeout) {
