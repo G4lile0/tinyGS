@@ -1,5 +1,5 @@
 /*
-  esp32_mqtt_client.h - MQTT connection class
+  MQTTClient.h - MQTT connection class
   
   Copyright (C) 2020 @G4lile0, @gmag12 and @dev_4m1g0
 
@@ -17,33 +17,18 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef _ESP32_MQTT_CLIENT_h
-#define _ESP32_MQTT_CLIENT_h
-
-#if defined(ARDUINO) && ARDUINO >= 100
-	#include "Arduino.h"
-#else
-	#include "WProgram.h"
-#endif
-
-#include <PubSubClient.h>
-#include <WiFi.h>
-#include <WiFiClientSecure.h>
-#include "esp_log.h"
-#include "esp_system.h"
-#include "esp_event.h"
-#include "mqtt_client.h"
-#include <cstddef>
-#include <cstdint>
-#include <functional>
-#include <list>
+#ifndef MQTT_CLIENT_H
+#define MQTT_CLIENT_H
 
 #define SECURE_MQTT // Comment this line if you are not using MQTT over SSL
+#define LOG_TAG "MQTT"
 
+#include "../ConfigManager/ConfigManager.h"
+#include "../Status.h"
+#include <PubSubClient.h>
 #ifdef SECURE_MQTT
-#include "esp_tls.h"
+#include <WiFiClientSecure.h>
 
-// Let's Encrypt CA certificate. Change with the one you need
 static const char DSTroot_CA[] PROGMEM = R"EOF(
 -----BEGIN CERTIFICATE-----
 MIIDSjCCAjKgAwIBAgIQRK+wgNajJ7qJMDmGLvhAazANBgkqhkiG9w0BAQUFADA/
@@ -66,43 +51,54 @@ JDGFoqgCWjBH4d1QB7wCCZAA62RjYJsWvIjJEubSfZGL+T0yjWW06XyxV3bqxbYo
 Ob8VZRzI9neWagqNdwvYkQsEjgfbKbYK7p2CNTUQ
 -----END CERTIFICATE-----
 )EOF";
-#endif // SECURE_MQTT
-
-typedef std::function<void (esp_mqtt_event_id_t event)> onMQTTevent_t;
-typedef std::function<void (char* topic, size_t topic_len, char* payload, size_t payload_len)> onMQTTdata_t;
-
-class Esp32_mqtt_clientClass
-{
- protected:
-	esp_mqtt_client_config_t mqtt_cfg;
-	std::list<String> subs_topics;
-	onMQTTdata_t _onData = NULL;
-#ifdef SECURE_MQTT
-	WiFiClientSecure espClient;
 #else
-	WiFiClient espClient;
+#include <WiFiClient.h>
 #endif
-	PubSubClient *client;
-	void data_handler(char* topic, byte* payload, unsigned int length);
-	void reconnect ();
-	//static void mqtt_task (void* mqtt_client);
-	TaskHandle_t xHandle = NULL;
-	String lwtopic;
 
- public:
-	void init(const char* host, int32_t port, const char* user, const char* password);
-	bool begin ();
-	void loop();
-	bool publish (const char* topic, const char* payload, size_t payload_lenght, int qos = 0, bool retain = false);
-	bool subscribe (const char* topic);
-	bool unsubscribe (const char* topic);
-	void onReceive (onMQTTdata_t callback);
-	//void onEvent (onMQTTevent_t callback);
-	//bool setLastWill (const char* topic, const char* payload, size_t payload_lenght, bool retain = false, int qos = 0);
-	bool setLastWill (const char* topic);
-	~Esp32_mqtt_clientClass ();
+extern Status status;
+
+class MQTT_Client : public PubSubClient {
+public:
+  MQTT_Client(ConfigManager& configManager);
+  void begin();
+  void loop();
+  void sendWelcome();
+  void sendSystemInfo();
+  void sendPong();
+  void sendMessage(char* frame, size_t respLen);
+  void sendRawPacket();
+
+protected:
+#ifdef SECURE_MQTT
+  WiFiClientSecure espClient;
+#else
+  WiFiClient espClient;
+#endif
+  void reconnect();
+
+private:
+  ConfigManager& configManager;
+  String buildTopic(const char * topic);
+  void subscribeToAll();
+  unsigned long lastPing = 0;
+  unsigned long lastConnectionAtempt = 0;
+  uint8_t connectionAtempts = 0;
+  String clientId;
+
+  const unsigned long pingInterval = 1 * 60 * 1000;
+  const unsigned long reconnectionInterval = 5 * 1000;
+  uint16_t connectionTimeout = 5 * 60 * 1000 / reconnectionInterval;
+
+  const char* topicStart PROGMEM = "fossa";
+  const char* topicWelcome PROGMEM = "welcome";
+  const char* topicStatus PROGMEM = "status";
+  const char* topicSysInfo PROGMEM = "sys_info";
+  const char* topicPong PROGMEM= "pong";
+  const char* topicMsg PROGMEM= "msg";
+  const char* topicMiniTTN PROGMEM= "miniTTN";
+  const char* topicData PROGMEM= "data/#";
+  const char* topicPing PROGMEM= "ping";
+  const char* topicRawPacket PROGMEM= "raw_packet";
 };
-
-//extern Esp32_mqtt_clientClass MQTT_client;
 
 #endif

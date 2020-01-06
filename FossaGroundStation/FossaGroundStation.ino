@@ -62,24 +62,14 @@
 #include "src/ConfigManager/ConfigManager.h"
 #include "src/Comms/Comms.h"
 #include "src/Display/Display.h"
-
-#include <PubSubClient.h>
-#include "src/Mqtt/esp32_mqtt_client.h"
-#include "ArduinoJson.h"
+#include "src/Mqtt/MQTT_Client.h"
 #include "src/Status.h"
 #include "src/Radio/Radio.h"
-
 #include "src/ArduinoOTA/ArduinoOTA.h"
 
 ConfigManager configManager;
-Esp32_mqtt_clientClass mqtt;
+MQTT_Client mqtt(configManager);
 Radio radio(configManager);
-
-const char* message[32];
-
-void manageMQTTEvent (esp_mqtt_event_id_t event);
-void manageMQTTData (char* topic, size_t topic_len, char* payload, size_t payload_len);
-void manageSatPosOled(char* payload, size_t payload_len);
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 0; // 3600;         // 3600 for Spain
@@ -90,17 +80,7 @@ void printLocalTime();
 Status status;
 
 void printControls();
-
-void welcome_message();
-void json_system_info();
-void json_message();
-void json_pong();
-
-void sendPing();
 void switchTestmode();
-void requestInfo();
-void requestPacketInfo();
-void requestRetransmit();
 
 void wifiConnected() {
   configManager.printConfig();
@@ -122,31 +102,12 @@ void wifiConnected() {
   }
 
   printLocalTime();
-  delay (1000); // wait to show the connected screen
+  configManager.delay(1000); // wait to show the connected screen
 
-  mqtt.init(configManager.getMqttServer(), configManager.getMqttPort(), configManager.getMqttUser(), configManager.getMqttPass());
-  String topic = "fossa/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/status";
-  mqtt.setLastWill(topic.c_str());
-  //mqtt.onEvent(manageMQTTEvent);
-  mqtt.onReceive(manageMQTTData);
   mqtt.begin();
 
   // TODO: Make this beautiful
   displayShowWaitingMqttConnection();
-  Serial.println ("Waiting for MQTT connection. Connect to the config panel on the ip: " + WiFi.localIP().toString() + " to review the MQTT connection credentials.");
-  int i = 0;
-  /*while (!status.mqtt_connected) {
-    if (i++ > 120) {// 1m
-      Serial.println (" MQTT unable to connect after 30s, restarting...");
-      ESP.restart();
-    }
-	  Serial.print ('.');
-    // FIXME: This is a temporal hack! we should not block the main thread waiting for the mqtt connection
-    // in the meantime we call the config loop to make it alive.
-    configManager.delay(500);
-  }
-  Serial.println (" Connected !!!");*/
-  
   printControls();
 }
 
@@ -218,8 +179,10 @@ void loop() {
   }
   wasConnected = true;
   mqtt.loop();
+  ArduinoOTA.handle();
 
   if (!radio.isReady()) {
+    displayShowLoRaError();
     return;
   }
 
@@ -312,25 +275,13 @@ void loop() {
 
   delete[] respOptData;
   respOptData = nullptr;
-  
-  static unsigned long last_connection_fail = millis();
-  if (!status.mqtt_connected){
-    if (millis() - last_connection_fail > 300000){ // 5m
-      Serial.println("MQTT Disconnected, restarting...");
-      ESP.restart();
-    }
-  } else {
-    last_connection_fail = millis();
-  }
-
-  ArduinoOTA.handle ();
 }
 
 void processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_t respLen) {
   switch(functionId) {
     case RESP_PONG:
       Serial.println(F("Pong!"));
-      json_pong();
+      mqtt.sendPong();
       break;
 
     case RESP_SYSTEM_INFO:
@@ -380,7 +331,7 @@ void processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_t respL
       status.sysInfo.powerConfig=FCP_Get_Power_Configuration(respOptData);
       Serial.println(FCP_Get_Power_Configuration(respOptData), BIN);
 
-      json_system_info();
+      mqtt.sendSystemInfo();
       break;
 
     case RESP_LAST_PACKET_INFO:
@@ -398,7 +349,7 @@ void processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_t respL
     case RESP_REPEATED_MESSAGE:
       Serial.println(F("Got repeated message:"));
       Serial.println((char*)respOptData);
-      json_message((char*)respOptData,respLen);
+      mqtt.sendMessage((char*)respOptData,respLen);
       break;
 
     default:
@@ -407,155 +358,7 @@ void processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_t respL
   }
 }
 
-
-void  welcome_message (void) {
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(16);
-  DynamicJsonDocument doc(capacity);
-  doc["station"] = configManager.getThingName();  // G4lile0
-  JsonArray station_location = doc.createNestedArray("station_location");
-  station_location.add(configManager.getLatitude());
-  station_location.add(configManager.getLongitude());
-  doc["version"] = status.version;
-
-  serializeJson(doc, Serial);
-  String topic = "fossa/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/welcome";
-  char buffer[512];
-  size_t n = serializeJson(doc, buffer);
-  mqtt.publish(topic.c_str(), buffer,n );
-  ESP_LOGI (LOG_TAG, "Wellcome sent");
-}
-
-void  json_system_info(void) {
-  time_t now;
-  time(&now);
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(19);
-  DynamicJsonDocument doc(capacity);
-  doc["station"] = configManager.getThingName();  // G4lile0
-  JsonArray station_location = doc.createNestedArray("station_location");
-  station_location.add(configManager.getLatitude());
-  station_location.add(configManager.getLongitude());
-  doc["rssi"] = status.lastPacketInfo.rssi;
-  doc["snr"] = status.lastPacketInfo.snr;
-  doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
-  doc["unix_GS_time"] = now;
-  doc["batteryChargingVoltage"] = status.sysInfo.batteryChargingVoltage;
-  doc["batteryChargingCurrent"] = status.sysInfo.batteryChargingCurrent;
-  doc["batteryVoltage"] = status.sysInfo.batteryVoltage;
-  doc["solarCellAVoltage"] = status.sysInfo.solarCellAVoltage;
-  doc["solarCellBVoltage"] = status.sysInfo.solarCellBVoltage;
-  doc["solarCellCVoltage"] = status.sysInfo.solarCellCVoltage;
-  doc["batteryTemperature"] = status.sysInfo.batteryTemperature;
-  doc["boardTemperature"] = status.sysInfo.boardTemperature;
-  doc["mcuTemperature"] = status.sysInfo.mcuTemperature;
-  doc["resetCounter"] = status.sysInfo.resetCounter;
-  doc["powerConfig"] = status.sysInfo.powerConfig;
-  serializeJson(doc, Serial);
-  String topic = "fossa/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/sys_info";
-  char buffer[512];
-  serializeJson(doc, buffer);
-  size_t n = serializeJson(doc, buffer);
-  mqtt.publish(topic.c_str(), buffer,n );
-}
-
-
-void  json_message(char* frame, size_t respLen) {
-  time_t now;
-  time(&now);
-  Serial.println(String(respLen));
-  char tmp[respLen+1];
-  memcpy(tmp, frame, respLen);
-  tmp[respLen-12] = '\0';
-
-      // if special miniTTN message   
-  Serial.println(String(frame[0]));
-  Serial.println(String(frame[1]));
-  Serial.println(String(frame[2]));
-//          if ((frame[0]=='0x54') &&  (frame[1]=='0x30') && (frame[2]=='0x40'))
-  if ((frame[0]=='T') &&  (frame[1]=='0') && (frame[2]=='@'))
-  {
-    Serial.println("mensaje miniTTN");
-    const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(11) +JSON_ARRAY_SIZE(respLen-12);
-    DynamicJsonDocument doc(capacity);
-    doc["station"] = configManager.getThingName();  // G4lile0
-    JsonArray station_location = doc.createNestedArray("station_location");
-    station_location.add(configManager.getLongitude());
-    station_location.add(configManager.getLongitude());
-    doc["rssi"] = status.lastPacketInfo.rssi;
-    doc["snr"] = status.lastPacketInfo.snr;
-    doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
-    doc["unix_GS_time"] = now;
-    JsonArray msgTTN = doc.createNestedArray("msgTTN");
-
-    for (byte i=0 ; i<  (respLen-12);i++) {
-      msgTTN.add(String(tmp[i], HEX));
-    }
-    serializeJson(doc, Serial);
-    String topic = "fossa/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/miniTTN";
-
-    char buffer[256];
-    serializeJson(doc, buffer);
-    size_t n = serializeJson(doc, buffer);
-    mqtt.publish(topic.c_str(), buffer,n );
-  }
-  else {
-    const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(11);
-    DynamicJsonDocument doc(capacity);
-    doc["station"] = configManager.getThingName();  // G4lile0
-    JsonArray station_location = doc.createNestedArray("station_location");
-    station_location.add(configManager.getLatitude());
-    station_location.add(configManager.getLongitude());
-    doc["rssi"] = status.lastPacketInfo.rssi;
-    doc["snr"] = status.lastPacketInfo.snr;
-    doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
-    doc["unix_GS_time"] = now;
-  //          doc["len"] = respLen;
-    doc["msg"] = String(tmp);
-  //          doc["msg"] = String(frame);
-
-    serializeJson(doc, Serial);
-    String topic = "fossa/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/msg";
-    
-    char buffer[256];
-    serializeJson(doc, buffer);
-    size_t n = serializeJson(doc, buffer);
-    mqtt.publish(topic.c_str(), buffer,n );
-  }
-}
-
-void  json_pong(void) {
-  //// JSON
-  time_t now;
-  time(&now);
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(7);
-  DynamicJsonDocument doc(capacity);
-  doc["station"] = configManager.getThingName();  // G4lile0
-  JsonArray station_location = doc.createNestedArray("station_location");
-  station_location.add(configManager.getLatitude());
-  station_location.add(configManager.getLongitude());
-  doc["rssi"] = status.lastPacketInfo.rssi;
-  doc["snr"] = status.lastPacketInfo.snr;
-  doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
-  doc["unix_GS_time"] = now;
-  doc["pong"] = 1;
-  serializeJson(doc, Serial);
-  String topic = "fossa/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/pong";
-  char buffer[256];
-  serializeJson(doc, buffer);
-  size_t n = serializeJson(doc, buffer);
-  mqtt.publish(topic.c_str(), buffer,n );
-}
-
-
-
-
-
-
-
-
-
-
-
-void  switchTestmode() {
+void switchTestmode() {
   char temp_station[32];
   if ((configManager.getThingName()[0]=='t') &&  (configManager.getThingName()[1]=='e') && (configManager.getThingName()[2]=='s') && (configManager.getThingName()[4]=='_')) {
     Serial.println(F("Changed from test mode to normal mode"));
@@ -572,39 +375,6 @@ void  switchTestmode() {
   }
 
   configManager.configSave();
-}
-
-void manageMQTTEvent (esp_mqtt_event_id_t event) {
-  if (event == MQTT_EVENT_CONNECTED) {
-	  status.mqtt_connected = true;
-    String topic = "fossa/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/data/#";
-    mqtt.subscribe (topic.c_str());
-    mqtt.subscribe ("fossa/global/sat_pos_oled");
-	  welcome_message ();
-    
-  } else   if (event == MQTT_EVENT_DISCONNECTED) {
-    status.mqtt_connected = false;
-  }
-}
-void manageSatPosOled(char* payload, size_t payload_len) {
-  DynamicJsonDocument doc(60);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payload);
-  status.satPos[0] = doc[0];
-  status.satPos[1] = doc[1];
-}
-
-void manageMQTTData (char* topic, size_t topic_len, char* payload, size_t payload_len) {
-  // Don't use Serial.print here. It will not work. Use ESP_LOG or printf instead.
-  ESP_LOGI (LOG_TAG,"Received MQTT message: %.*s : %.*s\n", topic_len, topic, payload_len, payload);
-  char topicStr[topic_len+1];
-  memcpy(topicStr, topic, topic_len);
-  topicStr[topic_len] = '\0';
-  if (!strcmp(topicStr, "fossa/global/sat_pos_oled")) {
-    manageSatPosOled(payload, payload_len);
-  }
 }
 
 void printLocalTime()
