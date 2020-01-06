@@ -35,7 +35,7 @@ bool eInterrupt = true;
 #define LORA_CURRENT_LIMIT_7X         120     // mA
 #define LORA_CURRENT_LIMIT_6X         120.0f     // mA
 #define SYNC_WORD_7X                  0xFF    // sync word when using SX127x
-#define SYNC_WORD_6X                  0xFF  //                      SX126x
+#define SYNC_WORD_6X                  0x0F0F  //                      SX126x
 #define LORA_PREAMBLE_LENGTH          8U
 
 Radio::Radio(ConfigManager& x, MQTT_Client& mqtt)

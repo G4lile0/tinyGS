@@ -371,7 +371,7 @@ class SX126x: public PhysicalLayer {
 
       \returns \ref status_codes
     */
-    int16_t begin(float bw, uint8_t sf, uint8_t cr, uint8_t syncWord, float currentLimit, uint16_t preambleLength, float tcxoVoltage);
+    int16_t begin(float bw, uint8_t sf, uint8_t cr, uint16_t syncWord, float currentLimit, uint16_t preambleLength, float tcxoVoltage);
 
     /*!
       \brief Initialization method for FSK modem.
@@ -576,7 +576,7 @@ class SX126x: public PhysicalLayer {
 
       \returns \ref status_codes
     */
-    int16_t setSyncWord(uint8_t syncWord);
+    int16_t setSyncWord(uint16_t syncWord);
 
     /*!
       \brief Sets current protection limit. Can be set in 0.25 mA steps.

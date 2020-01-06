@@ -4,7 +4,7 @@ SX126x::SX126x(Module* mod) : PhysicalLayer(SX126X_CRYSTAL_FREQ, SX126X_DIV_EXPO
   _mod = mod;
 }
 
-int16_t SX126x::begin(float bw, uint8_t sf, uint8_t cr, uint8_t syncWord, float currentLimit, uint16_t preambleLength, float tcxoVoltage) {
+int16_t SX126x::begin(float bw, uint8_t sf, uint8_t cr, uint16_t syncWord, float currentLimit, uint16_t preambleLength, float tcxoVoltage) {
   // set module properties
   _mod->init(RADIOLIB_USE_SPI);
   Module::pinMode(_mod->getIrq(), INPUT);
@@ -678,16 +678,15 @@ int16_t SX126x::setCodingRate(uint8_t cr) {
   return(setModulationParams(_sf, _bw, _cr));
 }
 
-int16_t SX126x::setSyncWord(uint8_t syncWord) {
+int16_t SX126x::setSyncWord(uint16_t syncWord) {
   // check active modem
   if(getPacketType() != SX126X_PACKET_TYPE_LORA) {
     return(ERR_WRONG_MODEM);
   }
 
   // update register
-  uint8_t data[2] = {(uint8_t)((syncWord & 0xF0) | 0x04), (uint8_t)(((syncWord & 0x0F) << 4) | 0x04)};
-  Serial.println(data[0], HEX);
-  Serial.println(data[1], HEX);
+  //uint8_t data[2] = {(uint8_t)((syncWord & 0xF0) | 0x04), (uint8_t)(((syncWord & 0x0F) << 4) | 0x04)};
+  uint8_t data[2] = {(uint8_t)((syncWord >> 8) & 0xFF), (uint8_t)(syncWord & 0xFF)};
   return(writeRegister(SX126X_REG_LORA_SYNC_WORD_MSB, data, 2));
 }
 
