@@ -507,7 +507,7 @@ void IotWebConf2::handleConfig()
       {
         if (strcmp("password", current->type) == 0)
         {
-          char temp[current->getLength()];
+          char *temp = new char[current->getLength()];
           this->readParamValue(current->getId(), temp, current->getLength());
           if (temp[0] != '\0')
           {
@@ -525,6 +525,8 @@ void IotWebConf2::handleConfig()
             Serial.println(" was not changed");
 #endif
           }
+          
+          delete[] temp;
         }
         else
         {
