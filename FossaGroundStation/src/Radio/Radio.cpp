@@ -39,6 +39,7 @@ bool eInterrupt = true;
 Radio::Radio(ConfigManager& x, MQTT_Client& mqtt)
 : configManager(x)
 , mqtt(mqtt)
+, spi(VSPI)
 {
   
 }
@@ -47,9 +48,10 @@ void Radio::init(){
   Serial.print(F("[SX12xx] Initializing ... "));
   board_type board = configManager.getBoardConfig();
   
+  spi.begin(board.L_SCK, board.L_MISO, board.L_MOSI, board.L_NSS);
   int state = 0;
   if (board.L_SX127X) {
-    lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01));
+    lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi));
     state = ((SX1278*)lora)->begin(LORA_CARRIER_FREQUENCY,
                                       LORA_BANDWIDTH,
                                       LORA_SPREADING_FACTOR,
@@ -59,7 +61,7 @@ void Radio::init(){
                                       (uint8_t)LORA_CURRENT_LIMIT);
   }
   else {
-    lora = new SX1268(new Module(board.L_NSS, board.L_DI00, board.L_BUSSY));
+    lora = new SX1268(new Module(board.L_NSS, board.L_DI00, board.L_BUSSY, spi));
     state = ((SX1268*)lora)->begin(LORA_CARRIER_FREQUENCY,
                                       LORA_BANDWIDTH,
                                       LORA_SPREADING_FACTOR,

@@ -61,7 +61,6 @@ ConfigManager::ConfigManager()
   addParameter(&boardParam);
 }
 
-
 void ConfigManager::handleRoot()
 {
   // -- Let IotWebConf test and handle captive portal requests.
@@ -134,7 +133,6 @@ void ConfigManager::handleRestart() {
   delay(100);
   ESP.restart();
 }
-
 
 bool ConfigManager::formValidator()
 {
@@ -251,6 +249,4 @@ void ConfigManager::printConfig() {
   Serial.print(getBoard());
   Serial.print(F(" -->  "));
   Serial.println(boards[getBoard()].BOARD);
-  
-  
 }

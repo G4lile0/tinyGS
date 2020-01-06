@@ -49,6 +49,7 @@ private:
   static void setFlag();
   int sendFrame(uint8_t functionId, const char* data = "");
   bool ready = false;
+  SPIClass spi;
 };
 
 #endif
