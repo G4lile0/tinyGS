@@ -91,6 +91,7 @@ void MQTT_Client::sendWelcome() {
   station_location.add(configManager.getLatitude());
   station_location.add(configManager.getLongitude());
   doc["version"] = status.version;
+  doc["board"] = configManager.getBoard();
 
   serializeJson(doc, Serial);
 

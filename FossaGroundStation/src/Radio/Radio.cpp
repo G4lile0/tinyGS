@@ -31,10 +31,12 @@ bool eInterrupt = true;
 #define LORA_SPREADING_FACTOR         11
 #define LORA_SPREADING_FACTOR_ALT     10
 #define LORA_CODING_RATE              8       // 4/8, Extended Hamming
-#define LORA_OUTPUT_POWER             21      // dBm
-#define LORA_CURRENT_LIMIT            120     // mA
+#define LORA_OUTPUT_POWER             20      // dBm
+#define LORA_CURRENT_LIMIT_7X         120     // mA
+#define LORA_CURRENT_LIMIT_6X         120.0f     // mA
 #define SYNC_WORD_7X                  0xFF    // sync word when using SX127x
-#define SYNC_WORD_6X                  0x0F0F  //                      SX126x
+#define SYNC_WORD_6X                  0xFF  //                      SX126x
+#define LORA_PREAMBLE_LENGTH          8U
 
 Radio::Radio(ConfigManager& x, MQTT_Client& mqtt)
 : configManager(x)
@@ -57,18 +59,20 @@ void Radio::init(){
                                       LORA_SPREADING_FACTOR,
                                       LORA_CODING_RATE,
                                       SYNC_WORD_7X,
-                                      17,
-                                      (uint8_t)LORA_CURRENT_LIMIT);
+                                      LORA_OUTPUT_POWER,
+                                      (uint8_t)LORA_CURRENT_LIMIT_7X);
   }
   else {
-    lora = new SX1268(new Module(board.L_NSS, board.L_DI00, board.L_BUSSY, spi));
+    lora = new SX1268(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi));
     state = ((SX1268*)lora)->begin(LORA_CARRIER_FREQUENCY,
                                       LORA_BANDWIDTH,
                                       LORA_SPREADING_FACTOR,
                                       LORA_CODING_RATE,
                                       SYNC_WORD_6X,
-                                      17,
-                                      (uint8_t)LORA_CURRENT_LIMIT);
+                                      LORA_OUTPUT_POWER,
+                                      LORA_CURRENT_LIMIT_6X,
+                                      LORA_PREAMBLE_LENGTH,
+                                      board.L_TCXO_V);
   }
   
   if (state == ERR_NONE) {

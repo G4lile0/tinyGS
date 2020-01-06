@@ -81,6 +81,7 @@ typedef struct {
    uint8_t  L_MISO;
    uint8_t  L_MOSI;        
    uint8_t  L_SCK;
+   float    L_TCXO_V;
    String   BOARD;
 } board_type;
 
