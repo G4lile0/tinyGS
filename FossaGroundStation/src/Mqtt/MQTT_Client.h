@@ -66,7 +66,7 @@ public:
   void sendSystemInfo();
   void sendPong();
   void sendMessage(char* frame, size_t respLen);
-  void sendRawPacket();
+  void sendRawPacket(String packet);
 
 protected:
 #ifdef SECURE_MQTT

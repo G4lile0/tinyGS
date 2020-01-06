@@ -64,6 +64,7 @@ void MQTT_Client::reconnect() {
   Serial.println ("If this is taking more than expected, connect to the config panel on the ip: " + WiFi.localIP().toString() + " to review the MQTT connection credentials.");
   if (connect(clientId.c_str(), configManager.getMqttUser(), configManager.getMqttPass(), buildTopic(topicStatus).c_str(), 2, false, "0")) {
     Serial.println("connected");
+    subscribeToAll();
     sendWelcome();
   }
   else {
@@ -98,7 +99,7 @@ void MQTT_Client::sendWelcome() {
   publish(buildTopic(topicWelcome).c_str(), buffer,n );
 }
 
-void  MQTT_Client::sendSystemInfo(void) {
+void  MQTT_Client::sendSystemInfo() {
   time_t now;
   time(&now);
   const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(19);
@@ -130,7 +131,7 @@ void  MQTT_Client::sendSystemInfo(void) {
   publish(buildTopic(topicSysInfo).c_str(), buffer,n );
 }
 
-void  MQTT_Client::sendPong(void) {
+void  MQTT_Client::sendPong() {
   time_t now;
   time(&now);
   const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(7);
@@ -149,7 +150,7 @@ void  MQTT_Client::sendPong(void) {
   serializeJson(doc, buffer);
   size_t n = serializeJson(doc, buffer);
 
-  publish(buildTopic(topicPong).c_str(), buffer,n );
+  publish(buildTopic(topicPong).c_str(), buffer, n);
 }
 
 void  MQTT_Client::sendMessage(char* frame, size_t respLen) {
@@ -212,10 +213,10 @@ void  MQTT_Client::sendMessage(char* frame, size_t respLen) {
   }
 }
 
-void  MQTT_Client::sendRawPacket(void) {
+void  MQTT_Client::sendRawPacket(String packet) {
   time_t now;
   time(&now);
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(7);
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(10);
   DynamicJsonDocument doc(capacity);
   doc["station"] = configManager.getThingName();
   JsonArray station_location = doc.createNestedArray("station_location");
@@ -225,7 +226,7 @@ void  MQTT_Client::sendRawPacket(void) {
   doc["snr"] = status.lastPacketInfo.snr;
   doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
   doc["unix_GS_time"] = now;
-  doc["pong"] = 1;
+  doc["data"] = packet.c_str();
   serializeJson(doc, Serial);
   char buffer[256];
   serializeJson(doc, buffer);

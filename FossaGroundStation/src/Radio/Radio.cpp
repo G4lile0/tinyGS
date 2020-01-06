@@ -19,6 +19,7 @@
 
 #include "Radio.h"
 #include "../Comms/Comms.h"
+#include <base64.h>
 
 char callsign[] = "FOSSASAT-1";
 bool received = false;
@@ -35,8 +36,9 @@ bool eInterrupt = true;
 #define SYNC_WORD_7X                  0xFF    // sync word when using SX127x
 #define SYNC_WORD_6X                  0x0F0F  //                      SX126x
 
-Radio::Radio(ConfigManager& x)
+Radio::Radio(ConfigManager& x, MQTT_Client& mqtt)
 : configManager(x)
+, mqtt(mqtt)
 {
   
 }
@@ -204,7 +206,7 @@ void Radio::requestRetransmit(char* data) {
   }
 }
 
-uint8_t Radio::listen(uint8_t *&respOptData,  size_t &respLen, uint8_t &functionId){
+uint8_t Radio::listen() {
   // check if the flag is set (received interruption)
   if(!received) 
     return 1;
@@ -216,7 +218,7 @@ uint8_t Radio::listen(uint8_t *&respOptData,  size_t &respLen, uint8_t &function
   // reset flag
   received = false;
 
-  respLen = 0;
+  size_t respLen = 0;
   uint8_t* respFrame = 0;
   int state = 0;
   // read received data
@@ -240,12 +242,12 @@ uint8_t Radio::listen(uint8_t *&respOptData,  size_t &respLen, uint8_t &function
   }
   
   // get function ID
-  functionId = FCP_Get_FunctionID(callsign, respFrame, respLen);
+  uint8_t functionId = FCP_Get_FunctionID(callsign, respFrame, respLen);
   Serial.print(F("Function ID: 0x"));
   Serial.println(functionId, HEX);
 
   // check optional data
-  respOptData = nullptr;
+  uint8_t *respOptData = nullptr;
   uint8_t respOptDataLen = FCP_Get_OptData_Length(callsign, respFrame, respLen);
   Serial.print(F("Optional data ("));
   Serial.print(respOptDataLen);
@@ -256,6 +258,11 @@ uint8_t Radio::listen(uint8_t *&respOptData,  size_t &respLen, uint8_t &function
     FCP_Get_OptData(callsign, respFrame, respLen, respOptData);
     PRINT_BUFF(respFrame, respLen);
   }
+
+  String encoded = base64::encode(respFrame, respLen);
+  mqtt.sendRawPacket(encoded);
+
+  delete[] respFrame;
 
   struct tm timeinfo;
   if(!getLocalTime(&timeinfo)){
@@ -303,6 +310,11 @@ uint8_t Radio::listen(uint8_t *&respOptData,  size_t &respLen, uint8_t &function
   enableInterrupt();
 
   if (state == ERR_NONE) {
+    processReceivedFrame(functionId, respOptData, respLen);
+  }
+  delete[] respOptData;
+
+  if (state == ERR_NONE) {
     return 0;
   } else if (state == ERR_CRC_MISMATCH) {
     // packet was received, but is malformed
@@ -313,5 +325,86 @@ uint8_t Radio::listen(uint8_t *&respOptData,  size_t &respLen, uint8_t &function
     Serial.print(F("[SX12x8] Failed, code "));
     Serial.println(state);
     return 3;
+  }
+}
+
+void Radio::processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_t respLen) {
+  switch(functionId) {
+    case RESP_PONG:
+      Serial.println(F("Pong!"));
+      mqtt.sendPong();
+      break;
+
+    case RESP_SYSTEM_INFO:
+      Serial.println(F("System info:"));
+
+      Serial.print(F("batteryChargingVoltage = "));
+      status.sysInfo.batteryChargingVoltage = FCP_Get_Battery_Charging_Voltage(respOptData);
+      Serial.println(FCP_Get_Battery_Charging_Voltage(respOptData));
+      
+      Serial.print(F("batteryChargingCurrent = "));
+      status.sysInfo.batteryChargingCurrent = (FCP_Get_Battery_Charging_Current(respOptData), 4);
+      Serial.println(FCP_Get_Battery_Charging_Current(respOptData), 4);
+
+      Serial.print(F("batteryVoltage = "));
+      status.sysInfo.batteryVoltage=FCP_Get_Battery_Voltage(respOptData);
+      Serial.println(FCP_Get_Battery_Voltage(respOptData));          
+
+      Serial.print(F("solarCellAVoltage = "));
+      status.sysInfo.solarCellAVoltage= FCP_Get_Solar_Cell_Voltage(0, respOptData);
+      Serial.println(FCP_Get_Solar_Cell_Voltage(0, respOptData));
+
+      Serial.print(F("solarCellBVoltage = "));
+      status.sysInfo.solarCellBVoltage= FCP_Get_Solar_Cell_Voltage(1, respOptData);
+      Serial.println(FCP_Get_Solar_Cell_Voltage(1, respOptData));
+
+      Serial.print(F("solarCellCVoltage = "));
+      status.sysInfo.solarCellCVoltage= FCP_Get_Solar_Cell_Voltage(2, respOptData);
+      Serial.println(FCP_Get_Solar_Cell_Voltage(2, respOptData));
+
+      Serial.print(F("batteryTemperature = "));
+      status.sysInfo.batteryTemperature=FCP_Get_Battery_Temperature(respOptData);
+      Serial.println(FCP_Get_Battery_Temperature(respOptData));
+
+      Serial.print(F("boardTemperature = "));
+      status.sysInfo.boardTemperature=FCP_Get_Board_Temperature(respOptData);
+      Serial.println(FCP_Get_Board_Temperature(respOptData));
+
+      Serial.print(F("mcuTemperature = "));
+      status.sysInfo.mcuTemperature =FCP_Get_MCU_Temperature(respOptData);
+      Serial.println(FCP_Get_MCU_Temperature(respOptData));
+
+      Serial.print(F("resetCounter = "));
+      status.sysInfo.resetCounter=FCP_Get_Reset_Counter(respOptData);
+      Serial.println(FCP_Get_Reset_Counter(respOptData));
+
+      Serial.print(F("powerConfig = 0b"));
+      status.sysInfo.powerConfig=FCP_Get_Power_Configuration(respOptData);
+      Serial.println(FCP_Get_Power_Configuration(respOptData), BIN);
+
+      mqtt.sendSystemInfo();
+      break;
+
+    case RESP_LAST_PACKET_INFO:
+      Serial.println(F("Last packet info:"));
+
+      Serial.print(F("SNR = "));
+      Serial.print(respOptData[0] / 4.0);
+      Serial.println(F(" dB"));
+
+      Serial.print(F("RSSI = "));
+      Serial.print(respOptData[1] / -2.0);
+      Serial.println(F(" dBm"));
+      break;
+
+    case RESP_REPEATED_MESSAGE:
+      Serial.println(F("Got repeated message:"));
+      Serial.println((char*)respOptData);
+      mqtt.sendMessage((char*)respOptData,respLen);
+      break;
+
+    default:
+      Serial.println(F("Unknown function ID!"));
+      break;
   }
 }

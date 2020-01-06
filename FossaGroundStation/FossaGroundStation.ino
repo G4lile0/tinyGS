@@ -52,6 +52,11 @@
       @dev_4m1g0    https://twitter.com/dev_4m1g0
       @g4lile0      https://twitter.com/G4lile0
 
+====================================================
+  IMPORTANT:
+    - Change libraries/PubSubClient/src/PubSubClient.h
+        #define MQTT_MAX_PACKET_SIZE 1000
+
 **************************************************************************/
 
 #if defined(ARDUINO) && ARDUINO >= 100
@@ -69,7 +74,7 @@
 
 ConfigManager configManager;
 MQTT_Client mqtt(configManager);
-Radio radio(configManager);
+Radio radio(configManager, mqtt);
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 0; // 3600;         // 3600 for Spain
@@ -266,96 +271,7 @@ void loop() {
     radio.enableInterrupt();
   }
 
-  uint8_t *respOptData; // Warning: this needs to be freed
-  size_t respLen = 0;
-  uint8_t functionId = 0;
-  uint8_t error = radio.listen(respOptData, respLen, functionId);
-  if (!error)
-    processReceivedFrame(functionId, respOptData, respLen);
-
-  delete[] respOptData;
-  respOptData = nullptr;
-}
-
-void processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_t respLen) {
-  switch(functionId) {
-    case RESP_PONG:
-      Serial.println(F("Pong!"));
-      mqtt.sendPong();
-      break;
-
-    case RESP_SYSTEM_INFO:
-      Serial.println(F("System info:"));
-
-      Serial.print(F("batteryChargingVoltage = "));
-      status.sysInfo.batteryChargingVoltage = FCP_Get_Battery_Charging_Voltage(respOptData);
-      Serial.println(FCP_Get_Battery_Charging_Voltage(respOptData));
-      
-      Serial.print(F("batteryChargingCurrent = "));
-      status.sysInfo.batteryChargingCurrent = (FCP_Get_Battery_Charging_Current(respOptData), 4);
-      Serial.println(FCP_Get_Battery_Charging_Current(respOptData), 4);
-
-      Serial.print(F("batteryVoltage = "));
-      status.sysInfo.batteryVoltage=FCP_Get_Battery_Voltage(respOptData);
-      Serial.println(FCP_Get_Battery_Voltage(respOptData));          
-
-      Serial.print(F("solarCellAVoltage = "));
-      status.sysInfo.solarCellAVoltage= FCP_Get_Solar_Cell_Voltage(0, respOptData);
-      Serial.println(FCP_Get_Solar_Cell_Voltage(0, respOptData));
-
-      Serial.print(F("solarCellBVoltage = "));
-      status.sysInfo.solarCellBVoltage= FCP_Get_Solar_Cell_Voltage(1, respOptData);
-      Serial.println(FCP_Get_Solar_Cell_Voltage(1, respOptData));
-
-      Serial.print(F("solarCellCVoltage = "));
-      status.sysInfo.solarCellCVoltage= FCP_Get_Solar_Cell_Voltage(2, respOptData);
-      Serial.println(FCP_Get_Solar_Cell_Voltage(2, respOptData));
-
-      Serial.print(F("batteryTemperature = "));
-      status.sysInfo.batteryTemperature=FCP_Get_Battery_Temperature(respOptData);
-      Serial.println(FCP_Get_Battery_Temperature(respOptData));
-
-      Serial.print(F("boardTemperature = "));
-      status.sysInfo.boardTemperature=FCP_Get_Board_Temperature(respOptData);
-      Serial.println(FCP_Get_Board_Temperature(respOptData));
-
-      Serial.print(F("mcuTemperature = "));
-      status.sysInfo.mcuTemperature =FCP_Get_MCU_Temperature(respOptData);
-      Serial.println(FCP_Get_MCU_Temperature(respOptData));
-
-      Serial.print(F("resetCounter = "));
-      status.sysInfo.resetCounter=FCP_Get_Reset_Counter(respOptData);
-      Serial.println(FCP_Get_Reset_Counter(respOptData));
-
-      Serial.print(F("powerConfig = 0b"));
-      status.sysInfo.powerConfig=FCP_Get_Power_Configuration(respOptData);
-      Serial.println(FCP_Get_Power_Configuration(respOptData), BIN);
-
-      mqtt.sendSystemInfo();
-      break;
-
-    case RESP_LAST_PACKET_INFO:
-      Serial.println(F("Last packet info:"));
-
-      Serial.print(F("SNR = "));
-      Serial.print(respOptData[0] / 4.0);
-      Serial.println(F(" dB"));
-
-      Serial.print(F("RSSI = "));
-      Serial.print(respOptData[1] / -2.0);
-      Serial.println(F(" dBm"));
-      break;
-
-    case RESP_REPEATED_MESSAGE:
-      Serial.println(F("Got repeated message:"));
-      Serial.println((char*)respOptData);
-      mqtt.sendMessage((char*)respOptData,respLen);
-      break;
-
-    default:
-      Serial.println(F("Unknown function ID!"));
-      break;
-  }
+  radio.listen();
 }
 
 void switchTestmode() {

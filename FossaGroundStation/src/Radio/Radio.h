@@ -23,12 +23,13 @@
 #include <RadioLib.h>
 #include "../ConfigManager/ConfigManager.h"
 #include "../Status.h"
+#include "../Mqtt/MQTT_Client.h"
 
 extern Status status;
 
 class Radio {
 public:
-  Radio(ConfigManager& configManager);
+  Radio(ConfigManager& x, MQTT_Client& mqtt);
   void init();
   void sendPing();
   void requestInfo();
@@ -36,12 +37,14 @@ public:
   void requestRetransmit(char* data);
   void enableInterrupt();
   void disableInterrupt();
-  uint8_t listen(uint8_t *&respOptData, size_t &respLen, uint8_t &functionId);
+  uint8_t listen();
   bool isReady() { return ready; }
 
 private:
   PhysicalLayer* lora;
   ConfigManager& configManager;
+  MQTT_Client& mqtt;
+  void processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_t respLen);
   
   static void setFlag();
   int sendFrame(uint8_t functionId, const char* data = "");
