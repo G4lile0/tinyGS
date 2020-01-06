@@ -48,7 +48,7 @@ constexpr auto thingName = "test_GroundStation";
 constexpr auto initialApPassword = "";
 constexpr auto configVersion = "0.01"; //max 4 chars
 
-#define MQTT_DEFAULT_SERVER "132.145.77.12" //"fossa.apaluba.com"
+#define MQTT_DEFAULT_SERVER "fossa.apaluba.com"
 #define MQTT_DEFAULT_PORT  "8883"
 
 constexpr auto AP_TIMEOUT_MS = "300000";

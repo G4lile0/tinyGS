@@ -104,6 +104,7 @@ void Radio::init(){
   else {
     Serial.print(F("failed, code "));
     Serial.println(state);
+    Serial.println(String("Go to the config panel (") + WiFi.localIP().toString() + ") and check if the board selected matches your hardware.");
     return;
   }
 
@@ -167,6 +168,7 @@ void Radio::sendPing() {
   } else {
     Serial.print(F("failed, code "));
     Serial.println(state);
+    Serial.println(String("Go to the config panel (") + WiFi.localIP().toString() + ") and check if the board selected matches your hardware.");
   }
 }
 
@@ -180,6 +182,7 @@ void Radio::requestInfo() {
   } else {
     Serial.print(F("failed, code "));
     Serial.println(state);
+    Serial.println(String("Go to the config panel (") + WiFi.localIP().toString() + ") and check if the board selected matches your hardware.");
   }
 }
 
@@ -193,6 +196,7 @@ void Radio::requestPacketInfo() {
   } else {
     Serial.print(F("failed, code "));
     Serial.println(state);
+    Serial.println(String("Go to the config panel (") + WiFi.localIP().toString() + ") and check if the board selected matches your hardware.");
   }
 }
 
@@ -205,6 +209,7 @@ void Radio::requestRetransmit(char* data) {
   } else {
     Serial.print(F("failed, code "));
     Serial.println(state);
+    Serial.println(String("Go to the config panel (") + WiFi.localIP().toString() + ") and check if the board selected matches your hardware.");
   }
 }
 
