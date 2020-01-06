@@ -104,7 +104,7 @@ bool Config_managerClass::loadFlashData (bool load_wifi_data) {
 				strlcpy (board_config->ssid, doc["wifi_ssid"] | "", sizeof (board_config->ssid));
 				strlcpy (board_config->pass, doc["wifi_pass"] | "", sizeof (board_config->pass));
 			} else {
-				ESP_LOGD ("Not oading WiFi data");
+				ESP_LOGD ("Not loading WiFi data");
 			}
 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
