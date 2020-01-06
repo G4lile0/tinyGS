@@ -59,10 +59,12 @@ enum boardNum {
   TTGO_V1,
   TTGO_V2,
   TBEAM_OLED,
-  ESP32_SX126X,
-  TTGO_V2_SX126X,
+  ESP32_SX126X_XTAL,
+  TTGO_V2_SX126X_XTAL,
+  ESP32_SX126X_TXC0_1,
+  ESP32_SX126X_TXC0_2,
 
-  NUM_BOARDS //this line alwasys has to be the last one
+  NUM_BOARDS //this line always has to be the last one
 };
 
 typedef struct {

@@ -30,8 +30,10 @@ ConfigManager::ConfigManager()
   {      0x3c,        4,        15,       16,           0,         2,      true,    18,     26,      0,      0,    14,      19,     27,     5,     0.0f, "TTGO LoRa 32 v1"        }, // @g4lile0
   {      0x3c,       21,        22,       16,           0,        22,      true,    18,     26,     33,      0,    14,      19,     27,     5,     0.0f, "TTGO LoRA 32 v2"        }, // @TCRobotics
   {      0x3c,       21,        22,       16,          39,        22,      true,    18,     26,     33,     32,    14,      19,     27,     5,     0.0f, "T-BEAM + OLED"        }, 
-  {      0x3c,       21,        22,       16,           0,        25,     false,     5,      0,      2,      4,    14,      19,     23,    18,     0.0f, "Custom ESP32 Wroom + SX126x Crystal"  }, // @4m1g0
+  {      0x3c,       21,        22,       16,           0,        25,     false,     5,      0,     27,     26,    14,      19,     23,    18,     0.0f, "Custom ESP32 Wroom + SX126x (Crystal)"  }, // @4m1g0, @lillefyr
   {      0x3c,       21,        22,       16,           0,        25,     false,    18,      0,     33,     32,    14,      19,     27,     5,     0.0f, "TTGO LoRa 32 V2 Modified with module SX126x (crystal)"  },// @TCRobotics
+  {      0x3c,       21,        22,       16,           0,        25,     false,     5,      0,      2,     13,    26,      19,     23,    18,     1.6f, "Custom ESP32 Wroom + SX126x DRF1268T (TCX0) (5, 2, 26, 13)"  }, // @sdey76
+  {      0x3c,       21,        22,       16,           0,        25,     false,     5,      0,     26,     12,    14,      19,     23,    18,     1.6f, "Custom ESP32 Wroom + SX126x DRF1268T (TCX0) (5, 26, 14, 12)"  }, // @imants
   })
 {
   server.on(ROOT_URL, [this]{ handleRoot(); });
