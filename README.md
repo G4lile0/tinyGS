@@ -40,7 +40,7 @@ We are using Telegram as the mean of communication for the project, there are al
 This project is ready to use with [Platformio](https://platformio.org/). It will take care of all dependencies automatically when building the project. It can also be used with Arduino IDE.
 
 ## Platformio (recommended)
-Arduino ide instructions bellow.
+Arduino IDE instructions are below.
 ### Installing platformio
 Platformio can be installed as a plugin for many IDEs. You can find a complete list here: https://docs.platformio.org/en/latest/ide.html#desktop-ide
 
