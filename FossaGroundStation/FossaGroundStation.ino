@@ -195,13 +195,6 @@ void loop() {
   wasConnected = true;
   mqtt.loop();
   ArduinoOTA.handle();
-
-  if (!radio.isReady()) {
-    displayShowLoRaError();
-    return;
-  }
-
-  displayUpdate();
   
   if(Serial.available()) {
     radio.disableInterrupt();
@@ -220,15 +213,31 @@ void loop() {
     // process serial command
     switch(serialCmd) {
       case 'p':
+        if (!radio.isReady()) {
+          Serial.println(F("Radio is not ready, please configure it properly before using this command."));
+          break;
+        }
         radio.sendPing();
         break;
       case 'i':
+        if (!radio.isReady()) {
+          Serial.println(F("Radio is not ready, please configure it properly before using this command."));
+          break;
+        }
         radio.requestInfo();
         break;
       case 'l':
+        if (!radio.isReady()) {
+          Serial.println(F("Radio is not ready, please configure it properly before using this command."));
+          break;
+        }
         radio.requestPacketInfo();
         break;
       case 'r':
+        if (!radio.isReady()) {
+          Serial.println(F("Radio is not ready, please configure it properly before using this command."));
+          break;
+        }
         Serial.println(F("Enter message to be sent:"));
         Serial.println(F("(max 32 characters, end with LF or CR+LF)"));
         {
@@ -280,6 +289,13 @@ void loop() {
 
     radio.enableInterrupt();
   }
+
+  if (!radio.isReady()) {
+    displayShowLoRaError();
+    return;
+  }
+
+  displayUpdate();
 
   radio.listen();
 }
