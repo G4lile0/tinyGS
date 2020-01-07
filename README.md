@@ -27,6 +27,11 @@ We are using Telegram as the mean of communication for the project, there are al
 * **Heltec WiFi LoRa 32 V2** (433MHz SX1278) https://heltec.org/project/wifi-lora-32/
 * **TTGO LoRa32 V1** (433MHz SX1278)
 * **TTGO LoRa32 V2** (433MHz SX1278)
+* **T-BEAM + OLED** (433MHz SX1278)
+* **ESP32 dev board + SX126X with crystal (Custom build, OLED optional)**
+* **ESP32 dev board + SX126X with TCXO (Custom build, OLED optional)**
+* **ESP32 dev board + SX127X (Custom build, OLED optional)**
+* **TTGO LoRa32 V2 (Manualy swaped SX1267 to SX1278)**
 
 ## Supported modules
 * sx126x
@@ -37,10 +42,9 @@ We are using Telegram as the mean of communication for the project, there are al
 </p>
 
 # Quick Install
-This project is ready to use with [Platformio](https://platformio.org/). It will take care of all dependencies automatically when building the project. It can also be used with Arduino IDE.
+This project is ready to use with [Platformio](https://platformio.org/). It will take care of all dependencies automatically when building the project. It can also be used with [Arduino IDE](https://github.com/G4lile0/ESP32-OLED-Fossa-GroundStation/wiki/Arduino-IDE).
 
 ## Platformio (strongly recommended)
-Arduino ide instructions bellow.
 ### Installing platformio
 Platformio can be installed as a plugin for many IDEs. You can find a complete list here: https://docs.platformio.org/en/latest/ide.html#desktop-ide
 
@@ -54,79 +58,20 @@ Once you have cloned this project to a local directory, you can open it on Visua
 
 ![Add folder to workspace VSCode](/doc/images/add_folder_to_workspace.png "Add folder to workspace VSCode")
 
-Then select the `ESP32-OLED-Fossa-GroundStation` folder inside the repository and click open, make sure it is the root folder and that it has the platformio.ino inside.
+Then select the `ESP32-OLED-Fossa-GroundStation` folder of the repository and click open, make sure it is the root folder and that it has the platformio.ino inside.
 
 ![Select folder](/doc/images/Select_folder.png "Select folder")
 
-After that, the project should be loaded in visual studio and ready to configure and build.
-
-### Configure the project
-First we need to select the board. To do so, open the `platformio.ini` file and uncomment one of the lines at the beggining of the file depending on the board you are going to use.
-
-```
-default_envs = 
-; Uncomment by deleting ";" in the line below to select the board
-;   heltec_wifi_lora_32
-;   ttgo-lora32-v1
-;   ttgo-lora32-v2
-```
+After that, the project should be loaded in visual studio and ready to configure and build. **There is no need to change anything on the code if you have one of the supported boards. Platformio will compile for heltec_wifi_lora_32 but that is normal even if your board is not Heltec.**
 
 ## Build and upload the project
-Once the configuration is done, connect the board to the computer and click on the upload button from the platformio toolbar, or go to Terminal -> Run Task -> Upload.
+Connect the board to the computer and click on the upload button from the platformio toolbar, or go to Terminal -> Run Task -> Upload.
 
 ![Upload](/doc/images/upload.png "Upload")
 
-All the dependencies will be downloaded and installed automatically.
+All the dependencies will be configured and built automatically.
 
 Note that if you are a Linux used like me and it is your first time using platformio, you will have to install the udev rules to grant permissions to platformio to upload the program to the board. You can follow the instructions here: https://docs.platformio.org/en/latest/faq.html#platformio-udev-rules
-
-## Arduino IDE
-We strongly recommend using platformio, the build process is simpler and it is less likely to have compilation error.
-
-You can install the Arduino IDE by downloading it from [arduino.cc](https://www.arduino.cc/en/Main/Software), we recommend the last version, but you should use v1.6 or above.
-
-### Install the Arduino Core for ESP32
-First step is to install support for ESP32 based boards on the Arduino IDE through the Board Manager.
-
-* Start Arduino and open Preferences window.
-* Enter `https://dl.espressif.com/dl/package_esp32_index.json` into *Additional Board Manager URLs* field. You can add multiple URLs, separating them with commas. 
-* Open Boards Manager from Tools > Board menu and find *esp32* platform.
-* Select the version you need from a drop-down box.
-* Click *install* button.
-
-### Installing dependencies
-This project relies on several third party dependencies that must be installed in order to be able to build the binaries. You can find the dependencies list below.
-
-To install the libraries you can simply copy all files from the GroundStation folder `lib` into your sketchbook\libraries folder. Make sure there are no duplicate libraries that might cause a conflict.
-
-* **RadioLib** (recomended v2.0.1) https://github.com/jgromes/RadioLib
-* **ArduinoJson** (recomended v6.13.0 **Required** >v6.0) https://github.com/bblanchon/ArduinoJson
-* **ESP8266_SSD1306** (recomended v4.1.0) https://github.com/ThingPulse/esp8266-oled-ssd1306
-* **IoTWebConf** (**Required:** 2.3.0@4m1g0) https://github.com/4m1g0/IotWebConf
-
-### Open the project in Arduino IDE
-Once you have cloned this project to a local directory, you can open it from the Arduino IDE in `File > Add folder` to workspace. And select the .ino file which is located in `FossaGroundStation > Fossa_GroundStation.ino`
-
-![Open on Arduino IDE](/doc/images/open_arduino.png "Open on Arduino IDE")
-
-### Build and upload the project
-The next step is to open the project file ` FossaGroundStation/BoardConfig.h` and uncomment the line matching your board by removing the leading `//`
-
-```
-// uncomment the line matching your board by removing the //
-
-//#define TTGO_V1
-//#define TTGO_V2
-//#define HELTEC
-```
-
-Connect the board to the computer, select your board in the Arduino IDE `Tools > Boards `
-
-![Select board on Arduino IDE](/doc/images/select_board_arduino.png "Select board on Arduino IDE")
-
-Then select the port where the board is connected to the computer in `Tools > Ports`
-
-And finally click on the rounded arrow button on the top to upload the project to the board or go to `Program > Upload (Ctl+U)`
 
 # Configure Station parameters
 The first time the board boot it will generate an AP with the name: FossaGroundStation. Once connected to that network you should be prompted with a web panel to configure the basic parameters of your station. If that were not the case, you can access the web panel using a web browser and going to the url 192.168.4.1.
