@@ -94,21 +94,15 @@ The parameters that must be filled are the following:
 # OTA Update
 This project implements OTA updates with both Arduino IDE and Platformio. To use this method the board and the computer have to be connected to the same network and be visible to each other.
 
-## Platformio
-In order to upload a new version through OTA in platformio, the `platformio.ide` file has to be edited uncommenting two lines to enable OTA and set the current IP Address of the station (it can be seen on the OLED display).
+You can find more information on [the wiki page about the OTA Update](https://github.com/G4lile0/ESP32-OLED-Fossa-GroundStation/wiki/OTA-Update).
 
-```
-# Uncomment these 2 lines by deleting ";" and edit as needed to upload through OTA
-;upload_protocol = espota
-;upload_port = IP_OF_THE_BOARD
-```
+# Dependencies
+This project relies on several third party dependencies that must be installed in order to be able to build the binaries. You can find the dependencies list below.
 
-Once this is done, the new firmware can be uploaded using the upload button normally as if the board were connected through USB.
+* **RadioLib (with modifications)** (**required:** v3.0.0@4m1g0) https://github.com/4m1g0/RadioLib
+* **ArduinoJson** (recomended v6.13.0 **Required** >v6.0) https://github.com/bblanchon/ArduinoJson
+* **ESP8266_SSD1306** (recomended v4.1.0) https://github.com/ThingPulse/esp8266-oled-ssd1306
+* **IoTWebConf2** (**Required:** 2.3.0@4m1g0) https://github.com/4m1g0/IotWebConf2
+* **PubSubCluent (with modifications)** (recomended 2.7) https://github.com/knolleary/pubsubclient
 
-## Arduino IDE
-To upload a new version through OTA on Arduino, you have to navigate to `Tools > port` and, if the computer is in the same network it should detect a network port for the ESP32. If that is the case, select the network port.
-
-Once this is done, the new firmware can be uploaded normally using the upload button or navigating to `Program > upload`
-Arduino 
-
-
+**Note for Arduino IDE Users**: Some of this libraries have modifications compared to the original ones, so make sure you use the version listed here or just copy the libraries from the `lib`folder to avoid problems. On PubSubClient it is mandatory to set `MQTT_MAX_PACKET_SIZE` to 1000 on the `PubSubClient.h` file. Platformio users don't have to worry about this as Platformio handle all of this automatically.
