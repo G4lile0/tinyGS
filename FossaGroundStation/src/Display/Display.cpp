@@ -238,12 +238,13 @@ void displayShowLoRaError() {
 
 void displayUpdate() {
   ui->update();
-  // NOTE: After some investigation I don't think it's necesary to manage time budget here, 
-  // the update methos will skip frames when necesary without stoping the main thread.
+  // NOTE: After some investigation I don't think it's necessary to manage
+  // the time budget here, as the update methods will skip frames when necesary
+  // without stopping the main thread.
 
   /*int remainingTimeBudget = ui->update();
   if (remainingTimeBudget > 0) {
-    // You can do some work here
+    // You can do some work here.
     // Don't do stuff if you are below your
     // time budget.
     delay(remainingTimeBudget);
