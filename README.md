@@ -3,10 +3,10 @@ The aim of this project is to create an open network of ground stations for the 
 
 This project is based on ESP32 boards and is compatible with sx126x and sx127x you can build you own board using one of these modules but most of us use a development board like the ones listed in the Supported boards section.
 
-The developers of this project have no relation with the Fossa team in charge of the mission, we are passionate about space and created this project to be able to track and use the satellites as well as supporting the mission.
+The developers of this project have no relation with the Fossa team in charge of the mission. We are passionate about space and created this project to be able to track and use the satellites as well as supporting the mission.
 
 ## [IMPORTANT] Status of the project
-Currently we are at an early stage of development (just a couple of weeks of work), the current version is functional but not fully stable and we are actively developing new changes so you will have to update the firmware quite regularly if you want to stay updated.
+Currently we are at an early stage of development and the current version is functional but not fully stable and we are actively developing so you will have to update the firmware regularly if you want to stay updated.
 
 The first Fossa satellite, FossaSat-1 was launched on December 12, 2019 and it is still in evaluation stage by the Fossa team, so it is important **not to communicate to the satellity and only listen** until the Fossa team says otherwise. 
 
@@ -17,7 +17,7 @@ FossaSat-1 is currently in a healthy state and sending packets, however several 
 
 The Fossa team has announced that **two new satellites will be launched on March 2020 and those will be 100% compatible** with all the boards including sx127x, so at this moment the priority is keep improving the project, try to receive communications form FossaSat-1 with high gain antenas and be prepared for the next launch on March when all bords will be compatible. 
 
-We are using Telegram as the mean of communication for the project, there are also two channels where you can suscribe and be updated automátically whenever a new packet is received by the network from the Satellite.
+We are using Telegram as the main method of communication for the project community. As well as the main channel, there are two other channels where you can subscribe and receive updates whenever a new packet is received by the network from the Satellite.
 * **Main community chat:** https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q
 * **Data channel (station status and received packets):** https://t.me/FOSSASAT_DATA
 * **Test channel (simulator packets received by test groundstations):** https://t.me/FOSSASAT_TEST
@@ -97,4 +97,4 @@ This project relies on several third party dependencies that must be installed i
 * **IoTWebConf2** (**Required:** 2.3.0@4m1g0) https://github.com/4m1g0/IotWebConf2
 * **PubSubCluent (with modifications)** (recomended 2.7) https://github.com/knolleary/pubsubclient
 
-**Note for Arduino IDE Users**: Some of this libraries have modifications compared to the original ones, so make sure you use the version listed here or just copy the libraries from the `lib`folder to avoid problems. On PubSubClient it is mandatory to set `MQTT_MAX_PACKET_SIZE` to 1000 on the `PubSubClient.h` file. Platformio users don't have to worry about this as Platformio handle all of this automatically.
+**Note for Arduino IDE Users**: Some of these libraries have modifications compared to the original ones, so make sure you use the version listed here or just copy the libraries from the `lib` folder to avoid problems. On PubSubClient it is mandatory to set `MQTT_MAX_PACKET_SIZE` to 1000 on the `PubSubClient.h` file. Platformio users don't have to worry about this as Platformio will handle all of this automatically.
