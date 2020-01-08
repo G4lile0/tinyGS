@@ -81,15 +81,7 @@ The first time the board boot it will generate an AP with the name: FossaGroundS
   <img src="/doc/images/config_wifimanager.jpg" width="400" /> 
 </p>
 
-The parameters that must be filled are the following:
-* **GROUNDSTATION NAME:** The name of your ground station. If you have registered yours in the [Fossa Ground Station Database](http://groundstationdatabase.com/database.php), the name should match. All ground stations starting with `test_` will be considered stations in test mode and all messages from those gs will be published on the [TEST telegram channel](https://t.me/FOSSASAT_TEST) in order not to flood the main channel with test packaged. Make sure you use a name stating with `test_` for example if you are going to test you gs with a satellite emulator.
- **GROUNDSTATION PASSWORD:** This is the password of your ground station, you will be asked for this password next time you connect to it through the web panel. **The user is always `admin`**
-* **SSID and PASSWORD:** The configuration parameters of you home WiFi AP so that the ground station can connect to internet.
-* **TIME ZONE:** Your timezone, this is to show you the time imformation in your timezone.
-* **LATITUDE and LONGITUDE:** The geographical coordinates of the ground station. This serves the purpose of locating your ground station when you receive a package from the satellite.
-* **MQTT_SERVER and MQTT_PORT:** These are the address and port of the MQTT server of the project you should not change them if you want the Ground Station to be able to connect the main server. 
-* **MQTT_USER and MQTT_PASS:** These are the credentials of the project MQTT server, the purpose is to be able to collect the most packets from the satellite and manage all groundStations from this central server. You can ask for user and password in this telegram group: https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q
-* **BOARD TYPE:** The hardware board you are using. The firmware is able to autodetect your board but, in case the selection is wrong or you know what you are doing, you can change it manually by modifying this parameter.
+You can find more information about the config parameters and the available boards on [the configuration wiki page](https://github.com/G4lile0/ESP32-OLED-Fossa-GroundStation/wiki/Ground-Station-configuration).
 
 # OTA Update
 This project implements OTA updates with both Arduino IDE and Platformio. To use this method the board and the computer have to be connected to the same network and be visible to each other.
