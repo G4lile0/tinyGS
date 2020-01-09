@@ -23,10 +23,7 @@
 MQTT_Client::MQTT_Client(ConfigManager& x) 
 : PubSubClient(espClient)
 , configManager(x)
-{
-  uint64_t chipId = ESP.getEfuseMac();
-	clientId = String ((uint32_t)chipId, HEX);
-}
+{ }
 
 void MQTT_Client::loop() {
   if (!connected() && millis() - lastConnectionAtempt > reconnectionInterval) {
@@ -55,14 +52,14 @@ void MQTT_Client::loop() {
 }
 
 void MQTT_Client::reconnect() {
-  if (!connected()) {
-    uint64_t chipId = ESP.getEfuseMac();
-  String clientId = String ((uint32_t)chipId, HEX);
-  }
+  uint64_t chipId = ESP.getEfuseMac();
+  char clientId[13];
+  sprintf(clientId, "%04X%08X",(uint16_t)(chipId>>32), (uint32_t)chipId);
+  Serial.println(clientId);
 
   Serial.print("Attempting MQTT connection...");
   Serial.println ("If this is taking more than expected, connect to the config panel on the ip: " + WiFi.localIP().toString() + " to review the MQTT connection credentials.");
-  if (connect(clientId.c_str(), configManager.getMqttUser(), configManager.getMqttPass(), buildTopic(topicStatus).c_str(), 2, false, "0")) {
+  if (connect(clientId, configManager.getMqttUser(), configManager.getMqttPass(), buildTopic(topicStatus).c_str(), 2, false, "0")) {
     Serial.println("connected");
     subscribeToAll();
     sendWelcome();
