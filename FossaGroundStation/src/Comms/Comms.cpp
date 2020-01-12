@@ -14,7 +14,7 @@ int16_t FCP_Get_Frame_Length(char* callsign, uint8_t optDataLen, const char* pas
     frameLen += 1 + optDataLen;
   }
 
-  // check if the frame is encrpyted
+  // check if the frame is encrypted
   if(password != NULL) {
     frameLen += strlen(password);
     if(optDataLen == 0) {
