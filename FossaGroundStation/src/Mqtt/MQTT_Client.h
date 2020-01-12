@@ -81,8 +81,8 @@ private:
   String buildTopic(const char * topic);
   void subscribeToAll();
   unsigned long lastPing = 0;
-  unsigned long lastConnectionAtempt = 0;
-  uint8_t connectionAtempts = 0;
+  unsigned long lastConnectionAttempt = 0;
+  uint8_t connectionAttempts = 0;
 
   const unsigned long pingInterval = 1 * 60 * 1000;
   const unsigned long reconnectionInterval = 5 * 1000;

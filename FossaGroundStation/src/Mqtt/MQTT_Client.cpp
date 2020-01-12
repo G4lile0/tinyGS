@@ -1,5 +1,5 @@
 /*
-  MQTTClient.cpp - MQTT connection class
+  MQTT_Client.cpp - MQTT connection class
   
   Copyright (C) 2020 @G4lile0, @gmag12 and @dev_4m1g0
 
@@ -26,19 +26,19 @@ MQTT_Client::MQTT_Client(ConfigManager& x)
 { }
 
 void MQTT_Client::loop() {
-  if (!connected() && millis() - lastConnectionAtempt > reconnectionInterval) {
-    lastConnectionAtempt = millis();
-    connectionAtempts++;
+  if (!connected() && millis() - lastConnectionAttempt > reconnectionInterval) {
+    lastConnectionAttempt = millis();
+    connectionAttempts++;
     status.mqtt_connected = false;
     reconnect();
   }
   else {
-    connectionAtempts = 0;
+    connectionAttempts = 0;
     status.mqtt_connected = true;
   }
 
-  if (connectionAtempts > connectionTimeout) {
-    Serial.println("Unable to connect to MQTT Server after many atempts. Restarting...");
+  if (connectionAttempts > connectionTimeout) {
+    Serial.println("Unable to connect to MQTT Server after many attempts. Restarting...");
     ESP.restart();
   }
 
