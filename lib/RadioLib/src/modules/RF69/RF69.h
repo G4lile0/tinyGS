@@ -7,9 +7,10 @@
 #include "../../protocols/PhysicalLayer/PhysicalLayer.h"
 
 // RF69 physical layer properties
+#define RF69_FREQUENCY_STEP_SIZE                      61.03515625
+#define RF69_MAX_PACKET_LENGTH                        64
 #define RF69_CRYSTAL_FREQ                             32.0
 #define RF69_DIV_EXPONENT                             19
-#define RF69_MAX_PACKET_LENGTH                        64
 
 // RF69 register map
 #define RF69_REG_FIFO                                 0x00
@@ -563,11 +564,21 @@ class RF69: public PhysicalLayer {
     void setDio0Action(void (*func)(void));
 
     /*!
+      \brief Clears interrupt service routine to call when DIO0 activates.
+    */
+    void clearDio0Action();
+
+    /*!
       \brief Sets interrupt service routine to call when DIO1 activates.
 
       \param func ISR to call.
     */
     void setDio1Action(void (*func)(void));
+
+    /*!
+      \brief Clears interrupt service routine to call when DIO1 activates.
+    */
+    void clearDio1Action();
 
     /*!
       \brief Interrupt-driven binary transmit method.

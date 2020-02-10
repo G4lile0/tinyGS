@@ -7,9 +7,10 @@
 #include "../../protocols/PhysicalLayer/PhysicalLayer.h"
 
 // CC1101 physical layer properties
+#define CC1101_FREQUENCY_STEP_SIZE                    396.7285156
+#define CC1101_MAX_PACKET_LENGTH                      63
 #define CC1101_CRYSTAL_FREQ                           26.0
 #define CC1101_DIV_EXPONENT                           16
-#define CC1101_MAX_PACKET_LENGTH                      63
 
 // CC1101 SPI commands
 #define CC1101_CMD_READ                               0b10000000
@@ -602,6 +603,11 @@ class CC1101: public PhysicalLayer {
     void setGdo0Action(void (*func)(void), uint8_t dir = FALLING);
 
     /*!
+      \brief Clears interrupt service routine to call when GDO0 activates.
+    */
+    void clearGdo0Action();
+
+    /*!
       \brief Sets interrupt service routine to call when GDO2 activates.
 
       \param func ISR to call.
@@ -609,6 +615,11 @@ class CC1101: public PhysicalLayer {
       \param dir Signal change direction. Defaults to FALLING.
     */
     void setGdo2Action(void (*func)(void), uint8_t dir = FALLING);
+
+    /*!
+      \brief Clears interrupt service routine to call when GDO0 activates.
+    */
+    void clearGdo2Action();
 
     /*!
       \brief Interrupt-driven binary transmit method.
