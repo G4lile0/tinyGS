@@ -54,7 +54,12 @@ int16_t FCP_Get_OptData_Length(char* callsign, uint8_t* frame, uint8_t frameLen,
     memcpy(encSection, frame + strlen(callsign) + 1, encSectionLen);
 
     // decrypt
-//    aes128_dec_multiple(key, encSection, encSectionLen);
+    /*struct AES_ctx ctx;
+    AES_init_ctx(&ctx, key);
+    uint8_t numBlocks = encSectionLen / 16;
+    for(uint8_t i = 0; i < numBlocks; i++) {
+      AES_ECB_decrypt(&ctx, encSection + (i * 16));
+    }*/
 
     // check password
     if(memcmp(encSection + 1, password, strlen(password)) == 0) {
@@ -138,7 +143,12 @@ int16_t FCP_Get_OptData(char* callsign, uint8_t* frame, uint8_t frameLen, uint8_
     memcpy(encSection, framePtr, encSectionLen);
 
     // decrypt
-//    aes128_dec_multiple(key, encSection, encSectionLen);
+    /*struct AES_ctx ctx;
+    AES_init_ctx(&ctx, key);
+    uint8_t numBlocks = encSectionLen / 16;
+    for(uint8_t i = 0; i < numBlocks; i++) {
+      AES_ECB_decrypt(&ctx, encSection + (i * 16));
+    }*/
     uint8_t* encSectionPtr = encSection;
 
     // get optional data length
@@ -242,7 +252,12 @@ int16_t FCP_Encode(uint8_t* frame, char* callsign, uint8_t functionId, uint8_t o
     }
 
     // encrypt
-//    aes128_enc_multiple(key, encSection, encSectionLen + paddingLen);
+    /*struct AES_ctx ctx;
+    AES_init_ctx(&ctx, key);
+    uint8_t numBlocks = (encSectionLen + paddingLen) / 16;
+    for(uint8_t i = 0; i < numBlocks; i++) {
+      AES_ECB_encrypt(&ctx, encSection + (i * 16));
+    }*/
 
     // copy encrypted section into frame buffer
     memcpy(framePtr, encSection, encSectionLen + paddingLen);
@@ -271,57 +286,25 @@ int16_t FCP_Encode(uint8_t* frame, char* callsign, uint8_t functionId, uint8_t o
   return(ERR_FRAME_INVALID);
 }
 
-float FCP_Get_Battery_Charging_Voltage(uint8_t* optData) {
+float FCP_Get_Battery_Voltage(uint8_t* optData) {
   return(FCP_System_Info_Get_Voltage(optData, 0));
 }
 
 float FCP_Get_Battery_Charging_Current(uint8_t* optData) {
-  if(optData == NULL) {
-    return(0);
-  }
-
-  int16_t raw;
-  memcpy(&raw, optData + 1, sizeof(int16_t));
-  return((float)raw * ((float)CURRENT_MULTIPLIER / (float)CURRENT_UNIT));
+  return(FCP_System_Info_Get_Current(optData, 1));
 }
 
-float FCP_Get_Battery_Voltage(uint8_t* optData) {
+float FCP_Get_Battery_Charging_Voltage(uint8_t* optData) {
   return(FCP_System_Info_Get_Voltage(optData, 3));
 }
 
-float FCP_Get_Solar_Cell_Voltage(uint8_t cell, uint8_t* optData) {
-  if(cell > 2) {
-    return(0);
-  }
-
-  return(FCP_System_Info_Get_Voltage(optData, 4 + cell));
-}
-
-float FCP_Get_Battery_Temperature(uint8_t* optData) {
-  return(FCP_System_Info_Get_Temperature(optData, 7));
-}
-
-float FCP_Get_Board_Temperature(uint8_t* optData) {
-  return(FCP_System_Info_Get_Temperature(optData, 9));
-}
-
-int8_t FCP_Get_MCU_Temperature(uint8_t* optData) {
+uint32_t FCP_Get_Uptime_Counter(uint8_t* optData) {
   if(optData == NULL) {
     return(0);
   }
 
-  int8_t val;
-  memcpy(&val, optData + 10, sizeof(int8_t));
-  return(val);
-}
-
-uint16_t FCP_Get_Reset_Counter(uint8_t* optData) {
-  if(optData == NULL) {
-    return(0);
-  }
-
-  uint16_t val;
-  memcpy(&val, optData + 12, sizeof(uint16_t));
+  uint32_t val;
+  memcpy(&val, optData + 4, sizeof(uint32_t));
   return(val);
 }
 
@@ -330,7 +313,43 @@ uint8_t FCP_Get_Power_Configuration(uint8_t* optData) {
     return(0);
   }
 
-  return(optData[14]);
+  return(optData[8]);
+}
+
+uint16_t FCP_Get_Reset_Counter(uint8_t* optData) {
+  if(optData == NULL) {
+    return(0);
+  }
+
+  uint16_t val;
+  memcpy(&val, optData + 9, sizeof(uint16_t));
+  return(val);
+}
+
+float FCP_Get_Solar_Cell_Voltage(uint8_t cell, uint8_t* optData) {
+  if(cell > 2) {
+    return(0);
+  }
+
+  return(FCP_System_Info_Get_Voltage(optData, 11 + cell));
+}
+
+float FCP_Get_Battery_Temperature(uint8_t* optData) {
+  return(FCP_System_Info_Get_Temperature(optData, 14));
+}
+
+float FCP_Get_Board_Temperature(uint8_t* optData) {
+  return(FCP_System_Info_Get_Temperature(optData, 16));
+}
+
+int8_t FCP_Get_MCU_Temperature(uint8_t* optData) {
+  if(optData == NULL) {
+    return(0);
+  }
+
+  int8_t val;
+  memcpy(&val, optData + 18, sizeof(int8_t));
+  return(val);
 }
 
 float FCP_System_Info_Get_Voltage(uint8_t* optData, uint8_t pos) {
@@ -349,4 +368,14 @@ float FCP_System_Info_Get_Temperature(uint8_t* optData, uint8_t pos) {
   int16_t raw;
   memcpy(&raw, optData + pos, sizeof(int16_t));
   return((float)raw * ((float)TEMPERATURE_MULTIPLIER / (float)TEMPERATURE_UNIT));
+}
+
+float FCP_System_Info_Get_Current(uint8_t* optData, uint8_t pos) {
+  if(optData == NULL) {
+    return(0);
+  }
+  
+  int16_t raw;
+  memcpy(&raw, optData + pos, sizeof(int16_t));
+  return((float)raw * ((float)CURRENT_MULTIPLIER / (float)CURRENT_UNIT));
 }

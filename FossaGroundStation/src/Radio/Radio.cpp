@@ -34,8 +34,7 @@ bool eInterrupt = true;
 #define LORA_OUTPUT_POWER             20      // dBm
 #define LORA_CURRENT_LIMIT_7X         120     // mA
 #define LORA_CURRENT_LIMIT_6X         120.0f     // mA
-#define SYNC_WORD_7X                  0xFF    // sync word when using SX127x
-#define SYNC_WORD_6X                  0x0F0F  //                      SX126x
+#define SYNC_WORD                     0x12    // sync word 
 #define LORA_PREAMBLE_LENGTH          8U
 
 Radio::Radio(ConfigManager& x, MQTT_Client& mqtt)
@@ -58,7 +57,7 @@ void Radio::init(){
                                       LORA_BANDWIDTH,
                                       LORA_SPREADING_FACTOR,
                                       LORA_CODING_RATE,
-                                      SYNC_WORD_7X,
+                                      SYNC_WORD,
                                       LORA_OUTPUT_POWER,
                                       (uint8_t)LORA_CURRENT_LIMIT_7X);
   }
@@ -68,7 +67,7 @@ void Radio::init(){
                                       LORA_BANDWIDTH,
                                       LORA_SPREADING_FACTOR,
                                       LORA_CODING_RATE,
-                                      SYNC_WORD_6X,
+                                      SYNC_WORD,
                                       LORA_OUTPUT_POWER,
                                       LORA_CURRENT_LIMIT_6X,
                                       LORA_PREAMBLE_LENGTH,
@@ -192,7 +191,7 @@ void Radio::requestInfo() {
 
 void Radio::requestPacketInfo() {
   Serial.print(F("Requesting last packet info ... "));
-  int state = sendFrame(CMD_GET_LAST_PACKET_INFO);
+  int state = sendFrame(CMD_GET_PACKET_INFO);
   
   // check transmission success
   if (state == ERR_NONE) {
@@ -396,7 +395,7 @@ void Radio::processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_
       mqtt.sendSystemInfo();
       break;
 
-    case RESP_LAST_PACKET_INFO:
+    case RESP_PACKET_INFO:
       Serial.println(F("Last packet info:"));
 
       Serial.print(F("SNR = "));
