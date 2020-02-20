@@ -243,10 +243,17 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     manageSatPosOled((char*)payload, length);
   }
 
-  // Remote Reset
+ // Remote_Reset
  if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteReset)).c_str()).c_str())) {
     ESP.restart();
   }
+
+// Remote_Freq
+ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFreq)).c_str()).c_str())) {
+    // ejemplo inicial intentando llamar a Radio.cpp 
+    radio.sendPing();
+  }
+
 
 }
 
