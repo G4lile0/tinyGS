@@ -242,6 +242,12 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
   if (!strcmp(topic, "fossa/global/sat_pos_oled")) {
     manageSatPosOled((char*)payload, length);
   }
+
+  // Remote Reset
+ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteReset)).c_str()).c_str())) {
+    ESP.restart();
+  }
+
 }
 
 void MQTT_Client::manageSatPosOled(char* payload, size_t payload_len) {

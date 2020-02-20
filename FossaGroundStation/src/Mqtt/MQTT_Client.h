@@ -105,6 +105,11 @@ private:
   const char* topicData PROGMEM= "data/#";
   const char* topicPing PROGMEM= "ping";
   const char* topicRawPacket PROGMEM= "raw_packet";
+  const char* topicRemote PROGMEM= "data/remote/";
+  const char* topicRemoteReset PROGMEM= "reset";
+
+
+
 };
 
 #endif
