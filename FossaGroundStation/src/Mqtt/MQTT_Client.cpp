@@ -20,9 +20,8 @@
 #include "MQTT_Client.h"
 #include "ArduinoJson.h"
 
-MQTT_Client::MQTT_Client(ConfigManager& x) 
+MQTT_Client::MQTT_Client() 
 : PubSubClient(espClient)
-, configManager(x)
 { }
 
 void MQTT_Client::loop() {
@@ -52,10 +51,10 @@ void MQTT_Client::loop() {
 }
 
 void MQTT_Client::reconnect() {
+  ConfigManager& configManager = ConfigManager::getInstance();
   uint64_t chipId = ESP.getEfuseMac();
   char clientId[13];
   sprintf(clientId, "%04X%08X",(uint16_t)(chipId>>32), (uint32_t)chipId);
-  Serial.println(clientId);
 
   Serial.print("Attempting MQTT connection...");
   Serial.println ("If this is taking more than expected, connect to the config panel on the ip: " + WiFi.localIP().toString() + " to review the MQTT connection credentials.");
@@ -71,6 +70,7 @@ void MQTT_Client::reconnect() {
 }
 
 String MQTT_Client::buildTopic(const char* topic){
+  ConfigManager& configManager = ConfigManager::getInstance();
   return String(topicStart) + "/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/" +  String(topic);
 }
 
@@ -81,6 +81,7 @@ void MQTT_Client::subscribeToAll() {
 }
 
 void MQTT_Client::sendWelcome() {
+  ConfigManager& configManager = ConfigManager::getInstance();
   const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(16);
   DynamicJsonDocument doc(capacity);
   doc["station"] = configManager.getThingName();
@@ -98,6 +99,7 @@ void MQTT_Client::sendWelcome() {
 }
 
 void  MQTT_Client::sendSystemInfo() {
+  ConfigManager& configManager = ConfigManager::getInstance();
   time_t now;
   time(&now);
   const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(19);
@@ -130,6 +132,7 @@ void  MQTT_Client::sendSystemInfo() {
 }
 
 void  MQTT_Client::sendPong() {
+  ConfigManager& configManager = ConfigManager::getInstance();
   time_t now;
   time(&now);
   const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(7);
@@ -152,6 +155,7 @@ void  MQTT_Client::sendPong() {
 }
 
 void  MQTT_Client::sendMessage(char* frame, size_t respLen) {
+  ConfigManager& configManager = ConfigManager::getInstance();
   time_t now;
   time(&now);
   Serial.println(String(respLen));
@@ -212,6 +216,7 @@ void  MQTT_Client::sendMessage(char* frame, size_t respLen) {
 }
 
 void  MQTT_Client::sendRawPacket(String packet) {
+  ConfigManager& configManager = ConfigManager::getInstance();
   time_t now;
   time(&now);
   const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(10);
@@ -251,6 +256,7 @@ void manageMQTTData(char *topic, uint8_t *payload, unsigned int length) {
 }
 
 void MQTT_Client::begin() {
+  ConfigManager& configManager = ConfigManager::getInstance();
   setServer(configManager.getMqttServer(), configManager.getMqttPort());
   setCallback(manageMQTTData);
 }

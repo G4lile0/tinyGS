@@ -42,7 +42,7 @@ int graphVal = 1;
 int delta = 1;
 
 void displayInit(){
-  board_type board = configManager.getBoardConfig();
+  board_type board = ConfigManager::getInstance().getBoardConfig();
   display = new SSD1306(board.OLED__address, board.OLED__SDA, board.OLED__SCL);
 
   ui = new OLEDDisplayUi(display);
@@ -89,7 +89,7 @@ void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->drawXbm(x , y + 14, Fossa_Logo_width, Fossa_Logo_height, Fossa_Logo_bits);
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString( x+70, y + 40, "Sta: "+ String(configManager.getThingName()));
+  display->drawString( x+70, y + 40, "Sta: "+ String(ConfigManager::getInstance().getThingName()));
 }
 
 
@@ -178,7 +178,7 @@ void displayShowConnected() {
   display->drawXbm(34, 0 , WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
   
   Serial.println(" CONNECTED");
-  display->drawString(64 , 35 , "Connected " + String(configManager.getWiFiSSID()));
+  display->drawString(64 , 35 , "Connected " + String(ConfigManager::getInstance().getWiFiSSID()));
   display->drawString(64 ,53 , (WiFi.localIP().toString()));
   display->display();
 }
@@ -212,7 +212,7 @@ void displayShowApMode() {
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->drawString(0, 6,"Connect to AP:");
-  display->drawString(0,18,"->"+String(configManager.getThingName()));
+  display->drawString(0,18,"->"+String(ConfigManager::getInstance().getThingName()));
   display->drawString(5,32,"to configure your Station");
   display->drawString(10,52,"IP:   192.168.4.1");
   display->display();
@@ -222,7 +222,7 @@ void displayShowStaMode() {
   display->clear();
   display->drawXbm(34, 0 , WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString(64 , 35 , "Connecting " + String(configManager.getWiFiSSID()));
+  display->drawString(64 , 35 , "Connecting " + String(ConfigManager::getInstance().getWiFiSSID()));
   display->display();
 }
 

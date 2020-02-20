@@ -82,9 +82,9 @@
 #endif
 
 
-ConfigManager configManager;
-MQTT_Client mqtt(configManager);
-Radio radio(configManager, mqtt);
+ConfigManager& configManager = ConfigManager::getInstance();
+MQTT_Client& mqtt = MQTT_Client::getInstance();
+Radio& radio = Radio::getInstance();
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 0; // 3600;         // 3600 for Spain

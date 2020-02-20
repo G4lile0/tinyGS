@@ -59,7 +59,11 @@ extern Status status;
 
 class MQTT_Client : public PubSubClient {
 public:
-  MQTT_Client(ConfigManager& configManager);
+  static MQTT_Client& getInstance()
+  {
+    static MQTT_Client instance; 
+    return instance;
+  }
   void begin();
   void loop();
   void sendWelcome();
@@ -77,7 +81,7 @@ protected:
   void reconnect();
 
 private:
-  ConfigManager& configManager;
+  MQTT_Client();
   String buildTopic(const char * topic);
   void subscribeToAll();
   unsigned long lastPing = 0;

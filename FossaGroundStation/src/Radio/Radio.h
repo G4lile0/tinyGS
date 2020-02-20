@@ -29,7 +29,12 @@ extern Status status;
 
 class Radio {
 public:
-  Radio(ConfigManager& x, MQTT_Client& mqtt);
+  static Radio& getInstance()
+  {
+    static Radio instance; 
+    return instance;
+  }
+
   void init();
   void sendPing();
   void requestInfo();
@@ -41,9 +46,8 @@ public:
   bool isReady() { return ready; }
 
 private:
+  Radio();
   PhysicalLayer* lora;
-  ConfigManager& configManager;
-  MQTT_Client& mqtt;
   void processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_t respLen);
   
   static void setFlag();

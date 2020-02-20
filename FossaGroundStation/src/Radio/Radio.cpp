@@ -37,17 +37,15 @@ bool eInterrupt = true;
 #define SYNC_WORD                     0x12    // sync word 
 #define LORA_PREAMBLE_LENGTH          8U
 
-Radio::Radio(ConfigManager& x, MQTT_Client& mqtt)
-: configManager(x)
-, mqtt(mqtt)
-, spi(VSPI)
+Radio::Radio()
+: spi(VSPI)
 {
   
 }
 
 void Radio::init(){
   Serial.print(F("[SX12xx] Initializing ... "));
-  board_type board = configManager.getBoardConfig();
+  board_type board = ConfigManager::getInstance().getBoardConfig();
   
   spi.begin(board.L_SCK, board.L_MISO, board.L_MOSI, board.L_NSS);
   int state = 0;
@@ -143,7 +141,7 @@ int Radio::sendFrame(uint8_t functionId, const char* data) {
 
   // send data
   int state = 0;
-  if (configManager.getBoardConfig().L_SX127X) {
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
     SX1278* l = (SX1278*)lora;
     state = l->transmit(frame, len);
     l->setDio0Action(setFlag);
@@ -232,7 +230,7 @@ uint8_t Radio::listen() {
   uint8_t* respFrame = 0;
   int state = 0;
   // read received data
-  if (configManager.getBoardConfig().L_SX127X) {
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
     SX1278* l = (SX1278*)lora;
     respLen = l->getPacketLength();
     respFrame = new uint8_t[respLen];
@@ -270,7 +268,7 @@ uint8_t Radio::listen() {
   }
 
   String encoded = base64::encode(respFrame, respLen);
-  mqtt.sendRawPacket(encoded);
+  MQTT_Client::getInstance().sendRawPacket(encoded);
 
   delete[] respFrame;
 
@@ -310,7 +308,7 @@ uint8_t Radio::listen() {
 
 
   // put module back to listen mode
-  if (configManager.getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     ((SX1278*)lora)->startReceive();
   else
     ((SX1268*)lora)->startReceive();
@@ -342,7 +340,7 @@ void Radio::processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_
   switch(functionId) {
     case RESP_PONG:
       Serial.println(F("Pong!"));
-      mqtt.sendPong();
+      MQTT_Client::getInstance().sendPong();
       break;
 
     case RESP_SYSTEM_INFO:
@@ -392,7 +390,7 @@ void Radio::processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_
       status.sysInfo.powerConfig=FCP_Get_Power_Configuration(respOptData);
       Serial.println(FCP_Get_Power_Configuration(respOptData), BIN);
 
-      mqtt.sendSystemInfo();
+      MQTT_Client::getInstance().sendSystemInfo();
       break;
 
     case RESP_PACKET_INFO:
@@ -410,7 +408,7 @@ void Radio::processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_
     case RESP_REPEATED_MESSAGE:
       Serial.println(F("Got repeated message:"));
       Serial.println((char*)respOptData);
-      mqtt.sendMessage((char*)respOptData,respLen);
+      MQTT_Client::getInstance().sendMessage((char*)respOptData,respLen);
       break;
 
     default:
