@@ -238,7 +238,13 @@ void  MQTT_Client::sendRawPacket(String packet) {
   publish(buildTopic(topicRawPacket).c_str(), buffer,n );
 }
 
-void manageSatPosOled(char* payload, size_t payload_len) {
+void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int length) {
+  if (!strcmp(topic, "fossa/global/sat_pos_oled")) {
+    manageSatPosOled((char*)payload, length);
+  }
+}
+
+void MQTT_Client::manageSatPosOled(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(60);
   char payloadStr[payload_len+1];
   memcpy(payloadStr, payload, payload_len);
@@ -248,15 +254,14 @@ void manageSatPosOled(char* payload, size_t payload_len) {
   status.satPos[1] = doc[1];
 }
 
-void manageMQTTData(char *topic, uint8_t *payload, unsigned int length) {
+// Helper class to use as a callback
+void manageMQTTDataCallback(char *topic, uint8_t *payload, unsigned int length) {
   ESP_LOGI (LOG_TAG,"Received MQTT message: %s : %.*s\n", topic, length, payload);
-  if (!strcmp(topic, "fossa/global/sat_pos_oled")) {
-    manageSatPosOled((char*)payload, length);
-  }
+  MQTT_Client::getInstance().manageMQTTData(topic, payload, length);
 }
 
 void MQTT_Client::begin() {
   ConfigManager& configManager = ConfigManager::getInstance();
   setServer(configManager.getMqttServer(), configManager.getMqttPort());
-  setCallback(manageMQTTData);
+  setCallback(manageMQTTDataCallback);
 }

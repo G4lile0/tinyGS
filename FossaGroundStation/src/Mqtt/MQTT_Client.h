@@ -71,6 +71,7 @@ public:
   void sendPong();
   void sendMessage(char* frame, size_t respLen);
   void sendRawPacket(String packet);
+  void manageMQTTData(char *topic, uint8_t *payload, unsigned int length);
 
 protected:
 #ifdef SECURE_MQTT
@@ -84,6 +85,8 @@ private:
   MQTT_Client();
   String buildTopic(const char * topic);
   void subscribeToAll();
+  void manageSatPosOled(char* payload, size_t payload_len);
+
   unsigned long lastPing = 0;
   unsigned long lastConnectionAtempt = 0;
   uint8_t connectionAtempts = 0;
