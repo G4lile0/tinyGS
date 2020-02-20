@@ -19,6 +19,7 @@
 
 #include "MQTT_Client.h"
 #include "ArduinoJson.h"
+#include "../Radio/Radio.h"
 
 MQTT_Client::MQTT_Client() 
 : PubSubClient(espClient)
@@ -239,6 +240,7 @@ void  MQTT_Client::sendRawPacket(String packet) {
 }
 
 void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int length) {
+  Radio& radio = Radio::getInstance();
   if (!strcmp(topic, "fossa/global/sat_pos_oled")) {
     manageSatPosOled((char*)payload, length);
   }
