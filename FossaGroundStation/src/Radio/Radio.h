@@ -50,6 +50,7 @@ public:
   void remote_cr(char* payload, size_t payload_len);
   void remote_crc(char* payload, size_t payload_len);
   void remote_pl(char* payload, size_t payload_len);
+  void remote_begin_lora(char* payload, size_t payload_len);
 
 private:
   Radio();

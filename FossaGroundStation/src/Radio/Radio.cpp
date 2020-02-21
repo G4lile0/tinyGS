@@ -504,7 +504,7 @@ void Radio::remote_cr(char* payload, size_t payload_len) {
   deserializeJson(doc, payload);
   uint8_t cr = doc[0];
   Serial.println("");
-  Serial.print(F("Set spreading factor: ")); Serial.println(cr);
+  Serial.print(F("Set coding rate: ")); Serial.println(cr);
   int state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
       state = ((SX1278*)lora)->setCodingRate(cr);
@@ -571,4 +571,101 @@ void Radio::remote_pl(char* payload, size_t payload_len) {
     return;
   }
 }
+
+
+
+void Radio::remote_begin_lora(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(256);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  float   freq = doc[0];
+  float   bw  =  doc[1];
+  uint8_t sf  =  doc[2];
+  uint8_t cr  =  doc[3];
+  uint8_t syncWord =  doc[4];
+  int8_t  power = doc[5];
+  uint8_t current_limit = doc[6];
+  uint16_t preambleLength = doc[7];
+  uint8_t gain = doc[8];
+
+  Serial.println("");
+  Serial.print(F("Set Frequency: ")); Serial.print(freq, 3);Serial.println(F(" MHz"));
+  Serial.print(F("Set bandwidth: ")); Serial.print(bw, 3);Serial.println(F(" kHz"));
+  Serial.print(F("Set spreading factor: ")); Serial.println(sf);
+  Serial.print(F("Set coding rate: ")); Serial.println(cr);
+  Serial.print(F("Set sync Word: ")); Serial.println(syncWord);
+  Serial.print(F("Set Power: ")); Serial.println(power);
+  Serial.print(F("Set C limit: ")); Serial.println(current_limit);
+  Serial.print(F("Set Preamble: ")); Serial.println(preambleLength);
+  Serial.print(F("Set Gain: ")); Serial.println(gain);
+  
+  
+  
+  int state = 0;
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+    state = ((SX1278*)lora)->begin(freq,
+                                     bw,
+                                     sf,
+                                     cr,
+                                     syncWord,
+                                     power,
+                                     current_limit,
+                                     preambleLength);
+  }
+  else {
+    state = ((SX1268*)lora)->begin(freq,
+                                     bw,
+                                     sf,
+                                     cr,
+                                     syncWord,
+                                     power,
+                                     current_limit,
+                                     preambleLength,
+                                     ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
+  }
+  
+  if (state == ERR_NONE) {
+    Serial.println(F("success!"));
+  } 
+  else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    return;
+  }
+
+  
+
+
+
+/*
+
+
+  Serial.println("");
+  Serial.print(F("Set Preamble ")); Serial.println(pl);
+  int state = 0;
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+      state = ((SX1278*)lora)->setPreambleLength(pl);
+  else
+      state = ((SX1268*)lora)->setPreambleLength(pl);
+
+  if (state == ERR_NONE) {
+    Serial.println(F("success!"));
+  } 
+  else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    return;
+  }
+
+*/
+
+
+
+}
+
+
+
+
 

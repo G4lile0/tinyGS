@@ -280,6 +280,11 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemotePl)).c_st
     radio.remote_crc((char*)payload, length);
   }
 
+// Remote_Begin_Lora
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteBl)).c_str()).c_str())) {
+    radio.remote_begin_lora((char*)payload, length);
+  }
+
 
 
 
