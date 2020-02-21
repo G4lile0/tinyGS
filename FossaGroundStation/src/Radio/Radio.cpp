@@ -18,6 +18,7 @@
 */
 
 #include "Radio.h"
+#include "ArduinoJson.h"
 #include "../Comms/Comms.h"
 #include <base64.h>
 
@@ -414,5 +415,31 @@ void Radio::processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_
     default:
       Serial.println(F("Unknown function ID!"));
       break;
+  }
+}
+
+// remote
+void Radio::remote_freq(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  double frequency = doc[0];
+  Serial.println("");
+  Serial.print(F("Set Frequency: ")); Serial.print(frequency, 3);Serial.println(F(" Mhz"));
+  int state = 0;
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+      state = ((SX1278*)lora)->setFrequency(frequency);
+  else
+      state = ((SX1268*)lora)->setFrequency(frequency);
+
+  if (state == ERR_NONE) {
+    Serial.println(F("success!"));
+  } 
+  else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    return;
   }
 }

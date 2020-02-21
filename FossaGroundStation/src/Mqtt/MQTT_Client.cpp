@@ -250,12 +250,18 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     ESP.restart();
   }
 
-// Remote_Freq
- if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFreq)).c_str()).c_str())) {
+// Remote_Ping
+ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemotePing)).c_str()).c_str())) {
     // ejemplo inicial intentando llamar a Radio.cpp 
     radio.sendPing();
   }
 
+// Remote_Frequency
+ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFreq)).c_str()).c_str())) {
+    // ejemplo inicial intentando llamar a Radio.cpp 
+    radio.remote_freq((char*)payload, length);
+   //Serial.println("Frequency");
+  }
 
 }
 
