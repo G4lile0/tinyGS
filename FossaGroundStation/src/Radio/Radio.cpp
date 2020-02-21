@@ -595,12 +595,11 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len) {
   Serial.print(F("Set bandwidth: ")); Serial.print(bw, 3);Serial.println(F(" kHz"));
   Serial.print(F("Set spreading factor: ")); Serial.println(sf);
   Serial.print(F("Set coding rate: ")); Serial.println(cr);
-  Serial.print(F("Set sync Word: ")); Serial.println(syncWord);
+  Serial.print(F("Set sync Word: 0x")); Serial.println(syncWord,HEX);
   Serial.print(F("Set Power: ")); Serial.println(power);
   Serial.print(F("Set C limit: ")); Serial.println(current_limit);
   Serial.print(F("Set Preamble: ")); Serial.println(preambleLength);
   Serial.print(F("Set Gain: ")); Serial.println(gain);
-  
   
   
   int state = 0;
