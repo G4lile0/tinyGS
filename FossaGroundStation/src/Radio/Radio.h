@@ -45,6 +45,11 @@ public:
   uint8_t listen();
   bool isReady() { return ready; }
   void remote_freq(char* payload, size_t payload_len);
+  void remote_bw(char* payload, size_t payload_len);
+  void remote_sf(char* payload, size_t payload_len);
+  void remote_cr(char* payload, size_t payload_len);
+  void remote_crc(char* payload, size_t payload_len);
+  void remote_pl(char* payload, size_t payload_len);
 
 private:
   Radio();

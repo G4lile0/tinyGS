@@ -252,16 +252,37 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
 
 // Remote_Ping
  if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemotePing)).c_str()).c_str())) {
-    // ejemplo inicial intentando llamar a Radio.cpp 
     radio.sendPing();
   }
 
 // Remote_Frequency
  if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFreq)).c_str()).c_str())) {
-    // ejemplo inicial intentando llamar a Radio.cpp 
     radio.remote_freq((char*)payload, length);
-   //Serial.println("Frequency");
   }
+// Remote_Bandwidth
+ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteBw)).c_str()).c_str())) {
+    radio.remote_bw((char*)payload, length);
+  }
+// Remote_spreading factor
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteSf)).c_str()).c_str())) {
+    radio.remote_sf((char*)payload, length);
+  }
+// Remote_Coding rate
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteCr)).c_str()).c_str())) {
+    radio.remote_cr((char*)payload, length);
+  }
+// Remote_Crc
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteCrc)).c_str()).c_str())) {
+    radio.remote_crc((char*)payload, length);
+  }
+// Remote_Preamble Lenght
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemotePl)).c_str()).c_str())) {
+    radio.remote_crc((char*)payload, length);
+  }
+
+
+
+
 
 }
 

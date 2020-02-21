@@ -419,15 +419,16 @@ void Radio::processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_
 }
 
 // remote
+
 void Radio::remote_freq(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(60);
   char payloadStr[payload_len+1];
   memcpy(payloadStr, payload, payload_len);
   payloadStr[payload_len] = '\0';
   deserializeJson(doc, payload);
-  double frequency = doc[0];
+  float frequency = doc[0];
   Serial.println("");
-  Serial.print(F("Set Frequency: ")); Serial.print(frequency, 3);Serial.println(F(" Mhz"));
+  Serial.print(F("Set Frequency: ")); Serial.print(frequency, 3);Serial.println(F(" MHz"));
   int state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
       state = ((SX1278*)lora)->setFrequency(frequency);
@@ -443,3 +444,131 @@ void Radio::remote_freq(char* payload, size_t payload_len) {
     return;
   }
 }
+
+void Radio::remote_bw(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  float frequency = doc[0];
+  Serial.println("");
+  Serial.print(F("Set bandwidth: ")); Serial.print(frequency, 3);Serial.println(F(" kHz"));
+  int state = 0;
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+      state = ((SX1278*)lora)->setBandwidth(frequency);
+  else
+      state = ((SX1268*)lora)->setBandwidth(frequency);
+
+  if (state == ERR_NONE) {
+    Serial.println(F("success!"));
+  } 
+  else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    return;
+  }
+}
+
+void Radio::remote_sf(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  uint8_t sf = doc[0];
+  Serial.println("");
+  Serial.print(F("Set spreading factor: ")); Serial.println(sf);
+  int state = 0;
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+      state = ((SX1278*)lora)->setSpreadingFactor(sf);
+  else
+      state = ((SX1268*)lora)->setSpreadingFactor(sf);
+
+  if (state == ERR_NONE) {
+    Serial.println(F("success!"));
+  } 
+  else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    return;
+  }
+}
+
+
+void Radio::remote_cr(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  uint8_t cr = doc[0];
+  Serial.println("");
+  Serial.print(F("Set spreading factor: ")); Serial.println(cr);
+  int state = 0;
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+      state = ((SX1278*)lora)->setCodingRate(cr);
+  else
+      state = ((SX1268*)lora)->setCodingRate(cr);
+
+  if (state == ERR_NONE) {
+    Serial.println(F("success!"));
+  } 
+  else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    return;
+  }
+}
+
+
+void Radio::remote_crc(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  bool crc = doc[0];
+  Serial.println("");
+  Serial.print(F("Set CRC "));  if (crc) Serial.println(F("ON")); else Serial.println(F("OFF"));
+  int state = 0;
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+      state = ((SX1278*)lora)->setCRC (crc);
+  else
+      state = ((SX1268*)lora)->setCRC (crc);
+
+  if (state == ERR_NONE) {
+    Serial.println(F("success!"));
+  } 
+  else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    return;
+  }
+}
+
+void Radio::remote_pl(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  uint16_t pl = doc[0];
+  Serial.println("");
+  Serial.print(F("Set Preamble ")); Serial.println(pl);
+  int state = 0;
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+      state = ((SX1278*)lora)->setPreambleLength(pl);
+  else
+      state = ((SX1268*)lora)->setPreambleLength(pl);
+
+  if (state == ERR_NONE) {
+    Serial.println(F("success!"));
+  } 
+  else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    return;
+  }
+}
+
