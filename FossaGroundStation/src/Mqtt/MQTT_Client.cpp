@@ -284,7 +284,10 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemotePl)).c_st
 if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteBl)).c_str()).c_str())) {
     radio.remote_begin_lora((char*)payload, length);
   }
-
+// Remote_Begin_FSK
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFs)).c_str()).c_str())) {
+    radio.remote_begin_fsk((char*)payload, length);
+  }
 
 
 

@@ -52,6 +52,20 @@ void Radio::init(){
   int state = 0;
   if (board.L_SX127X) {
     lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi));
+    fsk  = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi));
+//    fsk  = new SX1278(new Module(18, 26, 12));
+//    fsk  = new SX1278(new Module(board.L_NSS, board.L_DI00,board.L_RST,board.L_DI01, spi));
+
+
+//test arrancar en inicio en modo FSK
+  state = ((SX1278*)fsk)->beginFSK();
+  if (state == ERR_NONE) {
+    Serial.println(F("success en inicio enable fsk!"));
+  } else {
+    Serial.print(F("failed fsk en inicio, code "));
+    Serial.println(state);}
+//test
+
     state = ((SX1278*)lora)->begin(LORA_CARRIER_FREQUENCY,
                                       LORA_BANDWIDTH,
                                       LORA_SPREADING_FACTOR,
@@ -572,8 +586,6 @@ void Radio::remote_pl(char* payload, size_t payload_len) {
   }
 }
 
-
-
 void Radio::remote_begin_lora(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(256);
   char payloadStr[payload_len+1];
@@ -600,8 +612,6 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len) {
   Serial.print(F("Set C limit: ")); Serial.println(current_limit);
   Serial.print(F("Set Preamble: ")); Serial.println(preambleLength);
   Serial.print(F("Set Gain: ")); Serial.println(gain);
-  
-  
   int state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
     state = ((SX1278*)lora)->begin(freq,
@@ -633,22 +643,72 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len) {
     Serial.println(state);
     return;
   }
-
-  
-
+}
 
 
-/*
-
+void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(256);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  float   freq  = doc[0];
+  float  	br    = doc[1];
+  float   freqDev  =  doc[2];
+  float   rxBw  =  doc[3];
+  int8_t  power = doc[4];
+  uint8_t currentlimit = doc[5];
+  uint16_t preambleLength = doc[6];
+  bool    enableOOK = doc[7];
+  float   dataShaping = doc[8];
 
   Serial.println("");
-  Serial.print(F("Set Preamble ")); Serial.println(pl);
+  Serial.print(F("Set Frequency: ")); Serial.print(freq, 3);Serial.println(F(" MHz"));
+  Serial.print(F("Set bit rate: ")); Serial.print(br, 3);Serial.println(F(" kbps"));
+  Serial.print(F("Set Frequency deviatio: ")); Serial.print(freqDev, 3);Serial.println(F(" MHz"));
+  Serial.print(F("Set receiver bandwidth: ")); Serial.print(rxBw, 3);Serial.println(F(" kHz"));
+  Serial.print(F("Set Power: ")); Serial.println(power);
+  Serial.print(F("Set Current limit: ")); Serial.println(currentlimit);
+  Serial.print(F("Set Preamble Length: ")); Serial.println(preambleLength);
+  Serial.print(F("OOK Modulation "));  if (enableOOK) Serial.println(F("ON")); else Serial.println(F("OFF"));
+  Serial.print(F("Set Sx1268 datashaping ")); Serial.println(dataShaping);
+  
   int state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-      state = ((SX1278*)lora)->setPreambleLength(pl);
-  else
-      state = ((SX1268*)lora)->setPreambleLength(pl);
 
+//  test de inicio sin comentarios... 
+  state = ((SX1278*)fsk)->beginFSK();
+  if (state == ERR_NONE) {
+    Serial.println(F("success enable fsk!"));
+  } else {
+    Serial.print(F("failed fsk, code "));
+    Serial.println(state);
+  }
+
+  state =0;
+  
+
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+    state = ((SX1278*)fsk)->beginFSK(freq,
+                                     br,
+                                     freqDev,
+                                     rxBw,                                     
+                                     power,
+                                     currentlimit,
+                                     preambleLength);
+  }
+  else {
+    state = ((SX1268*)lora)->beginFSK(freq,
+                                     br,
+                                     freqDev,
+                                     rxBw,                                     
+                                     power,
+                                     currentlimit,
+                                     preambleLength,
+                                     dataShaping,
+                                     ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
+
+  }
+  
   if (state == ERR_NONE) {
     Serial.println(F("success!"));
   } 
@@ -658,12 +718,8 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len) {
     return;
   }
 
-*/
-
-
 
 }
-
 
 
 

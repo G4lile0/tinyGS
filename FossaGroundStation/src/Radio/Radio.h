@@ -51,10 +51,13 @@ public:
   void remote_crc(char* payload, size_t payload_len);
   void remote_pl(char* payload, size_t payload_len);
   void remote_begin_lora(char* payload, size_t payload_len);
+  void remote_begin_fsk(char* payload, size_t payload_len);
+  
 
 private:
   Radio();
   PhysicalLayer* lora;
+  PhysicalLayer* fsk;
   void processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_t respLen);
   
   static void setFlag();
