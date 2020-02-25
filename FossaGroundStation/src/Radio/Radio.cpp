@@ -52,20 +52,6 @@ void Radio::init(){
   int state = 0;
   if (board.L_SX127X) {
     lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi));
-    fsk  = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi));
-//    fsk  = new SX1278(new Module(18, 26, 12));
-//    fsk  = new SX1278(new Module(board.L_NSS, board.L_DI00,board.L_RST,board.L_DI01, spi));
-
-
-//test arrancar en inicio en modo FSK
-  state = ((SX1278*)fsk)->beginFSK();
-  if (state == ERR_NONE) {
-    Serial.println(F("success en inicio enable fsk!"));
-  } else {
-    Serial.print(F("failed fsk en inicio, code "));
-    Serial.println(state);}
-//test
-
     state = ((SX1278*)lora)->begin(LORA_CARRIER_FREQUENCY,
                                       LORA_BANDWIDTH,
                                       LORA_SPREADING_FACTOR,
@@ -672,23 +658,10 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
   Serial.print(F("Set Preamble Length: ")); Serial.println(preambleLength);
   Serial.print(F("OOK Modulation "));  if (enableOOK) Serial.println(F("ON")); else Serial.println(F("OFF"));
   Serial.print(F("Set Sx1268 datashaping ")); Serial.println(dataShaping);
-  
+
   int state = 0;
-
-//  test de inicio sin comentarios... 
-  state = ((SX1278*)fsk)->beginFSK();
-  if (state == ERR_NONE) {
-    Serial.println(F("success enable fsk!"));
-  } else {
-    Serial.print(F("failed fsk, code "));
-    Serial.println(state);
-  }
-
-  state =0;
-  
-
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
-    state = ((SX1278*)fsk)->beginFSK(freq,
+    state = ((SX1278*)lora)->beginFSK(freq,
                                      br,
                                      freqDev,
                                      rxBw,                                     
@@ -710,14 +683,13 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
   }
   
   if (state == ERR_NONE) {
-    Serial.println(F("success!"));
+    Serial.println(F("success FSK enable!"));
   } 
   else {
     Serial.print(F("failed, code "));
     Serial.println(state);
     return;
   }
-
 
 }
 

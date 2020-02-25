@@ -57,7 +57,7 @@ public:
 private:
   Radio();
   PhysicalLayer* lora;
-  PhysicalLayer* fsk;
+ // PhysicalLayer* fsk;
   void processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_t respLen);
   
   static void setFlag();
