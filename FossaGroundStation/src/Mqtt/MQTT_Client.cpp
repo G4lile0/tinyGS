@@ -259,7 +259,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
  if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFreq)).c_str()).c_str())) {
     radio.remote_freq((char*)payload, length);
   }
-// Remote_Bandwidth
+// Remote_Lora_Bandwidth
  if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteBw)).c_str()).c_str())) {
     radio.remote_bw((char*)payload, length);
   }
@@ -288,6 +288,23 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteBl)).c_st
 if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFs)).c_str()).c_str())) {
     radio.remote_begin_fsk((char*)payload, length);
   }
+
+// Remote_FSK_BitRate
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteBr)).c_str()).c_str())) {
+    radio.remote_br((char*)payload, length);
+  }
+
+// Remote_FSK_FrequencyDeviation
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFd)).c_str()).c_str())) {
+    radio.remote_fd((char*)payload, length);
+  }
+
+// Remote_FSK_RxBandwidth
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFbw)).c_str()).c_str())) {
+    radio.remote_fbw((char*)payload, length);
+  }
+
+
 
 
 

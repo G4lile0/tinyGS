@@ -52,7 +52,9 @@ public:
   void remote_pl(char* payload, size_t payload_len);
   void remote_begin_lora(char* payload, size_t payload_len);
   void remote_begin_fsk(char* payload, size_t payload_len);
-  
+  void remote_br(char* payload, size_t payload_len);
+  void remote_fd(char* payload, size_t payload_len);
+  void remote_fbw(char* payload, size_t payload_len);
 
 private:
   Radio();

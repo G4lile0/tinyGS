@@ -117,6 +117,10 @@ private:
   const char* topicRemotePl PROGMEM= "pl";
   const char* topicRemoteBl PROGMEM= "begin_lora";
   const char* topicRemoteFs PROGMEM= "begin_fsk";
+  const char* topicRemoteBr PROGMEM= "br";
+  const char* topicRemoteFd PROGMEM= "Fd";
+  const char* topicRemoteFbw PROGMEM= "fbw";
+
 
 };
 

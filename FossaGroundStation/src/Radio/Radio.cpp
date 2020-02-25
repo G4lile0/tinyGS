@@ -582,19 +582,21 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len) {
   float   bw  =  doc[1];
   uint8_t sf  =  doc[2];
   uint8_t cr  =  doc[3];
-  uint8_t syncWord =  doc[4];
+  uint8_t syncWord78 =  doc[4];
   int8_t  power = doc[5];
   uint8_t current_limit = doc[6];
   uint16_t preambleLength = doc[7];
   uint8_t gain = doc[8];
+  uint16_t syncWord68 =  doc[4];
 
   Serial.println("");
   Serial.print(F("Set Frequency: ")); Serial.print(freq, 3);Serial.println(F(" MHz"));
   Serial.print(F("Set bandwidth: ")); Serial.print(bw, 3);Serial.println(F(" kHz"));
   Serial.print(F("Set spreading factor: ")); Serial.println(sf);
   Serial.print(F("Set coding rate: ")); Serial.println(cr);
-  Serial.print(F("Set sync Word: 0x")); Serial.println(syncWord,HEX);
-  Serial.print(F("Set Power: ")); Serial.println(power);
+  Serial.print(F("Set sync Word 127x: 0x")); Serial.println(syncWord78,HEX);
+  Serial.print(F("Set sync Word 126x: 0x")); Serial.println(syncWord68,HEX);
+    Serial.print(F("Set Power: ")); Serial.println(power);
   Serial.print(F("Set C limit: ")); Serial.println(current_limit);
   Serial.print(F("Set Preamble: ")); Serial.println(preambleLength);
   Serial.print(F("Set Gain: ")); Serial.println(gain);
@@ -604,7 +606,7 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len) {
                                      bw,
                                      sf,
                                      cr,
-                                     syncWord,
+                                     syncWord78,
                                      power,
                                      current_limit,
                                      preambleLength);
@@ -614,7 +616,7 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len) {
                                      bw,
                                      sf,
                                      cr,
-                                     syncWord,
+                                     syncWord68,
                                      power,
                                      current_limit,
                                      preambleLength,
@@ -692,6 +694,86 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
   }
 
 }
+
+
+void Radio::remote_br(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  uint8_t br = doc[0];
+  Serial.println("");
+  Serial.print(F("Set FSK Bit rate: ")); Serial.println(br);
+  int state = 0;
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+      state = ((SX1278*)lora)->setBitRate(br);
+  else
+      state = ((SX1268*)lora)->setBitRate(br);
+
+  if (state == ERR_NONE) {
+    Serial.println(F("success!"));
+  } 
+  else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    return;
+  }
+}
+
+
+void Radio::remote_fd(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  uint8_t fd = doc[0];
+  Serial.println("");
+  Serial.print(F("Set FSK Bit rate: ")); Serial.println(fd);
+  int state = 0;
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+      state = ((SX1278*)lora)->setFrequencyDeviation(fd);
+  else
+      state = ((SX1268*)lora)->setFrequencyDeviation(fd);
+
+  if (state == ERR_NONE) {
+    Serial.println(F("success!"));
+  } 
+  else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    return;
+  }
+}
+
+
+void Radio::remote_fbw(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  float frequency = doc[0];
+  Serial.println("");
+  Serial.print(F("Set FSK bandwidth: ")); Serial.print(frequency, 3);Serial.println(F(" kHz"));
+  int state = 0;
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+      state = ((SX1278*)lora)->setRxBandwidth(frequency);
+  else
+      state = ((SX1268*)lora)->setRxBandwidth(frequency);
+
+  if (state == ERR_NONE) {
+    Serial.println(F("success!"));
+  } 
+  else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    return;
+  }
+}
+
+
 
 
 
