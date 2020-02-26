@@ -309,6 +309,10 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFsw)).c_s
     radio.remote_fsw((char*)payload, length);
   }
 
+// Remote_FSK_Set_OOK + DataShapingOOK(only sx1278)    
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFook)).c_str()).c_str())) {
+    radio.remote_fook((char*)payload, length);
+  }
 
 
 
