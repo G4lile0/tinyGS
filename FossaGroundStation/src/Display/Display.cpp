@@ -30,9 +30,10 @@ void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 void drawFrame4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawFrame5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
+void drawFrame7(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 
-uint8_t frameCount = 6;
-FrameCallback frames[] = { drawFrame1, drawFrame2, drawFrame3, drawFrame4, drawFrame5, drawFrame6 };
+uint8_t frameCount = 7;
+FrameCallback frames[] = { drawFrame1, drawFrame2, drawFrame3, drawFrame4, drawFrame5, drawFrame6,drawFrame7 };
 uint8_t overlaysCount = 1;
 OverlayCallback overlays[] = { msOverlay };
 
@@ -93,7 +94,7 @@ void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 }
 
 
-void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+void drawFrame7(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_10);
   display->drawXbm(x + 34, y + 22, bat_width, bat_height, bat_bits);
@@ -172,6 +173,19 @@ void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
     display->drawCircle(status.satPos[0]+x, status.satPos[1]+y, graphVal/3);
   }
 }
+
+void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->setFont(ArialMT_Plain_10);
+  display->drawString(0 + x,  0 + y, "Sat." + status.modeminfo.satelite);
+  display->drawString(0 + x,  16 + y, "Frq:" + String(status.modeminfo.frequency) + "Mhz " + String(status.modeminfo.modem_mode) + " Mode" );
+
+
+//  display->drawString( x,  23 + y, "RSSI:" + String(status.lastPacketInfo.rssi) + "dBm" );
+//  display->drawString( x,  34 + y, "SNR: "+ String(status.lastPacketInfo.snr) + "dB" );
+//  display->drawString( x, 45 + y, "Freq error: " + String(status.lastPacketInfo.frequencyerror) + " Hz");
+}
+
 
 void displayShowConnected() {
   display->clear();

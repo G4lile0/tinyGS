@@ -314,11 +314,6 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFook)).c_
     radio.remote_fook((char*)payload, length);
   }
 
-
-
-
-
-
 }
 
 void MQTT_Client::manageSatPosOled(char* payload, size_t payload_len) {

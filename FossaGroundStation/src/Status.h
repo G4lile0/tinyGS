@@ -41,12 +41,33 @@ struct PacketInfo {
   float frequencyerror = 0;
 };
 
+
+struct ModemInfo {
+  String satelite     = "FossaSat-1      ";
+  String  modem_mode  = "LoRa" ;     // 1-LoRa  2-FSK  3-GMSK
+  float   frequency   = 436.7; // MHz  
+  float   bw          = 125.0; // kHz dual sideban
+  uint8_t sf          =  11 ;
+  uint8_t cr          =   8 ;
+  int8_t  power       =  20 ;
+  uint16_t preambleLength = 8;
+  float  	bitrate    =  0;
+  float   freqDev    =  0;
+  float   rxBw       =  0;
+  bool    enableOOK  =  0;
+  float   dataShaping = 0;
+};
+
+
 struct Status {
   const uint32_t version = 2002261; // version year month day release
   bool mqtt_connected = false;
   SysInfo sysInfo;
   PacketInfo lastPacketInfo;
+  ModemInfo modeminfo;
   float satPos[2] = {0, 0};
 };
+
+
 
 #endif
