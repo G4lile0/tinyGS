@@ -776,5 +776,42 @@ void Radio::remote_fbw(char* payload, size_t payload_len) {
 
 
 
+void Radio::remote_fsw(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(256);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  uint8_t syncWord[7];
+  uint8_t synnwordsize = doc[0];
+
+ Serial.println("");
+ Serial.print(F("Set SyncWord Size ")); Serial.print(synnwordsize); Serial.print(F("-> "));
+ for (uint8_t words=0; words<synnwordsize;words++){
+      syncWord[words]=doc[words+1];
+      Serial.print(F(" 0x"));Serial.print(syncWord[words],HEX);Serial.print(F(", "));
+  }
+
+
+  int state = 0;
+
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+      state = ((SX1278*)lora)->setSyncWord(syncWord, synnwordsize);
+  else
+      state = ((SX1268*)lora)->setSyncWord(syncWord, synnwordsize);
+
+  if (state == ERR_NONE) {
+    Serial.println(F("success!"));
+  } 
+  else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    return;
+  }
+
+}
+
+
+
 
 

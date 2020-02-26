@@ -304,6 +304,12 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFbw)).c_s
     radio.remote_fbw((char*)payload, length);
   }
 
+// Remote_FSK_syncword    
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFsw)).c_str()).c_str())) {
+    radio.remote_fsw((char*)payload, length);
+  }
+
+
 
 
 

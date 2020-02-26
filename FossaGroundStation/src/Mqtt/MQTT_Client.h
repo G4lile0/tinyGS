@@ -120,6 +120,9 @@ private:
   const char* topicRemoteBr PROGMEM= "br";
   const char* topicRemoteFd PROGMEM= "Fd";
   const char* topicRemoteFbw PROGMEM= "fbw";
+  const char* topicRemoteFsw PROGMEM= "fsw";
+
+
 
 
 };

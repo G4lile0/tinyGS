@@ -55,6 +55,7 @@ public:
   void remote_br(char* payload, size_t payload_len);
   void remote_fd(char* payload, size_t payload_len);
   void remote_fbw(char* payload, size_t payload_len);
+  void remote_fsw(char* payload, size_t payload_len);
 
 private:
   Radio();
