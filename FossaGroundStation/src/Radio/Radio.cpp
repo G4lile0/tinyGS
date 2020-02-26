@@ -165,13 +165,7 @@ void Radio::sendPing() {
   int state = sendFrame(CMD_PING);
 
   // check transmission success
-  if (state == ERR_NONE) {
-    Serial.println(F("sent successfully!"));
-  } else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    Serial.println(String("Go to the config panel (") + WiFi.localIP().toString() + ") and check if the board selected matches your hardware.");
-  }
+  readState_sent(state);
 }
 
 void Radio::requestInfo() {
@@ -179,13 +173,7 @@ void Radio::requestInfo() {
   int state = sendFrame(CMD_TRANSMIT_SYSTEM_INFO);
   
   // check transmission success
-  if (state == ERR_NONE) {
-    Serial.println(F("sent successfully!"));
-  } else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    Serial.println(String("Go to the config panel (") + WiFi.localIP().toString() + ") and check if the board selected matches your hardware.");
-  }
+  readState_sent(state);
 }
 
 void Radio::requestPacketInfo() {
@@ -193,26 +181,14 @@ void Radio::requestPacketInfo() {
   int state = sendFrame(CMD_GET_PACKET_INFO);
   
   // check transmission success
-  if (state == ERR_NONE) {
-    Serial.println(F("sent successfully!"));
-  } else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    Serial.println(String("Go to the config panel (") + WiFi.localIP().toString() + ") and check if the board selected matches your hardware.");
-  }
+  readState_sent(state);
 }
 
 void Radio::requestRetransmit(char* data) {
   Serial.print(F("Requesting retransmission ... "));
   int state = sendFrame(CMD_RETRANSMIT, data);
   // check transmission success
-  if (state == ERR_NONE) {
-    Serial.println(F("sent successfully!"));
-  } else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    Serial.println(String("Go to the config panel (") + WiFi.localIP().toString() + ") and check if the board selected matches your hardware.");
-  }
+  readState_sent(state);
 }
 
 uint8_t Radio::listen() {
@@ -418,8 +394,30 @@ void Radio::processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_
   }
 }
 
-// remote
+void Radio::readState(int state) {
+  if (state == ERR_NONE) {
+    Serial.println(F("success!"));
+  } 
+  else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    return;
+  }
+}
 
+
+void Radio::readState_sent(int state) {
+  if (state == ERR_NONE) {
+    Serial.println(F("sent successfully!"));
+  } else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    Serial.println(String(F("Go to the config panel (")) + WiFi.localIP().toString() + F(") and check if the board selected matches your hardware."));
+  }
+}
+
+
+// remote
 void Radio::remote_freq(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(60);
   char payloadStr[payload_len+1];
@@ -434,15 +432,8 @@ void Radio::remote_freq(char* payload, size_t payload_len) {
       state = ((SX1278*)lora)->setFrequency(frequency);
   else
       state = ((SX1268*)lora)->setFrequency(frequency);
+  readState(state);
 
-  if (state == ERR_NONE) {
-    Serial.println(F("success!"));
-  } 
-  else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    return;
-  }
 }
 
 void Radio::remote_bw(char* payload, size_t payload_len) {
@@ -459,15 +450,7 @@ void Radio::remote_bw(char* payload, size_t payload_len) {
       state = ((SX1278*)lora)->setBandwidth(frequency);
   else
       state = ((SX1268*)lora)->setBandwidth(frequency);
-
-  if (state == ERR_NONE) {
-    Serial.println(F("success!"));
-  } 
-  else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    return;
-  }
+  readState(state);
 }
 
 void Radio::remote_sf(char* payload, size_t payload_len) {
@@ -484,15 +467,7 @@ void Radio::remote_sf(char* payload, size_t payload_len) {
       state = ((SX1278*)lora)->setSpreadingFactor(sf);
   else
       state = ((SX1268*)lora)->setSpreadingFactor(sf);
-
-  if (state == ERR_NONE) {
-    Serial.println(F("success!"));
-  } 
-  else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    return;
-  }
+  readState(state);
 }
 
 
@@ -510,15 +485,7 @@ void Radio::remote_cr(char* payload, size_t payload_len) {
       state = ((SX1278*)lora)->setCodingRate(cr);
   else
       state = ((SX1268*)lora)->setCodingRate(cr);
-
-  if (state == ERR_NONE) {
-    Serial.println(F("success!"));
-  } 
-  else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    return;
-  }
+  readState(state);
 }
 
 
@@ -537,14 +504,7 @@ void Radio::remote_crc(char* payload, size_t payload_len) {
   else
       state = ((SX1268*)lora)->setCRC (crc);
 
-  if (state == ERR_NONE) {
-    Serial.println(F("success!"));
-  } 
-  else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    return;
-  }
+  readState(state);
 }
 
 void Radio::remote_pl(char* payload, size_t payload_len) {
@@ -562,14 +522,7 @@ void Radio::remote_pl(char* payload, size_t payload_len) {
   else
       state = ((SX1268*)lora)->setPreambleLength(pl);
 
-  if (state == ERR_NONE) {
-    Serial.println(F("success!"));
-  } 
-  else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    return;
-  }
+  readState(state);
 }
 
 void Radio::remote_begin_lora(char* payload, size_t payload_len) {
@@ -623,16 +576,8 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len) {
                                      ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
   }
   
-  if (state == ERR_NONE) {
-    Serial.println(F("success!"));
-  } 
-  else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    return;
-  }
+  readState(state);
 }
-
 
 void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(256);
@@ -684,17 +629,8 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
 
   }
   
-  if (state == ERR_NONE) {
-    Serial.println(F("success FSK enable!"));
-  } 
-  else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    return;
-  }
-
+  readState(state);
 }
-
 
 void Radio::remote_br(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(60);
@@ -710,17 +646,8 @@ void Radio::remote_br(char* payload, size_t payload_len) {
       state = ((SX1278*)lora)->setBitRate(br);
   else
       state = ((SX1268*)lora)->setBitRate(br);
-
-  if (state == ERR_NONE) {
-    Serial.println(F("success!"));
-  } 
-  else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    return;
-  }
+  readState(state);
 }
-
 
 void Radio::remote_fd(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(60);
@@ -737,16 +664,8 @@ void Radio::remote_fd(char* payload, size_t payload_len) {
   else
       state = ((SX1268*)lora)->setFrequencyDeviation(fd);
 
-  if (state == ERR_NONE) {
-    Serial.println(F("success!"));
-  } 
-  else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    return;
-  }
+  readState(state);
 }
-
 
 void Radio::remote_fbw(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(60);
@@ -763,18 +682,8 @@ void Radio::remote_fbw(char* payload, size_t payload_len) {
   else
       state = ((SX1268*)lora)->setRxBandwidth(frequency);
 
-  if (state == ERR_NONE) {
-    Serial.println(F("success!"));
-  } 
-  else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    return;
-  }
+  readState(state);
 }
-
-
-
 
 void Radio::remote_fsw(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(256);
@@ -792,23 +701,13 @@ void Radio::remote_fsw(char* payload, size_t payload_len) {
       Serial.print(F(" 0x"));Serial.print(syncWord[words],HEX);Serial.print(F(", "));
   }
 
-
   int state = 0;
-
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
       state = ((SX1278*)lora)->setSyncWord(syncWord, synnwordsize);
   else
       state = ((SX1268*)lora)->setSyncWord(syncWord, synnwordsize);
 
-  if (state == ERR_NONE) {
-    Serial.println(F("success!"));
-  } 
-  else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    return;
-  }
-
+  readState(state);
 }
 
 

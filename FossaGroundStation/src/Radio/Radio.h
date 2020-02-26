@@ -60,10 +60,10 @@ public:
 private:
   Radio();
   PhysicalLayer* lora;
- // PhysicalLayer* fsk;
   void processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_t respLen);
-  
-  static void setFlag();
+  void readState(int state);
+  void readState_sent(int state);
+    static void setFlag();
   int sendFrame(uint8_t functionId, const char* data = "");
   bool ready = false;
   SPIClass spi;
