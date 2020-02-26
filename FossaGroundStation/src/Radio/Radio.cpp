@@ -628,7 +628,6 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
                                      ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
 
   }
-  
   readState(state);
 }
 
@@ -706,11 +705,38 @@ void Radio::remote_fsw(char* payload, size_t payload_len) {
       state = ((SX1278*)lora)->setSyncWord(syncWord, synnwordsize);
   else
       state = ((SX1268*)lora)->setSyncWord(syncWord, synnwordsize);
-
   readState(state);
 }
 
 
 
+void Radio::remote_fook(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  bool    enableOOK = doc[0];
+  uint8_t ook_shape = doc[1];
+
+  Serial.println("");
+  Serial.print(F("OOK Modulation "));  if (enableOOK) Serial.println(F("ON")); else Serial.println(F("OFF"));
+  Serial.print(F("Set OOK datashaping ")); Serial.println(ook_shape);
+  int state = 0;
+
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+      state = ((SX1278*)lora)->setOOK(enableOOK);
+  else
+//      state = ((SX1268*)lora)->setOOK(enableOOK);
+  readState(state);
+
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+      state = ((SX1278*)lora)->setDataShapingOOK(ook_shape);
+  else
+//      state = ((SX1268*)lora)->setDataShapingOOK(ook_shape);
+  readState(state);
+
+
+}
 
 
