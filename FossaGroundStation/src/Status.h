@@ -51,16 +51,16 @@ struct ModemInfo {
   uint8_t cr          =   8 ;
   int8_t  power       =  20 ;
   uint16_t preambleLength = 8;
-  float  	bitrate    =  0;
-  float   freqDev    =  0;
-  float   rxBw       =  0;
+  float  	bitrate    =  48.0 ;
+  float   freqDev    =  50.0;
+  float   rxBw       =  125.0;
   bool    enableOOK  =  0;
-  float   dataShaping = 0;
+  float   dataShaping = 0.3;
 };
 
 
 struct Status {
-  const uint32_t version = 2002261; // version year month day release
+  const uint32_t version = 2002271; // version year month day release
   bool mqtt_connected = false;
   SysInfo sysInfo;
   PacketInfo lastPacketInfo;

@@ -177,11 +177,32 @@ void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_10);
-  display->drawString(0 + x,  0 + y, "Sat." + status.modeminfo.satelite);
-  display->drawString(0 + x,  16 + y, "Frq:" + String(status.modeminfo.frequency) + "Mhz " + String(status.modeminfo.modem_mode) + " Mode" );
+  display->drawString(x,  y, "Sat." + status.modeminfo.satelite);
+  display->drawString(x,  12 + y, "Frq:" + String(status.modeminfo.frequency) + "Mhz");
+
+  display->setTextAlignment(TEXT_ALIGN_RIGHT);
+  display->drawString(128+x,  12 + y, String(status.modeminfo.modem_mode) + " Mode" );
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+
+  if (String(status.modeminfo.modem_mode)=="LoRa") {
+      display->drawString(x,  23 + y, "SF: " + String(status.modeminfo.sf) );
+      display->drawString( x,  34 + y, "Pwr:"+ String(status.modeminfo.power) + "dBm" );
+      display->setTextAlignment(TEXT_ALIGN_RIGHT);
+      display->drawString(128+x,  23 + y,"BW:"+ String(status.modeminfo.bw)+ "kHz" );
+      display->drawString(128+x,  34 + y, "CR: "+ String(status.modeminfo.cr) );
+
+  } else {
+      display->drawString(x,  23 + y, "FD: " + String(status.modeminfo.freqDev) );
+      display->drawString( x,  34 + y, "Pwr:"+ String(status.modeminfo.power) + "dBm" );
+      display->setTextAlignment(TEXT_ALIGN_RIGHT);
+      display->drawString(128+x,  23 + y,"BW:"+ String(status.modeminfo.bw)+ "kHz" );
+      display->drawString(128+x,  34 + y, "br:"+ String(status.modeminfo.bitrate)+ "kbps");
+
+  }
+
+  
 
 
-//  display->drawString( x,  23 + y, "RSSI:" + String(status.lastPacketInfo.rssi) + "dBm" );
 //  display->drawString( x,  34 + y, "SNR: "+ String(status.lastPacketInfo.snr) + "dB" );
 //  display->drawString( x, 45 + y, "Freq error: " + String(status.lastPacketInfo.frequencyerror) + " Hz");
 }
