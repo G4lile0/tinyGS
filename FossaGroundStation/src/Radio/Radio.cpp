@@ -433,6 +433,10 @@ void Radio::remote_freq(char* payload, size_t payload_len) {
   else
       state = ((SX1268*)lora)->setFrequency(frequency);
   readState(state);
+  if (state == ERR_NONE) {
+    status.modeminfo.frequency  = frequency;
+      }
+
 
 }
 
@@ -442,15 +446,19 @@ void Radio::remote_bw(char* payload, size_t payload_len) {
   memcpy(payloadStr, payload, payload_len);
   payloadStr[payload_len] = '\0';
   deserializeJson(doc, payload);
-  float frequency = doc[0];
+  float bw = doc[0];
   Serial.println("");
-  Serial.print(F("Set bandwidth: ")); Serial.print(frequency, 3);Serial.println(F(" kHz"));
+  Serial.print(F("Set bandwidth: ")); Serial.print(bw, 3);Serial.println(F(" kHz"));
   int state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-      state = ((SX1278*)lora)->setBandwidth(frequency);
+      state = ((SX1278*)lora)->setBandwidth(bw);
   else
-      state = ((SX1268*)lora)->setBandwidth(frequency);
+      state = ((SX1268*)lora)->setBandwidth(bw);
   readState(state);
+  if (state == ERR_NONE) {
+    status.modeminfo.bw         = bw;
+      }
+
 }
 
 void Radio::remote_sf(char* payload, size_t payload_len) {
@@ -468,6 +476,10 @@ void Radio::remote_sf(char* payload, size_t payload_len) {
   else
       state = ((SX1268*)lora)->setSpreadingFactor(sf);
   readState(state);
+  if (state == ERR_NONE) {
+    status.modeminfo.sf         = sf;
+      }
+
 }
 
 
@@ -486,6 +498,10 @@ void Radio::remote_cr(char* payload, size_t payload_len) {
   else
       state = ((SX1268*)lora)->setCodingRate(cr);
   readState(state);
+  if (state == ERR_NONE) {
+    status.modeminfo.cr         = cr;
+      }
+
 }
 
 
@@ -523,6 +539,10 @@ void Radio::remote_pl(char* payload, size_t payload_len) {
       state = ((SX1268*)lora)->setPreambleLength(pl);
 
   readState(state);
+  if (state == ERR_NONE) {
+    status.modeminfo.preambleLength = pl;
+      }
+
 }
 
 void Radio::remote_begin_lora(char* payload, size_t payload_len) {
@@ -577,6 +597,18 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len) {
   }
   
   readState(state);
+  if (state == ERR_NONE) {
+    status.modeminfo.modem_mode = "LoRa";
+    status.modeminfo.frequency  = freq;
+    status.modeminfo.bw         = bw;
+    status.modeminfo.power      = power ;
+    status.modeminfo.preambleLength = preambleLength;
+    status.modeminfo.sf         = sf;
+    status.modeminfo.cr         = cr;
+      }
+
+
+
 }
 
 void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
@@ -629,7 +661,21 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
 
   }
   readState(state);
+  if (state == ERR_NONE) {
+    status.modeminfo.modem_mode = "FSK";
+    status.modeminfo.frequency  = freq;
+    status.modeminfo.rxBw       = rxBw;
+    status.modeminfo.power      = power ;
+    status.modeminfo.preambleLength = preambleLength;
+    status.modeminfo.bitrate    = br;
+    status.modeminfo.freqDev    = freqDev;
+    status.modeminfo.dataShaping= dataShaping;
+  }
+
 }
+
+
+
 
 void Radio::remote_br(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(60);
@@ -645,7 +691,13 @@ void Radio::remote_br(char* payload, size_t payload_len) {
       state = ((SX1278*)lora)->setBitRate(br);
   else
       state = ((SX1268*)lora)->setBitRate(br);
+
   readState(state);
+  if (state == ERR_NONE) {
+    status.modeminfo.bitrate    = br;
+  }
+
+
 }
 
 void Radio::remote_fd(char* payload, size_t payload_len) {
@@ -656,7 +708,7 @@ void Radio::remote_fd(char* payload, size_t payload_len) {
   deserializeJson(doc, payload);
   uint8_t fd = doc[0];
   Serial.println("");
-  Serial.print(F("Set FSK Bit rate: ")); Serial.println(fd);
+  Serial.print(F("Set FSK Frequency Des. : ")); Serial.println(fd);
   int state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
       state = ((SX1278*)lora)->setFrequencyDeviation(fd);
@@ -664,6 +716,11 @@ void Radio::remote_fd(char* payload, size_t payload_len) {
       state = ((SX1268*)lora)->setFrequencyDeviation(fd);
 
   readState(state);
+   if (state == ERR_NONE) {
+    status.modeminfo.freqDev    = fd;
+  }
+
+
 }
 
 void Radio::remote_fbw(char* payload, size_t payload_len) {
@@ -682,6 +739,13 @@ void Radio::remote_fbw(char* payload, size_t payload_len) {
       state = ((SX1268*)lora)->setRxBandwidth(frequency);
 
   readState(state);
+  if (state == ERR_NONE) {
+    status.modeminfo.rxBw  = frequency;
+  }
+
+
+
+
 }
 
 void Radio::remote_fsw(char* payload, size_t payload_len) {

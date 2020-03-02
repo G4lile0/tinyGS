@@ -60,7 +60,7 @@ struct ModemInfo {
 
 
 struct Status {
-  const uint32_t version = 2003011; // version year month day release
+  const uint32_t version = 2003021; // version year month day release
   bool mqtt_connected = false;
   SysInfo sysInfo;
   PacketInfo lastPacketInfo;

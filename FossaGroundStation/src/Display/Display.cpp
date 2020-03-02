@@ -90,7 +90,7 @@ void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->drawXbm(x , y + 14, Fossa_Logo_width, Fossa_Logo_height, Fossa_Logo_bits);
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString( x+70, y + 40, "Sta: "+ String(ConfigManager::getInstance().getThingName()));
+  display->drawString( x+70, y + 45, "Sta: "+ String(ConfigManager::getInstance().getThingName()));
 }
 
 
@@ -127,8 +127,8 @@ void drawFrame4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(0 + x,  11 + y, "Last Packet: " + status.lastPacketInfo.time);
-  display->drawString( x,  23 + y, "RSSI:" + String(status.lastPacketInfo.rssi) + "dBm" );
-  display->drawString( x,  34 + y, "SNR: "+ String(status.lastPacketInfo.snr) + "dB" );
+  display->drawString( x,  23 + y, "RSSI: " + String(status.lastPacketInfo.rssi) + "dBm" );
+  display->drawString( x,  34 + y, "SNR:  "+ String(status.lastPacketInfo.snr) + "dB" );
   display->drawString( x, 45 + y, "Freq error: " + String(status.lastPacketInfo.frequencyerror) + " Hz");
 }
 
@@ -150,10 +150,11 @@ void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->setFont(ArialMT_Plain_10);
  
   if (status.satPos[0] == 0 && status.satPos[1] == 0) {
-    display->drawString( 65+x,  49+y+(x/2), "Waiting for FossaSat Pos" );
-    display->drawString( 63+x,  51+y+(x/2), "Waiting for FossaSat Pos" );
+    String msg = F("Waiting for FossaSat Pos");
+    display->drawString( 65+x,  49+y+(x/2), msg );
+    display->drawString( 63+x,  51+y+(x/2), msg );
     display->setColor(WHITE);
-    display->drawString( 64+x,  50+y+(x/2), "Waiting for FossaSat Pos" );
+    display->drawString( 64+x,  50+y+(x/2), msg );
   }
   else {
     if ((millis()-tick_interval)>tick_timing) {
@@ -179,7 +180,7 @@ void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->setFont(ArialMT_Plain_10);
   display->drawString(x,  y,  status.modeminfo.satelite);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString(64+ x,  12 + y,  String(status.modeminfo.modem_mode) + " @ " + String(status.modeminfo.frequency) + "Mhz" );
+  display->drawString(64+ x,  12 + y,  String(status.modeminfo.modem_mode) + " @ " + String(status.modeminfo.frequency) + "MHz" );
 //  display->drawString(x,  12 + y, "F:" );
 //  display->setTextAlignment(TEXT_ALIGN_RIGHT);
   
