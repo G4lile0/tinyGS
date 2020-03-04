@@ -455,15 +455,15 @@ class RF69: public PhysicalLayer {
 
       \param br Bit rate to be used in kbps. Defaults to 48.0 kbps.
 
-      \param rxBw Receiver bandwidth in kHz. Defaults to 125.0 kHz.
-
       \param freqDev Frequency deviation from carrier frequency in kHz Defaults to 50.0 kHz.
+
+      \param rxBw Receiver bandwidth in kHz. Defaults to 125.0 kHz.
 
       \param power Output power in dBm. Defaults to 13 dBm.
 
       \returns \ref status_codes
     */
-    int16_t begin(float freq = 434.0, float br = 48.0, float rxBw = 125.0, float freqDev = 50.0, int8_t power = 13);
+    int16_t begin(float freq = 434.0, float br = 48.0, float freqDev = 50.0, float rxBw = 125.0, int8_t power = 13);
 
     /*!
       \brief Reset method. Will reset the chip to the default state using RST pin.
@@ -771,6 +771,25 @@ class RF69: public PhysicalLayer {
       \returns \ref status_codes
     */
     int16_t setPromiscuousMode(bool promiscuous = true);
+
+    /*!
+      \brief Sets Gaussian filter bandwidth-time product that will be used for data shaping.
+      Allowed values are 0.3, 0.5 or 1.0. Set to 0 to disable data shaping.
+
+      \param sh Gaussian shaping bandwidth-time product that will be used for data shaping
+
+      \returns \ref status_codes
+    */
+    int16_t setDataShaping(float sh);
+
+    /*!
+      \brief Sets transmission encoding.
+
+      \param encoding Encoding to be used. Set to 0 for NRZ, 1 for Manchester and 2 for whitening.
+
+      \returns \ref status_codes
+    */
+    int16_t setEncoding(uint8_t encoding);
 
 #ifndef RADIOLIB_GODMODE
   protected:
