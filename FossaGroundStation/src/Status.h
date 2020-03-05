@@ -43,8 +43,8 @@ struct PacketInfo {
 
 
 struct ModemInfo {
-  String satelite     = "FossaSat-1      ";
-  String  modem_mode  = "LoRa" ;     // 1-LoRa  2-FSK  3-GMSK
+  String satelite     = "FossaSat-2      ";
+  String  modem_mode  = "FSK" ;     // 1-LoRa  2-FSK  3-GMSK
   float   frequency   = 436.7; // MHz  
   float   bw          = 125.0; // kHz dual sideban
   uint8_t sf          =  11 ;
