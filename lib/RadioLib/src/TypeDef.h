@@ -9,8 +9,8 @@
 
 // version definitions
 #define RADIOLIB_VERSION_MAJOR  (0x03)
-#define RADIOLIB_VERSION_MINOR  (0x02)
-#define RADIOLIB_VERSION_PATCH  (0x03)
+#define RADIOLIB_VERSION_MINOR  (0x03)
+#define RADIOLIB_VERSION_PATCH  (0x01)
 #define RADIOLIB_VERSION_EXTRA  (0x00)
 
 #define RADIOLIB_VERSION ((RADIOLIB_VERSION_MAJOR << 24) | (RADIOLIB_VERSION_MAJOR << 16) | (RADIOLIB_VERSION_MAJOR << 8) | (RADIOLIB_VERSION_EXTRA))
@@ -539,6 +539,29 @@
   The specified Rx period is shorter or longer than the hardware can handle.
 */
 #define ERR_INVALID_RX_PERIOD                         -709
+
+// AX.25-specific status codes
+
+/*!
+  \brief The provided callsign is invalid.
+
+  The specified callsign is longer than 6 ASCII characters.
+*/
+#define ERR_INVALID_CALLSIGN                          -801
+
+/*!
+  \brief The provided repeater configuration is invalid.
+
+  The specified number of repeaters does not match number of repeater IDs or their callsigns.
+*/
+#define ERR_INVALID_NUM_REPEATERS                     -802
+
+/*!
+  \brief One of the provided repeater callsigns is invalid.
+
+  The specified callsign is longer than 6 ASCII characters.
+*/
+#define ERR_INVALID_REPEATER_CALLSIGN                 -803
 
 /*!
   \}

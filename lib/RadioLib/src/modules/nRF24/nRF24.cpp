@@ -218,9 +218,6 @@ int16_t nRF24::readData(uint8_t* data, size_t len) {
   // read packet data
   SPIreadRxPayload(data, length);
 
-  // add terminating null
-  data[length] = 0;
-
   // clear interrupt
   clearIRQ();
 
@@ -471,6 +468,20 @@ int16_t nRF24::setAutoAck(uint8_t pipeNum, bool autoAckOn){
     default:
       return (ERR_INVALID_PIPE_NUMBER);
   }
+}
+
+int16_t nRF24::setDataShaping(float sh) {
+  // nRF24 is unable to set data shaping
+  // this method is implemented only for PhysicalLayer compatibility
+  (void)sh;
+  return(ERR_NONE);
+}
+
+int16_t nRF24::setEncoding(uint8_t encoding) {
+  // nRF24 is unable to set encoding
+  // this method is implemented only for PhysicalLayer compatibility
+  (void)encoding;
+  return(ERR_NONE);
 }
 
 void nRF24::clearIRQ() {
