@@ -50,7 +50,6 @@ void displayInit(){
   display = new SSD1306(board.OLED__address, board.OLED__SDA, board.OLED__SCL);
 
   ui = new OLEDDisplayUi(display);
-  
   ui->setTargetFPS(60);
   ui->setActiveSymbol(activeSymbol);
   ui->setInactiveSymbol(inactiveSymbol);
@@ -127,9 +126,44 @@ void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 
 
 void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->setFont(ArialMT_Plain_10);
-  display->drawString(x,  y,  "pantalla global");
+//  display->setTextAlignment(TEXT_ALIGN_LEFT);
+//  display->setFont(ArialMT_Plain_10);
+//  display->drawString(x,  y,  "pantalla global");
+
+  if (status.global_frame_text_leght==0 ) ui->nextFrame();
+
+ for (uint8_t n=0; n<status.global_frame_text_leght;n++){
+
+   switch (status.global_frame_text[n].text_font) {
+     case 2:
+      display->setFont(ArialMT_Plain_16);
+      break;
+
+      default:
+      display->setFont(ArialMT_Plain_10);
+      break;
+   }
+
+// 0 Left  1 Right  2 Center  3 Center Both
+   switch (status.global_frame_text[n].text_alignment) {
+     case 1:
+      display->setTextAlignment(TEXT_ALIGN_RIGHT);
+      break;
+     case 2:
+      display->setTextAlignment(TEXT_ALIGN_CENTER);
+      break;
+     case 3:
+      display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
+      break;
+
+      default:
+      display->setTextAlignment(TEXT_ALIGN_LEFT);
+      break;
+   }
+  display->drawString(x+status.global_frame_text[n].text_pos_x, y+ status.global_frame_text[n].text_pos_y,  String(status.global_frame_text[n].text));
+
+       }
+
 }
 
 void drawFrame4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
@@ -220,9 +254,47 @@ void drawFrame7(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 
 
 void drawFrame8(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->setFont(ArialMT_Plain_10);
-  display->drawString(x,  y,  "pantalla rec local");
+//  display->setTextAlignment(TEXT_ALIGN_LEFT);
+//  display->setFont(ArialMT_Plain_10);
+//  display->drawString(x,  y,  "pantalla rec local");
+
+
+  if (status.local_frame_text_leght==0 ) ui->nextFrame();
+
+ for (uint8_t n=0; n<status.local_frame_text_leght;n++){
+   switch (status.local_frame_text[n].text_font) {
+     case 2:
+      display->setFont(ArialMT_Plain_16);
+      break;
+
+      default:
+      display->setFont(ArialMT_Plain_10);
+      break;
+   }
+
+// 0 Left  1 Right  2 Center  3 Center Both
+   switch (status.local_frame_text[n].text_alignment) {
+     case 1:
+      display->setTextAlignment(TEXT_ALIGN_RIGHT);
+      break;
+     case 2:
+      display->setTextAlignment(TEXT_ALIGN_CENTER);
+      break;
+     case 3:
+      display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
+      break;
+
+      default:
+      display->setTextAlignment(TEXT_ALIGN_LEFT);
+      break;
+   }
+
+  display->drawString(x+status.local_frame_text[n].text_pos_x, y+ status.local_frame_text[n].text_pos_y,  status.local_frame_text[n].text);
+       }
+
+
+
+
 }
 
 

@@ -76,7 +76,7 @@ String MQTT_Client::buildTopic(const char* topic){
 }
 
 void MQTT_Client::subscribeToAll() {
-  String sat_pos_oled = String(topicStart) + "/global/sat_pos_oled";
+  String sat_pos_oled = String(topicStart) + "/global/#";
   subscribe(buildTopic(topicData).c_str());
   subscribe(sat_pos_oled.c_str());
 }
@@ -245,6 +245,18 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     manageSatPosOled((char*)payload, length);
   }
 
+// Remote_Frame_Local_A          -m "[]" -t fossa/global/global_frame
+//
+// [number of strings,
+// [font,TextAlignment,x,y,"string text"],
+// ...
+// ]
+//
+//  if (!strcmp(topic, "fossa/global/global_frame")) {    // no tengo permisos por ahora pruebas en el usuario local
+if (!strcmp(topic, "fossa/g4lile0/test_G4lile0_new/data/remote/global_frame")) {
+    radio.remote_global_frame((char*)payload, length);
+  }
+
  // Remote_Reset        -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/reset
  if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteReset)).c_str()).c_str())) {
     ESP.restart();
@@ -314,7 +326,20 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFook)).c_
     radio.remote_fook((char*)payload, length);
   }
 
+
+// Remote_Satellite_Name       -m "[\"FossaSat-3\"]" -t fossa/g4lile0/test_G4lile0_new/data/remote/sat
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteSat)).c_str()).c_str())) {
+    radio.remote_sat((char*)payload, length);
+  }
+
+// Remote_Frame_Local_       -m "[\"FossaSat-3\"]" -t fossa/g4lile0/test_G4lile0_new/data/remote/sat
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteLocalFrame)).c_str()).c_str())) {
+    radio.remote_local_frame((char*)payload, length);
+  }
+
+
 }
+
 
 void MQTT_Client::manageSatPosOled(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(60);

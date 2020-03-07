@@ -772,8 +772,6 @@ void Radio::remote_fsw(char* payload, size_t payload_len) {
   readState(state);
 }
 
-
-
 void Radio::remote_fook(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(60);
   char payloadStr[payload_len+1];
@@ -799,8 +797,85 @@ void Radio::remote_fook(char* payload, size_t payload_len) {
   else
 //      state = ((SX1268*)lora)->setDataShapingOOK(ook_shape);
   readState(state);
-
-
 }
+
+void Radio::remote_sat(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(256);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  
+  const char* satelite = doc[0];
+  String str(satelite);
+  status.modeminfo.satelite = str;
+  Serial.println("");
+  Serial.print(F("Listening Satellite: ")); Serial.print(str);
+ 
+}
+
+
+void Radio::remote_global_frame(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(256);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  status.global_frame_text_leght = doc[0];
+  Serial.println("");
+  Serial.println(status.global_frame_text_leght);
+  Serial.print(F("received frame: ")); Serial.print(status.global_frame_text_leght);
+  const char* texto = "12345678901234567890";
+ 
+ for (uint8_t n=0; n<status.global_frame_text_leght;n++){
+  status.global_frame_text[n].text_font = doc[n+1][0];
+  status.global_frame_text[n].text_alignment = doc[n+1][1];
+  status.global_frame_text[n].text_pos_x = doc[n+1][2];
+  status.global_frame_text[n].text_pos_y = doc[n+1][3];
+  texto = doc[n+1][4];
+  String str(texto);
+  status.global_frame_text[n].text= str;  Serial.println("");
+  Serial.print(F("Text "));Serial.print(n);
+  Serial.print(F(" Font "));Serial.print(status.global_frame_text[n].text_font);
+  Serial.print(F(" Alig "));Serial.print(status.global_frame_text[n].text_alignment);
+  Serial.print(F(" Pos x "));Serial.print(status.global_frame_text[n].text_pos_x);
+  Serial.print(F(" Pos y "));Serial.print(status.global_frame_text[n].text_pos_y);
+  Serial.print(F(" -> "));Serial.print(status.global_frame_text[n].text);
+  }
+}
+
+
+void Radio::remote_local_frame(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(256);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  status.local_frame_text_leght = doc[0];
+  Serial.println("");
+  Serial.println(status.local_frame_text_leght);
+  Serial.print(F("received frame: ")); Serial.print(status.local_frame_text_leght);
+  const char* texto = "12345678901234567890";
+ 
+ for (uint8_t n=0; n<status.local_frame_text_leght;n++){
+  status.local_frame_text[n].text_font = doc[n+1][0];
+  status.local_frame_text[n].text_alignment = doc[n+1][1];
+  status.local_frame_text[n].text_pos_x = doc[n+1][2];
+  status.local_frame_text[n].text_pos_y = doc[n+1][3];
+  texto = doc[n+1][4];
+  String str(texto);
+  status.local_frame_text[n].text= str;  Serial.println("");
+  Serial.print(F("Text "));Serial.print(n);
+  Serial.print(F(" Font "));Serial.print(status.local_frame_text[n].text_font);
+  Serial.print(F(" Alig "));Serial.print(status.local_frame_text[n].text_alignment);
+  Serial.print(F(" Pos x "));Serial.print(status.local_frame_text[n].text_pos_x);
+  Serial.print(F(" Pos y "));Serial.print(status.local_frame_text[n].text_pos_y);
+  Serial.print(F(" -> "));Serial.print(status.local_frame_text[n].text);
+  }
+}
+
+
+
+
 
 

@@ -35,7 +35,7 @@ struct SysInfo {
 };
 
 struct PacketInfo {
-  String time = " Waiting      ";
+  String time = "Waiting      ";
   float rssi = 0;
   float snr = 0;
   float frequencyerror = 0;
@@ -59,13 +59,39 @@ struct ModemInfo {
 };
 
 
+struct Global_Frame_Text {
+  uint8_t n;    
+  uint8_t text_font;
+  uint8_t text_alignment;
+  int16_t text_pos_x;
+  int16_t text_pos_y; 
+  String  text = "12345678901234567890";
+};
+
+struct Local_Frame_Text {
+  uint8_t n;    
+  uint8_t text_font;
+  uint8_t text_alignment;
+  int16_t text_pos_x;
+  int16_t text_pos_y; 
+  String  text = "12345678901234567890";
+};
+
+
+
+
 struct Status {
-  const uint32_t version = 2003021; // version year month day release
+  const uint32_t version = 2003061; // version year month day release
   bool mqtt_connected = false;
   SysInfo sysInfo;
   PacketInfo lastPacketInfo;
   ModemInfo modeminfo;
   float satPos[2] = {0, 0};
+  uint8_t global_frame_text_leght = 0;
+  uint8_t  local_frame_text_leght = 0;
+  Global_Frame_Text global_frame_text[10];
+  Local_Frame_Text   local_frame_text[10];
+  
 };
 
 

@@ -122,8 +122,9 @@ private:
   const char* topicRemoteFbw PROGMEM= "fbw";
   const char* topicRemoteFsw PROGMEM= "fsw";
   const char* topicRemoteFook PROGMEM= "fok";
-
-
+  const char* topicRemoteLocalFrame PROGMEM= "frame_l";
+  const char* topicRemoteSat PROGMEM= "sat";
+  
 
 
 };
