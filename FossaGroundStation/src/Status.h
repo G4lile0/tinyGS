@@ -81,7 +81,7 @@ struct Local_Frame_Text {
 
 
 struct Status {
-  const uint32_t version = 2003061; // version year month day release
+  const uint32_t version = 2003081; // version year month day release
   bool mqtt_connected = false;
   SysInfo sysInfo;
   PacketInfo lastPacketInfo;
@@ -89,8 +89,8 @@ struct Status {
   float satPos[2] = {0, 0};
   uint8_t global_frame_text_leght = 0;
   uint8_t  local_frame_text_leght = 0;
-  Global_Frame_Text global_frame_text[10];
-  Local_Frame_Text   local_frame_text[10];
+  Global_Frame_Text global_frame_text[15];
+  Local_Frame_Text   local_frame_text[15];
   
 };
 

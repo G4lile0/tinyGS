@@ -252,8 +252,8 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
 // ...
 // ]
 //
-//  if (!strcmp(topic, "fossa/global/global_frame")) {    // no tengo permisos por ahora pruebas en el usuario local
-if (!strcmp(topic, "fossa/g4lile0/test_G4lile0_new/data/remote/global_frame")) {
+if (!strcmp(topic, "fossa/global/global_frame")) {    
+//if (!strcmp(topic, "fossa/g4lile0/test_G4lile0_new/data/remote/global_frame")) {    
     radio.remote_global_frame((char*)payload, length);
   }
 
