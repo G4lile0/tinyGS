@@ -65,7 +65,7 @@ struct Global_Frame_Text {
   uint8_t text_alignment;
   int16_t text_pos_x;
   int16_t text_pos_y; 
-  String  text = "12345678901234567890";
+  String  text = "123456789012345678901234567890";
 };
 
 struct Local_Frame_Text {
@@ -74,7 +74,7 @@ struct Local_Frame_Text {
   uint8_t text_alignment;
   int16_t text_pos_x;
   int16_t text_pos_y; 
-  String  text = "12345678901234567890";
+  String  text = "123456789012345678901234567890";
 };
 
 

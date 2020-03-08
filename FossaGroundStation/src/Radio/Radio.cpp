@@ -816,7 +816,7 @@ void Radio::remote_sat(char* payload, size_t payload_len) {
 
 
 void Radio::remote_global_frame(char* payload, size_t payload_len) {
-  DynamicJsonDocument doc(256);
+  DynamicJsonDocument doc(512);
   char payloadStr[payload_len+1];
   memcpy(payloadStr, payload, payload_len);
   payloadStr[payload_len] = '\0';
