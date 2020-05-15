@@ -458,15 +458,20 @@ void Radio::remote_bw(char* payload, size_t payload_len) {
   Serial.println("");
   Serial.print(F("Set bandwidth: ")); Serial.print(bw, 3);Serial.println(F(" kHz"));
   int state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-      state = ((SX1278*)lora)->setBandwidth(bw);
-  else
-      state = ((SX1268*)lora)->setBandwidth(bw);
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+    state = ((SX1278*)lora)->setBandwidth(bw);
+            ((SX1278*)lora)->startReceive();
+            ((SX1278*)lora)->setDio0Action(setFlag);
+  }
+  else {
+    state = ((SX1268*)lora)->setBandwidth(bw);
+            ((SX1268*)lora)->startReceive();
+            ((SX1268*)lora)->setDio1Action(setFlag);
+          }
   readState(state);
   if (state == ERR_NONE) {
     status.modeminfo.bw         = bw;
       }
-
 }
 
 void Radio::remote_sf(char* payload, size_t payload_len) {
@@ -480,9 +485,14 @@ void Radio::remote_sf(char* payload, size_t payload_len) {
   Serial.print(F("Set spreading factor: ")); Serial.println(sf);
   int state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-      state = ((SX1278*)lora)->setSpreadingFactor(sf);
-  else
-      state = ((SX1268*)lora)->setSpreadingFactor(sf);
+    {  state = ((SX1278*)lora)->setSpreadingFactor(sf);
+               ((SX1278*)lora)->startReceive();
+               ((SX1278*)lora)->setDio0Action(setFlag);
+   } else{
+       state = ((SX1268*)lora)->setSpreadingFactor(sf);
+               ((SX1268*)lora)->startReceive();
+               ((SX1268*)lora)->setDio1Action(setFlag);
+               }
   readState(state);
   if (state == ERR_NONE) {
     status.modeminfo.sf         = sf;
@@ -501,10 +511,16 @@ void Radio::remote_cr(char* payload, size_t payload_len) {
   Serial.println("");
   Serial.print(F("Set coding rate: ")); Serial.println(cr);
   int state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
       state = ((SX1278*)lora)->setCodingRate(cr);
-  else
+              ((SX1278*)lora)->startReceive();
+              ((SX1278*)lora)->setDio0Action(setFlag); 
+    } else {
       state = ((SX1268*)lora)->setCodingRate(cr);
+              ((SX1268*)lora)->startReceive();
+              ((SX1268*)lora)->setDio1Action(setFlag);
+              }
+    
   readState(state);
   if (state == ERR_NONE) {
     status.modeminfo.cr         = cr;
@@ -523,11 +539,15 @@ void Radio::remote_crc(char* payload, size_t payload_len) {
   Serial.println("");
   Serial.print(F("Set CRC "));  if (crc) Serial.println(F("ON")); else Serial.println(F("OFF"));
   int state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
       state = ((SX1278*)lora)->setCRC (crc);
-  else
+              ((SX1278*)lora)->startReceive();
+              ((SX1278*)lora)->setDio0Action(setFlag); 
+   } else {
       state = ((SX1268*)lora)->setCRC (crc);
-
+              ((SX1268*)lora)->startReceive();
+              ((SX1268*)lora)->setDio1Action(setFlag);
+      }
   readState(state);
 }
 
@@ -541,11 +561,17 @@ void Radio::remote_pl(char* payload, size_t payload_len) {
   Serial.println("");
   Serial.print(F("Set Preamble ")); Serial.println(pl);
   int state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
       state = ((SX1278*)lora)->setPreambleLength(pl);
-  else
-      state = ((SX1268*)lora)->setPreambleLength(pl);
+              ((SX1278*)lora)->startReceive();
+              ((SX1278*)lora)->setDio0Action(setFlag); 
+   } else {
 
+      state = ((SX1268*)lora)->setPreambleLength(pl);
+              ((SX1268*)lora)->startReceive();
+              ((SX1268*)lora)->setDio1Action(setFlag);
+
+      }
   readState(state);
   if (state == ERR_NONE) {
     status.modeminfo.preambleLength = pl;
@@ -583,7 +609,9 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len) {
   Serial.print(F("Set Gain: ")); Serial.println(gain);
   int state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
-    state = ((SX1278*)lora)->begin(freq,
+
+    ((SX1278*)lora)->sleep();   // sleep mandatory if FastHop isn't ON.
+     state = ((SX1278*)lora)->begin(freq,
                                      bw,
                                      sf,
                                      cr,
@@ -591,8 +619,10 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len) {
                                      power,
                                      current_limit,
                                      preambleLength);
-  }
-  else {
+                ((SX1278*)lora)->startReceive();
+                ((SX1278*)lora)->setDio0Action(setFlag);
+
+  } else {
     state = ((SX1268*)lora)->begin(freq,
                                      bw,
                                      sf,
@@ -602,6 +632,8 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len) {
                                      current_limit,
                                      preambleLength,
                                      ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
+             ((SX1268*)lora)->startReceive();
+            ((SX1268*)lora)->setDio1Action(setFlag);
   }
   
   readState(state);
@@ -655,8 +687,7 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
                                      power,
                                      currentlimit,
                                      preambleLength);
-  }
-  else {
+  } else {
     state = ((SX1268*)lora)->beginFSK(freq,
                                      br,
                                      freqDev,
