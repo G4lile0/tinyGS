@@ -27,7 +27,7 @@ bool received = false;
 bool eInterrupt = true;
 
 // modem configuration
-#define LORA_CARRIER_FREQUENCY        436.7f  // MHz
+#define LORA_CARRIER_FREQUENCY        431.7f  // MHz
 #define LORA_BANDWIDTH                125.0f  // kHz dual sideband
 #define LORA_SPREADING_FACTOR         11
 #define LORA_SPREADING_FACTOR_ALT     10
@@ -35,7 +35,7 @@ bool eInterrupt = true;
 #define LORA_OUTPUT_POWER             20      // dBm
 #define LORA_CURRENT_LIMIT_7X         120     // mA
 #define LORA_CURRENT_LIMIT_6X         120.0f     // mA
-#define SYNC_WORD                     0x12    // sync word 
+#define SYNC_WORD                     0xFF    // sync word 
 #define LORA_PREAMBLE_LENGTH          8U
 
 Radio::Radio()
@@ -419,6 +419,7 @@ void Radio::readState_sent(int state) {
 
 // remote
 void Radio::remote_freq(char* payload, size_t payload_len) {
+  
   DynamicJsonDocument doc(60);
   char payloadStr[payload_len+1];
   memcpy(payloadStr, payload, payload_len);
@@ -428,17 +429,24 @@ void Radio::remote_freq(char* payload, size_t payload_len) {
   Serial.println("");
   Serial.print(F("Set Frequency: ")); Serial.print(frequency, 3);Serial.println(F(" MHz"));
   int state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+      ((SX1278*)lora)->sleep();   // sleep mandatory if FastHop isn't ON.
       state = ((SX1278*)lora)->setFrequency(frequency);
-  else
+      ((SX1278*)lora)->startReceive();
+      }      
+  else {
+      ((SX1268*)lora)->sleep();
       state = ((SX1268*)lora)->setFrequency(frequency);
+      ((SX1268*)lora)->startReceive();
+       }
+ 
   readState(state);
   if (state == ERR_NONE) {
     status.modeminfo.frequency  = frequency;
       }
 
-
 }
+
 
 void Radio::remote_bw(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(60);
