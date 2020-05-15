@@ -27,7 +27,7 @@ bool received = false;
 bool eInterrupt = true;
 
 // modem configuration
-#define LORA_CARRIER_FREQUENCY        431.7f  // MHz
+#define LORA_CARRIER_FREQUENCY        436.7f  // MHz
 #define LORA_BANDWIDTH                125.0f  // kHz dual sideband
 #define LORA_SPREADING_FACTOR         11
 #define LORA_SPREADING_FACTOR_ALT     10
