@@ -107,6 +107,7 @@ private:
   const char* topicRawPacket PROGMEM= "raw_packet";
   
   const char* topicRemote PROGMEM= "data/remote/";
+  const char* topicGlobalRemote PROGMEM= "fossa/global/remote/";
   const char* topicRemoteReset PROGMEM= "reset";
   const char* topicRemotePing PROGMEM= "ping";
   const char* topicRemoteFreq PROGMEM= "freq";

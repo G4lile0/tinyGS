@@ -281,67 +281,67 @@ if (!strcmp(topic, "fossa/global/global_frame")) {
   }
 
 // Remote_Frequency       -m "[434.8]" -t fossa/g4lile0/test_G4lile0_new/data/remote/freq
- if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFreq)).c_str()).c_str())) {
+ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFreq)).c_str()).c_str()) || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteFreq) ).c_str()) )  {
     radio.remote_freq((char*)payload, length);
   }
 // Remote_Lora_Bandwidth  -m "[250]" -t fossa/g4lile0/test_G4lile0_new/data/remote/bw
- if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteBw)).c_str()).c_str())) {
+ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteBw)).c_str()).c_str())  || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteBw) ).c_str()) ) {
     radio.remote_bw((char*)payload, length);
   }
 // Remote_spreading factor -m "[11]" -t fossa/g4lile0/test_G4lile0_new/data/remote/sf 
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteSf)).c_str()).c_str())) {
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteSf)).c_str()).c_str())   || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteSf) ).c_str()) ) {
     radio.remote_sf((char*)payload, length);
   }
 // Remote_Coding rate       -m "[8]" -t fossa/g4lile0/test_G4lile0_new/data/remote/cr
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteCr)).c_str()).c_str())) {
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteCr)).c_str()).c_str())   || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteCr) ).c_str()) ) {
     radio.remote_cr((char*)payload, length);
   }
 // Remote_Crc               -m "[0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/crc
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteCrc)).c_str()).c_str())) {
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteCrc)).c_str()).c_str())  || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteCrc) ).c_str()) ) {
     radio.remote_crc((char*)payload, length);
   }
 // Remote_Preamble Lenght   -m "[8]" -t fossa/g4lile0/test_G4lile0_new/data/remote/pl
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemotePl)).c_str()).c_str())) {
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemotePl)).c_str()).c_str())   || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemotePl) ).c_str()) ) {
     radio.remote_pl((char*)payload, length);
   }
 
 // Remote_Begin_Lora       -m "[437.7,125.0,11,8,18,11,120,8,0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/begin_lora
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteBl)).c_str()).c_str())) {
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteBl)).c_str()).c_str())   || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteBl) ).c_str()) ) {
     radio.remote_begin_lora((char*)payload, length);
   }
 // Remote_Begin_FSK       -m "[433.5,100.0,10.0,250.0,10,100,16,0,0.5]" -t fossa/g4lile0/test_G4lile0_new/data/remote/begin_fsk
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFs)).c_str()).c_str())) {
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFs)).c_str()).c_str())   || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteFs) ).c_str()) ) {
     radio.remote_begin_fsk((char*)payload, length);
   }
 
 // Remote_FSK_BitRate      -m "[250]" -t fossa/g4lile0/test_G4lile0_new/data/remote/br
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteBr)).c_str()).c_str())) {
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteBr)).c_str()).c_str())   || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteBr) ).c_str()) ) {
     radio.remote_br((char*)payload, length);
   }
 
 // Remote_FSK_FrequencyDeviation  -m "[10.0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/Fd
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFd)).c_str()).c_str())) {
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFd)).c_str()).c_str())   || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteFd) ).c_str()) ) {
     radio.remote_fd((char*)payload, length);
   }
 
 // Remote_FSK_RxBandwidth       -m "[125]" -t fossa/g4lile0/test_G4lile0_new/data/remote/fbw
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFbw)).c_str()).c_str())) {
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFbw)).c_str()).c_str())  || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteFbw) ).c_str()) ) {
     radio.remote_fbw((char*)payload, length);
   }
 
 // Remote_FSK_syncword          -m "[8,1,2,3,4,5,6,7,8,9]" -t fossa/g4lile0/test_G4lile0_new/data/remote/fsw
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFsw)).c_str()).c_str())) {
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFsw)).c_str()).c_str())  || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteFsw) ).c_str()) ) {
     radio.remote_fsw((char*)payload, length);
   }
 
 // Remote_FSK_Set_OOK + DataShapingOOK(only sx1278)     -m "[1,2]" -t fossa/g4lile0/test_G4lile0_new/data/remote/fok
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFook)).c_str()).c_str())) {
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFook)).c_str()).c_str()) || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteFook) ).c_str()) ) {
     radio.remote_fook((char*)payload, length);
   }
 
 
 // Remote_Satellite_Name       -m "[\"FossaSat-3\"]" -t fossa/g4lile0/test_G4lile0_new/data/remote/sat
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteSat)).c_str()).c_str())) {
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteSat)).c_str()).c_str())  || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteSat) ).c_str()) ) {
     radio.remote_sat((char*)payload, length);
   }
 
