@@ -43,17 +43,17 @@ struct PacketInfo {
 
 
 struct ModemInfo {
-  String satelite     = "FossaSat-2      ";
+  String satelite     = "Norbi (Norby)            ";
   String  modem_mode  = "LoRa" ;     // 1-LoRa  2-FSK  3-GMSK
-  float   frequency   = 436.7; // MHz  
-  float   bw          = 125.0; // kHz dual sideban
-  uint8_t sf          =  11 ;
-  uint8_t cr          =   8 ;
+  float   frequency   = 436.703; // MHz  
+  float   bw          = 250.0; // kHz dual sideban
+  uint8_t sf          =  10 ;
+  uint8_t cr          =   5 ;
   int8_t  power       =  20 ;
   uint16_t preambleLength = 8;
-  float  	bitrate    =  48.0 ;
-  float   freqDev    =  50.0;
-  float   rxBw       =  125.0;
+  float  	bitrate    =  9.6 ;
+  float   freqDev    =  5.0;
+  float   rxBw       =  39.0;
   bool    enableOOK  =  0;
   float   dataShaping = 0.3;
 };
@@ -81,7 +81,7 @@ struct Local_Frame_Text {
 
 
 struct Status {
-  const uint32_t version = 2005151; // version year month day release
+  const uint32_t version = 2010091; // version year month day release
   bool mqtt_connected = false;
   SysInfo sysInfo;
   PacketInfo lastPacketInfo;

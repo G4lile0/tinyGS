@@ -27,15 +27,15 @@ bool received = false;
 bool eInterrupt = true;
 
 // modem configuration
-#define LORA_CARRIER_FREQUENCY        436.7f  // MHz
-#define LORA_BANDWIDTH                125.0f  // kHz dual sideband
-#define LORA_SPREADING_FACTOR         11
+#define LORA_CARRIER_FREQUENCY        436.703f  // MHz
+#define LORA_BANDWIDTH                250.0f  // kHz dual sideband
+#define LORA_SPREADING_FACTOR         10
 #define LORA_SPREADING_FACTOR_ALT     10
-#define LORA_CODING_RATE              8       // 4/8, Extended Hamming
+#define LORA_CODING_RATE              5       // 4/8, Extended Hamming
 #define LORA_OUTPUT_POWER             20      // dBm
 #define LORA_CURRENT_LIMIT_7X         120     // mA
 #define LORA_CURRENT_LIMIT_6X         120.0f     // mA
-#define SYNC_WORD                     0xFF    // sync word 
+#define SYNC_WORD                     0x12    // sync word 
 #define LORA_PREAMBLE_LENGTH          8U
 
 Radio::Radio()
