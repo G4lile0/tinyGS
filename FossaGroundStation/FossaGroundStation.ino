@@ -77,14 +77,14 @@
         "#define MQTT_MAX_PACKET_SIZE 1000"
 #endif
 
-#if  RADIOLIB_VERSION_EXTRA != (0x16)
-"We are using a patched version of RadioLib please copy ESP32-OLED-Fossa-GroundStation/lib/RadioLib on Arduino/libraries"
+#if  RADIOLIB_VERSION_MAJOR != (0x03) || RADIOLIB_VERSION_MINOR != (0x03) || RADIOLIB_VERSION_PATCH != (0x01) || RADIOLIB_VERSION_EXTRA != (0x00)
+"You are not using the correct version of RadioLib please copy ESP32-OLED-Fossa-GroundStation/lib/RadioLib on Arduino/libraries"
 #endif
 
 
-ConfigManager configManager;
-MQTT_Client mqtt(configManager);
-Radio radio(configManager, mqtt);
+ConfigManager& configManager = ConfigManager::getInstance();
+MQTT_Client& mqtt = MQTT_Client::getInstance();
+Radio& radio = Radio::getInstance();
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 0; // 3600;         // 3600 for Spain

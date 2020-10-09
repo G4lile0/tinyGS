@@ -24,7 +24,7 @@
 // GDO0 pin:  2
 // RST pin:   unused
 // GDO2 pin:  3 (optional)
-CC1101 cc = new Module(10, 2, RADIOLIB_PIN_UNUSED, 3);
+CC1101 cc = new Module(10, 2, NC, 3);
 
 // or using RadioShield
 // https://github.com/jgromes/RadioShield
@@ -37,8 +37,8 @@ void setup() {
   Serial.print(F("[CC1101] Initializing ... "));
   // carrier frequency:                   868.0 MHz
   // bit rate:                            4.8 kbps
-  // Rx bandwidth:                        325.0 kHz
   // frequency deviation:                 48.0 kHz
+  // Rx bandwidth:                        325.0 kHz
   // sync word:                           0xD391
   int state = cc.begin();
   if (state == ERR_NONE) {
@@ -111,7 +111,7 @@ void loop() {
     // you can also read received data as byte array
     /*
       byte byteArr[8];
-      int state = cc.receive(byteArr, 8);
+      int state = cc.readData(byteArr, 8);
     */
 
     if (state == ERR_NONE) {

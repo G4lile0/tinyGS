@@ -29,7 +29,12 @@ extern Status status;
 
 class Radio {
 public:
-  Radio(ConfigManager& x, MQTT_Client& mqtt);
+  static Radio& getInstance()
+  {
+    static Radio instance; 
+    return instance;
+  }
+
   void init();
   void sendPing();
   void requestInfo();
@@ -39,14 +44,31 @@ public:
   void disableInterrupt();
   uint8_t listen();
   bool isReady() { return ready; }
+  void remote_freq(char* payload, size_t payload_len);
+  void remote_bw(char* payload, size_t payload_len);
+  void remote_sf(char* payload, size_t payload_len);
+  void remote_cr(char* payload, size_t payload_len);
+  void remote_crc(char* payload, size_t payload_len);
+  void remote_pl(char* payload, size_t payload_len);
+  void remote_begin_lora(char* payload, size_t payload_len);
+  void remote_begin_fsk(char* payload, size_t payload_len);
+  void remote_br(char* payload, size_t payload_len);
+  void remote_fd(char* payload, size_t payload_len);
+  void remote_fbw(char* payload, size_t payload_len);
+  void remote_fsw(char* payload, size_t payload_len);
+  void remote_fook(char* payload, size_t payload_len);
+  void remote_global_frame(char* payload, size_t payload_len);
+  void remote_local_frame(char* payload, size_t payload_len);
+  void remote_sat(char* payload, size_t payload_len);
 
-private:
-  PhysicalLayer* lora;
-  ConfigManager& configManager;
-  MQTT_Client& mqtt;
-  void processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_t respLen);
   
-  static void setFlag();
+private:
+  Radio();
+  PhysicalLayer* lora;
+  void processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_t respLen);
+  void readState(int state);
+  void readState_sent(int state);
+    static void setFlag();
   int sendFrame(uint8_t functionId, const char* data = "");
   bool ready = false;
   SPIClass spi;

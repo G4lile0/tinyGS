@@ -6,9 +6,8 @@
 
 #include "../../protocols/PhysicalLayer/PhysicalLayer.h"
 
-// nRF24 physical layer properties (dummy only)
-#define NRF24_CRYSTAL_FREQ                            1.0
-#define NRF24_DIV_EXPONENT                            0
+// nRF24 physical layer properties
+#define NRF24_FREQUENCY_STEP_SIZE                     1000000.0
 #define NRF24_MAX_PACKET_LENGTH                       32
 
 // nRF24 SPI commands
@@ -440,6 +439,24 @@ class nRF24: public PhysicalLayer {
      \returns \ref status_codes
    */
     int16_t setAutoAck(uint8_t pipeNum, bool autoAckOn = true);
+
+    /*!
+      \brief Dummy data shaping configuration method, to ensure PhysicalLayer compatibility.
+
+      \param sh Ignored.
+
+      \returns \ref status_codes
+    */
+    int16_t setDataShaping(float sh);
+
+    /*!
+      \brief Dummy encoding configuration method, to ensure PhysicalLayer compatibility.
+
+      \param sh Ignored.
+
+      \returns \ref status_codes
+    */
+    int16_t setEncoding(uint8_t encoding);
 
 #ifndef RADIOLIB_GODMODE
   private:

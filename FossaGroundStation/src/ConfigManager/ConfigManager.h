@@ -90,7 +90,11 @@ typedef struct {
 class ConfigManager : public IotWebConf2
 {
 public:
-  ConfigManager();
+  static ConfigManager& getInstance()
+  {
+    static ConfigManager instance;
+    return instance;
+  }
   void resetAPConfig();
   void resetAllConfig();
   boolean init();
@@ -111,6 +115,7 @@ public:
   board_type getBoardConfig(){ return boards[getBoard()]; }
 
 private:
+  
   class GSConfigHtmlFormatProvider : public IotWebConfHtmlFormatProvider
   {
   public:
@@ -152,6 +157,7 @@ private:
     ConfigManager& configManager;
   };
 
+  ConfigManager();
   void handleRoot();
   void handleDashboard();
   void handleRestart();

@@ -59,7 +59,11 @@ extern Status status;
 
 class MQTT_Client : public PubSubClient {
 public:
-  MQTT_Client(ConfigManager& configManager);
+  static MQTT_Client& getInstance()
+  {
+    static MQTT_Client instance; 
+    return instance;
+  }
   void begin();
   void loop();
   void sendWelcome();
@@ -67,6 +71,7 @@ public:
   void sendPong();
   void sendMessage(char* frame, size_t respLen);
   void sendRawPacket(String packet);
+  void manageMQTTData(char *topic, uint8_t *payload, unsigned int length);
 
 protected:
 #ifdef SECURE_MQTT
@@ -77,9 +82,11 @@ protected:
   void reconnect();
 
 private:
-  ConfigManager& configManager;
+  MQTT_Client();
   String buildTopic(const char * topic);
   void subscribeToAll();
+  void manageSatPosOled(char* payload, size_t payload_len);
+
   unsigned long lastPing = 0;
   unsigned long lastConnectionAtempt = 0;
   uint8_t connectionAtempts = 0;
@@ -98,6 +105,29 @@ private:
   const char* topicData PROGMEM= "data/#";
   const char* topicPing PROGMEM= "ping";
   const char* topicRawPacket PROGMEM= "raw_packet";
+  
+  const char* topicRemote PROGMEM= "data/remote/";
+  const char* topicGlobalRemote PROGMEM= "fossa/global/remote/";
+  const char* topicRemoteReset PROGMEM= "reset";
+  const char* topicRemotePing PROGMEM= "ping";
+  const char* topicRemoteFreq PROGMEM= "freq";
+  const char* topicRemoteBw PROGMEM= "bw";
+  const char* topicRemoteSf PROGMEM= "sf";
+  const char* topicRemoteCr PROGMEM= "cr";
+  const char* topicRemoteCrc PROGMEM= "crc";
+  const char* topicRemotePl PROGMEM= "pl";
+  const char* topicRemoteBl PROGMEM= "begin_lora";
+  const char* topicRemoteFs PROGMEM= "begin_fsk";
+  const char* topicRemoteBr PROGMEM= "br";
+  const char* topicRemoteFd PROGMEM= "Fd";
+  const char* topicRemoteFbw PROGMEM= "fbw";
+  const char* topicRemoteFsw PROGMEM= "fsw";
+  const char* topicRemoteFook PROGMEM= "fok";
+  const char* topicRemoteLocalFrame PROGMEM= "frame_l";
+  const char* topicRemoteSat PROGMEM= "sat";
+  
+
+
 };
 
 #endif

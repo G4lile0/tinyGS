@@ -7,9 +7,10 @@
 #include "../../protocols/PhysicalLayer/PhysicalLayer.h"
 
 // CC1101 physical layer properties
+#define CC1101_FREQUENCY_STEP_SIZE                    396.7285156
+#define CC1101_MAX_PACKET_LENGTH                      63
 #define CC1101_CRYSTAL_FREQ                           26.0
 #define CC1101_DIV_EXPONENT                           16
-#define CC1101_MAX_PACKET_LENGTH                      63
 
 // CC1101 SPI commands
 #define CC1101_CMD_READ                               0b10000000
@@ -524,9 +525,9 @@ class CC1101: public PhysicalLayer {
 
       \param br Bit rate to be used in kbps. Defaults to 4.8 kbps.
 
-      \param rxBw Receiver bandwidth in kHz. Defaults to 325.0 kHz.
-
       \param freqDev Frequency deviation from carrier frequency in kHz Defaults to 48.0 kHz.
+
+      \param rxBw Receiver bandwidth in kHz. Defaults to 325.0 kHz.
 
       \param power Output power in dBm. Defaults to 0 dBm.
 
@@ -534,7 +535,7 @@ class CC1101: public PhysicalLayer {
 
       \returns \ref status_codes
     */
-    int16_t begin(float freq = 868.0, float br = 4.8, float rxBw = 325.0, float freqDev = 48.0, int8_t power = 0, uint8_t preambleLength = 4);
+    int16_t begin(float freq = 868.0, float br = 4.8, float freqDev = 48.0, float rxBw = 325.0, int8_t power = 0, uint8_t preambleLength = 4);
 
     /*!
       \brief Blocking binary transmit method.
@@ -602,6 +603,11 @@ class CC1101: public PhysicalLayer {
     void setGdo0Action(void (*func)(void), uint8_t dir = FALLING);
 
     /*!
+      \brief Clears interrupt service routine to call when GDO0 activates.
+    */
+    void clearGdo0Action();
+
+    /*!
       \brief Sets interrupt service routine to call when GDO2 activates.
 
       \param func ISR to call.
@@ -609,6 +615,11 @@ class CC1101: public PhysicalLayer {
       \param dir Signal change direction. Defaults to FALLING.
     */
     void setGdo2Action(void (*func)(void), uint8_t dir = FALLING);
+
+    /*!
+      \brief Clears interrupt service routine to call when GDO0 activates.
+    */
+    void clearGdo2Action();
 
     /*!
       \brief Interrupt-driven binary transmit method.
@@ -698,9 +709,11 @@ class CC1101: public PhysicalLayer {
 
       \param maxErrBits Maximum allowed number of bit errors in received sync word. Defaults to 0.
 
+      \param requireCarrierSense Require carrier sense above threshold in addition to sync word.
+
       \returns \ref status_codes
     */
-    int16_t setSyncWord(uint8_t syncH, uint8_t syncL, uint8_t maxErrBits = 0);
+    int16_t setSyncWord(uint8_t syncH, uint8_t syncL, uint8_t maxErrBits = 0, bool requireCarrierSense = false);
 
     /*!
       \brief Sets 1 or 2 bytes of sync word.
@@ -711,9 +724,11 @@ class CC1101: public PhysicalLayer {
 
       \param maxErrBits Maximum allowed number of bit errors in received sync word. Defaults to 0.
 
+      \param requireCarrierSense Require carrier sense above threshold in addition to sync word.
+
       \returns \ref status_codes
     */
-    int16_t setSyncWord(uint8_t* syncWord, uint8_t len, uint8_t maxErrBits = 0);
+    int16_t setSyncWord(uint8_t* syncWord, uint8_t len, uint8_t maxErrBits = 0, bool requireCarrierSense = false);
 
     /*!
       \brief Sets preamble length.
@@ -797,16 +812,20 @@ class CC1101: public PhysicalLayer {
 
       \param numBits Sync word length in bits.
 
+      \param requireCarrierSense Require carrier sense above threshold in addition to sync word.
+
       \returns \ref status_codes
     */
-    int16_t enableSyncWordFiltering(uint8_t maxErrBits = 0);
+    int16_t enableSyncWordFiltering(uint8_t maxErrBits = 0, bool requireCarrierSense = false);
 
      /*!
       \brief Disable preamble and sync word filtering and generation.
 
+      \param requireCarrierSense Require carrier sense above threshold.
+
       \returns \ref status_codes
     */
-    int16_t disableSyncWordFiltering();
+    int16_t disableSyncWordFiltering(bool requireCarrierSense = false);
 
      /*!
       \brief Enable CRC filtering and generation.
@@ -825,6 +844,25 @@ class CC1101: public PhysicalLayer {
       \returns \ref status_codes
     */
     int16_t setPromiscuousMode(bool promiscuous = true);
+
+    /*!
+      \brief Sets Gaussian filter bandwidth-time product that will be used for data shaping.
+      Allowed value is 0.5. Set to 0 to disable data shaping.
+
+      \param sh Gaussian shaping bandwidth-time product that will be used for data shaping
+
+      \returns \ref status_codes
+    */
+    int16_t setDataShaping(float sh);
+
+    /*!
+      \brief Sets transmission encoding.
+
+      \param encoding Encoding to be used. Set to 0 for NRZ, 1 for Manchester and 2 for whitening.
+
+      \returns \ref status_codes
+    */
+    int16_t setEncoding(uint8_t encoding);
 
 #ifndef RADIOLIB_GODMODE
   private:

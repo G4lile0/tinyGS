@@ -56,7 +56,6 @@ void XBee::reset() {
   digitalWrite(_mod->getRst(), LOW);
   delayMicroseconds(200);
   digitalWrite(_mod->getRst(), HIGH);
-  pinMode(_mod->getRst(), INPUT);
 }
 
 int16_t XBee::transmit(uint8_t* dest, const char* payload, uint8_t radius) {
@@ -173,9 +172,7 @@ int16_t XBee::setPanId(uint8_t* panId) {
 
   // get response code
   int16_t state = readApiFrame(frameID, 4);
-  if(state != ERR_NONE) {
-    return(state);
-  }
+  RADIOLIB_ASSERT(state);
 
   // confirm changes
   return(confirmChanges());
@@ -343,9 +340,7 @@ int16_t XBee::confirmChanges() {
 
   // get response code
   int16_t state = readApiFrame(frameID, 4);
-  if(state != ERR_NONE) {
-    return(state);
-  }
+  RADIOLIB_ASSERT(state);
 
   // apply changes
   frameID = _frameID++;
@@ -353,9 +348,6 @@ int16_t XBee::confirmChanges() {
 
   // get response code
   state = readApiFrame(frameID, 4);
-  if(state != ERR_NONE) {
-    return(state);
-  }
 
   return(state);
 }

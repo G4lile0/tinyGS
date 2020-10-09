@@ -33,7 +33,6 @@ void displayUpdate();
 void displayShowLoRaError();
 void displayShowRadioError();
 
-extern ConfigManager configManager;
 extern Status status;
 
   

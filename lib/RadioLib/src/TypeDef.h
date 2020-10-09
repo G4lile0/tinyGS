@@ -1,16 +1,24 @@
 #ifndef _RADIOLIB_TYPES_H
 #define _RADIOLIB_TYPES_H
+
 #if ARDUINO >= 100
   #include "Arduino.h"
 #else
   #error "Unsupported Arduino version (< 1.0.0)"
 #endif
 
+// version definitions
+#define RADIOLIB_VERSION_MAJOR  (0x03)
+#define RADIOLIB_VERSION_MINOR  (0x03)
+#define RADIOLIB_VERSION_PATCH  (0x01)
+#define RADIOLIB_VERSION_EXTRA  (0x00)
+
+#define RADIOLIB_VERSION ((RADIOLIB_VERSION_MAJOR << 24) | (RADIOLIB_VERSION_MAJOR << 16) | (RADIOLIB_VERSION_MAJOR << 8) | (RADIOLIB_VERSION_EXTRA))
+
 /*
  * Uncomment to enable static-only memory management: no dynamic allocation will be performed.
  * Warning: Large static arrays will be created in some methods. It is not advised to send large packets in this mode.
  */
-#define RADIOLIB_VERSION_EXTRA  (0x16)
 
 //#define RADIOLIB_STATIC_ONLY
 
@@ -67,9 +75,16 @@
 #endif
 
 /*!
-  \brief Alias for unused pin.
+  \brief Alias for unused pin, if not supplied by the Arduino core.
 */
-#define RADIOLIB_PIN_UNUSED                           (-1)
+#if !(defined(NC) || defined(ARDUINO_ARCH_STM32))
+#define NC                                            (-1)
+#endif
+
+/*!
+  \brief A simple assert macro, will return on error.
+*/
+#define RADIOLIB_ASSERT(STATEVAR) { if(STATEVAR != ERR_NONE) { return(STATEVAR); } }
 
 /*!
   \defgroup shield_config Shield Configuration
@@ -524,6 +539,29 @@
   The specified Rx period is shorter or longer than the hardware can handle.
 */
 #define ERR_INVALID_RX_PERIOD                         -709
+
+// AX.25-specific status codes
+
+/*!
+  \brief The provided callsign is invalid.
+
+  The specified callsign is longer than 6 ASCII characters.
+*/
+#define ERR_INVALID_CALLSIGN                          -801
+
+/*!
+  \brief The provided repeater configuration is invalid.
+
+  The specified number of repeaters does not match number of repeater IDs or their callsigns.
+*/
+#define ERR_INVALID_NUM_REPEATERS                     -802
+
+/*!
+  \brief One of the provided repeater callsigns is invalid.
+
+  The specified callsign is longer than 6 ASCII characters.
+*/
+#define ERR_INVALID_REPEATER_CALLSIGN                 -803
 
 /*!
   \}

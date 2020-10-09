@@ -35,18 +35,65 @@ struct SysInfo {
 };
 
 struct PacketInfo {
-  String time = " Waiting      ";
+  String time = "Waiting      ";
   float rssi = 0;
   float snr = 0;
   float frequencyerror = 0;
 };
 
+
+struct ModemInfo {
+  String satelite     = "Norbi (Norby)            ";
+  String  modem_mode  = "LoRa" ;     // 1-LoRa  2-FSK  3-GMSK
+  float   frequency   = 436.703; // MHz  
+  float   bw          = 250.0; // kHz dual sideban
+  uint8_t sf          =  10 ;
+  uint8_t cr          =   5 ;
+  int8_t  power       =  20 ;
+  uint16_t preambleLength = 8;
+  float  	bitrate    =  9.6 ;
+  float   freqDev    =  5.0;
+  float   rxBw       =  39.0;
+  bool    enableOOK  =  0;
+  float   dataShaping = 0.3;
+};
+
+
+struct Global_Frame_Text {
+  uint8_t n;    
+  uint8_t text_font;
+  uint8_t text_alignment;
+  int16_t text_pos_x;
+  int16_t text_pos_y; 
+  String  text = "123456789012345678901234567890";
+};
+
+struct Local_Frame_Text {
+  uint8_t n;    
+  uint8_t text_font;
+  uint8_t text_alignment;
+  int16_t text_pos_x;
+  int16_t text_pos_y; 
+  String  text = "123456789012345678901234567890";
+};
+
+
+
+
 struct Status {
-  const uint32_t version = 2001081; // version year month day release
+  const uint32_t version = 2010091; // version year month day release
   bool mqtt_connected = false;
   SysInfo sysInfo;
   PacketInfo lastPacketInfo;
+  ModemInfo modeminfo;
   float satPos[2] = {0, 0};
+  uint8_t global_frame_text_leght = 0;
+  uint8_t  local_frame_text_leght = 0;
+  Global_Frame_Text global_frame_text[15];
+  Local_Frame_Text   local_frame_text[15];
+  
 };
+
+
 
 #endif
