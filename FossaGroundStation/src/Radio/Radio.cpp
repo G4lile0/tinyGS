@@ -57,8 +57,7 @@ void Radio::init(){
                                       LORA_SPREADING_FACTOR,
                                       LORA_CODING_RATE,
                                       SYNC_WORD,
-                                      LORA_OUTPUT_POWER,
-                                      (uint8_t)LORA_CURRENT_LIMIT_7X);
+                                      LORA_OUTPUT_POWER);
     ((SX1278*)lora)->forceLDRO(true);
   }
   else {
@@ -69,7 +68,6 @@ void Radio::init(){
                                       LORA_CODING_RATE,
                                       SYNC_WORD,
                                       LORA_OUTPUT_POWER,
-                                      LORA_CURRENT_LIMIT_6X,
                                       LORA_PREAMBLE_LENGTH,
                                       board.L_TCXO_V);
     ((SX1268*)lora)->forceLDRO(true);
