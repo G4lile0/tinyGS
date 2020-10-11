@@ -1,4 +1,4 @@
-#ifndef _RADIOLIB_NRF24_H
+#if !defined(_RADIOLIB_NRF24_H) && !defined(RADIOLIB_EXCLUDE_NRF24)
 #define _RADIOLIB_NRF24_H
 
 #include "../../Module.h"
@@ -127,7 +127,7 @@
 // NRF24_REG_STATUS
 #define NRF24_RX_DR                                   0b01000000  //  6     6     Rx data ready
 #define NRF24_TX_DS                                   0b00100000  //  5     5     Tx data sent
-#define NRF24_MAX_RT                                  0b00010000  //  4     4     maximum number of rentransmits reached (must be cleared to continue)
+#define NRF24_MAX_RT                                  0b00010000  //  4     4     maximum number of retransmits reached (must be cleared to continue)
 #define NRF24_RX_FIFO_EMPTY                           0b00001110  //  3     1     Rx FIFO is empty
 #define NRF24_RX_P_NO                                 0b00000000  //  3     1     number of data pipe that received data
 #define NRF24_TX_FIFO_FULL                            0b00000001  //  0     0     Tx FIFO is full
@@ -189,7 +189,7 @@ class nRF24: public PhysicalLayer {
 
       \param mod Instance of Module that will be used to communicate with the radio.
     */
-    nRF24(Module* module);
+    nRF24(Module* mod);
 
     // basic methods
 
@@ -220,7 +220,7 @@ class nRF24: public PhysicalLayer {
 
       \returns \ref status_codes
     */
-    int16_t standby();
+    int16_t standby() override;
 
     /*!
       \brief Blocking binary transmit method.
@@ -234,7 +234,7 @@ class nRF24: public PhysicalLayer {
 
       \returns \ref status_codes
     */
-    int16_t transmit(uint8_t* data, size_t len, uint8_t addr);
+    int16_t transmit(uint8_t* data, size_t len, uint8_t addr) override;
 
     /*!
       \brief Blocking binary receive method.
@@ -246,7 +246,7 @@ class nRF24: public PhysicalLayer {
 
       \returns \ref status_codes
     */
-    int16_t receive(uint8_t* data, size_t len);
+    int16_t receive(uint8_t* data, size_t len) override;
 
     /*!
       \brief Starts direct mode transmission.
@@ -255,14 +255,14 @@ class nRF24: public PhysicalLayer {
 
       \returns \ref status_codes
     */
-    int16_t transmitDirect(uint32_t frf = 0);
+    int16_t transmitDirect(uint32_t frf = 0) override;
 
     /*!
       \brief Dummy direct mode reception method, to ensure PhysicalLayer compatibility.
 
       \returns \ref status_codes
     */
-    int16_t receiveDirect();
+    int16_t receiveDirect() override;
 
     // interrupt methods
 
@@ -285,7 +285,7 @@ class nRF24: public PhysicalLayer {
 
       \returns \ref status_codes
     */
-    int16_t startTransmit(uint8_t* data, size_t len, uint8_t addr);
+    int16_t startTransmit(uint8_t* data, size_t len, uint8_t addr) override;
 
     /*!
       \brief Interrupt-driven receive method. IRQ will be activated when full packet is received.
@@ -303,7 +303,7 @@ class nRF24: public PhysicalLayer {
 
       \returns \ref status_codes
     */
-    int16_t readData(uint8_t* data, size_t len);
+    int16_t readData(uint8_t* data, size_t len) override;
 
     // configuration methods
 
@@ -393,13 +393,20 @@ class nRF24: public PhysicalLayer {
     int16_t getStatus(uint8_t mask = 0xFF);
 
     /*!
+      \brief Checks if carrier was detected during last RX
+
+      \returns Whatever the carrier was above threshold.
+    */
+    bool isCarrierDetected();
+
+    /*!
       \brief Dummy configuration method, to ensure PhysicalLayer compatibility.
 
       \param freqDev Dummy frequency deviation parameter, no configuration will be changed.
 
       \returns \ref status_codes
     */
-    int16_t setFrequencyDeviation(float freqDev);
+    int16_t setFrequencyDeviation(float freqDev) override;
 
      /*!
       \brief Query modem for the packet length of received payload.
@@ -408,8 +415,7 @@ class nRF24: public PhysicalLayer {
 
       \returns Length of last received packet in bytes.
     */
-    size_t getPacketLength(bool update = true);
-
+    size_t getPacketLength(bool update = true) override;
 
     /*!
      \brief Enable CRC filtering and generation.
@@ -421,7 +427,7 @@ class nRF24: public PhysicalLayer {
     int16_t setCrcFiltering(bool crcOn = true);
 
     /*!
-     \brief Enable or disable auto-acknowlede packets on all pipes
+     \brief Enable or disable auto-acknowledge packets on all pipes
 
      \param autoAckOn Enable (true) or disable (false) auto-acks.
 
@@ -430,7 +436,7 @@ class nRF24: public PhysicalLayer {
     int16_t setAutoAck(bool autoAckOn = true);
 
     /*!
-     \brief Enable or disable auto-acknowlede packets on given pipe.
+     \brief Enable or disable auto-acknowledge packets on given pipe.
 
      \param pipeNum Number of pipe to which enable / disable auto-acks.
 
@@ -438,7 +444,7 @@ class nRF24: public PhysicalLayer {
 
      \returns \ref status_codes
    */
-    int16_t setAutoAck(uint8_t pipeNum, bool autoAckOn = true);
+    int16_t setAutoAck(uint8_t pipeNum, bool autoAckOn);
 
     /*!
       \brief Dummy data shaping configuration method, to ensure PhysicalLayer compatibility.
@@ -447,7 +453,7 @@ class nRF24: public PhysicalLayer {
 
       \returns \ref status_codes
     */
-    int16_t setDataShaping(float sh);
+    int16_t setDataShaping(uint8_t sh) override;
 
     /*!
       \brief Dummy encoding configuration method, to ensure PhysicalLayer compatibility.
@@ -456,14 +462,21 @@ class nRF24: public PhysicalLayer {
 
       \returns \ref status_codes
     */
-    int16_t setEncoding(uint8_t encoding);
+    int16_t setEncoding(uint8_t encoding) override;
+
+    /*!
+     \brief Dummy random method, to ensure PhysicalLayer compatibility.
+
+     \returns Always returns 0.
+   */
+    uint8_t random();
 
 #ifndef RADIOLIB_GODMODE
   private:
 #endif
     Module* _mod;
 
-    uint8_t _addrWidth;
+    uint8_t _addrWidth = 0;
 
     int16_t config();
     void clearIRQ();

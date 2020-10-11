@@ -164,11 +164,11 @@ class PhysicalLayer {
       \brief Enables direct transmission mode on pins DIO1 (clock) and DIO2 (data). Must be implemented in module class.
       While in direct mode, the module will not be able to transmit or receive packets. Can only be activated in FSK mode.
 
-      \param FRF 24-bit raw frequency value to start transmitting at. Required for quick frequency shifts in RTTY.
+      \param frf 24-bit raw frequency value to start transmitting at. Required for quick frequency shifts in RTTY.
 
       \returns \ref status_codes
     */
-    virtual int16_t transmitDirect(uint32_t FRF = 0) = 0;
+    virtual int16_t transmitDirect(uint32_t frf = 0) = 0;
 
     /*!
       \brief Enables direct reception mode on pins DIO1 (clock) and DIO2 (data). Must be implemented in module class.
@@ -193,16 +193,16 @@ class PhysicalLayer {
     /*!
       \brief Sets GFSK data shaping. Only available in FSK mode. Must be implemented in module class.
 
-      \param sh Shaping to be set. Set to zero to disable data shaping.
+      \param sh Shaping to be set. See \ref config_shaping for possible values.
 
       \returns \ref status_codes
     */
-    virtual int16_t setDataShaping(float sh) = 0;
+    virtual int16_t setDataShaping(uint8_t sh) = 0;
 
     /*!
       \brief Sets FSK data encoding. Only available in FSK mode. Must be implemented in module class.
 
-      \param enc Encoding to be used. Set to zero to for no encoding (NRZ).
+      \param enc Encoding to be used. See \ref config_encoding for possible values.
 
       \returns \ref status_codes
     */
@@ -213,16 +213,43 @@ class PhysicalLayer {
 
       \returns Synthesizer frequency step size in Hz.
     */
-    float getFreqStep();
+    float getFreqStep() const;
 
     /*!
-     \brief Query modem for the packet length of received payload.
+     \brief Query modem for the packet length of received payload. Must be implemented in module class.
 
      \param update Update received packet length. Will return cached value when set to false.
 
      \returns Length of last received packet in bytes.
    */
    virtual size_t getPacketLength(bool update = true) = 0;
+
+   /*!
+    \brief Get truly random number in range 0 - max.
+
+    \param max The maximum value of the random number (non-inclusive).
+
+    \returns Random number.
+   */
+   int32_t random(int32_t max);
+
+   /*!
+    \brief Get truly random number in range min - max.
+
+    \param min The minimum value of the random number (inclusive).
+
+    \param max The maximum value of the random number (non-inclusive).
+   
+    \returns Random number.
+   */
+   int32_t random(int32_t min, int32_t max);
+
+   /*!
+    \brief Get one truly random byte from RSSI noise. Must be implemented in module class.
+
+    \returns TRNG byte.
+  */
+   virtual uint8_t random() = 0;
 
 #ifndef RADIOLIB_GODMODE
   private:

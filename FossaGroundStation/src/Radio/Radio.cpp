@@ -51,7 +51,7 @@ void Radio::init(){
   spi.begin(board.L_SCK, board.L_MISO, board.L_MOSI, board.L_NSS);
   int state = 0;
   if (board.L_SX127X) {
-    lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi));
+    lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
     state = ((SX1278*)lora)->begin(LORA_CARRIER_FREQUENCY,
                                       LORA_BANDWIDTH,
                                       LORA_SPREADING_FACTOR,
@@ -59,9 +59,10 @@ void Radio::init(){
                                       SYNC_WORD,
                                       LORA_OUTPUT_POWER,
                                       (uint8_t)LORA_CURRENT_LIMIT_7X);
+    ((SX1278*)lora)->forceLDRO(true);
   }
   else {
-    lora = new SX1268(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi));
+    lora = new SX1268(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
     state = ((SX1268*)lora)->begin(LORA_CARRIER_FREQUENCY,
                                       LORA_BANDWIDTH,
                                       LORA_SPREADING_FACTOR,
@@ -71,6 +72,7 @@ void Radio::init(){
                                       LORA_CURRENT_LIMIT_6X,
                                       LORA_PREAMBLE_LENGTH,
                                       board.L_TCXO_V);
+    ((SX1268*)lora)->forceLDRO(true);
   }
   
   if (state == ERR_NONE) {
@@ -563,11 +565,11 @@ void Radio::remote_fldro(char* payload, size_t payload_len) {
   Serial.print(F("Set ForceLDRO "));  if (ldro) Serial.println(F("ON")); else Serial.println(F("OFF"));
   int state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
-      state = ((SX1278*)lora)->setCRC (ldro);                     // change to ->forceLDRO(ldro)
+      state = ((SX1278*)lora)->forceLDRO(ldro);
               ((SX1278*)lora)->startReceive();
               ((SX1278*)lora)->setDio0Action(setFlag); 
    } else {
-      state = ((SX1268*)lora)->setCRC (ldro);                     // change to ->forceLDRO(ldro)
+      state = ((SX1268*)lora)->forceLDRO(ldro);
               ((SX1268*)lora)->startReceive();
               ((SX1268*)lora)->setDio1Action(setFlag);
       }
@@ -582,16 +584,16 @@ void Radio::remote_aldro(char* payload, size_t payload_len) {
   memcpy(payloadStr, payload, payload_len);
   payloadStr[payload_len] = '\0';
   deserializeJson(doc, payload);
-  bool ldro = doc[0];
+  bool ldro = doc[0]; // FIXME this is not used becasue autoLDRO has no parameter!!!! does it need if???
   Serial.println("");
   Serial.print(F("Set AutoLDRO ")); // if (ldro) Serial.println(F("ON")); else Serial.println(F("OFF"));
   int state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
-      state = ((SX1278*)lora)->setCRC (ldro);                     // change to ->autoLDRO()
+      state = ((SX1278*)lora)->autoLDRO();
               ((SX1278*)lora)->startReceive();
               ((SX1278*)lora)->setDio0Action(setFlag); 
    } else {
-      state = ((SX1268*)lora)->setCRC (ldro);                     // change to ->autoLDRO()
+      state = ((SX1268*)lora)->autoLDRO();
               ((SX1268*)lora)->startReceive();
               ((SX1268*)lora)->setDio1Action(setFlag);
       }
@@ -733,7 +735,6 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
                                      freqDev,
                                      rxBw,                                     
                                      power,
-                                     currentlimit,
                                      preambleLength);
   } else {
     state = ((SX1268*)lora)->beginFSK(freq,
@@ -741,9 +742,7 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
                                      freqDev,
                                      rxBw,                                     
                                      power,
-                                     currentlimit,
                                      preambleLength,
-                                     dataShaping,
                                      ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
 
   }
