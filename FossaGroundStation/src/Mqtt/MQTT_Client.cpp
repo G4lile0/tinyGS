@@ -300,6 +300,18 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteCr)).c_st
 if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteCrc)).c_str()).c_str())  || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteCrc) ).c_str()) ) {
     radio.remote_crc((char*)payload, length);
   }
+
+// Remote_Force LDRO        -m "[0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/fldro
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFldro)).c_str()).c_str())  || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteFldro) ).c_str()) ) {
+    radio.remote_fldro((char*)payload, length);
+  }
+
+// Remote_auto LDRO        -m "[0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/aldro
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteAldro)).c_str()).c_str())  || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteAldro) ).c_str()) ) {
+    radio.remote_aldro((char*)payload, length);
+  }
+
+
 // Remote_Preamble Lenght   -m "[8]" -t fossa/g4lile0/test_G4lile0_new/data/remote/pl
 if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemotePl)).c_str()).c_str())   || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemotePl) ).c_str()) ) {
     radio.remote_pl((char*)payload, length);

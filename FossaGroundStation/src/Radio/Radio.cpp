@@ -551,6 +551,54 @@ void Radio::remote_crc(char* payload, size_t payload_len) {
   readState(state);
 }
 
+
+void Radio::remote_fldro(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  bool ldro = doc[0];
+  Serial.println("");
+  Serial.print(F("Set ForceLDRO "));  if (ldro) Serial.println(F("ON")); else Serial.println(F("OFF"));
+  int state = 0;
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+      state = ((SX1278*)lora)->setCRC (ldro);                     // change to ->forceLDRO(ldro)
+              ((SX1278*)lora)->startReceive();
+              ((SX1278*)lora)->setDio0Action(setFlag); 
+   } else {
+      state = ((SX1268*)lora)->setCRC (ldro);                     // change to ->forceLDRO(ldro)
+              ((SX1268*)lora)->startReceive();
+              ((SX1268*)lora)->setDio1Action(setFlag);
+      }
+  readState(state);
+}
+
+
+
+void Radio::remote_aldro(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  bool ldro = doc[0];
+  Serial.println("");
+  Serial.print(F("Set AutoLDRO ")); // if (ldro) Serial.println(F("ON")); else Serial.println(F("OFF"));
+  int state = 0;
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+      state = ((SX1278*)lora)->setCRC (ldro);                     // change to ->autoLDRO()
+              ((SX1278*)lora)->startReceive();
+              ((SX1278*)lora)->setDio0Action(setFlag); 
+   } else {
+      state = ((SX1268*)lora)->setCRC (ldro);                     // change to ->autoLDRO()
+              ((SX1268*)lora)->startReceive();
+              ((SX1268*)lora)->setDio1Action(setFlag);
+      }
+  readState(state);
+}
+
+
 void Radio::remote_pl(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(60);
   char payloadStr[payload_len+1];

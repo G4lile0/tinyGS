@@ -49,6 +49,8 @@ public:
   void remote_sf(char* payload, size_t payload_len);
   void remote_cr(char* payload, size_t payload_len);
   void remote_crc(char* payload, size_t payload_len);
+  void remote_fldro(char* payload, size_t payload_len);
+  void remote_aldro(char* payload, size_t payload_len);
   void remote_pl(char* payload, size_t payload_len);
   void remote_begin_lora(char* payload, size_t payload_len);
   void remote_begin_fsk(char* payload, size_t payload_len);
