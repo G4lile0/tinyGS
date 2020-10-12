@@ -59,7 +59,8 @@ void Radio::init(){
                                       SYNC_WORD,
                                       LORA_OUTPUT_POWER);
     ((SX1278*)lora)->forceLDRO(true);
-  }
+    ((SX1278*)lora)->setCRC(true);
+      }
   else {
     lora = new SX1268(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
     state = ((SX1268*)lora)->begin(LORA_CARRIER_FREQUENCY,
@@ -71,7 +72,8 @@ void Radio::init(){
                                       LORA_PREAMBLE_LENGTH,
                                       board.L_TCXO_V);
     ((SX1268*)lora)->forceLDRO(true);
-  }
+    ((SX1268*)lora)->setCRC(true);
+      }
   
   if (state == ERR_NONE) {
     Serial.println(F("success!"));
@@ -579,10 +581,10 @@ void Radio::remote_fldro(char* payload, size_t payload_len) {
 void Radio::remote_aldro(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(60);
   char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payload);
-  bool ldro = doc[0]; // FIXME this is not used becasue autoLDRO has no parameter!!!! does it need if???
+  // memcpy(payloadStr, payload, payload_len);
+  // payloadStr[payload_len] = '\0';
+  // deserializeJson(doc, payload);
+  // bool ldro = doc[0]; // FIXME this is not used becasue autoLDRO has no parameter!!!! does it need if???
   Serial.println("");
   Serial.print(F("Set AutoLDRO ")); // if (ldro) Serial.println(F("ON")); else Serial.println(F("OFF"));
   int state = 0;
