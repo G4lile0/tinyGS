@@ -77,7 +77,7 @@
         "#define MQTT_MAX_PACKET_SIZE 1000"
 #endif
 
-#if  RADIOLIB_VERSION_MAJOR != (0x03) || RADIOLIB_VERSION_MINOR != (0x03) || RADIOLIB_VERSION_PATCH != (0x01) || RADIOLIB_VERSION_EXTRA != (0x00)
+#if  RADIOLIB_VERSION_MAJOR != (0x04) || RADIOLIB_VERSION_MINOR != (0x00) || RADIOLIB_VERSION_PATCH != (0x04) || RADIOLIB_VERSION_EXTRA != (0x00)
 "You are not using the correct version of RadioLib please copy ESP32-OLED-Fossa-GroundStation/lib/RadioLib on Arduino/libraries"
 #endif
 
