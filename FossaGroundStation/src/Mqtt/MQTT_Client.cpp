@@ -245,7 +245,7 @@ void  MQTT_Client::sendRawPacket(String packet) {
   doc["unix_GS_time"] = now;
   doc["data"] = packet.c_str();
   serializeJson(doc, Serial);
-  char buffer[512];
+  char buffer[1024];
   serializeJson(doc, buffer);
   size_t n = serializeJson(doc, buffer);
 
