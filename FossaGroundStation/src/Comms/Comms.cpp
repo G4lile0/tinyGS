@@ -106,7 +106,8 @@ int16_t FCP_Get_FunctionID(char* callsign, uint8_t* frame, uint8_t frameLen) {
     return(ERR_FRAME_INVALID);
   }
 
-  return((int16_t)frame[strlen(callsign)]);
+  return(0);    // FIXME  quick patch to avoid incorrectly decoding non-fossa packets. 
+//  return((int16_t)frame[strlen(callsign)]);
 }
 
 int16_t FCP_Get_OptData(char* callsign, uint8_t* frame, uint8_t frameLen, uint8_t* optData, const uint8_t* key, const char* password) {
