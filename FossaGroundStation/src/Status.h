@@ -43,7 +43,7 @@ struct PacketInfo {
 
 
 struct ModemInfo {
-  String satelite     = "Norbi (Norby)            ";
+  String satelite     = "Norby Sat               ";
   String  modem_mode  = "LoRa" ;     // 1-LoRa  2-FSK  3-GMSK
   float   frequency   = 436.703; // MHz  
   float   bw          = 250.0; // kHz dual sideban
