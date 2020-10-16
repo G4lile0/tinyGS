@@ -59,11 +59,17 @@
 
 **************************************************************************/
 
-#if defined(ARDUINO) && ARDUINO >= 100
-#include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
+#include <Arduino.h>
+
+_VOID      _EXFUN(tzset,	(_VOID));
+int	_EXFUN(setenv,(const char *__string, const char *__value, int __overwrite));
+
+// #if defined(ARDUINO) && ARDUINO >= 100
+// #include "Arduino.h"
+// #else
+// #include "WProgram.h"
+// #endif
+
 #include "src/ConfigManager/ConfigManager.h"
 #include "src/Comms/Comms.h"
 #include "src/Display/Display.h"
