@@ -734,7 +734,8 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
                                      freqDev,
                                      rxBw,                                     
                                      power,
-                                     preambleLength);
+                                     preambleLength,
+                                     enableOOK);
   } else {
     state = ((SX1268*)lora)->beginFSK(freq,
                                      br,
