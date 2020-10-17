@@ -208,6 +208,7 @@ uint8_t Radio::listen() {
   size_t respLen = 0;
   uint8_t* respFrame = 0;
   int state = 0;
+  status.lastPacketInfo.crc_error = 0;
   // read received data
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
     SX1278* l = (SX1278*)lora;
@@ -217,7 +218,7 @@ uint8_t Radio::listen() {
     status.lastPacketInfo.rssi = l->getRSSI();
     status.lastPacketInfo.snr = l->getSNR();
     status.lastPacketInfo.frequencyerror = l->getFrequencyError();
-  }
+    }
   else {
     SX1268* l = (SX1268*)lora;
     respLen = l->getPacketLength();
@@ -227,7 +228,10 @@ uint8_t Radio::listen() {
     status.lastPacketInfo.snr = l->getSNR();
     //status.lastPacketInfo.frequencyerror = l->getFrequencyError();
   }
+ 
   
+  
+
   // get function ID
   uint8_t functionId = FCP_Get_FunctionID(callsign, respFrame, respLen);
   Serial.print(F("Function ID: 0x"));
@@ -245,6 +249,13 @@ uint8_t Radio::listen() {
     FCP_Get_OptData(callsign, respFrame, respLen, respOptData);
     PRINT_BUFF(respFrame, respLen);
   }
+
+ if (state == ERR_NONE) {
+     status.lastPacketInfo.crc_error = false;
+    } else if (state == ERR_CRC_MISMATCH) {
+    // packet was received, but is malformed
+     status.lastPacketInfo.crc_error = true;
+    } 
 
   String encoded = base64::encode(respFrame, respLen);
   MQTT_Client::getInstance().sendRawPacket(encoded);
@@ -299,6 +310,7 @@ uint8_t Radio::listen() {
   if (state == ERR_NONE) {
     processReceivedFrame(functionId, respOptData, respLen);
   }
+
   delete[] respOptData;
 
   if (state == ERR_NONE) {
@@ -391,7 +403,7 @@ void Radio::processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_
       break;
 
     default:
-      Serial.println(F("Unknown function ID!"));
+     // Serial.println(F("Unknown function ID!"));
       break;
   }
 }
@@ -667,8 +679,8 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len) {
                                      cr,
                                      syncWord78,
                                      power,
-                                     current_limit,
-                                     preambleLength);
+                                     preambleLength,
+                                     gain );
                 ((SX1278*)lora)->startReceive();
                 ((SX1278*)lora)->setDio0Action(setFlag);
 
@@ -678,8 +690,7 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len) {
                                      sf,
                                      cr,
                                      syncWord68,
-                                     power,
-                                     current_limit,
+                                     power,                                     
                                      preambleLength,
                                      ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
              ((SX1268*)lora)->startReceive();
@@ -735,7 +746,8 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
                                      freqDev,
                                      rxBw,                                     
                                      power,
-                                     preambleLength);
+                                     preambleLength,
+                                     enableOOK);
   } else {
     state = ((SX1268*)lora)->beginFSK(freq,
                                      br,

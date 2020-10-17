@@ -35,10 +35,11 @@ struct SysInfo {
 };
 
 struct PacketInfo {
-  String time = "Waiting      ";
+  String time = "Waiting         ";
   float rssi = 0;
   float snr = 0;
   float frequencyerror = 0;
+  bool crc_error = false;
 };
 
 
@@ -54,8 +55,10 @@ struct ModemInfo {
   float  	bitrate    =  9.6 ;
   float   freqDev    =  5.0;
   float   rxBw       =  39.0;
-  bool    enableOOK  =  0;
+  bool    enableOOK  =  false;
   float   dataShaping = 0.3;
+  bool    crc         = true;
+
 };
 
 
@@ -81,7 +84,7 @@ struct Local_Frame_Text {
 
 
 struct Status {
-  const uint32_t version = 2010151; // version year month day release
+  const uint32_t version = 2010171; // version year month day release
   bool mqtt_connected = false;
   SysInfo sysInfo;
   PacketInfo lastPacketInfo;
