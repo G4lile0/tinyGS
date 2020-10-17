@@ -391,7 +391,7 @@ void Radio::processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_
       break;
 
     default:
-      Serial.println(F("Unknown function ID!"));
+     // Serial.println(F("Unknown function ID!"));
       break;
   }
 }
@@ -667,8 +667,8 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len) {
                                      cr,
                                      syncWord78,
                                      power,
-                                     current_limit,
-                                     preambleLength);
+                                     preambleLength,
+                                     gain );
                 ((SX1278*)lora)->startReceive();
                 ((SX1278*)lora)->setDio0Action(setFlag);
 
@@ -678,8 +678,7 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len) {
                                      sf,
                                      cr,
                                      syncWord68,
-                                     power,
-                                     current_limit,
+                                     power,                                     
                                      preambleLength,
                                      ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
              ((SX1268*)lora)->startReceive();
