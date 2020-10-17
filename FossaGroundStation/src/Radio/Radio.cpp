@@ -208,6 +208,7 @@ uint8_t Radio::listen() {
   size_t respLen = 0;
   uint8_t* respFrame = 0;
   int state = 0;
+  status.lastPacketInfo.crc_error = 0;
   // read received data
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
     SX1278* l = (SX1278*)lora;
@@ -217,7 +218,7 @@ uint8_t Radio::listen() {
     status.lastPacketInfo.rssi = l->getRSSI();
     status.lastPacketInfo.snr = l->getSNR();
     status.lastPacketInfo.frequencyerror = l->getFrequencyError();
-  }
+    }
   else {
     SX1268* l = (SX1268*)lora;
     respLen = l->getPacketLength();
@@ -227,7 +228,10 @@ uint8_t Radio::listen() {
     status.lastPacketInfo.snr = l->getSNR();
     //status.lastPacketInfo.frequencyerror = l->getFrequencyError();
   }
+ 
   
+  
+
   // get function ID
   uint8_t functionId = FCP_Get_FunctionID(callsign, respFrame, respLen);
   Serial.print(F("Function ID: 0x"));
@@ -245,6 +249,13 @@ uint8_t Radio::listen() {
     FCP_Get_OptData(callsign, respFrame, respLen, respOptData);
     PRINT_BUFF(respFrame, respLen);
   }
+
+ if (state == ERR_NONE) {
+     status.lastPacketInfo.crc_error = false;
+    } else if (state == ERR_CRC_MISMATCH) {
+    // packet was received, but is malformed
+     status.lastPacketInfo.crc_error = true;
+    } 
 
   String encoded = base64::encode(respFrame, respLen);
   MQTT_Client::getInstance().sendRawPacket(encoded);
@@ -299,6 +310,7 @@ uint8_t Radio::listen() {
   if (state == ERR_NONE) {
     processReceivedFrame(functionId, respOptData, respLen);
   }
+
   delete[] respOptData;
 
   if (state == ERR_NONE) {
