@@ -567,6 +567,24 @@ void Radio::remote_crc(char* payload, size_t payload_len) {
 }
 
 
+void Radio::remote_lsw(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  uint8_t sw = doc[0];
+  Serial.println("");
+  Serial.print(F(" 0x"));Serial.print(sw,HEX);
+  int state = 0;
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+      state = ((SX1278*)lora)->setSyncWord(sw);
+  else
+      state = ((SX1268*)lora)->setSyncWord(sw, 0x44);
+  readState(state);
+}
+
+
 void Radio::remote_fldro(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(60);
   char payloadStr[payload_len+1];

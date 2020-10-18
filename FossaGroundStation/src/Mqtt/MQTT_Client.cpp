@@ -303,6 +303,11 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteCrc)).c_s
     radio.remote_crc((char*)payload, length);
   }
 
+// Remote_LoRa_syncword          -m "[8,1,2,3,4,5,6,7,8,9]" -t fossa/g4lile0/test_G4lile0_new/data/remote/lsw
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteLsw)).c_str()).c_str())  || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteLsw) ).c_str()) ) {
+    radio.remote_lsw((char*)payload, length);
+  }
+
 // Remote_Force LDRO        -m "[0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/fldro
 if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFldro)).c_str()).c_str())  || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteFldro) ).c_str()) ) {
     radio.remote_fldro((char*)payload, length);
