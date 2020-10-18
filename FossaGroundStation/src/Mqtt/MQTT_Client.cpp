@@ -254,6 +254,57 @@ void  MQTT_Client::sendRawPacket(String packet) {
   publish(buildTopic(topicRawPacket).c_str(), buffer,n );
 }
 
+
+
+void  MQTT_Client::sendStatus() {
+  ConfigManager& configManager = ConfigManager::getInstance();
+  time_t now;
+  time(&now);
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(20);
+  DynamicJsonDocument doc(capacity);
+  doc["station"] = configManager.getThingName();
+  JsonArray station_location = doc.createNestedArray("station_location");
+  station_location.add(configManager.getLatitude());
+  station_location.add(configManager.getLongitude());
+  doc["mode"] = status.modeminfo.modem_mode;
+  doc["frequency"] = status.modeminfo.frequency;
+  doc["satelite"] = status.modeminfo.satelite;
+ 
+  if (String(status.modeminfo.modem_mode)=="LoRa") {
+      doc["sf"] = status.modeminfo.sf;
+      doc["cr"] = status.modeminfo.cr;
+  } else {
+      doc["bitrate"] = status.modeminfo.bitrate;
+      doc["freqdev"] = status.modeminfo.freqDev;
+    }
+
+  doc["bw"] = status.modeminfo.bw;
+  doc["pl"] = status.modeminfo.preambleLength;
+  doc["CRC"] = status.modeminfo.crc;
+  doc["FLDRO"] = status.modeminfo.fldro;
+  doc["OOK"] = status.modeminfo.enableOOK;
+  doc["Shaping"] = status.modeminfo.dataShaping;
+
+  doc["rssi"] = status.lastPacketInfo.rssi;
+  doc["snr"] = status.lastPacketInfo.snr;
+  doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
+  doc["unix_GS_time"] = now;
+  doc["CRC_error"] = status.lastPacketInfo.crc_error;
+  //doc["data"] = packet.c_str();
+  
+  serializeJson(doc, Serial);
+  char buffer[1024];
+  serializeJson(doc, buffer);
+  size_t n = serializeJson(doc, buffer);
+  publish(buildTopic(topicSendStatus).c_str(), buffer,n );
+}
+
+
+
+
+
+
+
 void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int length) {
   Radio& radio = Radio::getInstance();
   if (!strcmp(topic, "fossa/global/sat_pos_oled")) {
@@ -367,6 +418,11 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteSat)).c_s
 // Remote_Frame_Local_       -m "[\"FossaSat-3\"]" -t fossa/g4lile0/test_G4lile0_new/data/remote/sat
 if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteLocalFrame)).c_str()).c_str())) {
     radio.remote_local_frame((char*)payload, length);
+  }
+
+// Remote_Status       -m "[1]"     -t fossa/g4lile0/test_G4lile0_new/data/remote/status
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteStatus)).c_str()).c_str())) {
+    radio.remote_status((char*)payload, length);
   }
 
 

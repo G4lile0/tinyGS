@@ -58,6 +58,7 @@ struct ModemInfo {
   bool    enableOOK  =  false;
   float   dataShaping = 0.3;
   bool    crc         = true;
+  byte    fldro       = true;
 
 };
 
@@ -84,7 +85,7 @@ struct Local_Frame_Text {
 
 
 struct Status {
-  const uint32_t version = 2010182; // version year month day release
+  const uint32_t version = 2010191; // version year month day release
   bool mqtt_connected = false;
   SysInfo sysInfo;
   PacketInfo lastPacketInfo;

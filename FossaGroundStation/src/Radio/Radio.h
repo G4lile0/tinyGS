@@ -63,6 +63,8 @@ public:
   void remote_global_frame(char* payload, size_t payload_len);
   void remote_local_frame(char* payload, size_t payload_len);
   void remote_sat(char* payload, size_t payload_len);
+  void remote_status(char* payload, size_t payload_len);
+  
 
   
 private:

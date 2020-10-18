@@ -72,6 +72,7 @@ public:
   void sendMessage(char* frame, size_t respLen);
   void sendRawPacket(String packet);
   void manageMQTTData(char *topic, uint8_t *payload, unsigned int length);
+  void sendStatus();
 
 protected:
 #ifdef SECURE_MQTT
@@ -105,6 +106,7 @@ private:
   const char* topicData PROGMEM= "data/#";
   const char* topicPing PROGMEM= "ping";
   const char* topicRawPacket PROGMEM= "raw_packet";
+  const char* topicSendStatus PROGMEM= "gs_status";
   
   const char* topicRemote PROGMEM= "data/remote/";
   const char* topicGlobalRemote PROGMEM= "fossa/global/remote/";
@@ -128,6 +130,8 @@ private:
   const char* topicRemoteFook PROGMEM= "fok";
   const char* topicRemoteLocalFrame PROGMEM= "frame_l";
   const char* topicRemoteSat PROGMEM= "sat";
+  const char* topicRemoteStatus PROGMEM= "status";
+  
   
 
 

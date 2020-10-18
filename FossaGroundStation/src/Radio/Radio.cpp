@@ -605,6 +605,17 @@ void Radio::remote_fldro(char* payload, size_t payload_len) {
               ((SX1268*)lora)->setDio1Action(setFlag);
       }
   readState(state);
+
+    if (state == ERR_NONE) {
+   
+      if (ldro) status.modeminfo.fldro=true; else status.modeminfo.fldro=false;
+   
+      }
+
+
+  
+
+
 }
 
 
@@ -990,6 +1001,23 @@ void Radio::remote_local_frame(char* payload, size_t payload_len) {
   Serial.print(F(" -> "));Serial.print(status.local_frame_text[n].text);
   }
 }
+
+
+
+
+void Radio::remote_status(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  uint8_t status = doc[0];
+  Serial.println("");
+  Serial.print(F("Remote status requested: ")); Serial.println(status);     // right now just one mode
+  MQTT_Client::getInstance().sendStatus();
+  
+}
+
 
 
 
