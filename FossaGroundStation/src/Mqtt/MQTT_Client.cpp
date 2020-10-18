@@ -245,6 +245,7 @@ void  MQTT_Client::sendRawPacket(String packet) {
   doc["unix_GS_time"] = now;
   doc["CRC_error"] = status.lastPacketInfo.crc_error;
   doc["data"] = packet.c_str();
+  
   serializeJson(doc, Serial);
   char buffer[1024];
   serializeJson(doc, buffer);

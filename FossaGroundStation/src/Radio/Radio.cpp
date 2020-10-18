@@ -252,13 +252,15 @@ uint8_t Radio::listen() {
 
  if (state == ERR_NONE) {
      status.lastPacketInfo.crc_error = false;
+     String encoded = base64::encode(respFrame, respLen); 
+     MQTT_Client::getInstance().sendRawPacket(encoded);
     } else if (state == ERR_CRC_MISMATCH) {
     // packet was received, but is malformed
      status.lastPacketInfo.crc_error = true;
+     String error_encoded = base64::encode("Error_CRC");
+     MQTT_Client::getInstance().sendRawPacket(error_encoded);
     } 
 
-  String encoded = base64::encode(respFrame, respLen);
-  MQTT_Client::getInstance().sendRawPacket(encoded);
 
   delete[] respFrame;
 
@@ -308,9 +310,8 @@ uint8_t Radio::listen() {
   enableInterrupt();
 
   if (state == ERR_NONE) {
-    processReceivedFrame(functionId, respOptData, respLen);
+   //   processReceivedFrame(functionId, respOptData, respLen);
   }
-
   delete[] respOptData;
 
   if (state == ERR_NONE) {
