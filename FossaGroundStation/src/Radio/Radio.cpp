@@ -32,7 +32,7 @@ bool eInterrupt = true;
 #define LORA_SPREADING_FACTOR         10
 #define LORA_SPREADING_FACTOR_ALT     10
 #define LORA_CODING_RATE              5       // 4/8, Extended Hamming
-#define LORA_OUTPUT_POWER             20       // dBm
+#define LORA_OUTPUT_POWER             20      // dBm
 #define LORA_CURRENT_LIMIT_7X         120     // mA
 #define LORA_CURRENT_LIMIT_6X         120.0f     // mA
 #define SYNC_WORD                     0x12    // sync word 
@@ -756,7 +756,7 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
   uint8_t currentlimit = doc[5];
   uint16_t preambleLength = doc[6];
   bool    enableOOK = doc[7];
-  float   dataShaping = doc[8];
+  uint8_t   dataShaping = doc[8];
 
   Serial.println("");
   Serial.print(F("Set Frequency: ")); Serial.print(freq, 3);Serial.println(F(" MHz"));
@@ -767,7 +767,7 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
   Serial.print(F("Set Current limit: ")); Serial.println(currentlimit);
   Serial.print(F("Set Preamble Length: ")); Serial.println(preambleLength);
   Serial.print(F("OOK Modulation "));  if (enableOOK) Serial.println(F("ON")); else Serial.println(F("OFF"));
-  Serial.print(F("Set Sx1268 datashaping ")); Serial.println(dataShaping);
+  Serial.print(F("Set datashaping ")); Serial.println(dataShaping);
 
   int state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
@@ -778,6 +778,8 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
                                      power,
                                      preambleLength,
                                      enableOOK);
+    ((SX1278*)lora)->setDataShaping(dataShaping);
+
   } else {
     state = ((SX1268*)lora)->beginFSK(freq,
                                      br,
@@ -786,9 +788,11 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
                                      power,
                                      preambleLength,
                                      ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
-
+    ((SX1268*)lora)->setDataShaping(dataShaping);                              
   }
   readState(state);
+  
+  
   if (state == ERR_NONE) {
     status.modeminfo.modem_mode = "FSK";
     status.modeminfo.frequency  = freq;

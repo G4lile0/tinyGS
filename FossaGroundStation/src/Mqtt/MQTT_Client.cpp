@@ -381,7 +381,7 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemotePl)).c_st
 if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteBl)).c_str()).c_str())   || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteBl) ).c_str()) ) {
     radio.remote_begin_lora((char*)payload, length);
   }
-// Remote_Begin_FSK       -m "[433.5,100.0,10.0,250.0,10,100,16,0,0.5]" -t fossa/g4lile0/test_G4lile0_new/data/remote/begin_fsk
+// Remote_Begin_FSK       -m "[433.5,100.0,10.0,250.0,10,100,16,0,0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/begin_fsk
 if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFs)).c_str()).c_str())   || !strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteFs) ).c_str()) ) {
     radio.remote_begin_fsk((char*)payload, length);
   }
