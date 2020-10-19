@@ -231,6 +231,7 @@ uint8_t Radio::listen() {
  
   
   
+  /*  On hold waiting for Fossa
 
   // get function ID
   uint8_t functionId = FCP_Get_FunctionID(callsign, respFrame, respLen);
@@ -249,16 +250,27 @@ uint8_t Radio::listen() {
     FCP_Get_OptData(callsign, respFrame, respLen, respOptData);
     PRINT_BUFF(respFrame, respLen);
   }
+*/
+
+ if ((respLen > 0) && !(state == ERR_CRC_MISMATCH))  {
+    // read optional data
+    Serial.print(F("Packet ("));
+    Serial.print(respLen);
+    Serial.println(F(" bytes):"));
+    PRINT_BUFF(respFrame, respLen)
+ }
 
  if (state == ERR_NONE) {
      status.lastPacketInfo.crc_error = false;
+     String encoded = base64::encode(respFrame, respLen); 
+     MQTT_Client::getInstance().sendRawPacket(encoded);
     } else if (state == ERR_CRC_MISMATCH) {
     // packet was received, but is malformed
      status.lastPacketInfo.crc_error = true;
+     String error_encoded = base64::encode("Error_CRC");
+     MQTT_Client::getInstance().sendRawPacket(error_encoded);
     } 
 
-  String encoded = base64::encode(respFrame, respLen);
-  MQTT_Client::getInstance().sendRawPacket(encoded);
 
   delete[] respFrame;
 
@@ -308,10 +320,9 @@ uint8_t Radio::listen() {
   enableInterrupt();
 
   if (state == ERR_NONE) {
-    processReceivedFrame(functionId, respOptData, respLen);
+   //   processReceivedFrame(functionId, respOptData, respLen);
   }
-
-  delete[] respOptData;
+//  delete[] respOptData;
 
   if (state == ERR_NONE) {
     return 0;
@@ -566,6 +577,24 @@ void Radio::remote_crc(char* payload, size_t payload_len) {
 }
 
 
+void Radio::remote_lsw(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  uint8_t sw = doc[0];
+  Serial.println("");
+  Serial.print(F(" 0x"));Serial.print(sw,HEX);
+  int state = 0;
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+      state = ((SX1278*)lora)->setSyncWord(sw);
+  else
+      state = ((SX1268*)lora)->setSyncWord(sw, 0x44);
+  readState(state);
+}
+
+
 void Radio::remote_fldro(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(60);
   char payloadStr[payload_len+1];
@@ -586,6 +615,17 @@ void Radio::remote_fldro(char* payload, size_t payload_len) {
               ((SX1268*)lora)->setDio1Action(setFlag);
       }
   readState(state);
+
+    if (state == ERR_NONE) {
+   
+      if (ldro) status.modeminfo.fldro=true; else status.modeminfo.fldro=false;
+   
+      }
+
+
+  
+
+
 }
 
 
@@ -726,7 +766,7 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
   uint8_t currentlimit = doc[5];
   uint16_t preambleLength = doc[6];
   bool    enableOOK = doc[7];
-  float   dataShaping = doc[8];
+  uint8_t   dataShaping = doc[8];
 
   Serial.println("");
   Serial.print(F("Set Frequency: ")); Serial.print(freq, 3);Serial.println(F(" MHz"));
@@ -737,7 +777,7 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
   Serial.print(F("Set Current limit: ")); Serial.println(currentlimit);
   Serial.print(F("Set Preamble Length: ")); Serial.println(preambleLength);
   Serial.print(F("OOK Modulation "));  if (enableOOK) Serial.println(F("ON")); else Serial.println(F("OFF"));
-  Serial.print(F("Set Sx1268 datashaping ")); Serial.println(dataShaping);
+  Serial.print(F("Set datashaping ")); Serial.println(dataShaping);
 
   int state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
@@ -748,6 +788,8 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
                                      power,
                                      preambleLength,
                                      enableOOK);
+    ((SX1278*)lora)->setDataShaping(dataShaping);
+
   } else {
     state = ((SX1268*)lora)->beginFSK(freq,
                                      br,
@@ -756,9 +798,11 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
                                      power,
                                      preambleLength,
                                      ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
-
+    ((SX1268*)lora)->setDataShaping(dataShaping);                              
   }
   readState(state);
+  
+  
   if (state == ERR_NONE) {
     status.modeminfo.modem_mode = "FSK";
     status.modeminfo.frequency  = freq;
@@ -971,6 +1015,23 @@ void Radio::remote_local_frame(char* payload, size_t payload_len) {
   Serial.print(F(" -> "));Serial.print(status.local_frame_text[n].text);
   }
 }
+
+
+
+
+void Radio::remote_status(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  uint8_t status = doc[0];
+  Serial.println("");
+  Serial.print(F("Remote status requested: ")); Serial.println(status);     // right now just one mode
+  MQTT_Client::getInstance().sendStatus();
+  
+}
+
 
 
 
