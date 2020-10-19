@@ -273,12 +273,14 @@ void  MQTT_Client::sendStatus() {
   if (String(status.modeminfo.modem_mode)=="LoRa") {
       doc["sf"] = status.modeminfo.sf;
       doc["cr"] = status.modeminfo.cr;
+      doc["bw"] = status.modeminfo.bw;
+
   } else {
       doc["bitrate"] = status.modeminfo.bitrate;
       doc["freqdev"] = status.modeminfo.freqDev;
+      doc["rxBw"] = status.modeminfo.rxBw;
     }
 
-  doc["bw"] = status.modeminfo.bw;
   doc["pl"] = status.modeminfo.preambleLength;
   doc["CRC"] = status.modeminfo.crc;
   doc["FLDRO"] = status.modeminfo.fldro;
