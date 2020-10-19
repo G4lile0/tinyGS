@@ -231,6 +231,7 @@ uint8_t Radio::listen() {
  
   
   
+  /*  On hold waiting for Fossa
 
   // get function ID
   uint8_t functionId = FCP_Get_FunctionID(callsign, respFrame, respLen);
@@ -249,6 +250,15 @@ uint8_t Radio::listen() {
     FCP_Get_OptData(callsign, respFrame, respLen, respOptData);
     PRINT_BUFF(respFrame, respLen);
   }
+*/
+
+ if ((respLen > 0) && !(state == ERR_CRC_MISMATCH))  {
+    // read optional data
+    Serial.print(F("Packet ("));
+    Serial.print(respLen);
+    Serial.println(F(" bytes):"));
+    PRINT_BUFF(respFrame, respLen)
+ }
 
  if (state == ERR_NONE) {
      status.lastPacketInfo.crc_error = false;
@@ -312,7 +322,7 @@ uint8_t Radio::listen() {
   if (state == ERR_NONE) {
    //   processReceivedFrame(functionId, respOptData, respLen);
   }
-  delete[] respOptData;
+//  delete[] respOptData;
 
   if (state == ERR_NONE) {
     return 0;
