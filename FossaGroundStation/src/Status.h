@@ -85,7 +85,7 @@ struct Local_Frame_Text {
 
 
 struct Status {
-  const uint32_t version = 2010192; // version year month day release
+  const uint32_t version = 2010201; // version year month day release
   bool mqtt_connected = false;
   SysInfo sysInfo;
   PacketInfo lastPacketInfo;

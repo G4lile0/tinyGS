@@ -131,6 +131,8 @@ private:
   const char* topicRemoteLocalFrame PROGMEM= "frame_l";
   const char* topicRemoteSat PROGMEM= "sat";
   const char* topicRemoteStatus PROGMEM= "status";
+  const char* topicRemoteTest PROGMEM= "test";
+  
   
   
 

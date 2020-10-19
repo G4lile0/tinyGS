@@ -330,6 +330,29 @@ if (!strcmp(topic, "fossa/global/global_frame")) {
     ESP.restart();
   }
 
+ // Remote_switchTestmode(       -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/test
+ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteTest)).c_str()).c_str())) {
+   ConfigManager& configManager = ConfigManager::getInstance();
+     char temp_station[32];
+  if ((configManager.getThingName()[0]=='t') &&  (configManager.getThingName()[1]=='e') && (configManager.getThingName()[2]=='s') && (configManager.getThingName()[4]=='_')) {
+    Serial.println(F("Changed from test mode to normal mode"));
+    for (byte a=5; a<=strlen(configManager.getThingName()); a++ ) {
+      configManager.getThingName()[a-5]=configManager.getThingName()[a];
+    }
+  }
+  else
+  {
+    strcpy(temp_station,"test_");
+    strcat(temp_station,configManager.getThingName());
+    strcpy(configManager.getThingName(),temp_station);
+    Serial.println(F("Changed from normal mode to test mode"));
+  }
+  configManager.configSave();
+  ESP.restart();
+    }
+
+
+
 // Remote_Ping           -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/ping
  if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemotePing)).c_str()).c_str())) {
     radio.sendPing();
