@@ -61,6 +61,12 @@ ConfigManager::ConfigManager()
   addParameter(&mqttPassParam);
   addParameter(&separatorBoard);
   addParameter(&boardParam);
+
+  addParameter(&txParam);
+  addParameter(&remoteTuneParam);
+  addParameter(&telemetry3rdParam);
+  addParameter(&testParam);
+    
 }
 
 void ConfigManager::handleRoot()
@@ -251,4 +257,13 @@ void ConfigManager::printConfig() {
   Serial.print(getBoard());
   Serial.print(F(" -->  "));
   Serial.println(boards[getBoard()].BOARD);
+
+  Serial.print(F("TX "));
+  Serial.println(getTx() ? "Enable" : "Disable");
+  Serial.print(F("Remote Tune "));
+  Serial.println(getRemoteTune() ? "Allowed" : "Blocked");
+  Serial.print(F("Third party telemetry (sat owners,  satnog... ) "));
+  Serial.println(getTelemetry3rd() ? "Allowed" : "Blocked");
+  Serial.print(F("Test mode"));
+  Serial.println(getTest()  ? "Enable" : "Disable");
 }

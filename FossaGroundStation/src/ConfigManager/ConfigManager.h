@@ -34,6 +34,9 @@ constexpr auto SSID_LENGTH = 32;
 constexpr auto PASS_LENGTH = 64;
 constexpr auto TZ_LENGTH = 40;
 constexpr auto BOARD_LENGTH = 3;
+constexpr auto CHECKBOX_LENGTH = 2;
+
+
 
 constexpr auto ROOT_URL = "/";
 constexpr auto CONFIG_URL = "/config";
@@ -46,7 +49,7 @@ const char TITLE_TEXT[] PROGMEM = "FOSSA Ground Satation Configuration";
 
 constexpr auto thingName = "test_GroundStation";
 constexpr auto initialApPassword = "";
-constexpr auto configVersion = "0.01"; //max 4 chars
+constexpr auto configVersion = "0.02"; //max 4 chars
 
 #define MQTT_DEFAULT_SERVER "fossa.apaluba.com"
 #define MQTT_DEFAULT_PORT  "8883"
@@ -108,11 +111,16 @@ public:
   float getLongitude() { return atof(longitude); }
   const char* getTZ() { return tz; }
   uint8_t getBoard() { return atoi(board); }
-  const char* getWiFiSSID() { return getWifiSsidParameter()->valueBuffer; }
+  bool getTx() { return atoi(tx); }
+  bool getRemoteTune() { return atoi(remoteTune); }
+  bool getTelemetry3rd() { return atoi(telemetry3rd); }
+  bool getTest() { return atoi(test); }
 
+  const char* getWiFiSSID() { return getWifiSsidParameter()->valueBuffer; }
   bool isApMode() { return (getState() != IOTWEBCONF_STATE_CONNECTING && getState() != IOTWEBCONF_STATE_ONLINE); }
   bool isConnected() { return getState() == IOTWEBCONF_STATE_ONLINE; };
   board_type getBoardConfig(){ return boards[getBoard()]; }
+
 
 private:
   
@@ -179,6 +187,13 @@ private:
   char mqttUser[MQTT_USER_LENGTH] = "";
   char mqttPass[MQTT_PASS_LENGTH] = "";
   char board[BOARD_LENGTH] = "";
+  
+  char tx[CHECKBOX_LENGTH] = "";
+  char remoteTune[CHECKBOX_LENGTH] = "";
+  char telemetry3rd[CHECKBOX_LENGTH] = "";
+  char test[CHECKBOX_LENGTH] = "";
+
+
 
   IotWebConfParameter latitudeParam = IotWebConfParameter("Latitude (will be public)", "lat", latitude, COORDINATE_LENGTH, "number", NULL, NULL, "required min='-180' max='180' step='0.001'");
   IotWebConfParameter longitudeParam = IotWebConfParameter("Longitude (will be public)", "lng", longitude, COORDINATE_LENGTH, "number", NULL, NULL, "required min='-180' max='180' step='0.001'");
@@ -192,6 +207,12 @@ private:
 
   IotWebConfSeparator separatorBoard = IotWebConfSeparator("Board config");
   IotWebConfParameter boardParam = IotWebConfParameter("Board type", "board", board, BOARD_LENGTH, "board", NULL, NULL);
+  IotWebConfParameter txParam = IotWebConfParameter("Enable TX (HAM licence/ no preamp)","tx",tx, CHECKBOX_LENGTH, "checkbox", NULL, "0");
+  IotWebConfParameter remoteTuneParam = IotWebConfParameter("Enable Remote Tunning","remoteTune",remoteTune, CHECKBOX_LENGTH, "checkbox", NULL, "1");
+  IotWebConfParameter telemetry3rdParam = IotWebConfParameter("Enable third party telemetry (sat owners,  satnog... )","telemetry3rd",telemetry3rd, CHECKBOX_LENGTH, "checkbox", NULL, "1");
+  IotWebConfParameter testParam = IotWebConfParameter("Enable Test mode","test",test, CHECKBOX_LENGTH, "checkbox", NULL, "1");
+
+
 };
 
 #endif

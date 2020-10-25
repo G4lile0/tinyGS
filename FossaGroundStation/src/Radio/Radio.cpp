@@ -131,6 +131,12 @@ void Radio::disableInterrupt() {
 }
 
 int Radio::sendFrame(uint8_t functionId, const char* data) {
+
+  if (!status.tx) {
+      Serial.println(F("TX disable by config"));
+      return -1;
+  }
+
   // build frame
   uint8_t optDataLen = strlen(data);
 
@@ -435,10 +441,16 @@ void Radio::readState_sent(int state) {
   if (state == ERR_NONE) {
     Serial.println(F("sent successfully!"));
   } else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    Serial.println(String(F("Go to the config panel (")) + WiFi.localIP().toString() + F(") and check if the board selected matches your hardware."));
-  }
+        if (status.tx) {
+            Serial.print(F("failed, code "));
+            Serial.println(state);
+            Serial.println(String(F("Go to the config panel (")) + WiFi.localIP().toString() + F(") and check if the board selected matches your hardware."));
+        } else {
+            Serial.println(String(F("Go to the config panel (")) + WiFi.localIP().toString() + F(") to enable TX."));
+        } 
+        
+    }
+    
 }
 
 
