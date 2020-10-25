@@ -264,6 +264,6 @@ void ConfigManager::printConfig() {
   Serial.println(getRemoteTune() ? "Allowed" : "Blocked");
   Serial.print(F("Third party telemetry (sat owners,  satnog... ) "));
   Serial.println(getTelemetry3rd() ? "Allowed" : "Blocked");
-  Serial.print(F("Test mode"));
+  Serial.print(F("Test mode "));
   Serial.println(getTest()  ? "Enable" : "Disable");
 }
