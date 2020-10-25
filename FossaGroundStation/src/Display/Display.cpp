@@ -99,7 +99,7 @@ void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_10);
-  display->drawString(x,  y,  status.modeminfo.satelite);
+  display->drawString(x,  y,  status.modeminfo.satellite);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
   display->drawString(64+ x,  12 + y,  String(status.modeminfo.modem_mode) + " @ " + String(status.modeminfo.frequency) + "MHz" );
 //  display->drawString(x,  12 + y, "F:" );
@@ -170,7 +170,7 @@ void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 void drawFrame4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_10);
-  display->drawString(x,  y,  status.modeminfo.satelite);
+  display->drawString(x,  y,  status.modeminfo.satellite);
   display->drawString(0 + x,  11 + y, "Last Packet: " );
   display->drawString(64 + x,  11 + y, status.lastPacketInfo.time);
 

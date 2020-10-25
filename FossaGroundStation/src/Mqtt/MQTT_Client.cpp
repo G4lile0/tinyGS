@@ -234,7 +234,7 @@ void  MQTT_Client::sendRawPacket(String packet) {
   station_location.add(configManager.getLongitude());
   doc["mode"] = status.modeminfo.modem_mode;
   doc["frequency"] = status.modeminfo.frequency;
-  doc["satelite"] = status.modeminfo.satelite;
+  doc["satellite"] = status.modeminfo.satellite;
  
   if (String(status.modeminfo.modem_mode)=="LoRa") {
       doc["sf"] = status.modeminfo.sf;
@@ -274,7 +274,7 @@ void  MQTT_Client::sendStatus() {
   station_location.add(configManager.getLongitude());
   doc["mode"] = status.modeminfo.modem_mode;
   doc["frequency"] = status.modeminfo.frequency;
-  doc["satelite"] = status.modeminfo.satelite;
+  doc["satellite"] = status.modeminfo.satellite;
  
   if (String(status.modeminfo.modem_mode)=="LoRa") {
       doc["sf"] = status.modeminfo.sf;

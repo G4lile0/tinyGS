@@ -960,9 +960,9 @@ void Radio::remote_sat(char* payload, size_t payload_len) {
   payloadStr[payload_len] = '\0';
   deserializeJson(doc, payload);
   
-  const char* satelite = doc[0];
-  String str(satelite);
-  status.modeminfo.satelite = str;
+  const char* satellite = doc[0];
+  String str(satellite);
+  status.modeminfo.satellite = str;
   Serial.println("");
   Serial.print(F("Listening Satellite: ")); Serial.print(str);
  
