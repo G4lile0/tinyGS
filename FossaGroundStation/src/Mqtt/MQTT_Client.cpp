@@ -83,6 +83,10 @@ void MQTT_Client::subscribeToAll() {
 
 void MQTT_Client::sendWelcome() {
   ConfigManager& configManager = ConfigManager::getInstance();
+  status.tx = configManager.getTx();
+  status.remoteTune = configManager.getRemoteTune();
+  status.telemetry3rd = configManager.getTelemetry3rd();
+  status.test = configManager.getTest(); 
   const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(16);
   DynamicJsonDocument doc(capacity);
   doc["station"] = configManager.getThingName();
@@ -91,7 +95,11 @@ void MQTT_Client::sendWelcome() {
   station_location.add(configManager.getLongitude());
   doc["version"] = status.version;
   doc["board"] = configManager.getBoard();
-
+  doc["tx"] = status.tx;
+  doc["remoteTune"] = status.remoteTune;
+  doc["telemetry3d"] = status.telemetry3rd;
+  doc["test"] = status.test;
+  
   serializeJson(doc, Serial);
 
   char buffer[512];

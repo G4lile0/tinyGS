@@ -83,7 +83,6 @@ struct Local_Frame_Text {
 
 
 
-
 struct Status {
   const uint32_t version = 2010251; // version year month day release
   bool mqtt_connected = false;
@@ -96,9 +95,9 @@ struct Status {
   Global_Frame_Text global_frame_text[15];
   Local_Frame_Text   local_frame_text[15];
   bool tx = false;
-  bool remoteTune = false;
-  bool telemetry3rd = false;
-  bool test = false;
+  bool remoteTune = true;
+  bool telemetry3rd = true;
+  bool test = true;
 
  };
 
