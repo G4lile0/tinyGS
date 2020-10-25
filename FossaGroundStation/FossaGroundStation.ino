@@ -177,6 +177,7 @@ void setup() {
     displayShowStaMode();
   }
   delay(500);  
+  displayMode();
 }
 
 void loop() {
@@ -300,7 +301,23 @@ void loop() {
   radio.listen();
 }
 
-void switchTestmode() {
+void switchTestmode() {  
+
+  if (configManager.getTest()){
+      // TODO getTest to false
+      Serial.println(F("Changed from test mode to normal mode"));
+  } else {
+      // TODO getTest to true
+      Serial.println(F("Changed from normal mode to test mode"));
+  }
+
+  configManager.configSave();
+  status.test = configManager.getTest();
+  // reset .. o welcome?
+
+/*
+  TODO Borrar
+
   char temp_station[32];
   if ((configManager.getThingName()[0]=='t') &&  (configManager.getThingName()[1]=='e') && (configManager.getThingName()[2]=='s') && (configManager.getThingName()[4]=='_')) {
     Serial.println(F("Changed from test mode to normal mode"));
@@ -315,8 +332,10 @@ void switchTestmode() {
     strcpy(configManager.getThingName(),temp_station);
     Serial.println(F("Changed from normal mode to test mode"));
   }
-
   configManager.configSave();
+
+*/
+
 }
 
 void printLocalTime()

@@ -32,6 +32,7 @@ void displayShowStaMode();
 void displayUpdate();
 void displayShowLoRaError();
 void displayShowRadioError();
+void displayMode();
 
 extern Status status;
 

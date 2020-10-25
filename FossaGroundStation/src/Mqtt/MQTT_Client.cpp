@@ -99,9 +99,7 @@ void MQTT_Client::sendWelcome() {
   doc["remoteTune"] = status.remoteTune;
   doc["telemetry3d"] = status.telemetry3rd;
   doc["test"] = status.test;
-  
   serializeJson(doc, Serial);
-
   char buffer[512];
   size_t n = serializeJson(doc, buffer);
   publish(buildTopic(topicWelcome).c_str(), buffer,n );
@@ -341,6 +339,22 @@ if (!strcmp(topic, "fossa/global/global_frame")) {
  // Remote_switchTestmode(       -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/test
  if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteTest)).c_str()).c_str())) {
    ConfigManager& configManager = ConfigManager::getInstance();
+
+  if (configManager.getTest()){
+      // TODO getTest to false
+      Serial.println(F("Changed from test mode to normal mode"));
+  } else {
+      // TODO getTest to true
+      Serial.println(F("Changed from normal mode to test mode"));
+  }
+
+  configManager.configSave();
+  status.test = configManager.getTest();
+  // reset .. o welcome?
+
+
+   /*
+    TODO borrar
      char temp_station[32];
   if ((configManager.getThingName()[0]=='t') &&  (configManager.getThingName()[1]=='e') && (configManager.getThingName()[2]=='s') && (configManager.getThingName()[4]=='_')) {
     Serial.println(F("Changed from test mode to normal mode"));
@@ -357,6 +371,8 @@ if (!strcmp(topic, "fossa/global/global_frame")) {
   }
   configManager.configSave();
   ESP.restart();
+*/
+
     }
 
 
