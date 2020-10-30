@@ -177,8 +177,7 @@ void setup() {
     displayShowStaMode();
   }
   delay(500);  
-  displayMode();
-}
+ }
 
 void loop() {
   configManager.doLoop();

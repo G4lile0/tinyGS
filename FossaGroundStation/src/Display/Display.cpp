@@ -86,6 +86,7 @@ void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
   thisTime=thisTime + String(timeinfo.tm_sec);
   const char* newTime = (const char*) thisTime.c_str();
   display->drawString(128, 0,  newTime  );
+  if ((timeinfo.tm_hour < 6) || (timeinfo.tm_hour > 18) ) {display->normalDisplay();}  else {display->invertDisplay();}   // change the OLED according to the time. 
 }
 
 void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
@@ -372,11 +373,6 @@ void displayShowLoRaError() {
   display->drawString(0, 14, "Browse " + WiFi.localIP().toString());
   display->drawString(0, 28, "Ensure board selected");
   display->drawString(0, 42, "matches your hardware");
-  display->display();
-}
-
-void displayMode() {
-  if (status.test ) {display->invertDisplay();}  else {display->normalDisplay();}
   display->display();
 }
 
