@@ -783,7 +783,7 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
   Serial.println("");
   Serial.print(F("Set Frequency: ")); Serial.print(freq, 3);Serial.println(F(" MHz"));
   Serial.print(F("Set bit rate: ")); Serial.print(br, 3);Serial.println(F(" kbps"));
-  Serial.print(F("Set Frequency deviation: ")); Serial.print(freqDev, 3);Serial.println(F(" MHz"));
+  Serial.print(F("Set Frequency deviation: ")); Serial.print(freqDev, 3);Serial.println(F(" kHz"));
   Serial.print(F("Set receiver bandwidth: ")); Serial.print(rxBw, 3);Serial.println(F(" kHz"));
   Serial.print(F("Set Power: ")); Serial.println(power);
   Serial.print(F("Set Current limit: ")); Serial.println(currentlimit);
