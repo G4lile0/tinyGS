@@ -242,12 +242,13 @@ void  MQTT_Client::sendRawPacket(String packet) {
   if (String(status.modeminfo.modem_mode)=="LoRa") {
       doc["sf"] = status.modeminfo.sf;
       doc["cr"] = status.modeminfo.cr;
+      doc["bw"] = status.modeminfo.bw;
+  
   } else {
       doc["bitrate"] = status.modeminfo.bitrate;
       doc["freqdev"] = status.modeminfo.freqDev;
+      doc["rxBw"] = status.modeminfo.rxBw;
     }
-
-  doc["bw"] = status.modeminfo.bw;
   doc["rssi"] = status.lastPacketInfo.rssi;
   doc["snr"] = status.lastPacketInfo.snr;
   doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
