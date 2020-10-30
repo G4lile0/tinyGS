@@ -83,6 +83,8 @@ void MQTT_Client::subscribeToAll() {
 
 void MQTT_Client::sendWelcome() {
   ConfigManager& configManager = ConfigManager::getInstance();
+  time_t now;
+  time(&now);
   status.tx = configManager.getTx();
   status.remoteTune = configManager.getRemoteTune();
   status.telemetry3rd = configManager.getTelemetry3rd();
@@ -99,6 +101,7 @@ void MQTT_Client::sendWelcome() {
   doc["remoteTune"] = status.remoteTune;
   doc["telemetry3d"] = status.telemetry3rd;
   doc["test"] = status.test;
+  doc["unix_GS_time"] = now;
   serializeJson(doc, Serial);
   char buffer[512];
   size_t n = serializeJson(doc, buffer);
