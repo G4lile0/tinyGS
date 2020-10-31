@@ -104,6 +104,7 @@ void MQTT_Client::sendWelcome() {
   doc["unix_GS_time"] = now;
   serializeJson(doc, Serial);
   char buffer[512];
+  serializeJson(doc, buffer);
   publish(buildTopic(topicWelcome).c_str(), buffer,false);
 }
 
