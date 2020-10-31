@@ -335,7 +335,7 @@
  * Warning: Come on, it's called GOD mode - obviously only use this if you know what you're doing.
  *          Failure to heed the above warning may result in bricked module.
  */
-//#define RADIOLIB_GODMODE
+#define RADIOLIB_GODMODE
 
 /*
  * Uncomment to enable pre-defined modules when using RadioShield.

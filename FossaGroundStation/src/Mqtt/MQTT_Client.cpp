@@ -478,6 +478,16 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteStatus)).
     radio.remote_status((char*)payload, length);
   }
 
+ // GOD MODE  With great power comes great responsibility!
+// SPIsetRegValue  (only sx1278)     -m "[1,2,3,4,5]" -t fossa/g4lile0/test_G4lile0_new/data/remote/SPIsetRegValue
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicSPIsetRegValue)).c_str()).c_str()) || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicSPIsetRegValue) ).c_str()) && status.remoteTune )) {
+    radio.remote_SPIsetRegValue((char*)payload, length);
+  }
+// SPIwriteRegister  (only sx1278)     -m "[1,2]" -t fossa/g4lile0/test_G4lile0_new/data/remote/SPIwriteRegister
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicSPIwriteRegister)).c_str()).c_str()) || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicSPIwriteRegister) ).c_str()) && status.remoteTune )) {
+    radio.remote_SPIwriteRegister((char*)payload, length);
+  }
+// END GOD MODE
 
 }
 
