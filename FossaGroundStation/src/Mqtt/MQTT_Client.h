@@ -135,6 +135,8 @@ private:
   // GOD MODE  With great power comes great responsibility!
   const char* topicSPIsetRegValue PROGMEM= "SPIsetRegValue";
   const char* topicSPIwriteRegister PROGMEM= "SPIwriteRegister";
+  const char* topicSPIreadRegister PROGMEM= "SPIwriteRegister";
+  
   
 };
 

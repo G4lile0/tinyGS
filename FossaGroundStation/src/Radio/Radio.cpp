@@ -978,6 +978,34 @@ void Radio::remote_SPIwriteRegister(char* payload, size_t payload_len) {
 }
 
 
+void Radio::remote_SPIreadRegister(char* payload, size_t payload_len) {
+  DynamicJsonDocument doc(60);
+  char payloadStr[payload_len+1];
+  memcpy(payloadStr, payload, payload_len);
+  payloadStr[payload_len] = '\0';
+  deserializeJson(doc, payload);
+  uint8_t     reg = doc[0];
+  uint8_t     data = 0 ;
+  Serial.println("");
+
+  Serial.print(F("REG ID: 0x"));
+  Serial.print(reg, HEX);
+  int state = 0;
+
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+    data = ((SX1278*)lora)->_mod->SPIreadRegister(reg);
+  else
+//      state = ((SX1268*)lora)->setOOK(enableOOK);
+  Serial.print(F(" HEX : "));
+  Serial.println(data, HEX);
+  Serial.print(F(" BIN : "));
+  Serial.println(data, BIN);
+  
+  readState(state);
+
+}
+
+
 
 void Radio::remote_SPIsetRegValue(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(60);

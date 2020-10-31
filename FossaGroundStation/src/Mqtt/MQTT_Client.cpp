@@ -104,8 +104,7 @@ void MQTT_Client::sendWelcome() {
   doc["unix_GS_time"] = now;
   serializeJson(doc, Serial);
   char buffer[512];
-  size_t n = serializeJson(doc, buffer);
-  publish(buildTopic(topicWelcome).c_str(), buffer,n );
+  publish(buildTopic(topicWelcome).c_str(), buffer,false);
 }
 
 void  MQTT_Client::sendSystemInfo() {
@@ -136,9 +135,7 @@ void  MQTT_Client::sendSystemInfo() {
   serializeJson(doc, Serial);
   char buffer[512];
   serializeJson(doc, buffer);
-  size_t n = serializeJson(doc, buffer);
-  
-  publish(buildTopic(topicSysInfo).c_str(), buffer,n );
+  publish(buildTopic(topicSysInfo).c_str(), buffer, false);
 }
 
 void  MQTT_Client::sendPong() {
@@ -159,9 +156,7 @@ void  MQTT_Client::sendPong() {
   serializeJson(doc, Serial);
   char buffer[256];
   serializeJson(doc, buffer);
-  size_t n = serializeJson(doc, buffer);
-
-  publish(buildTopic(topicPong).c_str(), buffer, n);
+  publish(buildTopic(topicPong).c_str(), buffer, false);
 }
 
 void  MQTT_Client::sendMessage(char* frame, size_t respLen) {
@@ -181,7 +176,7 @@ void  MQTT_Client::sendMessage(char* frame, size_t respLen) {
   if ((frame[0]=='T') &&  (frame[1]=='0') && (frame[2]=='@'))
   {
     Serial.println("mensaje miniTTN");
-    const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(11) +JSON_ARRAY_SIZE(respLen-12);
+    const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(11) + JSON_ARRAY_SIZE(respLen-12);
     DynamicJsonDocument doc(capacity);
     doc["station"] = configManager.getThingName();
     JsonArray station_location = doc.createNestedArray("station_location");
@@ -199,9 +194,7 @@ void  MQTT_Client::sendMessage(char* frame, size_t respLen) {
     serializeJson(doc, Serial);
     char buffer[256];
     serializeJson(doc, buffer);
-    size_t n = serializeJson(doc, buffer);
-
-    publish(buildTopic(topicMiniTTN).c_str(), buffer,n );
+    publish(buildTopic(topicMiniTTN).c_str(), buffer, false);
   }
   else {
     const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(11);
@@ -219,9 +212,7 @@ void  MQTT_Client::sendMessage(char* frame, size_t respLen) {
     serializeJson(doc, Serial);
     char buffer[256];
     serializeJson(doc, buffer);
-    size_t n = serializeJson(doc, buffer);
-
-    publish(buildTopic(topicMsg).c_str(), buffer,n );
+    publish(buildTopic(topicMsg).c_str(), buffer, false);
   }
 }
 
@@ -259,9 +250,7 @@ void  MQTT_Client::sendRawPacket(String packet) {
   serializeJson(doc, Serial);
   char buffer[1024];
   serializeJson(doc, buffer);
-  size_t n = serializeJson(doc, buffer);
-
-  publish(buildTopic(topicRawPacket).c_str(), buffer,n );
+  publish(buildTopic(topicRawPacket).c_str(), buffer, false);
 }
 
 
@@ -307,8 +296,7 @@ void  MQTT_Client::sendStatus() {
   serializeJson(doc, Serial);
   char buffer[1024];
   serializeJson(doc, buffer);
-  size_t n = serializeJson(doc, buffer);
-  publish(buildTopic(topicSendStatus).c_str(), buffer,n );
+  publish(buildTopic(topicSendStatus).c_str(), buffer, false);
 }
 
 
@@ -487,6 +475,14 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicSPIsetRegValue)
 if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicSPIwriteRegister)).c_str()).c_str()) || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicSPIwriteRegister) ).c_str()) && status.remoteTune )) {
     radio.remote_SPIwriteRegister((char*)payload, length);
   }
+
+// SPIreadRegister            -m "[1]" -t fossa/g4lile0/test_G4lile0_new/data/remote/SPIreadRegister
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicSPIreadRegister)).c_str()).c_str()) || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicSPIreadRegister) ).c_str()) && status.remoteTune )) {
+    radio.remote_SPIreadRegister((char*)payload, length);
+  }
+
+
+
 // END GOD MODE
 
 }

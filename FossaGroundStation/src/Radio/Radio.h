@@ -66,6 +66,8 @@ public:
   void remote_status(char* payload, size_t payload_len);
   void remote_SPIsetRegValue(char* payload, size_t payload_len);
   void remote_SPIwriteRegister(char* payload, size_t payload_len);
+  void remote_SPIreadRegister(char* payload, size_t payload_len);
+  
    
 private:
   Radio();
