@@ -972,7 +972,7 @@ void Radio::remote_SPIwriteRegister(char* payload, size_t payload_len) {
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     ((SX1278*)lora)->_mod->SPIwriteRegister(reg,data);
-  else
+//  else
 //      state = ((SX1268*)lora)->setOOK(enableOOK);
   readState(state);
 }
@@ -994,10 +994,10 @@ void Radio::remote_SPIreadRegister(char* payload, size_t payload_len) {
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     data = ((SX1278*)lora)->_mod->SPIreadRegister(reg);
-  else
+//  else
 //      state = ((SX1268*)lora)->setOOK(enableOOK);
-  Serial.print(F(" HEX : "));
-  Serial.println(data, HEX);
+  Serial.print(F(" HEX : 0x"));
+  Serial.print(data, HEX);
   Serial.print(F(" BIN : "));
   Serial.println(data, BIN);
   
@@ -1008,7 +1008,7 @@ void Radio::remote_SPIreadRegister(char* payload, size_t payload_len) {
 
 
 void Radio::remote_SPIsetRegValue(char* payload, size_t payload_len) {
-  DynamicJsonDocument doc(60);
+  DynamicJsonDocument doc(120);
   char payloadStr[payload_len+1];
   memcpy(payloadStr, payload, payload_len);
   payloadStr[payload_len] = '\0';
@@ -1022,8 +1022,10 @@ void Radio::remote_SPIsetRegValue(char* payload, size_t payload_len) {
   Serial.println("");
   Serial.print(F("REG ID: 0x"));
   Serial.println(reg, HEX);
-  Serial.print(F("to : 0x"));
-  Serial.println(value, HEX);
+  Serial.print(F("to HEX: 0x"));
+  Serial.print(value, HEX);
+  Serial.print(F("bin : 0x "));
+  Serial.println(value, BIN);
   Serial.print(F("msb : "));
   Serial.println(msb);
   Serial.print(F("lsb : "));
@@ -1034,8 +1036,8 @@ void Radio::remote_SPIsetRegValue(char* payload, size_t payload_len) {
   int state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-    state = ((SX1278*)lora)->_mod->SPIsetRegValue(reg,value,msb,lsb,checkinterval);
-  else
+    state = ((SX1278*)lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
+// else
 //      state = ((SX1268*)lora)->setOOK(enableOOK);
   readState(state);
 }
