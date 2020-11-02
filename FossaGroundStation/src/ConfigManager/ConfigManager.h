@@ -115,6 +115,10 @@ public:
   bool getRemoteTune() { return atoi(remoteTune); }
   bool getTelemetry3rd() { return atoi(telemetry3rd); }
   bool getTest() { return atoi(test); }
+  void setTx(bool status) { itoa(status, tx, 10); this->configSave(); }
+  void setRemoteTune(bool status) { itoa(status, remoteTune, 10); this->configSave(); }
+  void getTelemetry3rd(bool status) { itoa(status, telemetry3rd, 10); this->configSave(); }
+  void setTest(bool status) { itoa(status, test, 10); this->configSave(); }
 
   const char* getWiFiSSID() { return getWifiSsidParameter()->valueBuffer; }
   bool isApMode() { return (getState() != IOTWEBCONF_STATE_CONNECTING && getState() != IOTWEBCONF_STATE_ONLINE); }
