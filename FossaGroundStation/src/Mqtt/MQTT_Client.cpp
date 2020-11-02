@@ -448,7 +448,7 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFook)).c_
   }
 
 
-// Remote_Satellite_Name       -m "[\"FossaSat-3\"]" -t fossa/g4lile0/test_G4lile0_new/data/remote/sat
+// Remote_Satellite_Name       -m "[\"FossaSat-3\" , 46494 ]" -t fossa/g4lile0/test_G4lile0_new/data/remote/sat
 if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteSat)).c_str()).c_str())  || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteSat) ).c_str()) && status.remoteTune )) {
     radio.remote_sat((char*)payload, length);
   }
