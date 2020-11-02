@@ -50,7 +50,7 @@ struct ModemInfo {
   float   bw          = 250.0; // kHz dual sideban
   uint8_t sf          =  10 ;
   uint8_t cr          =   5 ;
-  int8_t  power       =  20 ;
+  int8_t  power       =   5 ;
   uint16_t preambleLength = 8;
   float  	bitrate    =  9.6 ;
   float   freqDev    =  5.0;
@@ -85,7 +85,7 @@ struct Local_Frame_Text {
 
 
 struct Status {
-  const uint32_t version = 2011012; // version year month day release
+  const uint32_t version = 2011022; // version year month day release
   bool mqtt_connected = false;
   SysInfo sysInfo;
   PacketInfo lastPacketInfo;

@@ -250,7 +250,7 @@ void  MQTT_Client::sendRawPacket(String packet) {
   doc["NORAD"] = status.modeminfo.NORAD;
   
   serializeJson(doc, Serial);
-  char buffer[1024];
+  char buffer[1536];
   serializeJson(doc, buffer);
   publish(buildTopic(topicRawPacket).c_str(), buffer, false);
 }
@@ -270,6 +270,7 @@ void  MQTT_Client::sendStatus() {
   doc["mode"] = status.modeminfo.modem_mode;
   doc["frequency"] = status.modeminfo.frequency;
   doc["satellite"] = status.modeminfo.satellite;
+  doc["NORAD"] = status.modeminfo.NORAD;
  
   if (String(status.modeminfo.modem_mode)=="LoRa") {
       doc["sf"] = status.modeminfo.sf;
@@ -293,8 +294,7 @@ void  MQTT_Client::sendStatus() {
   doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
   doc["unix_GS_time"] = now;
   doc["CRC_error"] = status.lastPacketInfo.crc_error;
-  //doc["data"] = packet.c_str();
-  
+    
   serializeJson(doc, Serial);
   char buffer[1024];
   serializeJson(doc, buffer);
@@ -330,46 +330,41 @@ if (!strcmp(topic, "fossa/global/global_frame")) {
     ESP.restart();
   }
 
- // Remote_switchTestmode(       -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/test
+ // Remote_setTestmode(       -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/test
  if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteTest)).c_str()).c_str())) {
-   ConfigManager& configManager = ConfigManager::getInstance();
+  ConfigManager& configManager = ConfigManager::getInstance();
+  DynamicJsonDocument doc(60);
+  deserializeJson(doc, payload);
+  bool test = doc[0];
+  Serial.println("");
+  Serial.print(F("Set Test Mode to "));  if (test) Serial.println(F("ON")); else Serial.println(F("OFF"));
+  configManager.setTest(test);
+  status.test= test;
+   }
 
-  if (configManager.getTest()){
-      // TODO getTest to false
-      Serial.println(F("Changed from test mode to normal mode"));
-  } else {
-      // TODO getTest to true
-      Serial.println(F("Changed from normal mode to test mode"));
-  }
+ // Remote_topicRemoteremoteTune       -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/remoteTune
+ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteremoteTune)).c_str()).c_str())) {
+  ConfigManager& configManager = ConfigManager::getInstance();
+  DynamicJsonDocument doc(60);
+  deserializeJson(doc, payload);
+  bool tune = doc[0];
+  Serial.println("");
+  Serial.print(F("Set Remote Tune to "));  if (tune) Serial.println(F("ON")); else Serial.println(F("OFF"));
+  configManager.setRemoteTune(tune);
+  status.remoteTune= tune;
+   }
 
-  configManager.configSave();
-  status.test = configManager.getTest();
-  // reset .. o welcome?
-
-
-   /*
-    TODO borrar
-     char temp_station[32];
-  if ((configManager.getThingName()[0]=='t') &&  (configManager.getThingName()[1]=='e') && (configManager.getThingName()[2]=='s') && (configManager.getThingName()[4]=='_')) {
-    Serial.println(F("Changed from test mode to normal mode"));
-    for (byte a=5; a<=strlen(configManager.getThingName()); a++ ) {
-      configManager.getThingName()[a-5]=configManager.getThingName()[a];
-    }
-  }
-  else
-  {
-    strcpy(temp_station,"test_");
-    strcat(temp_station,configManager.getThingName());
-    strcpy(configManager.getThingName(),temp_station);
-    Serial.println(F("Changed from normal mode to test mode"));
-  }
-  configManager.configSave();
-  ESP.restart();
-*/
-
-    }
-
-
+ // Remote_topicRemotetelemetry3rd      -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/telemetry3rd
+ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemotetelemetry3rd)).c_str()).c_str())) {
+  ConfigManager& configManager = ConfigManager::getInstance();
+  DynamicJsonDocument doc(60);
+  deserializeJson(doc, payload);
+  bool telemetry3rd = doc[0];
+  Serial.println("");
+  Serial.print(F("Third party telemetry (sat owners,  satnog... ) "));  if (telemetry3rd) Serial.println(F("ON")); else Serial.println(F("OFF"));
+  configManager.setTelemetry3rd(telemetry3rd);
+  status.telemetry3rd= telemetry3rd;
+   }
 
 // Remote_Ping           -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/ping
  if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemotePing)).c_str()).c_str())) {

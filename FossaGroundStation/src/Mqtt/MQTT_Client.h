@@ -132,7 +132,9 @@ private:
   const char* topicRemoteSat PROGMEM= "sat";
   const char* topicRemoteStatus PROGMEM= "status";
   const char* topicRemoteTest PROGMEM= "test";
-  // GOD MODE  With great power comes great responsibility!
+  const char* topicRemoteremoteTune PROGMEM= "remoteTune";
+  const char* topicRemotetelemetry3rd PROGMEM= "telemetry3rd";
+    // GOD MODE  With great power comes great responsibility!
   const char* topicSPIsetRegValue PROGMEM= "SPIsetRegValue";
   const char* topicSPIwriteRegister PROGMEM= "SPIwriteRegister";
   const char* topicSPIreadRegister PROGMEM= "SPIreadRegister";

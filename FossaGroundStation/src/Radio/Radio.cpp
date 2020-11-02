@@ -32,7 +32,7 @@ bool eInterrupt = true;
 #define LORA_SPREADING_FACTOR         10
 #define LORA_SPREADING_FACTOR_ALT     10
 #define LORA_CODING_RATE              5       // 4/8, Extended Hamming
-#define LORA_OUTPUT_POWER             20      // dBm
+#define LORA_OUTPUT_POWER             5       // dBm
 #define LORA_CURRENT_LIMIT_7X         120     // mA
 #define LORA_CURRENT_LIMIT_6X         120.0f     // mA
 #define SYNC_WORD                     0x12    // sync word 
