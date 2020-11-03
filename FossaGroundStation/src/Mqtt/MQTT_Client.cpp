@@ -221,7 +221,7 @@ void  MQTT_Client::sendRawPacket(String packet) {
   ConfigManager& configManager = ConfigManager::getInstance();
   time_t now;
   time(&now);
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(19);
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(20);
   DynamicJsonDocument doc(capacity);
   doc["station"] = configManager.getThingName();
   JsonArray station_location = doc.createNestedArray("station_location");
@@ -248,6 +248,7 @@ void  MQTT_Client::sendRawPacket(String packet) {
   doc["CRC_error"] = status.lastPacketInfo.crc_error;
   doc["data"] = packet.c_str();
   doc["NORAD"] = status.modeminfo.NORAD;
+  doc["test"] = status.test;
   
   serializeJson(doc, Serial);
   char buffer[1536];
