@@ -66,6 +66,7 @@ enum boardNum {
   TTGO_V2_SX126X_XTAL,
   ESP32_SX126X_TXC0_1,
   ESP32_SX126X_TXC0_2,
+  TBEAM_OLED_v1_0,
 
   NUM_BOARDS //this line always has to be the last one
 };
