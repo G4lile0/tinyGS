@@ -59,7 +59,7 @@ struct ModemInfo {
   int     dataShaping = 0;    // 0 disable  1 -> 0.3  2-> 0.5  3 -> 0.6  4-> 1.0
   bool    crc         = true;
   byte    fldro       = true;
-  uint16_t  NORAD     = 46494;  // funny this remember me WARGames
+  uint32_t  NORAD     = 46494;  // funny this remember me WARGames
 
 };
 
