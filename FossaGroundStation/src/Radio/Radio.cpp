@@ -1050,7 +1050,7 @@ void Radio::remote_sat(char* payload, size_t payload_len) {
   payloadStr[payload_len] = '\0';
   deserializeJson(doc, payload);
   const char* satellite = doc[0];
-  uint16_t  NORAD     =  doc[1];
+  uint32_t  NORAD     =  doc[1];
   status.modeminfo.NORAD = NORAD;
   String str(satellite);
   status.modeminfo.satellite = str;
