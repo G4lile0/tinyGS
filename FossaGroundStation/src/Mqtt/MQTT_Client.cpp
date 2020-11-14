@@ -252,10 +252,14 @@ void  MQTT_Client::sendRawPacket(String packet) {
   doc["data"] = packet.c_str();
   doc["NORAD"] = status.modeminfo.NORAD;
   doc["test"] = status.test;
-  
   serializeJson(doc, Serial);
   char buffer[1536];
   serializeJson(doc, buffer);
+  delay(random(1000));  // ugly an quick blocking code to distribute the load on the backend
+  delay(random(1000));  //
+  delay(random(1000));  //
+  delay(random(1000));  //
+  delay(random(1000));  //
   publish(buildTopic(topicRawPacket).c_str(), buffer, false);
 }
 
