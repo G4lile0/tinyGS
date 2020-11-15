@@ -64,7 +64,7 @@ void displayInit(){
   pinMode(board.OLED__RST,OUTPUT);
   digitalWrite(board.OLED__RST, LOW);     
   delay(50);
-  digitalWrite(board.OLED__RST, HIGH);
+  digitalWrite(board.OLED__RST, HIGH);   
 }
 
 void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
@@ -90,6 +90,13 @@ void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
 }
 
 void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  
+  if (ConfigManager::getInstance().getOledBright()==0) {
+      display->displayOff();
+   } else {
+      display->setBrightness(2*ConfigManager::getInstance().getOledBright());
+   }
+
   display->drawXbm(x , y + 6, Fossa_Logo_width, Fossa_Logo_height, Fossa_Logo_bits);
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_CENTER);

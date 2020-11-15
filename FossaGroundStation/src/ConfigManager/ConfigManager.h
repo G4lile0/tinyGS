@@ -34,8 +34,8 @@ constexpr auto SSID_LENGTH = 32;
 constexpr auto PASS_LENGTH = 64;
 constexpr auto TZ_LENGTH = 40;
 constexpr auto BOARD_LENGTH = 3;
-constexpr auto CHECKBOX_LENGTH = 2;
-
+constexpr auto CHECKBOX_LENGTH = 1;
+constexpr auto NUMBER_LEN = 32;
 
 
 constexpr auto ROOT_URL = "/";
@@ -111,6 +111,7 @@ public:
   float getLongitude() { return atof(longitude); }
   const char* getTZ() { return tz; }
   uint8_t getBoard() { return atoi(board); }
+  uint8_t getOledBright() { return atoi(oledBright); }
   bool getTx() { return atoi(tx); }
   bool getRemoteTune() { return atoi(remoteTune); }
   bool getTelemetry3rd() { return atoi(telemetry3rd); }
@@ -191,7 +192,7 @@ private:
   char mqttUser[MQTT_USER_LENGTH] = "";
   char mqttPass[MQTT_PASS_LENGTH] = "";
   char board[BOARD_LENGTH] = "";
-  
+  char oledBright[NUMBER_LEN] = "";
   char tx[CHECKBOX_LENGTH] = "";
   char remoteTune[CHECKBOX_LENGTH] = "";
   char telemetry3rd[CHECKBOX_LENGTH] = "";
@@ -211,6 +212,7 @@ private:
 
   IotWebConfSeparator separatorBoard = IotWebConfSeparator("Board config");
   IotWebConfParameter boardParam = IotWebConfParameter("Board type", "board", board, BOARD_LENGTH, "board", NULL, NULL);
+  IotWebConfParameter oledBrightParam = IotWebConfParameter("OLED Bright", "oledBright", oledBright, NUMBER_LEN, "number", "0..100", NULL, "min='0' max='100' step='1'");
   IotWebConfParameter txParam = IotWebConfParameter("Enable TX (HAM licence/ no preamp)","tx",tx, CHECKBOX_LENGTH, "checkbox", NULL, "1");
   IotWebConfParameter remoteTuneParam = IotWebConfParameter("Enable Remote Tunning","remoteTune",remoteTune, CHECKBOX_LENGTH, "checkbox", NULL, "1");
   IotWebConfParameter telemetry3rdParam = IotWebConfParameter("Enable third party telemetry (sat owners,  satnog... )","telemetry3rd",telemetry3rd, CHECKBOX_LENGTH, "checkbox", NULL, "1");
