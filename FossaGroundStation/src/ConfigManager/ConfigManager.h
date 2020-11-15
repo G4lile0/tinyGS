@@ -34,7 +34,7 @@ constexpr auto SSID_LENGTH = 32;
 constexpr auto PASS_LENGTH = 64;
 constexpr auto TZ_LENGTH = 40;
 constexpr auto BOARD_LENGTH = 3;
-constexpr auto CHECKBOX_LENGTH = 1;
+constexpr auto CHECKBOX_LENGTH = 4;
 constexpr auto NUMBER_LEN = 32;
 
 
@@ -193,10 +193,10 @@ private:
   char mqttPass[MQTT_PASS_LENGTH] = "";
   char board[BOARD_LENGTH] = "";
   char oledBright[NUMBER_LEN] = "";
-  char tx[CHECKBOX_LENGTH] = "";
-  char remoteTune[CHECKBOX_LENGTH] = "";
-  char telemetry3rd[CHECKBOX_LENGTH] = "";
-  char test[CHECKBOX_LENGTH] = "";
+  char tx[NUMBER_LEN] = "";
+  char remoteTune[NUMBER_LEN] = "";
+  char telemetry3rd[NUMBER_LEN] = "";
+  char test[NUMBER_LEN] = "";
 
 
 
@@ -213,10 +213,10 @@ private:
   IotWebConfSeparator separatorBoard = IotWebConfSeparator("Board config");
   IotWebConfParameter boardParam = IotWebConfParameter("Board type", "board", board, BOARD_LENGTH, "board", NULL, NULL);
   IotWebConfParameter oledBrightParam = IotWebConfParameter("OLED Bright", "oledBright", oledBright, NUMBER_LEN, "number", "0..100", NULL, "min='0' max='100' step='1'");
-  IotWebConfParameter txParam = IotWebConfParameter("Enable TX (HAM licence/ no preamp)","tx",tx, CHECKBOX_LENGTH, "checkbox", NULL, "1");
-  IotWebConfParameter remoteTuneParam = IotWebConfParameter("Enable Remote Tunning","remoteTune",remoteTune, CHECKBOX_LENGTH, "checkbox", NULL, "1");
-  IotWebConfParameter telemetry3rdParam = IotWebConfParameter("Enable third party telemetry (sat owners,  satnog... )","telemetry3rd",telemetry3rd, CHECKBOX_LENGTH, "checkbox", NULL, "1");
-  IotWebConfParameter testParam = IotWebConfParameter("Enable Test mode","test",test, CHECKBOX_LENGTH, "checkbox", NULL, "1");
+  IotWebConfParameter txParam  =IotWebConfParameter("OFF <----  Enable TX (HAM licence/ no preamp) ----> ON", "tx", tx, NUMBER_LEN, "range", "0", "0","data-labels='Off|On' min='0' max='1' step='1'");
+  IotWebConfParameter remoteTuneParam = IotWebConfParameter("OFF <----------- Enable Remote Tunning ------------> ON","remoteTune",remoteTune, NUMBER_LEN, "range", "0", "0","data-labels='Off|On' min='0' max='1' step='1'");
+  IotWebConfParameter telemetry3rdParam = IotWebConfParameter("OFF <-- Enable third party telemetry (sat owners,  satnog... ) --> ON","telemetry3rd",telemetry3rd, NUMBER_LEN, "range", "0", "0","data-labels='Off|On' min='0' max='1' step='1'");
+  IotWebConfParameter testParam = IotWebConfParameter("OFF <------------- Enable Test mode ---------------> ON","test",test, NUMBER_LEN, "range", "0", "0","data-labels='Off|On' min='0' max='1' step='1'");
 
 
 };
