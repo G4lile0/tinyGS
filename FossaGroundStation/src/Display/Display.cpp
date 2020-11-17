@@ -44,6 +44,7 @@ unsigned long tick_interval;
 int tick_timing = 100;
 int graphVal = 1;
 int delta = 1;
+uint8_t oldOledBright = 100;
 
 void displayInit(){
   board_type board = ConfigManager::getInstance().getBoardConfig();
@@ -59,12 +60,13 @@ void displayInit(){
   ui->setFrames(frames, frameCount);
   ui->setOverlays(overlays, overlaysCount);
   ui->init();
-  display->flipScreenVertically();
-
   pinMode(board.OLED__RST,OUTPUT);
   digitalWrite(board.OLED__RST, LOW);     
   delay(50);
-  digitalWrite(board.OLED__RST, HIGH);
+  digitalWrite(board.OLED__RST, HIGH);   
+  display->init();
+  display->flipScreenVertically();
+
 }
 
 void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
@@ -87,6 +89,18 @@ void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
   const char* newTime = (const char*) thisTime.c_str();
   display->drawString(128, 0,  newTime  );
   if ((timeinfo.tm_hour < 6) || (timeinfo.tm_hour > 18) ) {display->normalDisplay();}  else {display->invertDisplay();}   // change the OLED according to the time. 
+  if (oldOledBright!=ConfigManager::getInstance().getOledBright()) {
+        oldOledBright = ConfigManager::getInstance().getOledBright(); 
+        if (ConfigManager::getInstance().getOledBright()==0) {
+              display->displayOff();
+              } else {
+                       display->setBrightness(2*ConfigManager::getInstance().getOledBright());
+                       }
+  }
+
+  
+
+
 }
 
 void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
@@ -334,8 +348,6 @@ void displayShowWaitingMqttConnection() {
 }
 
 void displayShowInitialCredits() {
-  display->init();
-  display->flipScreenVertically();
   display->setFont(ArialMT_Plain_16);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->drawString(0,5,"FossaSAT-1 Sta");

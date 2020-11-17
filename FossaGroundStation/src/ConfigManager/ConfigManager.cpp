@@ -63,7 +63,7 @@ ConfigManager::ConfigManager()
   addParameter(&mqttPassParam);
   addParameter(&separatorBoard);
   addParameter(&boardParam);
-
+  addParameter(&oledBrightParam);
   addParameter(&txParam);
   addParameter(&remoteTuneParam);
   addParameter(&telemetry3rdParam);
@@ -259,7 +259,8 @@ void ConfigManager::printConfig() {
   Serial.print(getBoard());
   Serial.print(F(" -->  "));
   Serial.println(boards[getBoard()].BOARD);
-
+  Serial.print(F("OLED Bright: "));
+  Serial.println(getOledBright());
   Serial.print(F("TX "));
   Serial.println(getTx() ? "Enable" : "Disable");
   Serial.print(F("Remote Tune "));
