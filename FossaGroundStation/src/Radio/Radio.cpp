@@ -801,6 +801,8 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
                                      preambleLength,
                                      enableOOK);
     ((SX1278*)lora)->setDataShaping(dataShaping);
+    ((SX1278*)lora)->startReceive();
+    ((SX1278*)lora)->setDio0Action(setFlag);
 
   } else {
     state = ((SX1268*)lora)->beginFSK(freq,
@@ -810,7 +812,9 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len) {
                                      power,
                                      preambleLength,
                                      ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
-    ((SX1268*)lora)->setDataShaping(dataShaping);                              
+    ((SX1268*)lora)->setDataShaping(dataShaping);
+    ((SX1268*)lora)->startReceive();
+    ((SX1268*)lora)->setDio1Action(setFlag);
   }
   readState(state);
   
