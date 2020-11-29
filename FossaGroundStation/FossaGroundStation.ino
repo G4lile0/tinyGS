@@ -71,6 +71,7 @@
 #include "src/Status.h"
 #include "src/Radio/Radio.h"
 #include "src/ArduinoOTA/ArduinoOTA.h"
+#include <ESPNtpClient.h>
 
 #if MQTT_MAX_PACKET_SIZE != 1000
 "Remeber to change libraries/PubSubClient/src/PubSubClient.h"
@@ -86,9 +87,11 @@ ConfigManager& configManager = ConfigManager::getInstance();
 MQTT_Client& mqtt = MQTT_Client::getInstance();
 Radio& radio = Radio::getInstance();
 
+TaskHandle_t dispUpdate_handle;
+
 const char* ntpServer = "pool.ntp.org";
-const long  gmtOffset_sec = 0; // 3600;         // 3600 for Spain
-const int   daylightOffset_sec = 0; // 3600;
+//const long  gmtOffset_sec = 0; // 3600;         // 3600 for Spain
+//const int   daylightOffset_sec = 0; // 3600;
 void printLocalTime();
 
 // Global status
@@ -96,6 +99,19 @@ Status status;
 
 void printControls();
 void switchTestmode();
+
+void ntp_cb (NTPEvent_t e){
+    switch (e.event) {
+        default: 
+            Serial.printf ("[NTP Event] %s\n", NTP.ntpEvent2str (e));
+    }
+}
+
+void displayUpdate_task (void* arg){
+    for (;;){
+        displayUpdate ();
+    }
+}
 
 void wifiConnected() {
   configManager.printConfig();
@@ -109,11 +125,22 @@ void wifiConnected() {
   }
 
   //init and get the time
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-  if (strcmp (configManager.getTZ(), "")) {
-	  setenv("TZ", configManager.getTZ(), 1);
-	  ESP_LOGD (LOG_TAG, "Set timezone value as %s", configManager.getTZ());
-	  tzset();
+//   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+//   if (strcmp (configManager.getTZ(), "")) {
+// 	  setenv("TZ", configManager.getTZ(), 1);
+// 	  ESP_LOGD (LOG_TAG, "Set timezone value as %s", configManager.getTZ());
+// 	  tzset();
+//   }
+  NTP.setInterval (120); // Sync each 2 minutes
+  NTP.setTimeZone (configManager.getTZ ()); // Get TX from config manager
+  NTP.onNTPSyncEvent (ntp_cb); // Register event callback
+  NTP.setMinSyncAccuracy (2000); // Sync accuracy target is 2 ms
+  NTP.settimeSyncThreshold (1000); // Sync only if calculated offset absolute value is greater than 1 ms
+  NTP.begin (ntpServer); // Start NTP client
+  
+  time_t startedSync = millis ();
+  while (NTP.syncStatus() != syncd && millis() - startedSync < 5000){ // Wait 5 seconds to get sync
+      delay (100);
   }
 
   printLocalTime();
@@ -176,6 +203,16 @@ void setup() {
   else {
     displayShowStaMode();
   }
+  
+  xTaskCreateUniversal (
+      displayUpdate_task,           // Display loop function
+      "Display Update",             // Task name
+      4096,                         // Stack size
+      NULL,                         // Function argument, not needed
+      1,                            // Priority, running higher than 1 causes errors on MQTT comms
+      &dispUpdate_handle,           // Task handle
+      CONFIG_ARDUINO_RUNNING_CORE); // Running core, should be 1
+  
   delay(500);  
  }
 
@@ -295,7 +332,7 @@ void loop() {
     return;
   }
 
-  displayUpdate();
+  //displayUpdate();
 
   radio.listen();
 }
