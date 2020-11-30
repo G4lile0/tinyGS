@@ -104,7 +104,7 @@ void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
 }
 
 void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->drawXbm(x , y + 6, Fossa_Logo_width, Fossa_Logo_height, Fossa_Logo_bits);
+  display->drawXbm(x +10, y , Logo_width, Logo_height, Logo_bits);
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
   display->drawString( x+70, y + 32, "Sta: "+ String(ConfigManager::getInstance().getThingName()));
@@ -207,7 +207,7 @@ void drawFrame5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->setFont(ArialMT_Plain_10);
  
   if (status.satPos[0] == 0 && status.satPos[1] == 0) {
-    String msg = F("Waiting for FossaSat Pos");
+    String msg = F("Waiting for Sat Pos");
     display->drawString( 65+x,  49+y+(x/2), msg );
     display->drawString( 63+x,  51+y+(x/2), msg );
     display->setColor(WHITE);
@@ -350,7 +350,7 @@ void displayShowWaitingMqttConnection() {
 void displayShowInitialCredits() {
   display->setFont(ArialMT_Plain_16);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->drawString(0,5,"FossaSAT-1 Sta");
+  display->drawString(0,5,"tinnyGS");
   display->setFont(ArialMT_Plain_10);
   display->drawString(55,23,"ver. " + String(status.version));
 
