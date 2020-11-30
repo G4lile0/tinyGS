@@ -216,7 +216,7 @@ void setup() {
 
 void loop() {
     
-    static bool startDisplayTast = true;
+    static bool startDisplayTask = true;
     
   FailSafe.loop (BOOT_FLAG_TIMEOUT); // Use always this line
 
@@ -339,8 +339,8 @@ void loop() {
     return;
   }
 
-  if (startDisplayTast){
-    startDisplayTast = false;
+  if (startDisplayTask){
+    startDisplayTask = false;
     xTaskCreateUniversal (
             displayUpdate_task,           // Display loop function
             "Display Update",             // Task name
