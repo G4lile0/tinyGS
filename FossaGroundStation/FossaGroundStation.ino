@@ -211,14 +211,14 @@ void setup() {
     displayShowStaMode();
   }
   
-  xTaskCreateUniversal (
-      displayUpdate_task,           // Display loop function
-      "Display Update",             // Task name
-      4096,                         // Stack size
-      NULL,                         // Function argument, not needed
-      1,                            // Priority, running higher than 1 causes errors on MQTT comms
-      &dispUpdate_handle,           // Task handle
-      CONFIG_ARDUINO_RUNNING_CORE); // Running core, should be 1
+//   xTaskCreateUniversal (
+//       displayUpdate_task,           // Display loop function
+//       "Display Update",             // Task name
+//       4096,                         // Stack size
+//       NULL,                         // Function argument, not needed
+//       1,                            // Priority, running higher than 1 causes errors on MQTT comms
+//       &dispUpdate_handle,           // Task handle
+//       CONFIG_ARDUINO_RUNNING_CORE); // Running core, should be 1
   
   delay(500);  
  }
@@ -346,7 +346,7 @@ void loop() {
     return;
   }
 
-  //displayUpdate();
+  displayUpdate();
 
   radio.listen();
 }
