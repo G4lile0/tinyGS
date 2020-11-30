@@ -159,7 +159,7 @@ void wifiConnected() {
 void setup() {
   Serial.begin(115200);
   delay(299);
-  FailSafe.checkBoot (MAX_CONSECUTIVE_BOOT, LED); // Parameters are optional
+  FailSafe.checkBoot (MAX_CONSECUTIVE_BOOT); // Parameters are optional
   if (FailSafe.isActive ()) { // Skip all user setup if fail safe mode is activated
       return;
   }
