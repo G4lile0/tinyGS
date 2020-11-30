@@ -72,6 +72,7 @@
 #include "src/Radio/Radio.h"
 #include "src/ArduinoOTA/ArduinoOTA.h"
 #include <ESPNtpClient.h>
+#include <FailSafe.h>
 
 #if MQTT_MAX_PACKET_SIZE != 1000
 "Remeber to change libraries/PubSubClient/src/PubSubClient.h"
@@ -82,6 +83,8 @@
 "You are not using the correct version of RadioLib please copy ESP32-OLED-Fossa-GroundStation/lib/RadioLib on Arduino/libraries"
 #endif
 
+const int MAX_CONSECUTIVE_BOOT = 3; // Number of rapid boot cycles before enabling fail safe mode
+const time_t BOOT_FLAG_TIMEOUT = 10000; // Time in ms to reset fail safe mode activation flag
 
 ConfigManager& configManager = ConfigManager::getInstance();
 MQTT_Client& mqtt = MQTT_Client::getInstance();
@@ -156,6 +159,10 @@ void wifiConnected() {
 void setup() {
   Serial.begin(115200);
   delay(299);
+  FailSafe.checkBoot (MAX_CONSECUTIVE_BOOT, LED); // Parameters are optional
+  if (FailSafe.isActive ()) { // Skip all user setup if fail safe mode is activated
+      return;
+  }
   Serial.printf("Fossa Ground station Version %d\n", status.version);
   configManager.setWifiConnectionCallback(wifiConnected);
   configManager.init();
@@ -217,6 +224,13 @@ void setup() {
  }
 
 void loop() {
+    
+  FailSafe.loop (BOOT_FLAG_TIMEOUT); // Use always this line
+
+  if (FailSafe.isActive ()) { // Skip all user loop code if Fail Safe mode is active
+    return;
+  }
+    
   configManager.doLoop();
 
   static bool wasConnected = false;
