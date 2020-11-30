@@ -83,7 +83,7 @@
 "You are not using the correct version of RadioLib please copy ESP32-OLED-Fossa-GroundStation/lib/RadioLib on Arduino/libraries"
 #endif
 
-const int MAX_CONSECUTIVE_BOOT = 3; // Number of rapid boot cycles before enabling fail safe mode
+const int MAX_CONSECUTIVE_BOOT = 10; // Number of rapid boot cycles before enabling fail safe mode
 const time_t BOOT_FLAG_TIMEOUT = 10000; // Time in ms to reset fail safe mode activation flag
 
 ConfigManager& configManager = ConfigManager::getInstance();
@@ -211,19 +211,12 @@ void setup() {
     displayShowStaMode();
   }
   
-//   xTaskCreateUniversal (
-//       displayUpdate_task,           // Display loop function
-//       "Display Update",             // Task name
-//       4096,                         // Stack size
-//       NULL,                         // Function argument, not needed
-//       1,                            // Priority, running higher than 1 causes errors on MQTT comms
-//       &dispUpdate_handle,           // Task handle
-//       CONFIG_ARDUINO_RUNNING_CORE); // Running core, should be 1
-  
   delay(500);  
  }
 
 void loop() {
+    
+    static bool startDisplayTast = true;
     
   FailSafe.loop (BOOT_FLAG_TIMEOUT); // Use always this line
 
@@ -346,7 +339,19 @@ void loop() {
     return;
   }
 
-  displayUpdate();
+  if (startDisplayTast){
+    startDisplayTast = false;
+    xTaskCreateUniversal (
+            displayUpdate_task,           // Display loop function
+            "Display Update",             // Task name
+            4096,                         // Stack size
+            NULL,                         // Function argument, not needed
+            1,                            // Priority, running higher than 1 causes errors on MQTT comms
+            &dispUpdate_handle,           // Task handle
+            CONFIG_ARDUINO_RUNNING_CORE); // Running core, should be 1
+  }
+  
+  //displayUpdate();
 
   radio.listen();
 }
