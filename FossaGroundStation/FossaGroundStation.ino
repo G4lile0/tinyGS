@@ -83,7 +83,7 @@
 "You are not using the correct version of RadioLib please copy ESP32-OLED-Fossa-GroundStation/lib/RadioLib on Arduino/libraries"
 #endif
 
-const int MAX_CONSECUTIVE_BOOT = 10; // Number of rapid boot cycles before enabling fail safe mode
+const int MAX_CONSECUTIVE_BOOT = 3; // Number of rapid boot cycles before enabling fail safe mode
 const time_t BOOT_FLAG_TIMEOUT = 10000; // Time in ms to reset fail safe mode activation flag
 
 ConfigManager& configManager = ConfigManager::getInstance();
@@ -142,6 +142,7 @@ void wifiConnected() {
   NTP.onNTPSyncEvent (ntp_cb); // Register event callback
   NTP.setMinSyncAccuracy (2000); // Sync accuracy target is 2 ms
   NTP.settimeSyncThreshold (1000); // Sync only if calculated offset absolute value is greater than 1 ms
+  NTP.setMaxNumSyncRetry (2); // 2 resync trials if accuracy not reached
   NTP.begin (ntpServer); // Start NTP client
   
   time_t startedSync = millis ();
