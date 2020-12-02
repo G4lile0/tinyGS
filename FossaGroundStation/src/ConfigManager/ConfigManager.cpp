@@ -34,6 +34,8 @@ ConfigManager::ConfigManager()
   {      0x3c,       21,        22,       16,           0,        25,     false,    18,      0,     33,     32,    14,      19,     27,     5,     0.0f, "TTGO LoRa 32 V2 Modified with module SX126x (crystal)"  },// @TCRobotics
   {      0x3c,       21,        22,       16,           0,        25,     false,     5,      0,      2,     13,    26,      19,     23,    18,     1.6f, "Custom ESP32 Wroom + SX126x DRF1268T (TCX0) (5, 2, 26, 13)"  }, // @sdey76
   {      0x3c,       21,        22,       16,           0,        25,     false,     5,      0,     26,     12,    14,      19,     23,    18,     1.6f, "Custom ESP32 Wroom + SX126x DRF1268T (TCX0) (5, 26, 14, 12)"  }, // @imants
+  {      0x3c,       21,        22,       16,          38,        22,      true,    18,     26,     33,      0,    14,      19,     27,     5,     0.0f, "T-BEAM V1.0 + OLED"     }, // @fafu
+
   })
 {
   server.on(ROOT_URL, [this]{ handleRoot(); });
@@ -61,7 +63,7 @@ ConfigManager::ConfigManager()
   addParameter(&mqttPassParam);
   addParameter(&separatorBoard);
   addParameter(&boardParam);
-
+  addParameter(&oledBrightParam);
   addParameter(&txParam);
   addParameter(&remoteTuneParam);
   addParameter(&telemetry3rdParam);
@@ -257,7 +259,8 @@ void ConfigManager::printConfig() {
   Serial.print(getBoard());
   Serial.print(F(" -->  "));
   Serial.println(boards[getBoard()].BOARD);
-
+  Serial.print(F("OLED Bright: "));
+  Serial.println(getOledBright());
   Serial.print(F("TX "));
   Serial.println(getTx() ? "Enable" : "Disable");
   Serial.print(F("Remote Tune "));

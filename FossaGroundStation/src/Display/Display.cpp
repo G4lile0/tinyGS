@@ -44,6 +44,7 @@ unsigned long tick_interval;
 int tick_timing = 100;
 int graphVal = 1;
 int delta = 1;
+uint8_t oldOledBright = 100;
 
 void displayInit(){
   board_type board = ConfigManager::getInstance().getBoardConfig();
@@ -59,12 +60,13 @@ void displayInit(){
   ui->setFrames(frames, frameCount);
   ui->setOverlays(overlays, overlaysCount);
   ui->init();
-  display->flipScreenVertically();
-
   pinMode(board.OLED__RST,OUTPUT);
   digitalWrite(board.OLED__RST, LOW);     
   delay(50);
-  digitalWrite(board.OLED__RST, HIGH);
+  digitalWrite(board.OLED__RST, HIGH);   
+  display->init();
+  display->flipScreenVertically();
+
 }
 
 void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
@@ -87,10 +89,22 @@ void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
   const char* newTime = (const char*) thisTime.c_str();
   display->drawString(128, 0,  newTime  );
   if ((timeinfo.tm_hour < 6) || (timeinfo.tm_hour > 18) ) {display->normalDisplay();}  else {display->invertDisplay();}   // change the OLED according to the time. 
+  if (oldOledBright!=ConfigManager::getInstance().getOledBright()) {
+        oldOledBright = ConfigManager::getInstance().getOledBright(); 
+        if (ConfigManager::getInstance().getOledBright()==0) {
+              display->displayOff();
+              } else {
+                       display->setBrightness(2*ConfigManager::getInstance().getOledBright());
+                       }
+  }
+
+  
+
+
 }
 
 void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->drawXbm(x , y + 6, Fossa_Logo_width, Fossa_Logo_height, Fossa_Logo_bits);
+  display->drawXbm(x +10, y , Logo_width, Logo_height, Logo_bits);
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
   display->drawString( x+70, y + 32, "Sta: "+ String(ConfigManager::getInstance().getThingName()));
@@ -193,7 +207,7 @@ void drawFrame5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->setFont(ArialMT_Plain_10);
  
   if (status.satPos[0] == 0 && status.satPos[1] == 0) {
-    String msg = F("Waiting for FossaSat Pos");
+    String msg = F("Waiting for Sat Pos");
     display->drawString( 65+x,  49+y+(x/2), msg );
     display->drawString( 63+x,  51+y+(x/2), msg );
     display->setColor(WHITE);
@@ -334,11 +348,9 @@ void displayShowWaitingMqttConnection() {
 }
 
 void displayShowInitialCredits() {
-  display->init();
-  display->flipScreenVertically();
   display->setFont(ArialMT_Plain_16);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->drawString(0,5,"FossaSAT-1 Sta");
+  display->drawString(0,5,"tinnyGS");
   display->setFont(ArialMT_Plain_10);
   display->drawString(55,23,"ver. " + String(status.version));
 

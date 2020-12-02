@@ -71,24 +71,30 @@
 #include "src/Status.h"
 #include "src/Radio/Radio.h"
 #include "src/ArduinoOTA/ArduinoOTA.h"
+#include <ESPNtpClient.h>
+#include <FailSafe.h>
 
 #if MQTT_MAX_PACKET_SIZE != 1000
 "Remeber to change libraries/PubSubClient/src/PubSubClient.h"
         "#define MQTT_MAX_PACKET_SIZE 1000"
 #endif
 
-#if  RADIOLIB_VERSION_MAJOR != (0x04) || RADIOLIB_VERSION_MINOR != (0x00) || RADIOLIB_VERSION_PATCH != (0x04) || RADIOLIB_VERSION_EXTRA != (0x01)
+#if  RADIOLIB_VERSION_MAJOR != (0x04) || RADIOLIB_VERSION_MINOR != (0x00) || RADIOLIB_VERSION_PATCH != (0x04) || RADIOLIB_VERSION_EXTRA != (0x02)
 "You are not using the correct version of RadioLib please copy ESP32-OLED-Fossa-GroundStation/lib/RadioLib on Arduino/libraries"
 #endif
 
+const int MAX_CONSECUTIVE_BOOT = 3; // Number of rapid boot cycles before enabling fail safe mode
+const time_t BOOT_FLAG_TIMEOUT = 10000; // Time in ms to reset fail safe mode activation flag
 
 ConfigManager& configManager = ConfigManager::getInstance();
 MQTT_Client& mqtt = MQTT_Client::getInstance();
 Radio& radio = Radio::getInstance();
 
-const char* ntpServer = "pool.ntp.org";
-const long  gmtOffset_sec = 0; // 3600;         // 3600 for Spain
-const int   daylightOffset_sec = 0; // 3600;
+TaskHandle_t dispUpdate_handle;
+
+const char* ntpServer = "time.cloudflare.com";
+//const long  gmtOffset_sec = 0; // 3600;         // 3600 for Spain
+//const int   daylightOffset_sec = 0; // 3600;
 void printLocalTime();
 
 // Global status
@@ -96,6 +102,22 @@ Status status;
 
 void printControls();
 void switchTestmode();
+
+void ntp_cb (NTPEvent_t e){
+    switch (e.event) {
+        case timeSyncd:
+        case partialSync:
+            Serial.printf ("[NTP Event] %s\n", NTP.ntpEvent2str (e));
+        default:
+            break;
+    }
+}
+
+void displayUpdate_task (void* arg){
+    for (;;){
+        displayUpdate ();
+    }
+}
 
 void wifiConnected() {
   configManager.printConfig();
@@ -109,11 +131,23 @@ void wifiConnected() {
   }
 
   //init and get the time
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-  if (strcmp (configManager.getTZ(), "")) {
-	  setenv("TZ", configManager.getTZ(), 1);
-	  ESP_LOGD (LOG_TAG, "Set timezone value as %s", configManager.getTZ());
-	  tzset();
+//   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+//   if (strcmp (configManager.getTZ(), "")) {
+// 	  setenv("TZ", configManager.getTZ(), 1);
+// 	  ESP_LOGD (LOG_TAG, "Set timezone value as %s", configManager.getTZ());
+// 	  tzset();
+//   }
+  NTP.setInterval (120); // Sync each 2 minutes
+  NTP.setTimeZone (configManager.getTZ ()); // Get TX from config manager
+  NTP.onNTPSyncEvent (ntp_cb); // Register event callback
+  NTP.setMinSyncAccuracy (2000); // Sync accuracy target is 2 ms
+  NTP.settimeSyncThreshold (1000); // Sync only if calculated offset absolute value is greater than 1 ms
+  NTP.setMaxNumSyncRetry (2); // 2 resync trials if accuracy not reached
+  NTP.begin (ntpServer); // Start NTP client
+  
+  time_t startedSync = millis ();
+  while (NTP.syncStatus() != syncd && millis() - startedSync < 5000){ // Wait 5 seconds to get sync
+      delay (100);
   }
 
   printLocalTime();
@@ -129,6 +163,10 @@ void wifiConnected() {
 void setup() {
   Serial.begin(115200);
   delay(299);
+  FailSafe.checkBoot (MAX_CONSECUTIVE_BOOT); // Parameters are optional
+  if (FailSafe.isActive ()) { // Skip all user setup if fail safe mode is activated
+      return;
+  }
   Serial.printf("Fossa Ground station Version %d\n", status.version);
   configManager.setWifiConnectionCallback(wifiConnected);
   configManager.init();
@@ -176,10 +214,20 @@ void setup() {
   else {
     displayShowStaMode();
   }
+  
   delay(500);  
  }
 
 void loop() {
+    
+    static bool startDisplayTask = true;
+    
+  FailSafe.loop (BOOT_FLAG_TIMEOUT); // Use always this line
+
+  if (FailSafe.isActive ()) { // Skip all user loop code if Fail Safe mode is active
+    return;
+  }
+    
   configManager.doLoop();
 
   static bool wasConnected = false;
@@ -295,7 +343,19 @@ void loop() {
     return;
   }
 
-  displayUpdate();
+  if (startDisplayTask){
+    startDisplayTask = false;
+    xTaskCreateUniversal (
+            displayUpdate_task,           // Display loop function
+            "Display Update",             // Task name
+            4096,                         // Stack size
+            NULL,                         // Function argument, not needed
+            1,                            // Priority, running higher than 1 causes errors on MQTT comms
+            &dispUpdate_handle,           // Task handle
+            CONFIG_ARDUINO_RUNNING_CORE); // Running core, should be 1
+  }
+  
+  //displayUpdate();
 
   radio.listen();
 }

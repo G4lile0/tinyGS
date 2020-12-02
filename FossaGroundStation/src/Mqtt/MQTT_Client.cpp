@@ -221,7 +221,9 @@ void  MQTT_Client::sendRawPacket(String packet) {
   ConfigManager& configManager = ConfigManager::getInstance();
   time_t now;
   time(&now);
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(20);
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(21);
   DynamicJsonDocument doc(capacity);
   doc["station"] = configManager.getThingName();
   JsonArray station_location = doc.createNestedArray("station_location");
@@ -245,14 +247,19 @@ void  MQTT_Client::sendRawPacket(String packet) {
   doc["snr"] = status.lastPacketInfo.snr;
   doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
   doc["unix_GS_time"] = now;
+  doc["usec_time"] = (int64_t)tv.tv_usec + tv.tv_sec * 1000000ll;
   doc["CRC_error"] = status.lastPacketInfo.crc_error;
   doc["data"] = packet.c_str();
   doc["NORAD"] = status.modeminfo.NORAD;
   doc["test"] = status.test;
-  
   serializeJson(doc, Serial);
   char buffer[1536];
   serializeJson(doc, buffer);
+  delay(random(1000));  // ugly an quick blocking code to distribute the load on the backend
+  delay(random(1000));  //
+  delay(random(1000));  //
+  delay(random(1000));  //
+  delay(random(1000));  //
   publish(buildTopic(topicRawPacket).c_str(), buffer, false);
 }
 
@@ -262,12 +269,21 @@ void  MQTT_Client::sendStatus() {
   ConfigManager& configManager = ConfigManager::getInstance();
   time_t now;
   time(&now);
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(20);
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(26);
   DynamicJsonDocument doc(capacity);
   doc["station"] = configManager.getThingName();
   JsonArray station_location = doc.createNestedArray("station_location");
   station_location.add(configManager.getLatitude());
   station_location.add(configManager.getLongitude());
+
+  doc["version"] = status.version;
+  doc["board"] = configManager.getBoard();
+  doc["tx"] = status.tx;
+  doc["remoteTune"] = status.remoteTune;
+  doc["telemetry3d"] = status.telemetry3rd;
+  doc["test"] = status.test;
+
+
   doc["mode"] = status.modeminfo.modem_mode;
   doc["frequency"] = status.modeminfo.frequency;
   doc["satellite"] = status.modeminfo.satellite;
