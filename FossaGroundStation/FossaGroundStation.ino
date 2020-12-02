@@ -106,7 +106,7 @@ void switchTestmode();
 void ntp_cb (NTPEvent_t e){
     switch (e.event) {
         case timeSyncd:
-        case partialSync:
+        case partlySync:
             Serial.printf ("[NTP Event] %s\n", NTP.ntpEvent2str (e));
         default:
             break;
