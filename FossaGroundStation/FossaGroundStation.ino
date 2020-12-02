@@ -108,6 +108,8 @@ void ntp_cb (NTPEvent_t e){
         case timeSyncd:
         case partlySync:
             Serial.printf ("[NTP Event] %s\n", NTP.ntpEvent2str (e));
+            status.test=e.info.offset;
+              break;
         default:
             break;
     }

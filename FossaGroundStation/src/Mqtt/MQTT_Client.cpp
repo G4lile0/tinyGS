@@ -223,7 +223,7 @@ void  MQTT_Client::sendRawPacket(String packet) {
   time(&now);
   struct timeval tv;
   gettimeofday(&tv, NULL);
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(21);
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(22);
   DynamicJsonDocument doc(capacity);
   doc["station"] = configManager.getThingName();
   JsonArray station_location = doc.createNestedArray("station_location");
@@ -248,6 +248,7 @@ void  MQTT_Client::sendRawPacket(String packet) {
   doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
   doc["unix_GS_time"] = now;
   doc["usec_time"] = (int64_t)tv.tv_usec + tv.tv_sec * 1000000ll;
+  doc["time_offset"] = status.time_offset;
   doc["CRC_error"] = status.lastPacketInfo.crc_error;
   doc["data"] = packet.c_str();
   doc["NORAD"] = status.modeminfo.NORAD;
@@ -269,7 +270,9 @@ void  MQTT_Client::sendStatus() {
   ConfigManager& configManager = ConfigManager::getInstance();
   time_t now;
   time(&now);
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(26);
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(28);
   DynamicJsonDocument doc(capacity);
   doc["station"] = configManager.getThingName();
   JsonArray station_location = doc.createNestedArray("station_location");
@@ -309,8 +312,10 @@ void  MQTT_Client::sendStatus() {
   doc["rssi"] = status.lastPacketInfo.rssi;
   doc["snr"] = status.lastPacketInfo.snr;
   doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
-  doc["unix_GS_time"] = now;
   doc["CRC_error"] = status.lastPacketInfo.crc_error;
+  doc["unix_GS_time"] = now;
+  doc["usec_time"] = (int64_t)tv.tv_usec + tv.tv_sec * 1000000ll;
+  doc["time_offset"] = status.time_offset;
     
   serializeJson(doc, Serial);
   char buffer[1024];
