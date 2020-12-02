@@ -92,7 +92,7 @@ Radio& radio = Radio::getInstance();
 
 TaskHandle_t dispUpdate_handle;
 
-const char* ntpServer = "pool.ntp.org";
+const char* ntpServer = "time.cloudflare.com";
 //const long  gmtOffset_sec = 0; // 3600;         // 3600 for Spain
 //const int   daylightOffset_sec = 0; // 3600;
 void printLocalTime();
