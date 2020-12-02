@@ -116,7 +116,7 @@ void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->setFont(ArialMT_Plain_10);
   display->drawString(x,  y,  status.modeminfo.satellite);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString(64+ x,  12 + y,  String(status.modeminfo.modem_mode) + " @ " + String(status.modeminfo.frequency) + "MHz" );
+  display->drawString(64+ x,  12 + y,  String(status.modeminfo.modem_mode) + " @ " + String(status.modeminfo.frequency, 3) + "MHz" );
 //  display->drawString(x,  12 + y, "F:" );
 //  display->setTextAlignment(TEXT_ALIGN_RIGHT);
   
