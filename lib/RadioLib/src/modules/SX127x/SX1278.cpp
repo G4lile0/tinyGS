@@ -67,7 +67,7 @@ void SX1278::reset() {
 }
 
 int16_t SX1278::setFrequency(float freq) {
-  RADIOLIB_CHECK_RANGE(freq, 137.0, 1025.0, ERR_INVALID_FREQUENCY);
+  RADIOLIB_CHECK_RANGE(freq, 137.0, 525.0, ERR_INVALID_FREQUENCY);
 
   // SX1276/77/78 Errata fixes
   if(getActiveModem() == SX127X_LORA) {
@@ -439,6 +439,7 @@ float SX1278::getRSSI() {
 int16_t SX1278::setCRC(bool enableCRC) {
   if(getActiveModem() == SX127X_LORA) {
     // set LoRa CRC
+    SX127x::_crcEnabled = enableCRC;
     if(enableCRC) {
       return(_mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_2, SX1278_RX_CRC_MODE_ON, 2, 2));
     } else {
@@ -492,12 +493,12 @@ int16_t SX1278::setSpreadingFactorRaw(uint8_t newSpreadingFactor) {
   // write registers
   if(newSpreadingFactor == SX127X_SF_6) {
     state |= _mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_1, SX1278_HEADER_IMPL_MODE, 0, 0);
-    state |= _mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_2, SX127X_SF_6 | SX127X_TX_MODE_SINGLE | SX1278_RX_CRC_MODE_ON, 7, 2);
+    state |= _mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_2, SX127X_SF_6 | SX127X_TX_MODE_SINGLE | (SX127x::_crcEnabled ? SX1278_RX_CRC_MODE_ON : SX1278_RX_CRC_MODE_OFF), 7, 2);
     state |= _mod->SPIsetRegValue(SX127X_REG_DETECT_OPTIMIZE, SX127X_DETECT_OPTIMIZE_SF_6, 2, 0);
     state |= _mod->SPIsetRegValue(SX127X_REG_DETECTION_THRESHOLD, SX127X_DETECTION_THRESHOLD_SF_6);
   } else {
     state |= _mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_1, SX1278_HEADER_EXPL_MODE, 0, 0);
-    state |= _mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_2, newSpreadingFactor | SX127X_TX_MODE_SINGLE | SX1278_RX_CRC_MODE_ON, 7, 2);
+    state |= _mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_2, newSpreadingFactor | SX127X_TX_MODE_SINGLE | (SX127x::_crcEnabled ? SX1278_RX_CRC_MODE_ON : SX1278_RX_CRC_MODE_OFF), 7, 2);
     state |= _mod->SPIsetRegValue(SX127X_REG_DETECT_OPTIMIZE, SX127X_DETECT_OPTIMIZE_SF_7_12, 2, 0);
     state |= _mod->SPIsetRegValue(SX127X_REG_DETECTION_THRESHOLD, SX127X_DETECTION_THRESHOLD_SF_7_12);
   }

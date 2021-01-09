@@ -16,9 +16,8 @@ int16_t SX127x::begin(uint8_t chipVersion, uint8_t syncWord, uint16_t preambleLe
     RADIOLIB_DEBUG_PRINTLN(F("No SX127x found!"));
     _mod->term(RADIOLIB_USE_SPI);
     return(ERR_CHIP_NOT_FOUND);
-  } else {
-    RADIOLIB_DEBUG_PRINTLN(F("Found SX127x!"));
   }
+  RADIOLIB_DEBUG_PRINTLN(F("M\tSX127x"));
 
   // set mode to standby
   int16_t state = standby();
@@ -59,9 +58,8 @@ int16_t SX127x::beginFSK(uint8_t chipVersion, float br, float freqDev, float rxB
     RADIOLIB_DEBUG_PRINTLN(F("No SX127x found!"));
     _mod->term(RADIOLIB_USE_SPI);
     return(ERR_CHIP_NOT_FOUND);
-  } else {
-    RADIOLIB_DEBUG_PRINTLN(F("Found SX127x!"));
   }
+  RADIOLIB_DEBUG_PRINTLN(F("M\tSX127x"));
 
   // check currently active modem
   int16_t state;
@@ -490,11 +488,18 @@ int16_t SX127x::readData(uint8_t* data, size_t len) {
       length = getPacketLength();
     }
 
-    // check integrity CRC
+    // check packet header integrity
+    if(_crcEnabled && (_mod->SPIgetRegValue(SX127X_REG_HOP_CHANNEL, 6, 6)) == 0) {
+      // CRC is disabled according to packet header and enabled according to user
+      // most likely damaged packet header
+      clearIRQFlags();
+      return(ERR_LORA_HEADER_DAMAGED);
+    }
+
+    // check payload CRC
     if(_mod->SPIgetRegValue(SX127X_REG_IRQ_FLAGS, 5, 5) == SX127X_CLEAR_IRQ_FLAG_PAYLOAD_CRC_ERROR) {
       // clear interrupt flags
       clearIRQFlags();
-
       return(ERR_CRC_MISMATCH);
     }
 
@@ -983,6 +988,10 @@ uint8_t SX127x::random() {
   return(randByte);
 }
 
+int16_t SX127x::getChipVersion() {
+  return(_mod->SPIgetRegValue(SX127X_REG_VERSION));
+}
+
 int8_t SX127x::getTempRaw() {
   int8_t temp = 0;
   uint8_t previousOpMode;
@@ -1109,7 +1118,7 @@ bool SX127x::findChip(uint8_t ver) {
     reset();
 
     // check version register
-    uint8_t version = _mod->SPIreadRegister(SX127X_REG_VERSION);
+    int16_t version = getChipVersion();
     if(version == ver) {
       flagFound = true;
     } else {
@@ -1119,7 +1128,7 @@ bool SX127x::findChip(uint8_t ver) {
         RADIOLIB_DEBUG_PRINT(F(" of 10 tries) SX127X_REG_VERSION == "));
 
         char buffHex[12];
-        sprintf(buffHex, "0x%02X", version);
+        sprintf(buffHex, "0x%04X", version);
         RADIOLIB_DEBUG_PRINT(buffHex);
         RADIOLIB_DEBUG_PRINT(F(", expected 0x00"));
         RADIOLIB_DEBUG_PRINTLN(ver, HEX);

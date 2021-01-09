@@ -18,7 +18,7 @@ int16_t Si443x::begin(float br, float freqDev, float rxBw, uint8_t preambleLen) 
     _mod->term(RADIOLIB_USE_SPI);
     return(ERR_CHIP_NOT_FOUND);
   } else {
-    RADIOLIB_DEBUG_PRINTLN(F("Found Si443x!"));
+    RADIOLIB_DEBUG_PRINTLN(F("M\tSi443x"));
   }
 
   // clear POR interrupt
@@ -342,7 +342,7 @@ int16_t Si443x::setFrequencyDeviation(float freqDev) {
     if(state == ERR_NONE) {
       _freqDev = freqDev;
     }
-
+    return(state);
   }
 
   RADIOLIB_CHECK_RANGE(freqDev, 0.625, 320.0, ERR_INVALID_FREQUENCY_DEVIATION);
@@ -570,6 +570,10 @@ uint8_t Si443x::random() {
   standby();
 
   return(randByte);
+}
+
+int16_t Si443x::getChipVersion() {
+  return(_mod->SPIgetRegValue(SI443X_REG_DEVICE_VERSION));
 }
 
 int16_t Si443x::setFrequencyRaw(float newFreq) {

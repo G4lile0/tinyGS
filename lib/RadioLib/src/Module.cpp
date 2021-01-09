@@ -219,7 +219,7 @@ int16_t Module::SPIsetRegValue(uint8_t reg, uint8_t value, uint8_t msb, uint8_t 
   // check register value each millisecond until check interval is reached
   // some registers need a bit of time to process the change (e.g. SX127X_REG_OP_MODE)
   uint32_t start = Module::micros();
-  uint8_t readValue;
+  uint8_t readValue = 0x00;
   while(Module::micros() - start < (checkInterval * 1000)) {
     readValue = SPIreadRegister(reg);
     if(readValue == newValue) {
@@ -336,20 +336,33 @@ RADIOLIB_PIN_STATUS Module::digitalRead(RADIOLIB_PIN_TYPE pin) {
 }
 
 void Module::tone(RADIOLIB_PIN_TYPE pin, uint16_t value) {
-  // TODO add tone support for platforms without tone()
-  #ifndef RADIOLIB_TONE_UNSUPPORTED
-  if(pin != RADIOLIB_NC) {
-    ::tone(pin, value);
+  if(pin == RADIOLIB_NC) {
+    return;
   }
+
+  #if !defined(RADIOLIB_TONE_UNSUPPORTED)
+    ::tone(pin, value);
+  #else
+    #if defined(ESP32)
+      // ESP32 tone() emulation
+      ledcAttachPin(pin, RADIOLIB_TONE_ESP32_CHANNEL);
+      ledcWriteTone(RADIOLIB_TONE_ESP32_CHANNEL, value);
+    #endif
   #endif
 }
 
 void Module::noTone(RADIOLIB_PIN_TYPE pin) {
-  // TODO add tone support for platforms without noTone()
-  #ifndef RADIOLIB_TONE_UNSUPPORTED
-  if(pin != RADIOLIB_NC) {
-    ::noTone(pin);
+  if(pin == RADIOLIB_NC) {
+    return;
   }
+
+  #if !defined(RADIOLIB_TONE_UNSUPPORTED)
+    ::noTone(pin);
+  #else
+  #if defined(ESP32)
+    ledcDetachPin(pin);
+    ledcWrite(RADIOLIB_TONE_ESP32_CHANNEL, 0);
+  #endif
   #endif
 }
 

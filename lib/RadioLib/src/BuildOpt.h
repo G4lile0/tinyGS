@@ -85,7 +85,7 @@
   //#define RADIOLIB_EXCLUDE_SSTV
 
 #else
-  #if defined(__AVR__) && !(defined(ARDUINO_AVR_UNO_WIFI_REV2) || defined(ARDUINO_AVR_NANO_EVERY))
+  #if defined(__AVR__) && !(defined(ARDUINO_AVR_UNO_WIFI_REV2) || defined(ARDUINO_AVR_NANO_EVERY) || defined(ARDUINO_ARCH_MEGAAVR))
     // Arduino AVR boards (except for megaAVR) - Uno, Mega etc.
     #define RADIOLIB_PLATFORM                           "Arduino AVR"
     #define RADIOLIB_PIN_TYPE                           uint8_t
@@ -128,7 +128,10 @@
     #define RADIOLIB_PROGMEM_READ_BYTE(addr)            pgm_read_byte(addr)
     #define RADIOLIB_SOFTWARE_SERIAL_UNSUPPORTED
     #define RADIOLIB_HARDWARE_SERIAL_PORT               Serial1
+
+    // ESP32 doesn't support tone(), but it can be emulated via LED control peripheral
     #define RADIOLIB_TONE_UNSUPPORTED
+    #define RADIOLIB_TONE_ESP32_CHANNEL                 (1)
 
   #elif defined(ARDUINO_ARCH_STM32)
     // official STM32 Arduino core (https://github.com/stm32duino/Arduino_Core_STM32)
@@ -146,14 +149,29 @@
     #define RADIOLIB_HARDWARE_SERIAL_PORT               Serial1
 
   #elif defined(SAMD_SERIES)
-    // Arduino SAMD (Zero, MKR, etc.) and Adafruit SAMD boards (M0 and M4)
-    #define RADIOLIB_PLATFORM                           "Arduino/Adafruit SAMD"
+    // Adafruit SAMD boards (M0 and M4)
+    #define RADIOLIB_PLATFORM                           "Adafruit SAMD"
     #define RADIOLIB_PIN_TYPE                           uint32_t
     #define RADIOLIB_PIN_MODE                           uint32_t
     #define RADIOLIB_PIN_STATUS                         uint32_t
     #define RADIOLIB_INTERRUPT_STATUS                   RADIOLIB_PIN_STATUS
     #define RADIOLIB_DIGITAL_PIN_TO_INTERRUPT(p)        digitalPinToInterrupt(p)
     #define RADIOLIB_NC                                 (0xFFFFFFFF)
+    #define RADIOLIB_DEFAULT_SPI                        SPI
+    #define RADIOLIB_PROGMEM                            PROGMEM
+    #define RADIOLIB_PROGMEM_READ_BYTE(addr)            pgm_read_byte(addr)
+    #define RADIOLIB_SOFTWARE_SERIAL_UNSUPPORTED
+    #define RADIOLIB_HARDWARE_SERIAL_PORT               Serial1
+
+  #elif defined(ARDUINO_ARCH_SAMD)
+    // Arduino SAMD (Zero, MKR, etc.)
+    #define RADIOLIB_PLATFORM                           "Arduino SAMD"
+    #define RADIOLIB_PIN_TYPE                           pin_size_t
+    #define RADIOLIB_PIN_MODE                           PinMode
+    #define RADIOLIB_PIN_STATUS                         PinStatus
+    #define RADIOLIB_INTERRUPT_STATUS                   RADIOLIB_PIN_STATUS
+    #define RADIOLIB_DIGITAL_PIN_TO_INTERRUPT(p)        digitalPinToInterrupt(p)
+    #define RADIOLIB_NC                                 (0xFF)
     #define RADIOLIB_DEFAULT_SPI                        SPI
     #define RADIOLIB_PROGMEM                            PROGMEM
     #define RADIOLIB_PROGMEM_READ_BYTE(addr)            pgm_read_byte(addr)
@@ -229,7 +247,6 @@
     #define RADIOLIB_PROGMEM_READ_BYTE(addr)            pgm_read_byte(addr)
     #define RADIOLIB_SOFTWARE_SERIAL_UNSUPPORTED
     #define RADIOLIB_HARDWARE_SERIAL_PORT               Serial1
-    #define RADIOLIB_TONE_UNSUPPORTED
 
   #elif defined(ARDUINO_ARDUINO_NANO33BLE)
     // Arduino Nano 33 BLE
@@ -281,7 +298,19 @@
     #define RADIOLIB_PROGMEM_READ_BYTE(addr)            pgm_read_byte(addr)
     #define RADIOLIB_SOFTWARE_SERIAL_UNSUPPORTED
     #define RADIOLIB_HARDWARE_SERIAL_PORT               Serial1
-    #define RADIOLIB_TONE_UNSUPPORTED
+
+  #elif defined(ARDUINO_ARCH_MEGAAVR)
+    // MegaCoreX by MCUdude (https://github.com/MCUdude/MegaCoreX)
+    #define RADIOLIB_PLATFORM                           "MegaCoreX"
+    #define RADIOLIB_PIN_TYPE                           uint8_t
+    #define RADIOLIB_PIN_MODE                           uint8_t
+    #define RADIOLIB_PIN_STATUS                         uint8_t
+    #define RADIOLIB_INTERRUPT_STATUS                   RADIOLIB_PIN_STATUS
+    #define RADIOLIB_DIGITAL_PIN_TO_INTERRUPT(p)        digitalPinToInterrupt(p)
+    #define RADIOLIB_NC                                 (0xFF)
+    #define RADIOLIB_DEFAULT_SPI                        SPI
+    #define RADIOLIB_PROGMEM                            PROGMEM
+    #define RADIOLIB_PROGMEM_READ_BYTE(addr)            pgm_read_byte(addr)
 
   #else
     // other platforms not covered by the above list - this may or may not work
@@ -335,7 +364,7 @@
  * Warning: Come on, it's called GOD mode - obviously only use this if you know what you're doing.
  *          Failure to heed the above warning may result in bricked module.
  */
-#define RADIOLIB_GODMODE
+//#define RADIOLIB_GODMODE
 
 /*
  * Uncomment to enable pre-defined modules when using RadioShield.
@@ -364,12 +393,11 @@
 */
 #define RADIOLIB_CHECK_RANGE(VAR, MIN, MAX, ERR) { if(!(((VAR) >= (MIN)) && ((VAR) <= (MAX)))) { return(ERR); } }
 
-
 // version definitions
 #define RADIOLIB_VERSION_MAJOR  (0x04)
-#define RADIOLIB_VERSION_MINOR  (0x00)
-#define RADIOLIB_VERSION_PATCH  (0x04)
-#define RADIOLIB_VERSION_EXTRA  (0x02)
+#define RADIOLIB_VERSION_MINOR  (0x01)
+#define RADIOLIB_VERSION_PATCH  (0x00)
+#define RADIOLIB_VERSION_EXTRA  (0x00)
 
 #define RADIOLIB_VERSION ((RADIOLIB_VERSION_MAJOR << 24) | (RADIOLIB_VERSION_MINOR << 16) | (RADIOLIB_VERSION_PATCH << 8) | (RADIOLIB_VERSION_EXTRA))
 

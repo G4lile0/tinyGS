@@ -16,10 +16,9 @@ jobs:
           - arduino:avr:mega
           - arduino:avr:leonardo
           - arduino:mbed:nano33ble
-          - arduino-beta:mbed:envie_m4
+          - arduino:mbed:envie_m4
           - arduino:megaavr:uno2018
           - arduino:sam:arduino_due_x
-          - arduino:samd:arduino_zero_native
           - arduino:samd:arduino_zero_native
           - adafruit:samd:adafruit_feather_m0
           - adafruit:nrf52:feather52832
@@ -29,6 +28,7 @@ jobs:
           - SparkFun:apollo3:amap3redboard
           - STM32:stm32:GenF3
           - stm32duino:STM32F1:mapleMini
+          - MegaCoreX:megaavr:4809
 
     runs-on: ubuntu-latest
     name: ${{ matrix.board }}
@@ -119,6 +119,10 @@ jobs:
             # STM32 (unofficial core)
             echo "::set-output name=options:::bootloader_version=original,cpu_speed=speed_72mhz"
             echo "::set-output name=index-url::--additional-urls http://dan.drown.org/stm32duino/package_STM32duino_index.json"
+
+          elif [[ "${{ contains(matrix.board, 'MegaCoreX:megaavr') }}" == "true" ]]; then
+            # MegaCoreX
+            echo "::set-output name=index-url::--additional-urls https://mcudude.github.io/MegaCoreX/package_MCUdude_MegaCoreX_index.json"
 
           fi
 

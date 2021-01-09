@@ -361,6 +361,7 @@ float SX1272::getRSSI() {
 int16_t SX1272::setCRC(bool enableCRC) {
   if(getActiveModem() == SX127X_LORA) {
     // set LoRa CRC
+    SX127x::_crcEnabled = enableCRC;
     if(enableCRC) {
       return(_mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_2, SX1272_RX_CRC_MODE_ON, 2, 2));
     } else {
@@ -414,12 +415,12 @@ int16_t SX1272::setSpreadingFactorRaw(uint8_t newSpreadingFactor) {
 
   // write registers
   if(newSpreadingFactor == SX127X_SF_6) {
-    state |= _mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_1, SX1272_HEADER_IMPL_MODE | SX1272_RX_CRC_MODE_ON, 2, 1);
+    state |= _mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_1, SX1272_HEADER_IMPL_MODE | (SX127x::_crcEnabled ? SX1272_RX_CRC_MODE_ON : SX1272_RX_CRC_MODE_OFF), 2, 1);
     state |= _mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_2, SX127X_SF_6 | SX127X_TX_MODE_SINGLE, 7, 3);
     state |= _mod->SPIsetRegValue(SX127X_REG_DETECT_OPTIMIZE, SX127X_DETECT_OPTIMIZE_SF_6, 2, 0);
     state |= _mod->SPIsetRegValue(SX127X_REG_DETECTION_THRESHOLD, SX127X_DETECTION_THRESHOLD_SF_6);
   } else {
-    state |= _mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_1, SX1272_HEADER_EXPL_MODE | SX1272_RX_CRC_MODE_ON,  2, 1);
+    state |= _mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_1, SX1272_HEADER_EXPL_MODE | (SX127x::_crcEnabled ? SX1272_RX_CRC_MODE_ON : SX1272_RX_CRC_MODE_OFF),  2, 1);
     state |= _mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_2, newSpreadingFactor | SX127X_TX_MODE_SINGLE, 7, 3);
     state |= _mod->SPIsetRegValue(SX127X_REG_DETECT_OPTIMIZE, SX127X_DETECT_OPTIMIZE_SF_7_12, 2, 0);
     state |= _mod->SPIsetRegValue(SX127X_REG_DETECTION_THRESHOLD, SX127X_DETECTION_THRESHOLD_SF_7_12);

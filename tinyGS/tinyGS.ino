@@ -1,5 +1,5 @@
 /***********************************************************************
-  FossaGroundStation.ini - GroundStation firmware
+  tinyGS.ini - GroundStation firmware
   
   Copyright (C) 2020 @G4lile0, @gmag12 and @dev_4m1g0
 
@@ -19,7 +19,7 @@
   ***********************************************************************
 
   The aim of this project is to create an open network of ground stations
-  for the Fossa Satellites distributed all over the world and connected
+  for the LoRa Satellites distributed all over the world and connected
   through Internet.
   This project is based on ESP32 boards and is compatible with sx126x and
   sx127x you can build you own board using one of these modules but most
@@ -27,7 +27,7 @@
   boards section.
   The developers of this project have no relation with the Fossa team in
   charge of the mission, we are passionate about space and created this
-  project to be able to trackand use the satellites as well as supporting
+  project to be able to track and use the satellites as well as supporting
   the mission.
 
   Supported boards
@@ -79,9 +79,14 @@
         "#define MQTT_MAX_PACKET_SIZE 1000"
 #endif
 
-#if  RADIOLIB_VERSION_MAJOR != (0x04) || RADIOLIB_VERSION_MINOR != (0x00) || RADIOLIB_VERSION_PATCH != (0x04) || RADIOLIB_VERSION_EXTRA != (0x02)
+#if  RADIOLIB_VERSION_MAJOR != (0x04) || RADIOLIB_VERSION_MINOR != (0x01) || RADIOLIB_VERSION_PATCH != (0x00) || RADIOLIB_VERSION_EXTRA != (0x00)
 "You are not using the correct version of RadioLib please copy ESP32-OLED-Fossa-GroundStation/lib/RadioLib on Arduino/libraries"
 #endif
+
+#ifndef RADIOLIB_GODMODE
+"Seems you are using Arduino IDE, edit /RadioLib/src/BuildOpt.h and uncomment #define RADIOLIB_GODMODE around line 367" 
+#endif
+
 
 const int MAX_CONSECUTIVE_BOOT = 3; // Number of rapid boot cycles before enabling fail safe mode
 const time_t BOOT_FLAG_TIMEOUT = 10000; // Time in ms to reset fail safe mode activation flag
