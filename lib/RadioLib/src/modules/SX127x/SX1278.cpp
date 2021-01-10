@@ -67,7 +67,7 @@ void SX1278::reset() {
 }
 
 int16_t SX1278::setFrequency(float freq) {
-  RADIOLIB_CHECK_RANGE(freq, 137.0, 525.0, ERR_INVALID_FREQUENCY);
+  RADIOLIB_CHECK_RANGE(freq, 137.0, 1025.0, ERR_INVALID_FREQUENCY);
 
   // SX1276/77/78 Errata fixes
   if(getActiveModem() == SX127X_LORA) {
