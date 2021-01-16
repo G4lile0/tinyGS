@@ -485,6 +485,112 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteStatus)).
     radio.remote_status((char*)payload, length);
   }
 
+
+// Remote_Status       -m "[1]"     -t fossa/g4lile0/test_G4lile0_new/data/remote/JSON
+if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteJSON)).c_str()).c_str())) {
+    
+  Serial.println("JSON");
+  DynamicJsonDocument doc(2048);
+  char payloadStr[length+1];
+  memcpy(payloadStr, payload, length);
+  payloadStr[length] = '\0';
+  deserializeJson(doc, payloadStr);
+  JsonObject root = doc.as<JsonObject>();
+  for (JsonPair kv : root) {
+    Serial.print(kv.key().c_str());
+    Serial.print("  ");
+    Serial.print(kv.value().as<char*>());
+    Serial.print("  ");
+    Serial.println(String(kv.value().as<char*>()).length());
+
+      if (!strcmp(kv.key().c_str(),topicRemoteCrc)) {        
+        radio.remote_crc((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length() );
+      }
+
+      if (!strcmp(kv.key().c_str(),topicRemoteFreq)){
+        radio.remote_freq((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }
+
+      if (!strcmp(kv.key().c_str(),topicRemoteBl)){
+        radio.remote_begin_lora((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }
+
+      if (!strcmp(kv.key().c_str(),topicRemoteBw)){
+        radio.remote_bw((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }
+
+      if (!strcmp(kv.key().c_str(),topicRemoteSf)){
+        radio.remote_sf((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }
+
+      if (!strcmp(kv.key().c_str(),topicRemoteLsw)){
+        radio.remote_lsw((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }
+
+      if (!strcmp(kv.key().c_str(),topicRemoteFldro)){
+        radio.remote_fldro((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }
+
+      if (!strcmp(kv.key().c_str(),topicRemoteAldro)){
+        radio.remote_aldro((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }
+
+      if (!strcmp(kv.key().c_str(),topicRemotePl)){
+        radio.remote_pl((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }
+
+      if (!strcmp(kv.key().c_str(),topicRemoteFs)){
+        radio.remote_begin_fsk((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }
+
+      if (!strcmp(kv.key().c_str(),topicRemoteBr)){
+        radio.remote_br((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }      
+
+      if (!strcmp(kv.key().c_str(),topicRemoteFd)){
+        radio.remote_fd((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }
+
+      if (!strcmp(kv.key().c_str(),topicRemoteFbw)){
+        radio.remote_fbw((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }      
+
+      if (!strcmp(kv.key().c_str(),topicRemoteFsw)){
+        radio.remote_fbw((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }      
+
+      if (!strcmp(kv.key().c_str(),topicRemoteFbw)){
+        radio.remote_fsw((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }      
+
+
+      if (!strcmp(kv.key().c_str(),topicRemoteFook)){
+        radio.remote_fook((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }      
+
+     if (!strcmp(kv.key().c_str(),topicRemoteSat)){
+        radio.remote_sat((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }      
+
+     if (!strcmp(kv.key().c_str(),topicSPIsetRegValue)){
+        radio.remote_SPIsetRegValue((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }  
+
+     if (!strcmp(kv.key().c_str(),topicSPIwriteRegister)){
+        radio.remote_SPIwriteRegister((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }  
+
+     if (!strcmp(kv.key().c_str(),topicSPIreadRegister)){
+        radio.remote_SPIreadRegister((char*)kv.value().as<char*>(),String(kv.value().as<char*>()).length());
+      }        
+
+  }
+ }
+
+
+
+
+
  // GOD MODE  With great power comes great responsibility!
 // SPIsetRegValue  (only sx1278)     -m "[1,2,3,4,5]" -t fossa/g4lile0/test_G4lile0_new/data/remote/SPIsetRegValue
 if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicSPIsetRegValue)).c_str()).c_str()) || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicSPIsetRegValue) ).c_str()) && status.remoteTune )) {
@@ -499,9 +605,6 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicSPIwriteRegiste
 if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicSPIreadRegister)).c_str()).c_str()) || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicSPIreadRegister) ).c_str()) && status.remoteTune )) {
     radio.remote_SPIreadRegister((char*)payload, length);
   }
-
-
-
 // END GOD MODE
 
 }
