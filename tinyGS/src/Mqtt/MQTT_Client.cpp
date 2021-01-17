@@ -480,6 +480,13 @@ if ((!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteLocalFra
     radio.remote_local_frame((char*)payload, length);
   }
 
+// Remote_Frame_Local_       -m "[\"FossaSat-3\"]" -t fossa/g4lile0/test_G4lile0_new/data/remote/sat
+if ((!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteLocalFrame1)).c_str()).c_str()) && status.remoteTune )) {
+    radio.remote_local_frame1((char*)payload, length);
+  }
+
+
+
 // Remote_Status       -m "[1]"     -t fossa/g4lile0/test_G4lile0_new/data/remote/status
 if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteStatus)).c_str()).c_str())) {
     radio.remote_status((char*)payload, length);

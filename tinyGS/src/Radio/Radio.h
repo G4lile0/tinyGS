@@ -62,6 +62,8 @@ public:
   void remote_fook(char* payload, size_t payload_len);
   void remote_global_frame(char* payload, size_t payload_len);
   void remote_local_frame(char* payload, size_t payload_len);
+  void remote_local_frame1(char* payload, size_t payload_len);
+  void remote_local_frame2(char* payload, size_t payload_len);
   void remote_sat(char* payload, size_t payload_len);
   void remote_status(char* payload, size_t payload_len);
   void remote_SPIsetRegValue(char* payload, size_t payload_len);

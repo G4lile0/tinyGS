@@ -32,11 +32,11 @@ void drawFrame5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawFrame7(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawFrame8(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void drawFrame9(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
+// void drawFrame9(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 
 
-uint8_t frameCount = 9;
-FrameCallback frames[] = { drawFrame1, drawFrame2, drawFrame3, drawFrame4, drawFrame5, drawFrame6,drawFrame7, drawFrame8,drawFrame9 };
+uint8_t frameCount = 8;
+FrameCallback frames[] = { drawFrame1, drawFrame2, drawFrame3, drawFrame4, drawFrame5, drawFrame6,drawFrame7, drawFrame8 };
 uint8_t overlaysCount = 1;
 OverlayCallback overlays[] = { msOverlay };
 
@@ -111,37 +111,9 @@ void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->drawString( x+70, y + 44, status.test  ? "Test mode ON" : "Test mode OFF");
 }
 
+
+
 void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->setFont(ArialMT_Plain_10);
-  display->drawString(x,  y,  status.modeminfo.satellite);
-  display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString(64+ x,  12 + y,  String(status.modeminfo.modem_mode) + " @ " + String(status.modeminfo.frequency) + "MHz" );
-//  display->drawString(x,  12 + y, "F:" );
-//  display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-
-  if (String(status.modeminfo.modem_mode)=="LoRa") {
-      display->drawString(x,  23 + y, "SF: " + String(status.modeminfo.sf) );
-      display->drawString( x,  34 + y, "Pwr:"+ String(status.modeminfo.power) + "dBm" );
-      display->setTextAlignment(TEXT_ALIGN_RIGHT);
-      display->drawString(128+x,  23 + y,"BW:"+ String(status.modeminfo.bw)+ "kHz" );
-      display->drawString(128+x,  34 + y, "CR: "+ String(status.modeminfo.cr) );
-
-  } else {
-      display->drawString(x,  23 + y, "FD/BW: " );
-      display->drawString( x,  34 + y, "P:"+ String(status.modeminfo.power) + "dBm" );
-      display->setTextAlignment(TEXT_ALIGN_RIGHT);
-      display->drawString(128+x,  23 + y, String(status.modeminfo.freqDev)+ "/" + String(status.modeminfo.rxBw)+ "kHz" );
-      display->drawString(128+x,  34 + y, String(status.modeminfo.bitrate)+ "kbps");
-
-  }
-}
-
-
-
-void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
 //  display->setTextAlignment(TEXT_ALIGN_LEFT);
 //  display->setFont(ArialMT_Plain_10);
 //  display->drawString(x,  y,  "pantalla global");
@@ -182,21 +154,87 @@ void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 
 }
 
-void drawFrame4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+
+void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(x,  y,  status.modeminfo.satellite);
-  display->drawString(0 + x,  11 + y, "Last Packet: " );
-  display->drawString(64 + x,  11 + y, status.lastPacketInfo.time);
+  display->setTextAlignment(TEXT_ALIGN_CENTER);
+  display->drawString(64+ x,  12 + y,  String(status.modeminfo.modem_mode) + " @ " + String(status.modeminfo.frequency) + "MHz" );
+//  display->drawString(x,  12 + y, "F:" );
+//  display->setTextAlignment(TEXT_ALIGN_RIGHT);
+  
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
 
-  display->drawString( x,  23 + y, "RSSI: " );
-  display->drawString( 64+ x,  23 + y,  String(status.lastPacketInfo.rssi) + "dBm" );
+  if (String(status.modeminfo.modem_mode)=="LoRa") {
+      display->drawString(x,  23 + y, "SF: " + String(status.modeminfo.sf) );
+      display->drawString( x,  34 + y, "Pwr:"+ String(status.modeminfo.power) + "dBm" );
+      display->setTextAlignment(TEXT_ALIGN_RIGHT);
+      display->drawString(128+x,  23 + y,"BW:"+ String(status.modeminfo.bw)+ "kHz" );
+      display->drawString(128+x,  34 + y, "CR: "+ String(status.modeminfo.cr) );
 
-  display->drawString( x,  34 + y, "SNR:  " );
-  display->drawString( 64 +x,  34 + y,  String(status.lastPacketInfo.snr) + "dB" );
+  } else {
+      display->drawString(x,  23 + y, "FD/BW: " );
+      display->drawString( x,  34 + y, "P:"+ String(status.modeminfo.power) + "dBm" );
+      display->setTextAlignment(TEXT_ALIGN_RIGHT);
+      display->drawString(128+x,  23 + y, String(status.modeminfo.freqDev)+ "/" + String(status.modeminfo.rxBw)+ "kHz" );
+      display->drawString(128+x,  34 + y, String(status.modeminfo.bitrate)+ "kbps");
 
-  display->drawString( x, 45 + y, "Freq error: " );
-  display->drawString( 64 + x, 45 + y,  String(status.lastPacketInfo.frequencyerror) + " Hz");
+  }
+}
+
+
+
+
+void drawFrame4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+
+  if (status.local_frame_text_leght==0 ) {
+
+    display->setTextAlignment(TEXT_ALIGN_LEFT);
+    display->setFont(ArialMT_Plain_10);
+    display->drawString(x,  y,  status.modeminfo.satellite);
+    display->drawString(0 + x,  11 + y, "Last Packet: " );
+    display->drawString(64 + x,  11 + y, status.lastPacketInfo.time);
+    display->drawString( x,  23 + y, "RSSI/SNR: "+ String(status.lastPacketInfo.rssi) + "/"+ String(status.lastPacketInfo.snr) + "dB");
+    if (status.lastPacketInfo.crc_error) display->drawString( 30 + x,  34 + y, "CRC ERROR!" );
+    display->drawString( x, 45 + y, "Freq error: " );
+    display->drawString( 64 + x, 45 + y,  String(status.lastPacketInfo.frequencyerror) + " Hz");
+  }  else {
+
+
+  for (uint8_t n=0; n<status.local_frame_text_leght;n++){
+   switch (status.local_frame_text[n].text_font) {
+     case 2:
+      display->setFont(ArialMT_Plain_16);
+      break;
+
+      default:
+      display->setFont(ArialMT_Plain_10);
+      break;
+   }
+
+// 0 Left  1 Right  2 Center  3 Center Both
+   switch (status.local_frame_text[n].text_alignment) {
+     case 1:
+      display->setTextAlignment(TEXT_ALIGN_RIGHT);
+      break;
+     case 2:
+      display->setTextAlignment(TEXT_ALIGN_CENTER);
+      break;
+     case 3:
+      display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
+      break;
+
+      default:
+      display->setTextAlignment(TEXT_ALIGN_LEFT);
+      break;
+   }
+
+  display->drawString(x+status.local_frame_text[n].text_pos_x, y+ status.local_frame_text[n].text_pos_y,  status.local_frame_text[n].text);
+       }
+
+  }
+
 }
 
 void drawFrame5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
@@ -233,6 +271,41 @@ void drawFrame5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 }
 
 void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+
+    if (status.local_frame1_text_leght==0 ) ui->nextFrame();
+
+    for (uint8_t n=0; n<status.local_frame1_text_leght;n++){
+   switch (status.local_frame1_text[n].text_font) {
+     case 2:
+      display->setFont(ArialMT_Plain_16);
+      break;
+
+      default:
+      display->setFont(ArialMT_Plain_10);
+      break;
+   }
+
+// 0 Left  1 Right  2 Center  3 Center Both
+   switch (status.local_frame1_text[n].text_alignment) {
+     case 1:
+      display->setTextAlignment(TEXT_ALIGN_RIGHT);
+      break;
+     case 2:
+      display->setTextAlignment(TEXT_ALIGN_CENTER);
+      break;
+     case 3:
+      display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
+      break;
+
+      default:
+      display->setTextAlignment(TEXT_ALIGN_LEFT);
+      break;
+   }
+
+  display->drawString(x+status.local_frame1_text[n].text_pos_x, y+ status.local_frame1_text[n].text_pos_y,  status.local_frame1_text[n].text);
+       }
+
+/*
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(0 + x,  10 + y, "Solar panels:");
@@ -245,9 +318,46 @@ void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
     if (graphVal <= 1) {graphVal = 8; } // ramp up value
     if ((status.sysInfo.batteryVoltage == 0) &&  (status.sysInfo.batteryChargingVoltage ==0) && (status.sysInfo.batteryTemperature == 0))   ui->nextFrame();  // if not data received move to the next frame
   }
+*/
 }
 
 void drawFrame7(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+
+
+    if (status.local_frame2_text_leght==0 ) ui->nextFrame();
+
+    for (uint8_t n=0; n<status.local_frame2_text_leght;n++){
+   switch (status.local_frame2_text[n].text_font) {
+     case 2:
+      display->setFont(ArialMT_Plain_16);
+      break;
+
+      default:
+      display->setFont(ArialMT_Plain_10);
+      break;
+   }
+
+// 0 Left  1 Right  2 Center  3 Center Both
+   switch (status.local_frame2_text[n].text_alignment) {
+     case 1:
+      display->setTextAlignment(TEXT_ALIGN_RIGHT);
+      break;
+     case 2:
+      display->setTextAlignment(TEXT_ALIGN_CENTER);
+      break;
+     case 3:
+      display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
+      break;
+
+      default:
+      display->setTextAlignment(TEXT_ALIGN_LEFT);
+      break;
+   }
+
+  display->drawString(x+status.local_frame2_text[n].text_pos_x, y+ status.local_frame2_text[n].text_pos_y,  status.local_frame2_text[n].text);
+       }
+
+/*
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_10);
   display->drawXbm(x + 34, y + 22, bat_width, bat_height, bat_bits);
@@ -266,55 +376,12 @@ void drawFrame7(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   }
 
   display->fillRect(x+48, y+32+graphVal, 25 , 13-graphVal);
+*/
 }
+
 
 
 void drawFrame8(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-//  display->setTextAlignment(TEXT_ALIGN_LEFT);
-//  display->setFont(ArialMT_Plain_10);
-//  display->drawString(x,  y,  "pantalla rec local");
-
-
-  if (status.local_frame_text_leght==0 ) ui->nextFrame();
-
- for (uint8_t n=0; n<status.local_frame_text_leght;n++){
-   switch (status.local_frame_text[n].text_font) {
-     case 2:
-      display->setFont(ArialMT_Plain_16);
-      break;
-
-      default:
-      display->setFont(ArialMT_Plain_10);
-      break;
-   }
-
-// 0 Left  1 Right  2 Center  3 Center Both
-   switch (status.local_frame_text[n].text_alignment) {
-     case 1:
-      display->setTextAlignment(TEXT_ALIGN_RIGHT);
-      break;
-     case 2:
-      display->setTextAlignment(TEXT_ALIGN_CENTER);
-      break;
-     case 3:
-      display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
-      break;
-
-      default:
-      display->setTextAlignment(TEXT_ALIGN_LEFT);
-      break;
-   }
-
-  display->drawString(x+status.local_frame_text[n].text_pos_x, y+ status.local_frame_text[n].text_pos_y,  status.local_frame_text[n].text);
-       }
-
-
-
-
-}
-
-
-void drawFrame9(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->drawString( x+2,  16+y, "MQTT:" );
   if (status.mqtt_connected ) {display->drawString( x+7,  26+y, "ON" );}  else {display->drawString( x+5,  26+y, "OFF" );}
