@@ -38,7 +38,7 @@ constexpr auto MQTT_USER_LENGTH = 31;
 constexpr auto MQTT_PASS_LENGTH = 31;
 constexpr auto SSID_LENGTH = 32;
 constexpr auto PASS_LENGTH = 64;
-constexpr auto CHECKBOX_LENGTH = 4;
+constexpr auto CHECKBOX_LENGTH = 9;
 constexpr auto NUMBER_LEN = 32;
 
 
@@ -152,27 +152,6 @@ private:
         iotwebconf2::HtmlFormatProvider::getBodyInner();
     }
 
-    /* TODO: remove
-    String getFormParam(const char* type) override
-    {
-      if (!strcmp(type, "TZ")) {
-        String select = String(FPSTR(IOTWEBCONF_HTML_FORM_TZ_PARAM));
-        String find = "value='" + String(configManager.tz) + "'";
-        select.replace(find, find + " selected");
-        Serial.println(find);
-        return select;
-      }
-
-      if (!strcmp(type, "board")) {
-        String select = String(FPSTR(IOTWEBCONF_HTML_FORM_BOARD_PARAM));
-        String find = "value='" + String(configManager.board) + "'";
-        select.replace(find, find + " selected");
-        return select;
-      }
-
-      return iotwebconf2::HtmlFormatProvider::getFormParam(type);
-    }*/
-
     ConfigManager& configManager;
   };
 
@@ -202,11 +181,11 @@ private:
   char mqttUser[MQTT_USER_LENGTH] = "";
   char mqttPass[MQTT_PASS_LENGTH] = "";
   char board[BOARD_LENGTH] = "";
-  char oledBright[NUMBER_LEN] = ""; // FIXME: this has not the right size, has to be changed below too
-  char tx[NUMBER_LEN] = "";
-  char remoteTune[NUMBER_LEN] = "";
-  char telemetry3rd[NUMBER_LEN] = "";
-  char test[NUMBER_LEN] = "";
+  char oledBright[NUMBER_LEN] = "";
+  char tx[CHECKBOX_LENGTH] = "";
+  char remoteTune[CHECKBOX_LENGTH] = "";
+  char telemetry3rd[CHECKBOX_LENGTH] = "";
+  char test[CHECKBOX_LENGTH] = "";
 
 
 
@@ -223,12 +202,10 @@ private:
   iotwebconf2::ParameterGroup groupBoardConfig = iotwebconf2::ParameterGroup("Board config" , "Board config");
   iotwebconf2::SelectParameter boardParam = iotwebconf2::SelectParameter("Board type", "board", board, BOARD_LENGTH, (char*)BOARD_VALUES, (char*)BOARD_NAMES, sizeof(BOARD_VALUES) / BOARD_LENGTH, BOARD_NAME_LENGTH);
   iotwebconf2::NumberParameter oledBrightParam = iotwebconf2::NumberParameter("OLED Bright", "oledBright", oledBright, NUMBER_LEN, "100", "0..100", "min='0' max='100' step='1'");
-  iotwebconf2::CheckboxParameter txParam  = iotwebconf2::CheckboxParameter("Enable TX (HAM licence/ no preamp)", "tx", tx, NUMBER_LEN, true);
-  iotwebconf2::CheckboxParameter remoteTuneParam = iotwebconf2::CheckboxParameter("Allow Remote Tunning","remoteTune",remoteTune, NUMBER_LEN, true);
-  iotwebconf2::CheckboxParameter telemetry3rdParam = iotwebconf2::CheckboxParameter("Allow third party telemetry (sat owners,  satnog... )","telemetry3rd",telemetry3rd, NUMBER_LEN, true);
-  iotwebconf2::CheckboxParameter testParam = iotwebconf2::CheckboxParameter("Test mode","test",test, NUMBER_LEN, false);
-
-
+  iotwebconf2::CheckboxParameter txParam  = iotwebconf2::CheckboxParameter("Enable TX (HAM licence/ no preamp)", "tx", tx, CHECKBOX_LENGTH, true);
+  iotwebconf2::CheckboxParameter remoteTuneParam = iotwebconf2::CheckboxParameter("Allow Remote Tunning","remoteTune",remoteTune, CHECKBOX_LENGTH, true);
+  iotwebconf2::CheckboxParameter telemetry3rdParam = iotwebconf2::CheckboxParameter("Allow third party telemetry (sat owners,  satnog... )","telemetry3rd",telemetry3rd, CHECKBOX_LENGTH, true);
+  iotwebconf2::CheckboxParameter testParam = iotwebconf2::CheckboxParameter("Test mode","test",test, CHECKBOX_LENGTH, false);
 };
 
 #endif
