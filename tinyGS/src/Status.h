@@ -86,6 +86,7 @@ struct Local_Frame_Text {
 
 struct Status {
   const uint32_t version = 21011701; // version year month day release
+  const char* git_version = GIT_VERSION;
   bool mqtt_connected = false;
   SysInfo sysInfo;
   PacketInfo lastPacketInfo;

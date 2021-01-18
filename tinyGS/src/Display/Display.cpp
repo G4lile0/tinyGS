@@ -419,7 +419,7 @@ void displayShowInitialCredits() {
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->drawString(0,5,"tinnyGS");
   display->setFont(ArialMT_Plain_10);
-  display->drawString(55,23,"ver. " + String(status.version));
+  display->drawString(50,23,"ver. " + String(status.version));
 
   display->drawString(5,38,"by @gmag12 @4m1g0");
   display->drawString(40,52,"& @g4lile0");

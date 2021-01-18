@@ -89,13 +89,14 @@ void MQTT_Client::sendWelcome() {
   status.remoteTune = configManager.getRemoteTune();
   status.telemetry3rd = configManager.getTelemetry3rd();
   status.test = configManager.getTest(); 
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(16);
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(10) + 21 + 20;
   DynamicJsonDocument doc(capacity);
   doc["station"] = configManager.getThingName();
   JsonArray station_location = doc.createNestedArray("station_location");
   station_location.add(configManager.getLatitude());
   station_location.add(configManager.getLongitude());
   doc["version"] = status.version;
+  doc["git_version"] = status.git_version;
   doc["board"] = configManager.getBoard();
   doc["tx"] = status.tx;
   doc["remoteTune"] = status.remoteTune;

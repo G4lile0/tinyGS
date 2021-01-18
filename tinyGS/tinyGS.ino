@@ -80,7 +80,7 @@
 #endif
 
 #if  RADIOLIB_VERSION_MAJOR != (0x04) || RADIOLIB_VERSION_MINOR != (0x01) || RADIOLIB_VERSION_PATCH != (0x01) || RADIOLIB_VERSION_EXTRA != (0x00)
-#error "You are not using the correct version of RadioLib please copy ESP32-OLED-Fossa-GroundStation/lib/RadioLib on Arduino/libraries"
+#error "You are not using the correct version of RadioLib please copy TinyGS/lib/RadioLib on Arduino/libraries"
 #endif
 
 #ifndef RADIOLIB_GODMODE
@@ -174,7 +174,7 @@ void setup() {
   if (FailSafe.isActive ()) { // Skip all user setup if fail safe mode is activated
       return;
   }
-  Serial.printf("Fossa Ground station Version %d\n", status.version);
+  Serial.printf("TinyGS Version %d - %s\n", status.version, status.git_version);
   configManager.setWifiConnectionCallback(wifiConnected);
   configManager.init();
   // make sure to call doLoop at least once before starting to use the configManager

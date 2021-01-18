@@ -235,28 +235,6 @@ uint8_t Radio::listen() {
     //status.lastPacketInfo.frequencyerror = l->getFrequencyError();
   }
  
-  
-  
-  /*  On hold waiting for Fossa
-
-  // get function ID
-  uint8_t functionId = FCP_Get_FunctionID(callsign, respFrame, respLen);
-  Serial.print(F("Function ID: 0x"));
-  Serial.println(functionId, HEX);
-
-  // check optional data
-  uint8_t *respOptData = nullptr;
-  uint8_t respOptDataLen = FCP_Get_OptData_Length(callsign, respFrame, respLen);
-  Serial.print(F("Optional data ("));
-  Serial.print(respOptDataLen);
-  Serial.println(F(" bytes):"));
-  if(respOptDataLen > 0) {
-    // read optional data
-    respOptData = new uint8_t[respOptDataLen];
-    FCP_Get_OptData(callsign, respFrame, respLen, respOptData);
-    PRINT_BUFF(respFrame, respLen);
-  }
-*/
 
  if ((respLen > 0) && !(state == ERR_CRC_MISMATCH))  {
     // read optional data
