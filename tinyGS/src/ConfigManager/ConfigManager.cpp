@@ -152,10 +152,16 @@ bool ConfigManager::formValidator(iotwebconf2::WebRequestWrapper* webRequestWrap
   Serial.println("Validating form.");
   boolean valid = true;
 
-  int l = 4;//server.arg(stringParam.getId()).length();
-  if (l < 3)
+  String name = webRequestWrapper->arg(this->getThingNameParameter()->getId());
+  
+  if (name.length() < 3)
   {
-    //stringParam.errorMessage = "Please provide at least 3 characters for this test!";
+    this->getThingNameParameter()->errorMessage = "Your ground station name must have more then 3 characters and less then 25 and should be unique.";
+    valid = false;
+  }
+
+  if (!strcmp(name.c_str(), thingName)) {
+    this->getThingNameParameter()->errorMessage = "Please, change your station name to something unique. Be creative!";
     valid = false;
   }
 
