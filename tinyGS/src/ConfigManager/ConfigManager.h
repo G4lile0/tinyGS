@@ -48,14 +48,14 @@ constexpr auto DASHBOARD_URL = "/dashboard";
 constexpr auto UPDATE_URL = "/firmware";
 constexpr auto RESTART_URL = "/restart";
 
-const char TITLE_TEXT[] PROGMEM = "FOSSA Ground Satation Configuration";
+const char TITLE_TEXT[] PROGMEM = "TinyGS Configuration";
 
 
 constexpr auto thingName = "My TinyGS";
 constexpr auto initialApPassword = "";
 constexpr auto configVersion = "0.03"; //max 4 chars
 
-#define MQTT_DEFAULT_SERVER "fossa.apaluba.com"
+#define MQTT_DEFAULT_SERVER "mqtt.tinygs.com"
 #define MQTT_DEFAULT_PORT  "8883"
 
 constexpr auto AP_TIMEOUT_MS = "300000";
@@ -165,11 +165,11 @@ private:
   std::function<boolean(iotwebconf2::WebRequestWrapper*)> formValidatorStd;
   DNSServer dnsServer;
   WebServer server;
-/*#ifdef ESP8266
+#ifdef ESP8266
   ESP8266HTTPUpdateServer httpUpdater;
 #elif defined(ESP32)
   HTTPUpdateServer httpUpdater;
-#endif*/
+#endif
   GSConfigHtmlFormatProvider gsConfigHtmlFormatProvider;
   board_type boards[NUM_BOARDS]; 
 

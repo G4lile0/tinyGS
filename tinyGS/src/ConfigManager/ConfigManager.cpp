@@ -42,9 +42,9 @@ ConfigManager::ConfigManager()
   server.on(CONFIG_URL, [this]{ handleConfig(); });
   server.on(DASHBOARD_URL, [this]{ handleDashboard(); });
   server.on(RESTART_URL, [this]{ handleRestart(); });
-  /*setupUpdateServer(
+  setupUpdateServer(
     [this](const char* updatePath) { httpUpdater.setup(&server, updatePath); },
-    [this](const char* userName, char* password) { httpUpdater.updateCredentials(userName, password); });*/
+    [this](const char* userName, char* password) { httpUpdater.updateCredentials(userName, password); });
   setHtmlFormatProvider(&gsConfigHtmlFormatProvider);
   formValidatorStd = std::bind(&ConfigManager::formValidator, this, std::placeholders::_1);
   setFormValidator(formValidatorStd);
