@@ -377,7 +377,7 @@ void switchTestmode() {
       Serial.println(F("Changed from normal mode to test mode"));
   }
 
-  configManager.configSave();
+  configManager.saveConfig();
   status.test = configManager.getTest();
   // reset .. o welcome?
 

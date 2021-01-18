@@ -24,6 +24,12 @@
 #include <Wire.h>
 #include "htmlOptions.h"
 
+#ifdef ESP8266
+  #include "ESP8266HTTPUpdateServer.h"
+#elif defined(ESP32)
+  #include "IotWebConf2ESP32HTTPUpdateServer.h"
+#endif
+
 constexpr auto STATION_NAME_LENGTH = 21;
 constexpr auto COORDINATE_LENGTH = 10;
 constexpr auto MQTT_SERVER_LENGTH = 31;
@@ -32,8 +38,6 @@ constexpr auto MQTT_USER_LENGTH = 31;
 constexpr auto MQTT_PASS_LENGTH = 31;
 constexpr auto SSID_LENGTH = 32;
 constexpr auto PASS_LENGTH = 64;
-constexpr auto TZ_LENGTH = 40;
-constexpr auto BOARD_LENGTH = 3;
 constexpr auto CHECKBOX_LENGTH = 4;
 constexpr auto NUMBER_LEN = 32;
 
@@ -47,9 +51,9 @@ constexpr auto RESTART_URL = "/restart";
 const char TITLE_TEXT[] PROGMEM = "FOSSA Ground Satation Configuration";
 
 
-constexpr auto thingName = "test_GroundStation";
+constexpr auto thingName = "My TinyGS";
 constexpr auto initialApPassword = "";
-constexpr auto configVersion = "0.02"; //max 4 chars
+constexpr auto configVersion = "0.03"; //max 4 chars
 
 #define MQTT_DEFAULT_SERVER "fossa.apaluba.com"
 #define MQTT_DEFAULT_PORT  "8883"
@@ -117,10 +121,10 @@ public:
   bool getRemoteTune() { return atoi(remoteTune); }
   bool getTelemetry3rd() { return atoi(telemetry3rd); }
   bool getTest() { return atoi(test); }
-  void setTx(bool status) { itoa(status, tx, 10); this->configSave(); }
-  void setRemoteTune(bool status) { itoa(status, remoteTune, 10); this->configSave(); }
-  void setTelemetry3rd(bool status) { itoa(status, telemetry3rd, 10); this->configSave(); }
-  void setTest(bool status) { itoa(status, test, 10); this->configSave(); }
+  void setTx(bool status) { itoa(status, tx, 10); this->saveConfig(); }
+  void setRemoteTune(bool status) { itoa(status, remoteTune, 10); this->saveConfig(); }
+  void setTelemetry3rd(bool status) { itoa(status, telemetry3rd, 10); this->saveConfig(); }
+  void setTest(bool status) { itoa(status, test, 10); this->saveConfig(); }
 
   const char* getWiFiSSID() { return getWifiSsidParameter()->valueBuffer; }
   bool isApMode() { return (getState() != IOTWEBCONF_STATE_CONNECTING && getState() != IOTWEBCONF_STATE_ONLINE); }
@@ -130,7 +134,7 @@ public:
 
 private:
   
-  class GSConfigHtmlFormatProvider : public IotWebConfHtmlFormatProvider
+  class GSConfigHtmlFormatProvider : public iotwebconf2::HtmlFormatProvider
   {
   public:
     GSConfigHtmlFormatProvider(ConfigManager& x) : configManager(x) { }
@@ -138,16 +142,17 @@ private:
     String getScriptInner() override
     {
       return
-        IotWebConfHtmlFormatProvider::getScriptInner();
+        iotwebconf2::HtmlFormatProvider::getScriptInner();
         //String(FPSTR(CUSTOMHTML_SCRIPT_INNER));
     }
     String getBodyInner() override
     {
       return
         String(FPSTR(LOGO)) +
-        IotWebConfHtmlFormatProvider::getBodyInner();
+        iotwebconf2::HtmlFormatProvider::getBodyInner();
     }
 
+    /* TODO: remove
     String getFormParam(const char* type) override
     {
       if (!strcmp(type, "TZ")) {
@@ -165,8 +170,8 @@ private:
         return select;
       }
 
-      return IotWebConfHtmlFormatProvider::getFormParam(type);
-    }
+      return iotwebconf2::HtmlFormatProvider::getFormParam(type);
+    }*/
 
     ConfigManager& configManager;
   };
@@ -175,13 +180,17 @@ private:
   void handleRoot();
   void handleDashboard();
   void handleRestart();
-  bool formValidator();
+  bool formValidator(iotwebconf2::WebRequestWrapper* webRequestWrapper);
   void boardDetection();
   
-  std::function<boolean()> formValidatorStd;
+  std::function<boolean(iotwebconf2::WebRequestWrapper*)> formValidatorStd;
   DNSServer dnsServer;
   WebServer server;
+/*#ifdef ESP8266
+  ESP8266HTTPUpdateServer httpUpdater;
+#elif defined(ESP32)
   HTTPUpdateServer httpUpdater;
+#endif*/
   GSConfigHtmlFormatProvider gsConfigHtmlFormatProvider;
   board_type boards[NUM_BOARDS]; 
 
@@ -193,7 +202,7 @@ private:
   char mqttUser[MQTT_USER_LENGTH] = "";
   char mqttPass[MQTT_PASS_LENGTH] = "";
   char board[BOARD_LENGTH] = "";
-  char oledBright[NUMBER_LEN] = "";
+  char oledBright[NUMBER_LEN] = ""; // FIXME: this has not the right size, has to be changed below too
   char tx[NUMBER_LEN] = "";
   char remoteTune[NUMBER_LEN] = "";
   char telemetry3rd[NUMBER_LEN] = "";
@@ -201,23 +210,23 @@ private:
 
 
 
-  IotWebConfParameter latitudeParam = IotWebConfParameter("Latitude (will be public)", "lat", latitude, COORDINATE_LENGTH, "number", NULL, NULL, "required min='-180' max='180' step='0.001'");
-  IotWebConfParameter longitudeParam = IotWebConfParameter("Longitude (will be public)", "lng", longitude, COORDINATE_LENGTH, "number", NULL, NULL, "required min='-180' max='180' step='0.001'");
-  IotWebConfParameter tzParam = IotWebConfParameter("Time Zone", "tz", tz, TZ_LENGTH, "TZ", NULL, NULL);
+  iotwebconf2::NumberParameter latitudeParam = iotwebconf2::NumberParameter("Latitude (will be public)", "lat", latitude, COORDINATE_LENGTH, NULL, NULL, "required min='-180' max='180' step='0.001'");
+  iotwebconf2::NumberParameter longitudeParam = iotwebconf2::NumberParameter("Longitude (will be public)", "lng", longitude, COORDINATE_LENGTH, NULL, NULL, "required min='-180' max='180' step='0.001'");
+  iotwebconf2::SelectParameter tzParam = iotwebconf2::SelectParameter("Time Zone", "tz", tz, TZ_LENGTH, (char*)TZ_VALUES, (char*)TZ_NAMES, sizeof(TZ_VALUES) / TZ_LENGTH, TZ_NAME_LENGTH);
 
-  IotWebConfSeparator mqttSeparator = IotWebConfSeparator("Mqtt credentials (get them <a href='https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q'>here</a>)");
-  IotWebConfParameter mqttServerParam = IotWebConfParameter("Server address", "mqtt_server", mqttServer, MQTT_SERVER_LENGTH, "text", NULL, MQTT_DEFAULT_SERVER, "required type=\"text\" maxlength=30");
-  IotWebConfParameter mqttPortParam = IotWebConfParameter("Server Port", "mqtt_port", mqttPort, MQTT_PORT_LENGTH, "number", NULL, MQTT_DEFAULT_PORT, "required type=\"number\" min=\"0\" max=\"65536\" step=\"1\"");
-  IotWebConfParameter mqttUserParam = IotWebConfParameter("MQTT Username", "mqtt_user", mqttUser, MQTT_USER_LENGTH, "text", NULL, NULL, "required type=\"text\" maxlength=30");
-  IotWebConfParameter mqttPassParam = IotWebConfParameter("MQTT Password", "mqtt_pass", mqttPass, MQTT_PASS_LENGTH, "text", NULL, NULL, "required type=\"text\" maxlength=30");
+  iotwebconf2::ParameterGroup groupMqtt = iotwebconf2::ParameterGroup("MQTT credentials" , "MQTT credentials (get them <a href='https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q'>here</a>)");
+  iotwebconf2::TextParameter mqttServerParam = iotwebconf2::TextParameter("Server address", "mqtt_server", mqttServer, MQTT_SERVER_LENGTH, MQTT_DEFAULT_SERVER, MQTT_DEFAULT_SERVER, "required type=\"text\" maxlength=30");
+  iotwebconf2::NumberParameter mqttPortParam = iotwebconf2::NumberParameter("Server Port", "mqtt_port", mqttPort, MQTT_PORT_LENGTH, MQTT_DEFAULT_PORT, MQTT_DEFAULT_PORT, "required min=\"0\" max=\"65536\" step=\"1\"");
+  iotwebconf2::TextParameter mqttUserParam = iotwebconf2::TextParameter("MQTT Username", "mqtt_user", mqttUser, MQTT_USER_LENGTH, NULL, NULL, "required type=\"text\" maxlength=30");
+  iotwebconf2::TextParameter mqttPassParam = iotwebconf2::TextParameter("MQTT Password", "mqtt_pass", mqttPass, MQTT_PASS_LENGTH, NULL, NULL, "required type=\"text\" maxlength=30");
 
-  IotWebConfSeparator separatorBoard = IotWebConfSeparator("Board config");
-  IotWebConfParameter boardParam = IotWebConfParameter("Board type", "board", board, BOARD_LENGTH, "board", NULL, NULL);
-  IotWebConfParameter oledBrightParam = IotWebConfParameter("OLED Bright", "oledBright", oledBright, NUMBER_LEN, "number", "0..100", NULL, "min='0' max='100' step='1'");
-  IotWebConfParameter txParam  =IotWebConfParameter("OFF <----  Enable TX (HAM licence/ no preamp) ----> ON", "tx", tx, NUMBER_LEN, "range", "0", "0","data-labels='Off|On' min='0' max='1' step='1'");
-  IotWebConfParameter remoteTuneParam = IotWebConfParameter("OFF <----------- Enable Remote Tunning ------------> ON","remoteTune",remoteTune, NUMBER_LEN, "range", "0", "0","data-labels='Off|On' min='0' max='1' step='1'");
-  IotWebConfParameter telemetry3rdParam = IotWebConfParameter("OFF <-- Enable third party telemetry (sat owners,  satnog... ) --> ON","telemetry3rd",telemetry3rd, NUMBER_LEN, "range", "0", "0","data-labels='Off|On' min='0' max='1' step='1'");
-  IotWebConfParameter testParam = IotWebConfParameter("OFF <------------- Enable Test mode ---------------> ON","test",test, NUMBER_LEN, "range", "0", "0","data-labels='Off|On' min='0' max='1' step='1'");
+  iotwebconf2::ParameterGroup groupBoardConfig = iotwebconf2::ParameterGroup("Board config" , "Board config");
+  iotwebconf2::SelectParameter boardParam = iotwebconf2::SelectParameter("Board type", "board", board, BOARD_LENGTH, (char*)BOARD_VALUES, (char*)BOARD_NAMES, sizeof(BOARD_VALUES) / BOARD_LENGTH, BOARD_NAME_LENGTH);
+  iotwebconf2::NumberParameter oledBrightParam = iotwebconf2::NumberParameter("OLED Bright", "oledBright", oledBright, NUMBER_LEN, "100", "0..100", "min='0' max='100' step='1'");
+  iotwebconf2::CheckboxParameter txParam  = iotwebconf2::CheckboxParameter("Enable TX (HAM licence/ no preamp)", "tx", tx, NUMBER_LEN, true);
+  iotwebconf2::CheckboxParameter remoteTuneParam = iotwebconf2::CheckboxParameter("Allow Remote Tunning","remoteTune",remoteTune, NUMBER_LEN, true);
+  iotwebconf2::CheckboxParameter telemetry3rdParam = iotwebconf2::CheckboxParameter("Allow third party telemetry (sat owners,  satnog... )","telemetry3rd",telemetry3rd, NUMBER_LEN, true);
+  iotwebconf2::CheckboxParameter testParam = iotwebconf2::CheckboxParameter("Test mode","test",test, NUMBER_LEN, false);
 
 
 };

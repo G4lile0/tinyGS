@@ -42,9 +42,11 @@ ConfigManager::ConfigManager()
   server.on(CONFIG_URL, [this]{ handleConfig(); });
   server.on(DASHBOARD_URL, [this]{ handleDashboard(); });
   server.on(RESTART_URL, [this]{ handleRestart(); });
-  setupUpdateServer(&httpUpdater);
+  /*setupUpdateServer(
+    [this](const char* updatePath) { httpUpdater.setup(&server, updatePath); },
+    [this](const char* userName, char* password) { httpUpdater.updateCredentials(userName, password); });*/
   setHtmlFormatProvider(&gsConfigHtmlFormatProvider);
-  formValidatorStd = std::bind(&ConfigManager::formValidator, this);
+  formValidatorStd = std::bind(&ConfigManager::formValidator, this, std::placeholders::_1);
   setFormValidator(formValidatorStd);
   skipApStartup();
   
@@ -53,27 +55,28 @@ ConfigManager::ConfigManager()
   getThingNameParameter()->label = "GroundStation Name";
   getApPasswordParameter()->label = "GroundStation dashboard password";
 
-  addParameter(&latitudeParam);
-  addParameter(&longitudeParam);
-  addParameter(&tzParam);
-  addParameter(&mqttSeparator);
-  addParameter(&mqttServerParam);
-  addParameter(&mqttPortParam);
-  addParameter(&mqttUserParam);
-  addParameter(&mqttPassParam);
-  addParameter(&separatorBoard);
-  addParameter(&boardParam);
-  addParameter(&oledBrightParam);
-  addParameter(&txParam);
-  addParameter(&remoteTuneParam);
-  addParameter(&telemetry3rdParam);
-  addParameter(&testParam);
-    
+  addSystemParameter(&latitudeParam);
+  addSystemParameter(&longitudeParam);
+  addSystemParameter(&tzParam);
+
+  groupMqtt.addItem(&mqttServerParam);
+  groupMqtt.addItem(&mqttPortParam);
+  groupMqtt.addItem(&mqttUserParam);
+  groupMqtt.addItem(&mqttPassParam);
+  addParameterGroup(&groupMqtt);
+
+  groupBoardConfig.addItem(&boardParam);
+  groupBoardConfig.addItem(&oledBrightParam);
+  groupBoardConfig.addItem(&txParam);
+  groupBoardConfig.addItem(&remoteTuneParam);
+  groupBoardConfig.addItem(&telemetry3rdParam);
+  groupBoardConfig.addItem(&testParam);
+  addParameterGroup(&groupBoardConfig);
 }
 
 void ConfigManager::handleRoot()
 {
-  // -- Let IotWebConf test and handle captive portal requests.
+  // -- Let IotWebConf2 test and handle captive portal requests.
   if (handleCaptivePortal())
   {
     // -- Captive portal request were already served.
@@ -144,7 +147,7 @@ void ConfigManager::handleRestart() {
   ESP.restart();
 }
 
-bool ConfigManager::formValidator()
+bool ConfigManager::formValidator(iotwebconf2::WebRequestWrapper* webRequestWrapper)
 {
   Serial.println("Validating form.");
   boolean valid = true;
@@ -165,7 +168,8 @@ void ConfigManager::resetAPConfig() {
   strncpy(getApPasswordParameter()->valueBuffer, initialApPassword, IOTWEBCONF_WORD_LEN);
   strncpy(getThingNameParameter()->valueBuffer, thingName, IOTWEBCONF_WORD_LEN);
   strncpy(getThingName(), thingName, IOTWEBCONF_WORD_LEN);
-  configSave();
+
+  saveConfig();
 }
 
 void ConfigManager::resetAllConfig(){
@@ -179,7 +183,7 @@ void ConfigManager::resetAllConfig(){
   mqttUserParam.valueBuffer[0] = '\0';
   mqttPassParam.valueBuffer[0] = '\0';
 
-  configSave();
+  saveConfig();
 }
 
 boolean ConfigManager::init() {
