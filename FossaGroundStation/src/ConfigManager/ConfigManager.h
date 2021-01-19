@@ -1,6 +1,6 @@
 /*
   ConfigManager.h - Config Manager class
-  
+
   Copyright (C) 2020 @G4lile0, @gmag12 and @dev_4m1g0
 
   This program is free software: you can redistribute it and/or modify
@@ -63,6 +63,7 @@ enum boardNum {
   TTGO_V2_SX126X_XTAL,
   ESP32_SX126X_TXC0_1,
   ESP32_SX126X_TXC0_2,
+  ESP32_SX126X_TXC0_1W,
 
   NUM_BOARDS //this line always has to be the last one
 };
@@ -76,12 +77,12 @@ typedef struct {
    uint8_t  BOARD_LED;
    bool     L_SX127X;
    uint8_t  L_NSS;        // CS
-   uint8_t  L_DI00;        
+   uint8_t  L_DI00;
    uint8_t  L_DI01;
-   uint8_t  L_BUSSY;        
+   uint8_t  L_BUSSY;
    uint8_t  L_RST;
    uint8_t  L_MISO;
-   uint8_t  L_MOSI;        
+   uint8_t  L_MOSI;
    uint8_t  L_SCK;
    float    L_TCXO_V;
    String   BOARD;
@@ -115,7 +116,7 @@ public:
   board_type getBoardConfig(){ return boards[getBoard()]; }
 
 private:
-  
+
   class GSConfigHtmlFormatProvider : public IotWebConfHtmlFormatProvider
   {
   public:
@@ -163,13 +164,13 @@ private:
   void handleRestart();
   bool formValidator();
   void boardDetection();
-  
+
   std::function<boolean()> formValidatorStd;
   DNSServer dnsServer;
   WebServer server;
   HTTPUpdateServer httpUpdater;
   GSConfigHtmlFormatProvider gsConfigHtmlFormatProvider;
-  board_type boards[NUM_BOARDS]; 
+  board_type boards[NUM_BOARDS];
 
   char latitude[COORDINATE_LENGTH] = "";
   char longitude[COORDINATE_LENGTH] = "";

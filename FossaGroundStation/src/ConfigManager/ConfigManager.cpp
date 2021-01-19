@@ -1,6 +1,6 @@
 /*
   ConfigManager.cpp - Config Manager class
-  
+
   Copyright (C) 2020 @G4lile0, @gmag12 and @dev_4m1g0
 
   This program is free software: you can redistribute it and/or modify
@@ -24,16 +24,17 @@ ConfigManager::ConfigManager()
 , server(80)
 , gsConfigHtmlFormatProvider(*this)
 , boards({
-  //OLED_add, OLED_SDA,  OLED_SCL, OLED_RST, PROG_BUTTON, BOARD_LED, L_SX127X?, L_NSS, L_DI00, L_DI01, L_BUSSY, L_RST,  L_MISO, L_MOSI, L_SCK, L_TCXO_V, BOARD 
+  //OLED_add, OLED_SDA,  OLED_SCL, OLED_RST, PROG_BUTTON, BOARD_LED, L_SX127X?, L_NSS, L_DI00, L_DI01, L_BUSSY, L_RST,  L_MISO, L_MOSI, L_SCK, L_TCXO_V, BOARD
   {      0x3c,        4,        15,       16,           0,        25,      true,    18,     26,     12,      0,    14,      19,     27,     5,     0.0f, "HELTEC WiFi LoRA 32 V1" }, // @4m1g0
   {      0x3c,        4,        15,       16,           0,        25,      true,    18,     26,     35,      0,    14,      19,     27,     5,     0.0f, "HELTEC WiFi LoRA 32 V2" }, // @4m1g0
   {      0x3c,        4,        15,       16,           0,         2,      true,    18,     26,      0,      0,    14,      19,     27,     5,     0.0f, "TTGO LoRa 32 v1"        }, // @g4lile0
   {      0x3c,       21,        22,       16,           0,        22,      true,    18,     26,     33,      0,    14,      19,     27,     5,     0.0f, "TTGO LoRA 32 v2"        }, // @TCRobotics
-  {      0x3c,       21,        22,       16,          39,        22,      true,    18,     26,     33,     32,    14,      19,     27,     5,     0.0f, "T-BEAM + OLED"        }, 
+  {      0x3c,       21,        22,       16,          39,        22,      true,    18,     26,     33,     32,    14,      19,     27,     5,     0.0f, "T-BEAM + OLED"        },
   {      0x3c,       21,        22,       16,           0,        25,     false,     5,      0,     27,     26,    14,      19,     23,    18,     0.0f, "Custom ESP32 Wroom + SX126x (Crystal)"  }, // @4m1g0, @lillefyr
   {      0x3c,       21,        22,       16,           0,        25,     false,    18,      0,     33,     32,    14,      19,     27,     5,     0.0f, "TTGO LoRa 32 V2 Modified with module SX126x (crystal)"  },// @TCRobotics
   {      0x3c,       21,        22,       16,           0,        25,     false,     5,      0,      2,     13,    26,      19,     23,    18,     1.6f, "Custom ESP32 Wroom + SX126x DRF1268T (TCX0) (5, 2, 26, 13)"  }, // @sdey76
   {      0x3c,       21,        22,       16,           0,        25,     false,     5,      0,     26,     12,    14,      19,     23,    18,     1.6f, "Custom ESP32 Wroom + SX126x DRF1268T (TCX0) (5, 26, 14, 12)"  }, // @imants
+  {      0x3c,       21,        22,       16,           0,         2,     false,     5,      0,     34,     32,    14,      19,     27,    18,     1.6f, "FOSSA 1W Ground Station"  }, // @jgromes
   })
 {
   server.on(ROOT_URL, [this]{ handleRoot(); });
@@ -45,7 +46,7 @@ ConfigManager::ConfigManager()
   formValidatorStd = std::bind(&ConfigManager::formValidator, this);
   setFormValidator(formValidatorStd);
   skipApStartup();
-  
+
 
   // Customize own parameters
   getThingNameParameter()->label = "GroundStation Name";
@@ -206,31 +207,31 @@ void ConfigManager::boardDetection() {
     Serial.print(F(" MOSI:"));     Serial.print(boards[ite].L_MOSI);
     Serial.print(F(" MISO:"));     Serial.print(boards[ite].L_MISO);
     Serial.print(F(" SCK:"));      Serial.print(boards[ite].L_SCK);
-      
+
     if (boards[ite].L_DI00) {Serial.print(F(" DI00:")); Serial.print(boards[ite].L_DI00);}
     if (boards[ite].L_DI01) {Serial.print(F(" DI01:")); Serial.print(boards[ite].L_DI01);}
     if (boards[ite].L_BUSSY) {Serial.print(F(" BUSSY:")); Serial.print(boards[ite].L_BUSSY);}
-    Serial.println("");   
+    Serial.println("");
   }
-  
+
   // test OLED configuration
   Serial.println(F("Seaching for a compatible BOARD"));
   for (uint8_t ite=0; ite<((sizeof(boards)/sizeof(boards[0])));ite++) {
     Serial.print(boards[ite].BOARD);
     pinMode(boards[ite].OLED__RST,OUTPUT);
-    digitalWrite(boards[ite].OLED__RST, LOW);     
+    digitalWrite(boards[ite].OLED__RST, LOW);
     delay(50);
     digitalWrite(boards[ite].OLED__RST, HIGH);
     Wire.begin (boards[ite].OLED__SDA, boards[ite].OLED__SCL);
     Wire.beginTransmission(boards[ite].OLED__address);
-    if (!Wire.endTransmission()) { 
-      Serial.println(F("  Compatible OLED FOUND")); 
+    if (!Wire.endTransmission()) {
+      Serial.println(F("  Compatible OLED FOUND"));
       itoa(ite, board, 10);
       break;
     }
     else {
       Serial.println(F("  Not Compatible"));
-    } 
+    }
   }
 }
 
