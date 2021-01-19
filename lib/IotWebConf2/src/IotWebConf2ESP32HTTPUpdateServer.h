@@ -1,33 +1,14 @@
 /**
- * IotWebConfCompatibility.h -- IotWebConf is an ESP8266/ESP32
+ * IotWebConfESP32HTTPUpdateServer.h -- IotWebConf is an ESP8266/ESP32
  *   non blocking WiFi/AP web configuration library for Arduino.
  *   https://github.com/prampec/IotWebConf
  *
- * Copyright (C) 2018 Balazs Kelemen <prampec+arduino@gmail.com>
+ * Copyright (C) 2020 Balazs Kelemen <prampec+arduino@gmail.com>
  *
  * This software may be modified and distributed under the terms
  * of the MIT license.  See the LICENSE file for details.
  *
- * Notes on IotWebConfCompatibility:
- * This file contains workarounds, and borrowed codes from other projects,
- * to keep IotWebConf code more simple and more general. See details
- * in comments for code segments bellow this file.
- *
- */
-
-/**
- * ESP8266 still uses these special naming for their classes, while
- * ESP32 uses a more general one. So for the time being, we are
- * creating local aliases for those.
- */
-#ifdef ESP8266
-# define WebServer ESP8266WebServer
-# define HTTPUpdateServer ESP8266HTTPUpdateServer
-#endif
-
-
-
-/**
+ * Notes on IotWebConfESP32HTTPUpdateServer:
  * ESP32 doesn't implement a HTTPUpdateServer. However it seams, that to code
  * from ESP8266 covers nearly all the same functionality.
  * So we need to implement our own HTTPUpdateServer for ESP32, and code is
@@ -89,6 +70,18 @@ class HTTPUpdateServer
     bool _authenticated;
     String _updaterError;
 };
+
+/////////////////////////////////////////////////////////////////////////////////
+
+static const char serverIndex[] PROGMEM =
+  R"(<html><body><form method='POST' action='' enctype='multipart/form-data'>
+                  <input type='file' name='update'>
+                  <input type='submit' value='Update'>
+               </form>
+         </body></html>)";
+static const char successResponse[] PROGMEM = 
+  "<META http-equiv=\"refresh\" content=\"15;URL=/\">Update Success! Rebooting...\n";
+
 #endif
 
 #endif

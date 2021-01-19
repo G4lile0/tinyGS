@@ -3,7 +3,7 @@
  *   non blocking WiFi/AP web configuration library for Arduino.
  *   https://github.com/prampec/IotWebConf 
  *
- * Copyright (C) 2018 Balazs Kelemen <prampec+arduino@gmail.com>
+ * Copyright (C) 2020 Balazs Kelemen <prampec+arduino@gmail.com>
  *
  * This software may be modified and distributed under the terms
  * of the MIT license.  See the LICENSE file for details.
@@ -12,7 +12,7 @@
 /**
  * Example: Minimal
  * Description:
- *   This example will shows the bare minimum required for IotWeConf to start up.
+ *   This example will shows the bare minimum required for IotWebConf to start up.
  *   After starting up the thing, please search for WiFi access points e.g. with
  *   your phone. Use password provided in the code!
  *   After connecting to the access point the root page will automatically appears.
@@ -36,6 +36,9 @@ const char thingName[] = "testThing";
 
 // -- Initial password to connect to the Thing, when it creates an own Access Point.
 const char wifiInitialApPassword[] = "smrtTHNG8266";
+
+// -- Method declarations.
+void handleRoot();
 
 DNSServer dnsServer;
 WebServer server(80);
@@ -77,7 +80,7 @@ void handleRoot()
     return;
   }
   String s = "<!DOCTYPE html><html lang=\"en\"><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, user-scalable=no\"/>";
-  s += "<title>IotWebConf 01 Minimal</title></head><body>Hello world!";
+  s += "<title>IotWebConf 01 Minimal</title></head><body>";
   s += "Go to <a href='config'>configure page</a> to change settings.";
   s += "</body></html>\n";
 

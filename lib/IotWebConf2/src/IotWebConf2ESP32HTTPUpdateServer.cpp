@@ -1,34 +1,4 @@
-/**
- * IotWebConfCompatibility.cpp -- IotWebConf is an ESP8266/ESP32
- *   non blocking WiFi/AP web configuration library for Arduino.
- *   https://github.com/prampec/IotWebConf
- *
- * Copyright (C) 2018 Balazs Kelemen <prampec+arduino@gmail.com>
- *
- * This software may be modified and distributed under the terms
- * of the MIT license.  See the LICENSE file for details.
- *
- * Notes on IotWebConfCompatibility:
- * This file contains workarounds, and borrowed codes from other projects,
- * to keep IotWebConf code more simple and more general. See details
- * in comments for code segments in IotWebConfCompatibility.h .
- *
- */
-
-#ifdef ESP32
-/**
- * NOTE: Lines starting with /// are changed by IotWebConf
- */
-#include "IotWebConfCompatibility.h"
-
-static const char serverIndex[] PROGMEM =
-  R"(<html><body><form method='POST' action='' enctype='multipart/form-data'>
-                  <input type='file' name='update'>
-                  <input type='submit' value='Update'>
-               </form>
-         </body></html>)";
-static const char successResponse[] PROGMEM = 
-  "<META http-equiv=\"refresh\" content=\"15;URL=/\">Update Success! Rebooting...\n";
+#include "IotWebConf2ESP32HTTPUpdateServer.h"
 
 HTTPUpdateServer::HTTPUpdateServer(bool serial_debug)
 {
@@ -117,4 +87,3 @@ void HTTPUpdateServer::_setUpdaterError()
   Update.printError(str);
   _updaterError = str.c_str();
 }
-#endif

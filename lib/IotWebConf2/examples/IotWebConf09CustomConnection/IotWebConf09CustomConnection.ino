@@ -3,7 +3,7 @@
  *   non blocking WiFi/AP web configuration library for Arduino.
  *   https://github.com/prampec/IotWebConf 
  *
- * Copyright (C) 2018 Balazs Kelemen <prampec+arduino@gmail.com>
+ * Copyright (C) 2020 Balazs Kelemen <prampec+arduino@gmail.com>
  *
  * This software may be modified and distributed under the terms
  * of the MIT license.  See the LICENSE file for details.
@@ -26,6 +26,7 @@
  */
 
 #include <IotWebConf.h>
+#include <IotWebConfUsing.h> // This loads aliases for easier class names.
 
 // -- Initial name of the Thing. Used e.g. as SSID of the own Access Point.
 const char thingName[] = "testThing";
@@ -48,11 +49,13 @@ const char wifiInitialApPassword[] = "smrtTHNG8266";
 //      when connected to the Wifi it will turn off (kept HIGH).
 #define STATUS_PIN LED_BUILTIN
 
-// -- Callback method declarations.
-void configSaved();
-boolean formValidator();
-boolean connectAp(const char* apName, const char* password);
+// -- Method declarations.
+void handleRoot();
+bool connectAp(const char* apName, const char* password);
 void connectWifi(const char* ssid, const char* password);
+// -- Callback methods.
+void configSaved();
+bool formValidator(iotwebconf::WebRequestWrapper* webRequestWrapper);
 
 DNSServer dnsServer;
 WebServer server(80);
@@ -62,9 +65,11 @@ char gatewayValue[STRING_LEN];
 char netmaskValue[STRING_LEN];
 
 IotWebConf iotWebConf(thingName, &dnsServer, &server, wifiInitialApPassword, CONFIG_VERSION);
-IotWebConfParameter ipAddressParam = IotWebConfParameter("IP address", "ipAddress", ipAddressValue, STRING_LEN, "text", NULL, "192.168.3.222");
-IotWebConfParameter gatewayParam = IotWebConfParameter("Gateway", "gateway", gatewayValue, STRING_LEN, "text", NULL, "192.168.3.0");
-IotWebConfParameter netmaskParam = IotWebConfParameter("Subnet mask", "netmask", netmaskValue, STRING_LEN, "text", NULL, "255.255.255.0");
+// -- You can also use namespace formats e.g.: iotwebconf::ParameterGroup
+IotWebConfParameterGroup connGroup = IotWebConfParameterGroup("Connection parameters");
+IotWebConfTextParameter ipAddressParam = IotWebConfTextParameter("IP address", "ipAddress", ipAddressValue, STRING_LEN, "text", NULL, "192.168.3.222");
+IotWebConfTextParameter gatewayParam = IotWebConfTextParameter("Gateway", "gateway", gatewayValue, STRING_LEN, "text", NULL, "192.168.3.0");
+IotWebConfTextParameter netmaskParam = IotWebConfTextParameter("Subnet mask", "netmask", netmaskValue, STRING_LEN, "text", NULL, "255.255.255.0");
 
 IPAddress ipAddress;
 IPAddress gateway;
@@ -76,18 +81,20 @@ void setup()
   Serial.println();
   Serial.println("Starting up...");
 
+  connGroup.addItem(&ipAddressParam);
+  connGroup.addItem(&gatewayParam);
+  connGroup.addItem(&netmaskParam);
+
   iotWebConf.setStatusPin(STATUS_PIN);
   iotWebConf.setConfigPin(CONFIG_PIN);
-  iotWebConf.addParameter(&ipAddressParam);
-  iotWebConf.addParameter(&gatewayParam);
-  iotWebConf.addParameter(&netmaskParam);
+  iotWebConf.addParameterGroup(&connGroup);
   iotWebConf.setConfigSavedCallback(&configSaved);
   iotWebConf.setFormValidator(&formValidator);
   iotWebConf.setApConnectionHandler(&connectAp);
   iotWebConf.setWifiConnectionHandler(&connectWifi);
 
   // -- Initializing the configuration.
-  boolean validConfig = iotWebConf.init();
+  iotWebConf.init();
 
   // -- Set up required URL handlers on the web server.
   server.on("/", handleRoot);
@@ -115,7 +122,9 @@ void handleRoot()
     return;
   }
   String s = "<!DOCTYPE html><html lang=\"en\"><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, user-scalable=no\"/>";
-  s += "<title>IotWebConf 09 Custom Connection</title></head><body>Hello world!";
+  s += "<title>IotWebConf 09 Custom Connection</title></head><body><div>Status page of ";
+  s += iotWebConf.getThingName();
+  s += ".</div>";
   s += "<ul>";
   s += "<li>IP address: ";
   s += ipAddressValue;
@@ -131,22 +140,22 @@ void configSaved()
   Serial.println("Configuration was updated.");
 }
 
-boolean formValidator()
+bool formValidator(iotwebconf::WebRequestWrapper* webRequestWrapper)
 {
   Serial.println("Validating form.");
-  boolean valid = true;
+  bool valid = true;
 
-  if (!ipAddress.fromString(server.arg(ipAddressParam.getId())))
+  if (!ipAddress.fromString(webRequestWrapper->arg(ipAddressParam.getId())))
   {
     ipAddressParam.errorMessage = "Please provide a valid IP address!";
     valid = false;
   }
-  if (!netmask.fromString(server.arg(netmaskParam.getId())))
+  if (!netmask.fromString(webRequestWrapper->arg(netmaskParam.getId())))
   {
     netmaskParam.errorMessage = "Please provide a valid netmask!";
     valid = false;
   }
-  if (!gateway.fromString(server.arg(gatewayParam.getId())))
+  if (!gateway.fromString(webRequestWrapper->arg(gatewayParam.getId())))
   {
     gatewayParam.errorMessage = "Please provide a valid gateway address!";
     valid = false;
@@ -155,7 +164,7 @@ boolean formValidator()
   return valid;
 }
 
-boolean connectAp(const char* apName, const char* password)
+bool connectAp(const char* apName, const char* password)
 {
   // -- Custom AP settings
   return WiFi.softAP(apName, password, 4);

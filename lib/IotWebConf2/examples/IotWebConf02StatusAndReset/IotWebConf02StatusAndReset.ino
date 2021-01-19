@@ -45,6 +45,9 @@ const char wifiInitialApPassword[] = "smrtTHNG8266";
 //      when connected to the Wifi it will turn off (kept HIGH).
 #define STATUS_PIN LED_BUILTIN
 
+// -- Method declarations.
+void handleRoot();
+
 DNSServer dnsServer;
 WebServer server(80);
 
@@ -87,7 +90,7 @@ void handleRoot()
     return;
   }
   String s = "<!DOCTYPE html><html lang=\"en\"><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, user-scalable=no\"/>";
-  s += "<title>IotWebConf 02 Status and Reset</title></head><body>Hello world!";
+  s += "<title>IotWebConf 02 Status and Reset</title></head><body>";
   s += "Go to <a href='config'>configure page</a> to change settings.";
   s += "</body></html>\n";
 

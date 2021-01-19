@@ -1,9 +1,9 @@
 /**
- * IotWebConf01Minimal.ino -- IotWebConf is an ESP8266/ESP32
+ * IotWebConf10CustomHtml.ino -- IotWebConf is an ESP8266/ESP32
  *   non blocking WiFi/AP web configuration library for Arduino.
  *   https://github.com/prampec/IotWebConf 
  *
- * Copyright (C) 2018 Balazs Kelemen <prampec+arduino@gmail.com>
+ * Copyright (C) 2020 Balazs Kelemen <prampec+arduino@gmail.com>
  *
  * This software may be modified and distributed under the terms
  * of the MIT license.  See the LICENSE file for details.
@@ -12,12 +12,12 @@
 /**
  * Example: Custom HTML
  * Description:
- *   This example demostrates how to override the default look and feel of the
+ *   This example demonstrates how to override the default look and feel of the
  *   config portal.
  * 
- *   The first customalization is to add a logo to the config page.
+ *   The first customization is to add a logo to the config page.
  * 
- *   The second customalization is a special javascript, that detects all
+ *   The second customization is a special javascript, that detects all
  *   password fields, and adds a small button after each of them with a
  *   lock on it. By pressing the lock the password became visible/hidden.
  */
@@ -29,6 +29,9 @@ const char thingName[] = "testThing";
 
 // -- Initial password to connect to the Thing, when it creates an own Access Point.
 const char wifiInitialApPassword[] = "smrtTHNG8266";
+
+// -- Method declarations.
+void handleRoot();
 
 DNSServer dnsServer;
 WebServer server(80);
@@ -51,20 +54,20 @@ const char CUSTOMHTML_BODY_INNER[] PROGMEM = "<div><img src='data:image/png;base
 // IotWebConfHtmlFormatProvider. Here two method are overriden from
 // the original class. See IotWebConf.h for all potentially overridable
 // methods of IotWebConfHtmlFormatProvider .
-class CustomHtmlFormatProvider : public IotWebConfHtmlFormatProvider
+class CustomHtmlFormatProvider : public iotwebconf::HtmlFormatProvider
 {
 protected:
   String getScriptInner() override
   {
     return
-      IotWebConfHtmlFormatProvider::getScriptInner() +
+      HtmlFormatProvider::getScriptInner() +
       String(FPSTR(CUSTOMHTML_SCRIPT_INNER));
   }
   String getBodyInner() override
   {
     return
       String(FPSTR(CUSTOMHTML_BODY_INNER)) +
-      IotWebConfHtmlFormatProvider::getBodyInner();
+      HtmlFormatProvider::getBodyInner();
   }
 };
 // -- An instance must be created from the class defined above.
