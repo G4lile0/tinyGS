@@ -36,8 +36,6 @@ constexpr auto MQTT_SERVER_LENGTH = 31;
 constexpr auto MQTT_PORT_LENGTH = 6;
 constexpr auto MQTT_USER_LENGTH = 31;
 constexpr auto MQTT_PASS_LENGTH = 31;
-constexpr auto SSID_LENGTH = 32;
-constexpr auto PASS_LENGTH = 64;
 constexpr auto CHECKBOX_LENGTH = 9;
 constexpr auto NUMBER_LEN = 32;
 

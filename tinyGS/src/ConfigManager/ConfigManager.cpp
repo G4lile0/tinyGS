@@ -52,8 +52,8 @@ ConfigManager::ConfigManager()
   
 
   // Customize own parameters
-  getThingNameParameter()->label = "GroundStation Name";
-  getApPasswordParameter()->label = "GroundStation dashboard password";
+  getThingNameParameter()->label = "GroundStation Name (will be seen on the map)";
+  getApPasswordParameter()->label = "Password for this dashboard (user is <b>admin</b>)";
 
   addSystemParameter(&latitudeParam);
   addSystemParameter(&longitudeParam);
