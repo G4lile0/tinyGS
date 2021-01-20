@@ -113,7 +113,7 @@ void ntp_cb (NTPEvent_t e){
         case timeSyncd:
         case partlySync:
             Serial.printf ("[NTP Event] %s\n", NTP.ntpEvent2str (e));
-            status.test=e.info.offset;
+            status.testMode=e.info.offset;
               break;
         default:
             break;
@@ -369,16 +369,16 @@ void loop() {
 
 void switchTestmode() {  
 
-  if (configManager.getTest()){
-      // TODO getTest to false
+  if (configManager.getTestMode()){
+      // TODO getTestMode to false
       Serial.println(F("Changed from test mode to normal mode"));
   } else {
-      // TODO getTest to true
+      // TODO getTestMode to true
       Serial.println(F("Changed from normal mode to test mode"));
   }
 
   configManager.saveConfig();
-  status.test = configManager.getTest();
+  status.testMode = configManager.getTestMode();
   // reset .. o welcome?
 
 /*

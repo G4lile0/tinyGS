@@ -108,7 +108,7 @@ void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
   display->drawString( x+70, y + 32, "Sta: "+ String(ConfigManager::getInstance().getThingName()));
-  display->drawString( x+70, y + 44, status.test  ? "Test mode ON" : "Test mode OFF");
+  display->drawString( x+70, y + 44, status.testMode  ? "Test mode ON" : "Test mode OFF");
 }
 
 

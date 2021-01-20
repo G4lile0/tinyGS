@@ -103,7 +103,7 @@ struct Status {
   bool tx = false;
   bool remoteTune = true;
   bool telemetry3rd = true;
-  bool test = true;
+  bool testMode = true;
   float time_offset = 0;
 
  };

@@ -67,7 +67,7 @@ ConfigManager::ConfigManager()
 
   groupBoardConfig.addItem(&boardParam);
   groupBoardConfig.addItem(&oledBrightParam);
-  groupBoardConfig.addItem(&txParam);
+  groupBoardConfig.addItem(&AllowTxParam);
   groupBoardConfig.addItem(&remoteTuneParam);
   groupBoardConfig.addItem(&telemetry3rdParam);
   groupBoardConfig.addItem(&testParam);
@@ -272,11 +272,11 @@ void ConfigManager::printConfig() {
   Serial.print(F("OLED Bright: "));
   Serial.println(getOledBright());
   Serial.print(F("TX "));
-  Serial.println(getTx() ? "Enable" : "Disable");
+  Serial.println(getAllowTx() ? "Enable" : "Disable");
   Serial.print(F("Remote Tune "));
   Serial.println(getRemoteTune() ? "Allowed" : "Blocked");
   Serial.print(F("Third party telemetry (sat owners,  satnog... ) "));
   Serial.println(getTelemetry3rd() ? "Allowed" : "Blocked");
   Serial.print(F("Test mode "));
-  Serial.println(getTest()  ? "Enable" : "Disable");
+  Serial.println(getTestMode()  ? "Enable" : "Disable");
 }

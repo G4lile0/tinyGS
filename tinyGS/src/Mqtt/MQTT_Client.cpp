@@ -85,10 +85,10 @@ void MQTT_Client::sendWelcome() {
   ConfigManager& configManager = ConfigManager::getInstance();
   time_t now;
   time(&now);
-  status.tx = configManager.getTx();
+  status.tx = configManager.getAllowTx();
   status.remoteTune = configManager.getRemoteTune();
   status.telemetry3rd = configManager.getTelemetry3rd();
-  status.test = configManager.getTest(); 
+  status.testMode = configManager.getTestMode();
   const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(10) + 21 + 20;
   DynamicJsonDocument doc(capacity);
   doc["station"] = configManager.getThingName();
@@ -101,7 +101,7 @@ void MQTT_Client::sendWelcome() {
   doc["tx"] = status.tx;
   doc["remoteTune"] = status.remoteTune;
   doc["telemetry3d"] = status.telemetry3rd;
-  doc["test"] = status.test;
+  doc["test"] = status.testMode;
   doc["unix_GS_time"] = now;
   serializeJson(doc, Serial);
   char buffer[512];
@@ -253,7 +253,7 @@ void  MQTT_Client::sendRawPacket(String packet) {
   doc["CRC_error"] = status.lastPacketInfo.crc_error;
   doc["data"] = packet.c_str();
   doc["NORAD"] = status.modeminfo.NORAD;
-  doc["test"] = status.test;
+  doc["test"] = status.testMode;
   serializeJson(doc, Serial);
   char buffer[1536];
   serializeJson(doc, buffer);
@@ -285,7 +285,7 @@ void  MQTT_Client::sendStatus() {
   doc["tx"] = status.tx;
   doc["remoteTune"] = status.remoteTune;
   doc["telemetry3d"] = status.telemetry3rd;
-  doc["test"] = status.test;
+  doc["test"] = status.testMode;
 
 
   doc["mode"] = status.modeminfo.modem_mode;
@@ -362,7 +362,7 @@ if (!strcmp(topic, "fossa/global/global_frame")) {
   Serial.println("");
   Serial.print(F("Set Test Mode to "));  if (test) Serial.println(F("ON")); else Serial.println(F("OFF"));
   configManager.setTest(test);
-  status.test= test;
+  status.testMode= test;
    }
 
  // Remote_topicRemoteremoteTune       -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/remoteTune
