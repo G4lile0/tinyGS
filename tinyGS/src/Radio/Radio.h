@@ -19,6 +19,7 @@
 
 #ifndef RADIO_H
 #define RADIO_H
+#define RADIOLIB_EXCLUDE_HTTP
 
 #include <RadioLib.h>
 #include "../ConfigManager/ConfigManager.h"

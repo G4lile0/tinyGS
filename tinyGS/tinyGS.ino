@@ -71,6 +71,7 @@
 #include "src/Status.h"
 #include "src/Radio/Radio.h"
 #include "src/ArduinoOTA/ArduinoOTA.h"
+#include "src/OTA/OTA.h"
 #include <ESPNtpClient.h>
 #include <FailSafe.h>
 
@@ -250,6 +251,7 @@ void loop() {
   wasConnected = true;
   mqtt.loop();
   ArduinoOTA.handle();
+  OTA::loop();
   
   if(Serial.available()) {
     radio.disableInterrupt();
