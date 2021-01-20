@@ -52,7 +52,7 @@ const char TITLE_TEXT[] PROGMEM = "TinyGS Configuration";
 
 constexpr auto thingName = "My TinyGS";
 constexpr auto initialApPassword = "";
-constexpr auto configVersion = "0.03"; //max 4 chars
+constexpr auto configVersion = "0.04"; //max 4 chars
 
 #define MQTT_DEFAULT_SERVER "mqtt.tinygs.com"
 #define MQTT_DEFAULT_PORT  "8883"
@@ -120,10 +120,12 @@ public:
   bool getRemoteTune() { return !strcmp(remoteTune, CB_SELECTED_STR); }
   bool getTelemetry3rd() { return !strcmp(telemetry3rd, CB_SELECTED_STR); }
   bool getTestMode() { return !strcmp(testMode, CB_SELECTED_STR); }
+  bool getAutoUpdate() { return !strcmp(autoUpdate, CB_SELECTED_STR); }
   void setAllowTx(bool status) { if (status) strcpy(allowTx, CB_SELECTED_STR); else allowTx[0] = '\0'; this->saveConfig(); }
-  void setRemoteTune(bool status) { if (status) strcpy(remoteTune, CB_SELECTED_STR); else allowTx[0] = '\0'; this->saveConfig(); }
-  void setTelemetry3rd(bool status) { if (status) strcpy(telemetry3rd, CB_SELECTED_STR); else allowTx[0] = '\0'; this->saveConfig(); }
-  void setTest(bool status) { if (status) strcpy(testMode, CB_SELECTED_STR); else allowTx[0] = '\0'; this->saveConfig(); }
+  void setRemoteTune(bool status) { if (status) strcpy(remoteTune, CB_SELECTED_STR); else remoteTune[0] = '\0'; this->saveConfig(); }
+  void setTelemetry3rd(bool status) { if (status) strcpy(telemetry3rd, CB_SELECTED_STR); else telemetry3rd[0] = '\0'; this->saveConfig(); }
+  void setTest(bool status) { if (status) strcpy(testMode, CB_SELECTED_STR); else testMode[0] = '\0'; this->saveConfig(); }
+  void setAutoUpdate(bool status) { if (status) strcpy(autoUpdate, CB_SELECTED_STR); else autoUpdate[0] = '\0'; this->saveConfig(); }
 
   const char* getWiFiSSID() { return getWifiSsidParameter()->valueBuffer; }
   bool isApMode() { return (getState() != IOTWEBCONF_STATE_CONNECTING && getState() != IOTWEBCONF_STATE_ONLINE); }
@@ -185,6 +187,7 @@ private:
   char remoteTune[CHECKBOX_LENGTH] = "";
   char telemetry3rd[CHECKBOX_LENGTH] = "";
   char testMode[CHECKBOX_LENGTH] = "";
+  char autoUpdate[CHECKBOX_LENGTH] = "";
 
 
 
@@ -200,11 +203,12 @@ private:
 
   iotwebconf2::ParameterGroup groupBoardConfig = iotwebconf2::ParameterGroup("Board config" , "Board config");
   iotwebconf2::SelectParameter boardParam = iotwebconf2::SelectParameter("Board type", "board", board, BOARD_LENGTH, (char*)BOARD_VALUES, (char*)BOARD_NAMES, sizeof(BOARD_VALUES) / BOARD_LENGTH, BOARD_NAME_LENGTH);
-  iotwebconf2::NumberParameter oledBrightParam = iotwebconf2::NumberParameter("OLED Bright", "oledBright", oledBright, NUMBER_LEN, "100", "0..100", "min='0' max='100' step='1'");
+  iotwebconf2::NumberParameter oledBrightParam = iotwebconf2::NumberParameter("OLED Bright", "oled_bright", oledBright, NUMBER_LEN, "100", "0..100", "min='0' max='100' step='1'");
   iotwebconf2::CheckboxParameter AllowTxParam  = iotwebconf2::CheckboxParameter("Enable TX (HAM licence/ no preamp)", "tx", allowTx, CHECKBOX_LENGTH, true);
-  iotwebconf2::CheckboxParameter remoteTuneParam = iotwebconf2::CheckboxParameter("Allow Remote Tunning","remoteTune",remoteTune, CHECKBOX_LENGTH, true);
+  iotwebconf2::CheckboxParameter remoteTuneParam = iotwebconf2::CheckboxParameter("Allow Remote Tunning","remote_tune",remoteTune, CHECKBOX_LENGTH, true);
   iotwebconf2::CheckboxParameter telemetry3rdParam = iotwebconf2::CheckboxParameter("Allow third party telemetry (sat owners,  satnog... )","telemetry3rd",telemetry3rd, CHECKBOX_LENGTH, true);
   iotwebconf2::CheckboxParameter testParam = iotwebconf2::CheckboxParameter("Test mode","test",testMode, CHECKBOX_LENGTH, false);
+  iotwebconf2::CheckboxParameter autoUpdateParam = iotwebconf2::CheckboxParameter("Automatic Firmware Update","auto_update",autoUpdate, CHECKBOX_LENGTH, true);
 };
 
 #endif

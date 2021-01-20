@@ -71,6 +71,7 @@ ConfigManager::ConfigManager()
   groupBoardConfig.addItem(&remoteTuneParam);
   groupBoardConfig.addItem(&telemetry3rdParam);
   groupBoardConfig.addItem(&testParam);
+  groupBoardConfig.addItem(&autoUpdateParam);
   addParameterGroup(&groupBoardConfig);
 }
 

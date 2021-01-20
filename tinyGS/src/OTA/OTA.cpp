@@ -48,13 +48,15 @@ void OTA::update()
     }
 }
 
+unsigned static long lastUpdateTime = 0;
 void OTA::loop()
 {
-    if (millis() < MIN_TIME_BEFORE_UPDATE)
+    if (millis() < MIN_TIME_BEFORE_UPDATE || !ConfigManager::getInstance().getAutoUpdate())
         return;
 
     if (millis() - lastUpdateTime > TIME_BETTWEN_UPDATE_CHECK)
     {
+        lastUpdateTime = millis();
         update();
     }
 }

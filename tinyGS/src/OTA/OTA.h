@@ -27,7 +27,6 @@
 
 constexpr auto MIN_TIME_BEFORE_UPDATE = 600000;
 constexpr auto TIME_BETTWEN_UPDATE_CHECK = 3600000;
-unsigned static long lastUpdateTime = 0;
 
 #ifdef SECURE_OTA
     static const char DSTroot_CA_update[] PROGMEM = R"EOF(
