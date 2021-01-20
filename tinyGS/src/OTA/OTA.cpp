@@ -34,7 +34,7 @@ void OTA::update()
 
     Serial.print("Checking for OTA Updates...  ");
     // Automatic update is checked on the server side to allow users to manually force update
-    t_httpUpdate_return ret = httpUpdate.update(client, String(UPDATE_URL) + ConfigManager::getInstance().getMqttUser(), status.git_version);
+    t_httpUpdate_return ret = httpUpdate.update(client, String(OTA_URL) + ConfigManager::getInstance().getMqttUser(), status.git_version);
 
     switch (ret) {
       case HTTP_UPDATE_FAILED:

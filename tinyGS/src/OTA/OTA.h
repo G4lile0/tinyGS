@@ -27,7 +27,7 @@
 
 constexpr auto MIN_TIME_BEFORE_UPDATE = 600000;
 constexpr auto TIME_BETTWEN_UPDATE_CHECK = 3600000;
-constexpr auto UPDATE_URL = "https://tinygs/firmware/updates/update.bin?station=";
+constexpr auto OTA_URL = "https://tinygs/firmware/updates/update.bin?station=";
 
 #ifdef SECURE_OTA
     static const char DSTroot_CA_update[] PROGMEM = R"EOF(
