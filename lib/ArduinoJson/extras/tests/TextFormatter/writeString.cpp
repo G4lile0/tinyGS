@@ -1,5 +1,5 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #include <catch.hpp>
@@ -19,10 +19,6 @@ void check(const char* input, std::string expected) {
 }
 
 TEST_CASE("TextFormatter::writeString()") {
-  SECTION("Null") {
-    check(0, "null");
-  }
-
   SECTION("EmptyString") {
     check("", "\"\"");
   }

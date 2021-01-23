@@ -1,5 +1,5 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
@@ -16,7 +16,8 @@ class StaticStringWriter {
   }
 
   size_t write(uint8_t c) {
-    if (p >= end) return 0;
+    if (p >= end)
+      return 0;
     *p++ = static_cast<char>(c);
     *p = '\0';
     return 1;

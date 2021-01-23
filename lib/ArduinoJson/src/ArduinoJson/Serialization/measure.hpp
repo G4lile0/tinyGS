@@ -1,5 +1,5 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
@@ -12,8 +12,7 @@ template <template <typename> class TSerializer, typename TSource>
 size_t measure(const TSource &source) {
   DummyWriter dp;
   TSerializer<DummyWriter> serializer(dp);
-  source.accept(serializer);
-  return serializer.bytesWritten();
+  return source.accept(serializer);
 }
 
 }  // namespace ARDUINOJSON_NAMESPACE

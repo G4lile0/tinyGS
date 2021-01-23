@@ -18,6 +18,7 @@
 */
 
 #include "MQTT_Client.h"
+#define ARDUINOJSON_USE_LONG_LONG 1
 #include "ArduinoJson.h"
 #include "../Radio/Radio.h"
 

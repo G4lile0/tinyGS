@@ -1,5 +1,5 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #include <ArduinoJson.h>
@@ -48,14 +48,17 @@ typedef BasicJsonDocument<ArmoredAllocator> ShrinkToFitTestDocument;
 
 void testShrinkToFit(ShrinkToFitTestDocument& doc, std::string expected_json,
                      size_t expected_size) {
-  doc.shrinkToFit();
+  // test twice: shrinkToFit() should be idempotent
+  for (int i = 0; i < 2; i++) {
+    doc.shrinkToFit();
 
-  REQUIRE(doc.capacity() == expected_size);
-  REQUIRE(doc.memoryUsage() == expected_size);
+    REQUIRE(doc.capacity() == expected_size);
+    REQUIRE(doc.memoryUsage() == expected_size);
 
-  std::string json;
-  serializeJson(doc, json);
-  REQUIRE(json == expected_json);
+    std::string json;
+    serializeJson(doc, json);
+    REQUIRE(json == expected_json);
+  }
 }
 
 TEST_CASE("BasicJsonDocument::shrinkToFit()") {
@@ -91,8 +94,8 @@ TEST_CASE("BasicJsonDocument::shrinkToFit()") {
   }
 
   SECTION("owned raw") {
-    doc.set(serialized(std::string("[{},123]")));
-    testShrinkToFit(doc, "[{},123]", 8);
+    doc.set(serialized(std::string("[{},12]")));
+    testShrinkToFit(doc, "[{},12]", 8);
   }
 
   SECTION("linked key") {

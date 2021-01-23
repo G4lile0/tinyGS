@@ -1,7 +1,9 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
+#define ARDUINOJSON_ENABLE_ARDUINO_STRING 1
+#define ARDUINOJSON_STRING_BUFFER_SIZE 5
 #include <ArduinoJson.h>
 #include <catch.hpp>
 #include "custom_string.hpp"
@@ -53,6 +55,44 @@ TEST_CASE("Writer<std::string>") {
   std::string output;
   Writer<std::string> sb(output);
   common_tests(sb, output);
+}
+
+TEST_CASE("Writer<String>") {
+  ::String output;
+  Writer< ::String> sb(output);
+
+  common_tests(sb, output);
+
+  SECTION("Writes characters to temporary buffer") {
+    // accumulate in buffer
+    sb.write('a');
+    sb.write('b');
+    sb.write('c');
+    REQUIRE(output == "");
+
+    // flush when full
+    sb.write('d');
+    REQUIRE(output == "abcd");
+
+    // flush on destruction
+    sb.write('e');
+    sb.~Writer();
+    REQUIRE(output == "abcde");
+  }
+
+  SECTION("Writes strings to temporary buffer") {
+    // accumulate in buffer
+    print(sb, "abc");
+    REQUIRE(output == "");
+
+    // flush when full, and continue to accumulate
+    print(sb, "de");
+    REQUIRE(output == "abcd");
+
+    // flush on destruction
+    sb.~Writer();
+    REQUIRE(output == "abcde");
+  }
 }
 
 TEST_CASE("Writer<custom_string>") {

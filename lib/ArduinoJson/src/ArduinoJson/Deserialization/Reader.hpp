@@ -1,5 +1,5 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
@@ -37,6 +37,7 @@ struct BoundedReader {
 
 #include <ArduinoJson/Deserialization/Readers/IteratorReader.hpp>
 #include <ArduinoJson/Deserialization/Readers/RamReader.hpp>
+#include <ArduinoJson/Deserialization/Readers/VariantReader.hpp>
 
 #if ARDUINOJSON_ENABLE_ARDUINO_STREAM
 #include <ArduinoJson/Deserialization/Readers/ArduinoStreamReader.hpp>

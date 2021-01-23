@@ -1,5 +1,5 @@
 // ArduinoJson - arduinojson.org
-// Copyright Benoit Blanchon 2014-2019
+// Copyright Benoit Blanchon 2014-2020
 // MIT License
 
 #pragma once
@@ -43,7 +43,8 @@ struct BoundedReader<const __FlashStringHelper*, void> {
 
   size_t readBytes(char* buffer, size_t length) {
     size_t available = static_cast<size_t>(_end - _ptr);
-    if (available < length) length = available;
+    if (available < length)
+      length = available;
     memcpy_P(buffer, _ptr, length);
     _ptr += length;
     return length;
