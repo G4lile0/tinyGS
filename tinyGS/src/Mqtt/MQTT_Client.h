@@ -139,9 +139,7 @@ private:
   const char* topicRemoteFbw PROGMEM= "fbw";
   const char* topicRemoteFsw PROGMEM= "fsw";
   const char* topicRemoteFook PROGMEM= "fok";
-  const char* topicRemoteLocalFrame PROGMEM= "frame_l";
-  const char* topicRemoteLocalFrame1 PROGMEM= "frame_l1";
-  const char* topicRemoteLocalFrame2 PROGMEM= "frame_l2";
+  const char* topicRemoteFrame PROGMEM= "frame";
   const char* topicRemoteSat PROGMEM= "sat";
   const char* topicRemoteStatus PROGMEM= "status";
   const char* topicRemoteTest PROGMEM= "test";

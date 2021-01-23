@@ -22,7 +22,6 @@
 #include "../ConfigManager/ConfigManager.h"
 #include "../Status.h"
 
-
 void displayInit();
 void displayShowConnected();
 void displayShowWaitingMqttConnection();

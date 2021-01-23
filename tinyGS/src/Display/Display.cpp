@@ -106,22 +106,13 @@ void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state)
   }
 }
 
-void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y)
+void drawRemoteFrame(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y, uint8_t frameNumber)
 {
-  display->drawXbm(x +10, y , Logo_width, Logo_height, Logo_bits);
-  display->setFont(ArialMT_Plain_10);
-  display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString( x+70, y + 32, "Sta: "+ String(ConfigManager::getInstance().getThingName()));
-  display->drawString( x+70, y + 44, status.testMode  ? "Test mode ON" : "Test mode OFF");
-}
+  if (status.remoteTextFrameLength[frameNumber] == 0) ui->nextFrame();
 
-void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y)
-{
-  if (status.global_frame_text_leght==0 ) ui->nextFrame();
-
-  for (uint8_t n=0; n<status.global_frame_text_leght;n++)
+  for (uint8_t n = 0; n < status.remoteTextFrameLength[frameNumber]; n++)
   {
-    switch (status.global_frame_text[n].text_font)
+    switch (status.remoteTextFrame[frameNumber][n].text_font)
     {
       case 2:
         display->setFont(ArialMT_Plain_16);
@@ -132,7 +123,7 @@ void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
     }
 
     // 0 Left  1 Right  2 Center  3 Center Both
-    switch (status.global_frame_text[n].text_alignment) {
+    switch (status.remoteTextFrame[frameNumber][n].text_alignment) {
       case 1:
         display->setTextAlignment(TEXT_ALIGN_RIGHT);
         break;
@@ -146,8 +137,22 @@ void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
         display->setTextAlignment(TEXT_ALIGN_LEFT);
         break;
     }
-    display->drawString(x+status.global_frame_text[n].text_pos_x, y+ status.global_frame_text[n].text_pos_y,  String(status.global_frame_text[n].text));
+    display->drawString(x+status.remoteTextFrame[frameNumber][n].text_pos_x, y+ status.remoteTextFrame[frameNumber][n].text_pos_y,  status.remoteTextFrame[frameNumber][n].text);
   }
+}
+
+void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y)
+{
+  display->drawXbm(x +10, y , Logo_width, Logo_height, Logo_bits);
+  display->setFont(ArialMT_Plain_10);
+  display->setTextAlignment(TEXT_ALIGN_CENTER);
+  display->drawString( x+70, y + 32, "Sta: "+ String(ConfigManager::getInstance().getThingName()));
+  display->drawString( x+70, y + 44, status.testMode  ? "Test mode ON" : "Test mode OFF");
+}
+
+void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y)
+{
+  drawRemoteFrame(display, state, x, y, 0);
 }
 
 void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y)
@@ -182,36 +187,7 @@ void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 
 void drawFrame4(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y)
 {
-  for (uint8_t n=0; n<status.local_frame_text_leght;n++)
-  {
-    switch (status.local_frame_text[n].text_font)
-    {
-      case 2:
-        display->setFont(ArialMT_Plain_16);
-        break;
-      default:
-        display->setFont(ArialMT_Plain_10);
-        break;
-    }
-
-    // 0 Left  1 Right  2 Center  3 Center Both
-    switch (status.local_frame_text[n].text_alignment) {
-      case 1:
-        display->setTextAlignment(TEXT_ALIGN_RIGHT);
-        break;
-      case 2:
-        display->setTextAlignment(TEXT_ALIGN_CENTER);
-        break;
-      case 3:
-        display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
-        break;
-      default:
-        display->setTextAlignment(TEXT_ALIGN_LEFT);
-        break;
-    }
-
-    display->drawString(x+status.local_frame_text[n].text_pos_x, y+ status.local_frame_text[n].text_pos_y,  status.local_frame_text[n].text);
-  }
+  drawRemoteFrame(display, state, x, y, 1);
 }
 
 void drawFrame5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y)
@@ -254,75 +230,12 @@ void drawFrame5(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 
 void drawFrame6(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y)
 {
-  if (status.local_frame1_text_leght==0 ) ui->nextFrame();
-
-  for (uint8_t n=0; n<status.local_frame1_text_leght;n++)
-  {
-    switch (status.local_frame1_text[n].text_font)
-    {
-      case 2:
-        display->setFont(ArialMT_Plain_16);
-        break;
-      default:
-        display->setFont(ArialMT_Plain_10);
-        break;
-    }
-
-    // 0 Left  1 Right  2 Center  3 Center Both
-    switch (status.local_frame1_text[n].text_alignment)
-    {
-      case 1:
-        display->setTextAlignment(TEXT_ALIGN_RIGHT);
-        break;
-      case 2:
-        display->setTextAlignment(TEXT_ALIGN_CENTER);
-        break;
-      case 3:
-        display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
-        break;
-      default:
-        display->setTextAlignment(TEXT_ALIGN_LEFT);
-        break;
-    }
-
-    display->drawString(x+status.local_frame1_text[n].text_pos_x, y+ status.local_frame1_text[n].text_pos_y,  status.local_frame1_text[n].text);
-  }
+  drawRemoteFrame(display, state, x, y, 2);
 }
 
 void drawFrame7(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y)
 {
- if (status.local_frame2_text_leght==0 ) ui->nextFrame();
-
-    for (uint8_t n=0; n<status.local_frame2_text_leght;n++){
-   switch (status.local_frame2_text[n].text_font) {
-     case 2:
-      display->setFont(ArialMT_Plain_16);
-      break;
-
-      default:
-      display->setFont(ArialMT_Plain_10);
-      break;
-   }
-
-// 0 Left  1 Right  2 Center  3 Center Both
-   switch (status.local_frame2_text[n].text_alignment) {
-     case 1:
-      display->setTextAlignment(TEXT_ALIGN_RIGHT);
-      break;
-     case 2:
-      display->setTextAlignment(TEXT_ALIGN_CENTER);
-      break;
-     case 3:
-      display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
-      break;
-
-      default:
-      display->setTextAlignment(TEXT_ALIGN_LEFT);
-      break;
-   }
-
-  display->drawString(x+status.local_frame2_text[n].text_pos_x, y+ status.local_frame2_text[n].text_pos_y,  status.local_frame2_text[n].text);
-       }
+  drawRemoteFrame(display, state, x, y, 3);
 }
 
 

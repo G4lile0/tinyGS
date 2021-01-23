@@ -338,18 +338,6 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     manageSatPosOled((char*)payload, length);
   }
 
-// Remote_Frame_Local_A          -m "[]" -t fossa/global/global_frame
-//
-// [number of strings,
-// [font,TextAlignment,x,y,"string text"],
-// ...
-// ]
-//
-if (!strcmp(topic, "fossa/global/global_frame")) {    
-//if (!strcmp(topic, "fossa/g4lile0/test_G4lile0_new/data/remote/global_frame")) {    
-    radio.remote_global_frame((char*)payload, length);
-  }
-
  // Remote_Reset        -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/reset
  if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteReset)).c_str()).c_str())) {
     ESP.restart();
@@ -473,17 +461,23 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteSat)).c_s
     radio.remote_sat((char*)payload, length);
   }
 
-// Remote_Frame_Local_       -m "[\"FossaSat-3\"]" -t fossa/g4lile0/test_G4lile0_new/data/remote/sat
-if ((!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteLocalFrame)).c_str()).c_str()) && status.remoteTune )) {
-    radio.remote_local_frame((char*)payload, length);
-  }
-
-// Remote_Frame_Local_       -m "[\"FossaSat-3\"]" -t fossa/g4lile0/test_G4lile0_new/data/remote/sat
-if ((!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteLocalFrame1)).c_str()).c_str()) && status.remoteTune )) {
-    radio.remote_local_frame1((char*)payload, length);
-  }
-
-
+if ((!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFrame)).c_str()).c_str()) && status.remoteTune ))
+{
+  uint8_t frameNumber = 0; // TODO: Parse the frame number from the mqtt topic. (pending to do the topic rewrite)
+  radio.remoteTextFrame((char*)payload, length, frameNumber);
+}
+// TODO: Handle the remote topic too
+// Remote_Frame_Local_A          -m "[]" -t fossa/global/global_frame
+//
+// [number of strings,
+// [font,TextAlignment,x,y,"string text"],
+// ...
+// ]
+//
+/*if (!strcmp(topic, "fossa/global/global_frame")) {    
+//if (!strcmp(topic, "fossa/g4lile0/test_G4lile0_new/data/remote/global_frame")) {    
+    radio.remote_global_frame((char*)payload, length);
+  }*/
 
 // Remote_Status       -m "[1]"     -t fossa/g4lile0/test_G4lile0_new/data/remote/status
 if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteStatus)).c_str()).c_str())) {

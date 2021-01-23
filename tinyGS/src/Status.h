@@ -63,23 +63,12 @@ struct ModemInfo {
 
 };
 
-
-struct Global_Frame_Text {
-  uint8_t n;    
+struct TextFrame {   
   uint8_t text_font;
   uint8_t text_alignment;
   int16_t text_pos_x;
   int16_t text_pos_y; 
-  String  text = "123456789012345678901234567890";
-};
-
-struct Local_Frame_Text {
-  uint8_t n;    
-  uint8_t text_font;
-  uint8_t text_alignment;
-  int16_t text_pos_x;
-  int16_t text_pos_y; 
-  String  text = "123456789012345678901234567890";
+  String text = "123456789012345678901234567890";
 };
 
 
@@ -92,14 +81,8 @@ struct Status {
   PacketInfo lastPacketInfo;
   ModemInfo modeminfo;
   float satPos[2] = {0, 0};
-  uint8_t global_frame_text_leght = 0;
-  uint8_t  local_frame_text_leght = 0;
-  uint8_t  local_frame1_text_leght = 0;
-  uint8_t  local_frame2_text_leght = 0;
-  Global_Frame_Text global_frame_text[15];
-  Local_Frame_Text   local_frame_text[15];
-  Local_Frame_Text   local_frame1_text[15];
-  Local_Frame_Text   local_frame2_text[15];
+  uint8_t remoteTextFrameLength[4] = {0, 0, 0, 0};
+  TextFrame remoteTextFrame[4][15];
   bool tx = false;
   bool remoteTune = true;
   bool telemetry3rd = true;
