@@ -25,6 +25,7 @@
 
 #include "../ConfigManager/ConfigManager.h"
 #include "../Status.h"
+#define MQTT_MAX_PACKET_SIZE 1000
 #include <PubSubClient.h>
 #ifdef SECURE_MQTT
 #include <WiFiClientSecure.h>
