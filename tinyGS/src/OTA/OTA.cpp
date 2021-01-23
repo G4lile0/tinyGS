@@ -32,34 +32,37 @@ void OTA::update()
     WiFiClient client;
 #endif
 
-    Serial.print("Checking for OTA Updates...  ");
-    // Automatic update is checked on the server side to allow users to manually force update
-    t_httpUpdate_return ret = httpUpdate.update(client, String(OTA_URL) + ConfigManager::getInstance().getMqttUser(), status.git_version);
+  Serial.print("Checking for OTA Updates...  ");
+  uint64_t chipId = ESP.getEfuseMac();
+  char clientId[13];
+  sprintf(clientId, "%04X%08X",(uint16_t)(chipId>>32), (uint32_t)chipId);
 
-    switch (ret) {
-      case HTTP_UPDATE_FAILED:
-        Serial.printf("Update failed Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
-        break;
+  t_httpUpdate_return ret = httpUpdate.update(client, String(OTA_URL) + clientId, status.git_version);
 
-      case HTTP_UPDATE_NO_UPDATES: // server 304
-        Serial.println("No updates required");
-        break;
+  switch (ret) {
+    case HTTP_UPDATE_FAILED:
+      Serial.printf("Update failed Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
+      break;
 
-      case HTTP_UPDATE_OK:
-        Serial.println("Update ok but ESP has not restarted!!! (This should never be printed)");
-        break;
-    }
+    case HTTP_UPDATE_NO_UPDATES: // server 304
+      Serial.println("No updates required");
+      break;
+
+    case HTTP_UPDATE_OK:
+      Serial.println("Update ok but ESP has not restarted!!! (This should never be printed)");
+      break;
+  }
 }
 
 unsigned static long lastUpdateTime = 0;
 void OTA::loop()
 {
-    if (millis() < MIN_TIME_BEFORE_UPDATE || !ConfigManager::getInstance().getAutoUpdate())
-        return;
+  if (millis() < MIN_TIME_BEFORE_UPDATE || !ConfigManager::getInstance().getAutoUpdate())
+    return;
 
-    if (millis() - lastUpdateTime > TIME_BETTWEN_UPDATE_CHECK)
-    {
-        lastUpdateTime = millis();
-        update();
-    }
+  if (millis() - lastUpdateTime > TIME_BETTWEN_UPDATE_CHECK)
+  {
+    lastUpdateTime = millis();
+    update();
+  }
 }
