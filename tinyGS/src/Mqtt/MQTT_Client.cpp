@@ -106,6 +106,7 @@ void MQTT_Client::sendWelcome()
   doc["version"] = status.version;
   doc["git_version"] = status.git_version;
   doc["board"] = configManager.getBoard();
+  doc["mac"] = ESP.getEfuseMac();
   doc["tx"] = configManager.getAllowTx();
   doc["remoteTune"] = configManager.getRemoteTune();
   doc["telemetry3d"] = configManager.getTelemetry3rd();
