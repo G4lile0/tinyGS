@@ -41,15 +41,13 @@ void LoadingDrawDefault(OLEDDisplay *display, LoadingStage* stage, uint8_t progr
 
 OLEDDisplayUi::OLEDDisplayUi(OLEDDisplay *display) {
   this->display = display;
-	
+
   indicatorPosition = BOTTOM;
   indicatorDirection = LEFT_RIGHT;
   activeSymbol = ANIMATION_activeSymbol;
   inactiveSymbol = ANIMATION_inactiveSymbol;
   frameAnimationDirection   = SLIDE_RIGHT;
   lastTransitionDirection = 1;
-  ticksPerFrame = 151; // ~ 5000ms at 30 FPS
-  ticksPerTransition = 15;  // ~  500ms at 30 FPS
   frameCount = 0;
   nextFrameNumber = -1;
   overlayCount = 0;
@@ -66,6 +64,8 @@ OLEDDisplayUi::OLEDDisplayUi(OLEDDisplay *display) {
   state.userData = NULL;
   shouldDrawIndicators = true;
   autoTransition = true;
+  setTimePerFrame(5000);
+  setTimePerTransition(500);
 }
 
 void OLEDDisplayUi::init() {
@@ -73,13 +73,10 @@ void OLEDDisplayUi::init() {
 }
 
 void OLEDDisplayUi::setTargetFPS(uint8_t fps){
-  float oldInterval = this->updateInterval;
   this->updateInterval = ((float) 1.0 / (float) fps) * 1000;
 
-  // Calculate new ticksPerFrame
-  float changeRatio = oldInterval / (float) this->updateInterval;
-  this->ticksPerFrame *= changeRatio;
-  this->ticksPerTransition *= changeRatio;
+  this->ticksPerFrame = timePerFrame / updateInterval;
+  this->ticksPerTransition = timePerTransition / updateInterval;
 }
 
 // -/------ Automatic controll ------\-
@@ -99,10 +96,12 @@ void OLEDDisplayUi::setAutoTransitionBackwards(){
   this->lastTransitionDirection = -1;
 }
 void OLEDDisplayUi::setTimePerFrame(uint16_t time){
-  this->ticksPerFrame = (uint16_t) ( (float) time / (float) updateInterval);
+  this->timePerFrame = time;
+  this->ticksPerFrame = timePerFrame / updateInterval;
 }
 void OLEDDisplayUi::setTimePerTransition(uint16_t time){
-  this->ticksPerTransition = (uint16_t) ( (float) time / (float) updateInterval);
+  this->timePerTransition = time;
+  this->ticksPerTransition = timePerTransition / updateInterval;
 }
 
 // -/------ Customize indicator position and style -------\-
@@ -236,7 +235,7 @@ int16_t OLEDDisplayUi::update(){
 #else
 #error "Unkown operating system"
 #endif
-  int16_t timeBudget = this->updateInterval - (frameStart - this->state.lastUpdate);
+  int32_t timeBudget = this->updateInterval - (frameStart - this->state.lastUpdate);
   if ( timeBudget <= 0) {
     // Implement frame skipping to ensure time budget is keept
     if (this->autoTransition && this->state.lastUpdate != 0) this->state.ticksSinceLastStateSwitch += ceil((double)-timeBudget / (double)this->updateInterval);
@@ -301,7 +300,10 @@ void OLEDDisplayUi::resetState() {
 void OLEDDisplayUi::drawFrame(){
   switch (this->state.frameState){
      case IN_TRANSITION: {
-       float progress = (float) this->state.ticksSinceLastStateSwitch / (float) this->ticksPerTransition;
+       float progress = 0.f;
+       if (this->ticksPerTransition > 0u) {
+         progress = (float) this->state.ticksSinceLastStateSwitch / (float) this->ticksPerTransition;
+       }
        int16_t x = 0, y = 0, x1 = 0, y1 = 0;
        switch(this->frameAnimationDirection){
         case SLIDE_LEFT:

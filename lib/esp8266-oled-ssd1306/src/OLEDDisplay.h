@@ -137,8 +137,15 @@ enum OLEDDISPLAY_TEXT_ALIGNMENT {
 
 enum OLEDDISPLAY_GEOMETRY {
   GEOMETRY_128_64   = 0,
-  GEOMETRY_128_32,
-  GEOMETRY_RAWMODE,
+  GEOMETRY_128_32   = 1,
+  GEOMETRY_64_48    = 2,
+  GEOMETRY_64_32    = 3,
+  GEOMETRY_RAWMODE  = 4
+};
+
+enum HW_I2C {
+  I2C_ONE,
+  I2C_TWO
 };
 
 typedef char (*FontTableLookupFunction)(const uint8_t ch);
@@ -232,6 +239,9 @@ class OLEDDisplay : public Stream {
     // Draws a string at the given location
     void drawString(int16_t x, int16_t y, String text);
 
+    // Draws a formatted string (like printf) at the given location
+    void drawStringf(int16_t x, int16_t y, char* buffer, String format, ... );
+
     // Draws a String with a maximum width at the given location.
     // If the given String is wider than the specified width
     // The text will be wrapped to the next line at a space or dash
@@ -275,7 +285,7 @@ class OLEDDisplay : public Stream {
     // normal brightness & contrast:  contrast = 100
     void setContrast(uint8_t contrast, uint8_t precharge = 241, uint8_t comdetect = 64);
 
-    // Convenience method to access 
+    // Convenience method to access
     void setBrightness(uint8_t);
 
     // Reset display rotation or mirroring
@@ -349,6 +359,7 @@ class OLEDDisplay : public Stream {
 
 
 	// the header size of the buffer used, e.g. for the SPI command header
+  int BufferOffset;
 	virtual int getBufferOffset(void) = 0;
 	
     // Send a command to the display (low level function)
