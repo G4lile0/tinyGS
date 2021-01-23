@@ -83,6 +83,7 @@ void ConfigManager::handleRoot()
     // -- Captive portal request were already served.
     return;
   }
+
   String s = String(FPSTR(IOTWEBCONF_HTML_HEAD));
   s += "<style>" + String(FPSTR(IOTWEBCONF_HTML_STYLE_INNER)) + "</style>";
   s += FPSTR(IOTWEBCONF_HTML_HEAD_END);
@@ -117,12 +118,12 @@ void ConfigManager::handleDashboard()
   server.send(200, "text/html; charset=UTF-8", s);
 }
 
-void ConfigManager::handleRestart() {
+void ConfigManager::handleRestart()
+{
   if (getState() == IOTWEBCONF_STATE_ONLINE)
   {
     // -- Authenticate
-    if (!server.authenticate(
-            IOTWEBCONF_ADMIN_USER_NAME, getApPasswordParameter()->valueBuffer))
+    if (!server.authenticate(IOTWEBCONF_ADMIN_USER_NAME, getApPasswordParameter()->valueBuffer))
     {
       IOTWEBCONF_DEBUG_LINE(F("Requesting authentication."));
       server.requestAuthentication();
@@ -161,7 +162,8 @@ bool ConfigManager::formValidator(iotwebconf2::WebRequestWrapper* webRequestWrap
     valid = false;
   }
 
-  if (!strcmp(name.c_str(), thingName)) {
+  if (!strcmp(name.c_str(), thingName))
+  {
     this->getThingNameParameter()->errorMessage = "Please, change your station name to something unique. Be creative!";
     valid = false;
   }
@@ -169,7 +171,8 @@ bool ConfigManager::formValidator(iotwebconf2::WebRequestWrapper* webRequestWrap
   return valid;
 }
 
-void ConfigManager::resetAPConfig() {
+void ConfigManager::resetAPConfig()
+{
   getWifiSsidParameter()->valueBuffer[0] = '\0';
   getWifiPasswordParameter()->valueBuffer[0] = '\0';
   strncpy(getApPasswordParameter()->valueBuffer, initialApPassword, IOTWEBCONF_WORD_LEN);
@@ -179,7 +182,8 @@ void ConfigManager::resetAPConfig() {
   saveConfig();
 }
 
-void ConfigManager::resetAllConfig(){
+void ConfigManager::resetAllConfig()
+{
   getWifiSsidParameter()->valueBuffer[0] = '\0';
   getWifiPasswordParameter()->valueBuffer[0] = '\0';
   strncpy(getApPasswordParameter()->valueBuffer, initialApPassword, IOTWEBCONF_WORD_LEN);
@@ -193,7 +197,8 @@ void ConfigManager::resetAllConfig(){
   saveConfig();
 }
 
-boolean ConfigManager::init() {
+boolean ConfigManager::init()
+{
   boolean validConfig = IotWebConf2::init();
 
   // when wifi credentials are set but we are not able to connect (maybe wrong credentials)
@@ -208,10 +213,12 @@ boolean ConfigManager::init() {
   return validConfig;
 }
 
-void ConfigManager::boardDetection() {
+void ConfigManager::boardDetection()
+{
   // List all compatible boards configuration
   Serial.println(F("\nSupported boards:"));
-  for (uint8_t ite=0; ite<((sizeof(boards)/sizeof(boards[0])));ite++) {
+  for (uint8_t ite=0; ite<((sizeof(boards)/sizeof(boards[0])));ite++)
+  {
     Serial.println("");
     Serial.println(boards[ite].BOARD);
     Serial.print(F(" OLED: Adrs 0x"));    Serial.print(boards[ite].OLED__address,HEX);
@@ -234,7 +241,8 @@ void ConfigManager::boardDetection() {
   
   // test OLED configuration
   Serial.println(F("Seaching for a compatible BOARD"));
-  for (uint8_t ite=0; ite<((sizeof(boards)/sizeof(boards[0])));ite++) {
+  for (uint8_t ite=0; ite<((sizeof(boards)/sizeof(boards[0])));ite++)
+  {
     Serial.print(boards[ite].BOARD);
     pinMode(boards[ite].OLED__RST,OUTPUT);
     digitalWrite(boards[ite].OLED__RST, LOW);     
@@ -242,18 +250,21 @@ void ConfigManager::boardDetection() {
     digitalWrite(boards[ite].OLED__RST, HIGH);
     Wire.begin (boards[ite].OLED__SDA, boards[ite].OLED__SCL);
     Wire.beginTransmission(boards[ite].OLED__address);
-    if (!Wire.endTransmission()) { 
+    if (!Wire.endTransmission())
+    { 
       Serial.println(F("  Compatible OLED FOUND")); 
       itoa(ite, board, 10);
       break;
     }
-    else {
+    else 
+    {
       Serial.println(F("  Not Compatible"));
     } 
   }
 }
 
-void ConfigManager::printConfig() {
+void ConfigManager::printConfig()
+{
   Serial.print(F("MQTT Port: "));
   Serial.println(getMqttPort());
   Serial.print(F("MQTT Server: "));

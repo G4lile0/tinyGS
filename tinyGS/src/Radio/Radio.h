@@ -21,6 +21,9 @@
 #define RADIO_H
 #define RADIOLIB_EXCLUDE_HTTP
 
+#ifndef RADIOLIB_GODMODE
+#define RADIOLIB_GODMODE
+#endif
 #include <RadioLib.h>
 #include "../ConfigManager/ConfigManager.h"
 #include "../Status.h"
@@ -37,10 +40,6 @@ public:
   }
 
   void init();
-  void sendPing();
-  void requestInfo();
-  void requestPacketInfo();
-  void requestRetransmit(char* data);
   void enableInterrupt();
   void disableInterrupt();
   uint8_t listen();
@@ -83,5 +82,15 @@ private:
   bool ready = false;
   SPIClass spi;
 };
+
+// Code from fossa
+#define PRINT_BUFF(BUFF, LEN) { \
+  for(size_t i = 0; i < LEN; i++) { \
+    Serial.print(F("0x")); \
+    Serial.print(BUFF[i], HEX); \
+    Serial.print('\t'); \
+    Serial.write(BUFF[i]); \
+    Serial.println(); \
+  } }
 
 #endif

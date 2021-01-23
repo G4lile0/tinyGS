@@ -391,11 +391,6 @@ if (!strcmp(topic, "fossa/global/global_frame")) {
   status.telemetry3rd= telemetry3rd;
    }
 
-// Remote_Ping           -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/ping
- if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemotePing)).c_str()).c_str())) {
-    radio.sendPing();
-  }
-
 // Remote_Frequency       -m "[434.8]" -t fossa/g4lile0/test_G4lile0_new/data/remote/freq
  if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFreq)).c_str()).c_str()) || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteFreq) ).c_str()) && status.remoteTune ))  {
     radio.remote_freq((char*)payload, length);

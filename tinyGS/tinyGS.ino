@@ -65,7 +65,6 @@
 #include "WProgram.h"
 #endif
 #include "src/ConfigManager/ConfigManager.h"
-#include "src/Comms/Comms.h"
 #include "src/Display/Display.h"
 #include "src/Mqtt/MQTT_Client.h"
 #include "src/Status.h"
@@ -109,42 +108,39 @@ Status status;
 void printControls();
 void switchTestmode();
 
-void ntp_cb (NTPEvent_t e){
-    switch (e.event) {
-        case timeSyncd:
-        case partlySync:
-            Serial.printf ("[NTP Event] %s\n", NTP.ntpEvent2str (e));
-            status.testMode=e.info.offset;
-              break;
-        default:
-            break;
-    }
+void ntp_cb (NTPEvent_t e)
+{
+  switch (e.event) {
+    case timeSyncd:
+    case partlySync:
+      Serial.printf ("[NTP Event] %s\n", NTP.ntpEvent2str (e));
+      status.testMode=e.info.offset;
+      break;
+    default:
+      break;
+  }
 }
 
-void displayUpdate_task (void* arg){
-    for (;;){
-        displayUpdate ();
-    }
+void displayUpdate_task (void* arg)
+{
+  for (;;){
+      displayUpdate ();
+  }
 }
 
-void wifiConnected() {
+void wifiConnected()
+{
   configManager.printConfig();
   arduino_ota_setup();
   displayShowConnected();
 
   radio.init();
-  if (!radio.isReady()){
+  if (!radio.isReady())
+  {
     Serial.println("LoRa initialization failed. Please connect to " + WiFi.localIP().toString() + " and make sure the board selected matches your hardware.");
     displayShowLoRaError();
   }
 
-  //init and get the time
-//   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-//   if (strcmp (configManager.getTZ(), "")) {
-// 	  setenv("TZ", configManager.getTZ(), 1);
-// 	  ESP_LOGD (LOG_TAG, "Set timezone value as %s", configManager.getTZ());
-// 	  tzset();
-//   }
   NTP.setInterval (120); // Sync each 2 minutes
   NTP.setTimeZone (configManager.getTZ ()); // Get TX from config manager
   NTP.onNTPSyncEvent (ntp_cb); // Register event callback
@@ -154,7 +150,8 @@ void wifiConnected() {
   NTP.begin (ntpServer); // Start NTP client
   
   time_t startedSync = millis ();
-  while (NTP.syncStatus() != syncd && millis() - startedSync < 5000){ // Wait 5 seconds to get sync
+  while (NTP.syncStatus() != syncd && millis() - startedSync < 5000) // Wait 5 seconds to get sync
+  {
       delay (100);
   }
 
@@ -168,13 +165,15 @@ void wifiConnected() {
   printControls();
 }
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
   delay(299);
+
   FailSafe.checkBoot (MAX_CONSECUTIVE_BOOT); // Parameters are optional
-  if (FailSafe.isActive ()) { // Skip all user setup if fail safe mode is activated
+  if (FailSafe.isActive ()) // Skip all user setup if fail safe mode is activated
       return;
-  }
+
   Serial.printf("TinyGS Version %d - %s\n", status.version, status.git_version);
   configManager.setWifiConnectionCallback(wifiConnected);
   configManager.init();
@@ -190,20 +189,24 @@ void setup() {
   unsigned long button_pushed_at;
   ESP_LOGI (LOG_TAG, "Waiting for reset config button");
   bool button_pushed = false;
-  while (millis () - start_waiting_for_button < WAIT_FOR_BUTTON) {
-
-	  if (!digitalRead (configManager.getBoardConfig().PROG__BUTTON)) {
+  while (millis () - start_waiting_for_button < WAIT_FOR_BUTTON)
+  {
+	  if (!digitalRead (configManager.getBoardConfig().PROG__BUTTON))
+    {
 		  button_pushed = true;
 		  button_pushed_at = millis ();
 		  ESP_LOGI (LOG_TAG, "Reset button pushed");
-		  while (millis () - button_pushed_at < RESET_BUTTON_TIME) {
-			  if (digitalRead (configManager.getBoardConfig().PROG__BUTTON)) {
+		  while (millis () - button_pushed_at < RESET_BUTTON_TIME)
+      {
+			  if (digitalRead (configManager.getBoardConfig().PROG__BUTTON))
+        {
 				  ESP_LOGI (LOG_TAG, "Reset button released");
 				  button_pushed = false;
 				  break;
 			  }
 		  }
-		  if (button_pushed) {
+		  if (button_pushed)
+      {
 			  ESP_LOGI (LOG_TAG, "Reset config triggered");
 			  WiFi.begin ("0", "0");
 			  WiFi.disconnect ();
@@ -211,36 +214,34 @@ void setup() {
 	  }
   }
 
-  if (button_pushed) {
+  if (button_pushed)
+  {
     configManager.resetAPConfig();
     ESP.restart();
   }
   
-  if (configManager.isApMode()) {
+  if (configManager.isApMode())
     displayShowApMode();
-  } 
-  else {
+  else 
     displayShowStaMode();
-  }
   
   delay(500);  
- }
+}
 
 void loop() {
-    
-    static bool startDisplayTask = true;
+  static bool startDisplayTask = true;
     
   FailSafe.loop (BOOT_FLAG_TIMEOUT); // Use always this line
-
-  if (FailSafe.isActive ()) { // Skip all user loop code if Fail Safe mode is active
+  if (FailSafe.isActive ()) // Skip all user loop code if Fail Safe mode is active
     return;
-  }
     
   configManager.doLoop();
 
   static bool wasConnected = false;
-  if (!configManager.isConnected()){
-    if (wasConnected){
+  if (!configManager.isConnected())
+  {
+    if (wasConnected)
+    {
       if (configManager.isApMode())
         displayShowApMode();
       else 
@@ -253,7 +254,8 @@ void loop() {
   ArduinoOTA.handle();
   OTA::loop();
   
-  if(Serial.available()) {
+  if(Serial.available())
+  {
     radio.disableInterrupt();
 
     // get the first character
@@ -263,69 +265,13 @@ void loop() {
     delay(50);
 
     // dump the serial buffer
-    while(Serial.available()) {
+    while(Serial.available())
+    {
       Serial.read();
     }
 
     // process serial command
     switch(serialCmd) {
-      case 'p':
-        if (!radio.isReady()) {
-          Serial.println(F("Radio is not ready, please configure it properly before using this command."));
-          break;
-        }
-        radio.sendPing();
-        break;
-      case 'i':
-        if (!radio.isReady()) {
-          Serial.println(F("Radio is not ready, please configure it properly before using this command."));
-          break;
-        }
-        radio.requestInfo();
-        break;
-      case 'l':
-        if (!radio.isReady()) {
-          Serial.println(F("Radio is not ready, please configure it properly before using this command."));
-          break;
-        }
-        radio.requestPacketInfo();
-        break;
-      case 'r':
-        if (!radio.isReady()) {
-          Serial.println(F("Radio is not ready, please configure it properly before using this command."));
-          break;
-        }
-        Serial.println(F("Enter message to be sent:"));
-        Serial.println(F("(max 32 characters, end with LF or CR+LF)"));
-        {
-          // get data to be retransmited
-          char optData[32];
-          uint8_t bufferPos = 0;
-          while(bufferPos < 32) {
-            while(!Serial.available());
-            char c = Serial.read();
-            Serial.print(c);
-            if((c != '\r') && (c != '\n')) {
-              optData[bufferPos] = c;
-              bufferPos++;
-            } else {
-              break;
-            }
-          }
-          optData[bufferPos] = '\0';
-
-          // wait for a bit to receive any trailing characters
-          delay(100);
-
-          // dump the serial buffer
-          while(Serial.available()) {
-            Serial.read();
-          }
-
-          Serial.println();
-          radio.requestRetransmit(optData);
-        }
-        break;
       case 'e':
         configManager.resetAllConfig();
         ESP.restart();
@@ -347,12 +293,14 @@ void loop() {
     radio.enableInterrupt();
   }
 
-  if (!radio.isReady()) {
+  if (!radio.isReady())
+  {
     displayShowLoRaError();
     return;
   }
 
-  if (startDisplayTask){
+  if (startDisplayTask)
+  {
     startDisplayTask = false;
     xTaskCreateUniversal (
             displayUpdate_task,           // Display loop function
@@ -363,53 +311,33 @@ void loop() {
             &dispUpdate_handle,           // Task handle
             CONFIG_ARDUINO_RUNNING_CORE); // Running core, should be 1
   }
-  
-  //displayUpdate();
 
   radio.listen();
 }
 
-void switchTestmode() {  
+void switchTestmode()
+{  
 
-  if (configManager.getTestMode()){
+  if (configManager.getTestMode())
+  {
       // TODO getTestMode to false
       Serial.println(F("Changed from test mode to normal mode"));
-  } else {
+  }
+  else
+  {
       // TODO getTestMode to true
       Serial.println(F("Changed from normal mode to test mode"));
   }
 
   configManager.saveConfig();
   status.testMode = configManager.getTestMode();
-  // reset .. o welcome?
-
-/*
-  TODO Borrar
-
-  char temp_station[32];
-  if ((configManager.getThingName()[0]=='t') &&  (configManager.getThingName()[1]=='e') && (configManager.getThingName()[2]=='s') && (configManager.getThingName()[4]=='_')) {
-    Serial.println(F("Changed from test mode to normal mode"));
-    for (byte a=5; a<=strlen(configManager.getThingName()); a++ ) {
-      configManager.getThingName()[a-5]=configManager.getThingName()[a];
-    }
-  }
-  else
-  {
-    strcpy(temp_station,"test_");
-    strcat(temp_station,configManager.getThingName());
-    strcpy(configManager.getThingName(),temp_station);
-    Serial.println(F("Changed from normal mode to test mode"));
-  }
-  configManager.configSave();
-
-*/
-
 }
 
 void printLocalTime()
 {
   struct tm timeinfo;
-  if(!getLocalTime(&timeinfo)){
+  if(!getLocalTime(&timeinfo))
+  {
     Serial.println("Failed to obtain time");
     return;
   }
@@ -417,12 +345,9 @@ void printLocalTime()
 }
 
 // function to print controls
-void printControls() {
+void printControls()
+{
   Serial.println(F("------------- Controls -------------"));
-  Serial.println(F("p - send ping frame"));
-  Serial.println(F("i - request satellite info"));
-  Serial.println(F("l - request last packet info"));
-  Serial.println(F("r - send message to be retransmitted"));
   Serial.println(F("t - change the test mode and restart"));
   Serial.println(F("e - erase board config and reset"));
   Serial.println(F("b - reboot the board"));
