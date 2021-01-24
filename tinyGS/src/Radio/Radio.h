@@ -73,9 +73,8 @@ private:
   PhysicalLayer* lora;
   void processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_t respLen);
   void readState(int state);
-  void readState_sent(int state);
-    static void setFlag();
-  int sendFrame(uint8_t functionId, const char* data = "");
+  static void setFlag();
+  int sendTx(uint8_t functionId, const char* data = "");
   bool ready = false;
   SPIClass spi;
 };

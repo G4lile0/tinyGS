@@ -27,18 +27,21 @@ MQTT_Client::MQTT_Client()
 { }
 
 void MQTT_Client::loop() {
-  if (!connected() && millis() - lastConnectionAtempt > reconnectionInterval) {
+  if (!connected() && millis() - lastConnectionAtempt > reconnectionInterval)
+  {
     lastConnectionAtempt = millis();
     connectionAtempts++;
     status.mqtt_connected = false;
     reconnect();
   }
-  else {
+  else
+  {
     connectionAtempts = 0;
     status.mqtt_connected = true;
   }
 
-  if (connectionAtempts > connectionTimeout) {
+  if (connectionAtempts > connectionTimeout)
+  {
     Serial.println("Unable to connect to MQTT Server after many atempts. Restarting...");
     ESP.restart();
   }
@@ -46,13 +49,15 @@ void MQTT_Client::loop() {
   PubSubClient::loop();
 
   unsigned long now = millis();
-  if (now - lastPing > pingInterval) {
+  if (now - lastPing > pingInterval)
+  {
     lastPing = now;
-    publish(buildTopic(topicPing).c_str(), "1");
+    publish(buildTopic(teleTopic, topicPing).c_str(), "1");
   }
 }
 
-void MQTT_Client::reconnect() {
+void MQTT_Client::reconnect()
+{
   ConfigManager& configManager = ConfigManager::getInstance();
   uint64_t chipId = ESP.getEfuseMac();
   char clientId[13];
@@ -60,7 +65,7 @@ void MQTT_Client::reconnect() {
 
   Serial.print("Attempting MQTT connection...");
   Serial.println ("If this is taking more than expected, connect to the config panel on the ip: " + WiFi.localIP().toString() + " to review the MQTT connection credentials.");
-  if (connect(clientId, configManager.getMqttUser(), configManager.getMqttPass(), buildTopic(topicStatus).c_str(), 2, false, "0")) {
+  if (connect(clientId, configManager.getMqttUser(), configManager.getMqttPass(), buildTopic(teleTopic, topicStatus).c_str(), 2, false, "0")) {
     Serial.println("connected");
     subscribeToAll();
     sendWelcome();
@@ -71,25 +76,28 @@ void MQTT_Client::reconnect() {
   }
 }
 
-String MQTT_Client::buildTopic(const char* topic){
+String MQTT_Client::buildTopic(const char* baseTopic, const char* cmnd)
+{
   ConfigManager& configManager = ConfigManager::getInstance();
-  return String(topicStart) + "/" + String(configManager.getMqttUser()) + "/" + String(configManager.getThingName()) + "/" +  String(topic);
+  String topic = baseTopic;
+  topic.replace("%user%", configManager.getMqttUser());
+  topic.replace("%station%", configManager.getThingName());
+  topic.replace("%cmnd%", cmnd);
+
+  return topic;
 }
 
 void MQTT_Client::subscribeToAll() {
-  String sat_pos_oled = String(topicStart) + "/global/#";
-  subscribe(buildTopic(topicData).c_str());
-  subscribe(sat_pos_oled.c_str());
+  subscribe(buildTopic(globalTopic, "#").c_str());
+  subscribe(buildTopic(cmndTopic, "#").c_str());
 }
 
-void MQTT_Client::sendWelcome() {
+void MQTT_Client::sendWelcome()
+{
   ConfigManager& configManager = ConfigManager::getInstance();
   time_t now;
   time(&now);
-  status.tx = configManager.getAllowTx();
-  status.remoteTune = configManager.getRemoteTune();
-  status.telemetry3rd = configManager.getTelemetry3rd();
-  status.testMode = configManager.getTestMode();
+
   const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(11) + 22 + 20;
   DynamicJsonDocument doc(capacity);
   doc["station"] = configManager.getThingName();
@@ -99,133 +107,26 @@ void MQTT_Client::sendWelcome() {
   doc["version"] = status.version;
   doc["git_version"] = status.git_version;
   doc["board"] = configManager.getBoard();
-  doc["tx"] = status.tx;
-  doc["remoteTune"] = status.remoteTune;
-  doc["telemetry3d"] = status.telemetry3rd;
-  doc["test"] = status.testMode;
+  doc["tx"] = configManager.getAllowTx();
+  doc["remoteTune"] = configManager.getRemoteTune();
+  doc["telemetry3d"] = configManager.getTelemetry3rd();
+  doc["test"] = configManager.getTestMode();
   doc["unix_GS_time"] = now;
   doc["autoUpdate"] = configManager.getAutoUpdate();
   serializeJson(doc, Serial);
   char buffer[512];
   serializeJson(doc, buffer);
-  publish(buildTopic(topicWelcome).c_str(), buffer,false);
+  publish(buildTopic(teleTopic, topicWelcome).c_str(), buffer, false);
 }
 
-void  MQTT_Client::sendSystemInfo() {
-  ConfigManager& configManager = ConfigManager::getInstance();
-  time_t now;
-  time(&now);
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(19);
-  DynamicJsonDocument doc(capacity);
-  doc["station"] = configManager.getThingName();  // G4lile0
-  JsonArray station_location = doc.createNestedArray("station_location");
-  station_location.add(configManager.getLatitude());
-  station_location.add(configManager.getLongitude());
-  doc["rssi"] = status.lastPacketInfo.rssi;
-  doc["snr"] = status.lastPacketInfo.snr;
-  doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
-  doc["unix_GS_time"] = now;
-  doc["batteryChargingVoltage"] = status.sysInfo.batteryChargingVoltage;
-  doc["batteryChargingCurrent"] = status.sysInfo.batteryChargingCurrent;
-  doc["batteryVoltage"] = status.sysInfo.batteryVoltage;
-  doc["solarCellAVoltage"] = status.sysInfo.solarCellAVoltage;
-  doc["solarCellBVoltage"] = status.sysInfo.solarCellBVoltage;
-  doc["solarCellCVoltage"] = status.sysInfo.solarCellCVoltage;
-  doc["batteryTemperature"] = status.sysInfo.batteryTemperature;
-  doc["boardTemperature"] = status.sysInfo.boardTemperature;
-  doc["mcuTemperature"] = status.sysInfo.mcuTemperature;
-  doc["resetCounter"] = status.sysInfo.resetCounter;
-  doc["powerConfig"] = status.sysInfo.powerConfig;
-  serializeJson(doc, Serial);
-  char buffer[512];
-  serializeJson(doc, buffer);
-  publish(buildTopic(topicSysInfo).c_str(), buffer, false);
-}
-
-void  MQTT_Client::sendPong() {
-  ConfigManager& configManager = ConfigManager::getInstance();
-  time_t now;
-  time(&now);
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(7);
-  DynamicJsonDocument doc(capacity);
-  doc["station"] = configManager.getThingName();
-  JsonArray station_location = doc.createNestedArray("station_location");
-  station_location.add(configManager.getLatitude());
-  station_location.add(configManager.getLongitude());
-  doc["rssi"] = status.lastPacketInfo.rssi;
-  doc["snr"] = status.lastPacketInfo.snr;
-  doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
-  doc["unix_GS_time"] = now;
-  doc["pong"] = 1;
-  serializeJson(doc, Serial);
-  char buffer[256];
-  serializeJson(doc, buffer);
-  publish(buildTopic(topicPong).c_str(), buffer, false);
-}
-
-void  MQTT_Client::sendMessage(char* frame, size_t respLen) {
-  ConfigManager& configManager = ConfigManager::getInstance();
-  time_t now;
-  time(&now);
-  Serial.println(String(respLen));
-  char tmp[respLen+1];
-  memcpy(tmp, frame, respLen);
-  tmp[respLen-12] = '\0';
-
-  // if special miniTTN message   
-  Serial.println(String(frame[0]));
-  Serial.println(String(frame[1]));
-  Serial.println(String(frame[2]));
-  // if ((frame[0]=='0x54') &&  (frame[1]=='0x30') && (frame[2]=='0x40'))
-  if ((frame[0]=='T') &&  (frame[1]=='0') && (frame[2]=='@'))
-  {
-    Serial.println("mensaje miniTTN");
-    const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(11) + JSON_ARRAY_SIZE(respLen-12);
-    DynamicJsonDocument doc(capacity);
-    doc["station"] = configManager.getThingName();
-    JsonArray station_location = doc.createNestedArray("station_location");
-    station_location.add(configManager.getLongitude());
-    station_location.add(configManager.getLongitude());
-    doc["rssi"] = status.lastPacketInfo.rssi;
-    doc["snr"] = status.lastPacketInfo.snr;
-    doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
-    doc["unix_GS_time"] = now;
-    JsonArray msgTTN = doc.createNestedArray("msgTTN");
-
-    for (byte i=0 ; i<  (respLen-12);i++) {
-      msgTTN.add(String(tmp[i], HEX));
-    }
-    serializeJson(doc, Serial);
-    char buffer[256];
-    serializeJson(doc, buffer);
-    publish(buildTopic(topicMiniTTN).c_str(), buffer, false);
-  }
-  else {
-    const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(11);
-    DynamicJsonDocument doc(capacity);
-    doc["station"] = configManager.getThingName();
-    JsonArray station_location = doc.createNestedArray("station_location");
-    station_location.add(configManager.getLatitude());
-    station_location.add(configManager.getLongitude());
-    doc["rssi"] = status.lastPacketInfo.rssi;
-    doc["snr"] = status.lastPacketInfo.snr;
-    doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
-    doc["unix_GS_time"] = now;
-    doc["msg"] = String(tmp);
-
-    serializeJson(doc, Serial);
-    char buffer[256];
-    serializeJson(doc, buffer);
-    publish(buildTopic(topicMsg).c_str(), buffer, false);
-  }
-}
-
-void  MQTT_Client::sendRawPacket(String packet) {
+void  MQTT_Client::sendRx(String packet)
+{
   ConfigManager& configManager = ConfigManager::getInstance();
   time_t now;
   time(&now);
   struct timeval tv;
   gettimeofday(&tv, NULL);
+
   const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(22);
   DynamicJsonDocument doc(capacity);
   doc["station"] = configManager.getThingName();
@@ -236,16 +137,19 @@ void  MQTT_Client::sendRawPacket(String packet) {
   doc["frequency"] = status.modeminfo.frequency;
   doc["satellite"] = status.modeminfo.satellite;
  
-  if (String(status.modeminfo.modem_mode)=="LoRa") {
-      doc["sf"] = status.modeminfo.sf;
-      doc["cr"] = status.modeminfo.cr;
-      doc["bw"] = status.modeminfo.bw;
-  
-  } else {
-      doc["bitrate"] = status.modeminfo.bitrate;
-      doc["freqdev"] = status.modeminfo.freqDev;
-      doc["rxBw"] = status.modeminfo.rxBw;
-    }
+  if (String(status.modeminfo.modem_mode)=="LoRa")
+  {
+    doc["sf"] = status.modeminfo.sf;
+    doc["cr"] = status.modeminfo.cr;
+    doc["bw"] = status.modeminfo.bw;
+  }
+  else
+  {
+    doc["bitrate"] = status.modeminfo.bitrate;
+    doc["freqdev"] = status.modeminfo.freqDev;
+    doc["rxBw"] = status.modeminfo.rxBw;
+  }
+
   doc["rssi"] = status.lastPacketInfo.rssi;
   doc["snr"] = status.lastPacketInfo.snr;
   doc["frequency_error"] = status.lastPacketInfo.frequencyerror;
@@ -255,21 +159,16 @@ void  MQTT_Client::sendRawPacket(String packet) {
   doc["CRC_error"] = status.lastPacketInfo.crc_error;
   doc["data"] = packet.c_str();
   doc["NORAD"] = status.modeminfo.NORAD;
-  doc["test"] = status.testMode;
+  doc["test"] = configManager.getTestMode();
+
   serializeJson(doc, Serial);
   char buffer[1536];
   serializeJson(doc, buffer);
-  delay(random(1000));  // ugly an quick blocking code to distribute the load on the backend
-  delay(random(1000));  //
-  delay(random(1000));  //
-  delay(random(1000));  //
-  delay(random(1000));  //
-  publish(buildTopic(topicRawPacket).c_str(), buffer, false);
+  publish(buildTopic(teleTopic, topicRx).c_str(), buffer, false);
 }
 
-
-
-void  MQTT_Client::sendStatus() {
+void  MQTT_Client::sendStatus()
+{
   ConfigManager& configManager = ConfigManager::getInstance();
   time_t now;
   time(&now);
@@ -284,27 +183,28 @@ void  MQTT_Client::sendStatus() {
 
   doc["version"] = status.version;
   doc["board"] = configManager.getBoard();
-  doc["tx"] = status.tx;
-  doc["remoteTune"] = status.remoteTune;
-  doc["telemetry3d"] = status.telemetry3rd;
-  doc["test"] = status.testMode;
-
+  doc["tx"] = configManager.getAllowTx();
+  doc["remoteTune"] = configManager.getRemoteTune();
+  doc["telemetry3d"] = configManager.getTelemetry3rd();
+  doc["test"] = configManager.getTestMode();
 
   doc["mode"] = status.modeminfo.modem_mode;
   doc["frequency"] = status.modeminfo.frequency;
   doc["satellite"] = status.modeminfo.satellite;
   doc["NORAD"] = status.modeminfo.NORAD;
  
-  if (String(status.modeminfo.modem_mode)=="LoRa") {
-      doc["sf"] = status.modeminfo.sf;
-      doc["cr"] = status.modeminfo.cr;
-      doc["bw"] = status.modeminfo.bw;
-
-  } else {
-      doc["bitrate"] = status.modeminfo.bitrate;
-      doc["freqdev"] = status.modeminfo.freqDev;
-      doc["rxBw"] = status.modeminfo.rxBw;
-    }
+  if (String(status.modeminfo.modem_mode)=="LoRa")
+  {
+    doc["sf"] = status.modeminfo.sf;
+    doc["cr"] = status.modeminfo.cr;
+    doc["bw"] = status.modeminfo.bw;
+  }
+  else
+  {
+    doc["bitrate"] = status.modeminfo.bitrate;
+    doc["freqdev"] = status.modeminfo.freqDev;
+    doc["rxBw"] = status.modeminfo.rxBw;
+  }
 
   doc["pl"] = status.modeminfo.preambleLength;
   doc["CRC"] = status.modeminfo.crc;
@@ -323,177 +223,171 @@ void  MQTT_Client::sendStatus() {
   serializeJson(doc, Serial);
   char buffer[1024];
   serializeJson(doc, buffer);
-  publish(buildTopic(topicSendStatus).c_str(), buffer, false);
+  publish(buildTopic(statTopic, topicStatus).c_str(), buffer, false);
 }
 
-
-
-
-
-
-
-void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int length) {
+void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int length)
+{
   Radio& radio = Radio::getInstance();
-  if (!strcmp(topic, "fossa/global/sat_pos_oled")) {
+
+  bool global = true;
+  char* command;
+  strtok(topic, "/");
+  strtok(NULL, "/"); // tinygs
+  if (strcmp(strtok(NULL, "/"), "global")) // user
+  {
+    global = false;
+    strtok(NULL, "/"); // station
+  }
+
+  command = strtok(NULL, "/");
+
+  if (!strcmp(command, commandSatPos)) {
     manageSatPosOled((char*)payload, length);
   }
 
- // Remote_Reset        -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/reset
- if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteReset)).c_str()).c_str())) {
+  // Remote_Reset        -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/reset
+  if (!strcmp(command, commandReset))
+  {
     ESP.restart();
   }
 
- // Remote_setTestmode(       -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/test
- if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteTest)).c_str()).c_str())) {
-  ConfigManager& configManager = ConfigManager::getInstance();
-  DynamicJsonDocument doc(60);
-  deserializeJson(doc, payload);
-  bool test = doc[0];
-  Serial.println("");
-  Serial.print(F("Set Test Mode to "));  if (test) Serial.println(F("ON")); else Serial.println(F("OFF"));
-  configManager.setTest(test);
-  status.testMode= test;
-   }
-
- // Remote_topicRemoteremoteTune       -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/remoteTune
- if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteremoteTune)).c_str()).c_str())) {
-  ConfigManager& configManager = ConfigManager::getInstance();
-  DynamicJsonDocument doc(60);
-  deserializeJson(doc, payload);
-  bool tune = doc[0];
-  Serial.println("");
-  Serial.print(F("Set Remote Tune to "));  if (tune) Serial.println(F("ON")); else Serial.println(F("OFF"));
-  configManager.setRemoteTune(tune);
-  status.remoteTune= tune;
-   }
-
- // Remote_topicRemotetelemetry3rd      -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/telemetry3rd
- if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemotetelemetry3rd)).c_str()).c_str())) {
-  ConfigManager& configManager = ConfigManager::getInstance();
-  DynamicJsonDocument doc(60);
-  deserializeJson(doc, payload);
-  bool telemetry3rd = doc[0];
-  Serial.println("");
-  Serial.print(F("Third party telemetry (sat owners,  satnog... ) "));  if (telemetry3rd) Serial.println(F("ON")); else Serial.println(F("OFF"));
-  configManager.setTelemetry3rd(telemetry3rd);
-  status.telemetry3rd= telemetry3rd;
-   }
-
-// Remote_Frequency       -m "[434.8]" -t fossa/g4lile0/test_G4lile0_new/data/remote/freq
- if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFreq)).c_str()).c_str()) || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteFreq) ).c_str()) && status.remoteTune ))  {
-    radio.remote_freq((char*)payload, length);
-  }
-// Remote_Lora_Bandwidth  -m "[250]" -t fossa/g4lile0/test_G4lile0_new/data/remote/bw
- if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteBw)).c_str()).c_str())  || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteBw) ).c_str())&& status.remoteTune )) {
-    radio.remote_bw((char*)payload, length);
-  }
-// Remote_spreading factor -m "[11]" -t fossa/g4lile0/test_G4lile0_new/data/remote/sf 
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteSf)).c_str()).c_str())   || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteSf) ).c_str()) && status.remoteTune )) {
-    radio.remote_sf((char*)payload, length);
-  }
-// Remote_Coding rate       -m "[8]" -t fossa/g4lile0/test_G4lile0_new/data/remote/cr
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteCr)).c_str()).c_str())   || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteCr) ).c_str()) && status.remoteTune )) {
-    radio.remote_cr((char*)payload, length);
-  }
-// Remote_Crc               -m "[0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/crc
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteCrc)).c_str()).c_str())  || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteCrc) ).c_str()) && status.remoteTune )) {
-    radio.remote_crc((char*)payload, length);
+  // Remote_setTestmode(       -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/test
+  if (!strcmp(command, commandTest))
+  {
+    if (length < 1) return;
+    ConfigManager& configManager = ConfigManager::getInstance();
+    bool test = payload[0] - '0';
+    Serial.print(F("Set Test Mode to ")); if (test) Serial.println(F("ON")); else Serial.println(F("OFF"));
+    configManager.setTestMode(test);
   }
 
-// Remote_LoRa_syncword          -m "[8,1,2,3,4,5,6,7,8,9]" -t fossa/g4lile0/test_G4lile0_new/data/remote/lsw
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteLsw)).c_str()).c_str())  || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteLsw) ).c_str()) && status.remoteTune )) {
-    radio.remote_lsw((char*)payload, length);
+  // Remote_topicRemoteremoteTune       -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/remoteTune
+  if (!strcmp(command, commandRemoteTune))
+  {
+    if (length < 1) return;
+    ConfigManager& configManager = ConfigManager::getInstance();
+    bool tune = payload[0] - '0';
+    Serial.println("");
+    Serial.print(F("Set Remote Tune to ")); if (tune) Serial.println(F("ON")); else Serial.println(F("OFF"));
+    configManager.setRemoteTune(tune);
   }
 
-// Remote_Force LDRO        -m "[0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/fldro
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFldro)).c_str()).c_str())  || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteFldro) ).c_str()) && status.remoteTune )) {
-    radio.remote_fldro((char*)payload, length);
+  // Remote_topicRemotetelemetry3rd      -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/telemetry3rd
+  if (!strcmp(command, commandRemoteTune))
+  {
+    if (length < 1) return;
+    ConfigManager& configManager = ConfigManager::getInstance();
+    bool telemetry3rd = payload[0] - '0';
+    Serial.print(F("Third party telemetry (sat owners,  satnog... ) "));  if (telemetry3rd) Serial.println(F("ON")); else Serial.println(F("OFF"));
+    configManager.setTelemetry3rd(telemetry3rd);
   }
 
-// Remote_auto LDRO        -m "[0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/aldro
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteAldro)).c_str()).c_str())  || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteAldro) ).c_str()) && status.remoteTune )) {
-    radio.remote_aldro((char*)payload, length);
+  if (!strcmp(command, commandFrame))
+  {
+    uint8_t frameNumber = atoi(strtok(NULL, "/"));
+    radio.remoteTextFrame((char*)payload, length, frameNumber);
   }
 
-
-// Remote_Preamble Lenght   -m "[8]" -t fossa/g4lile0/test_G4lile0_new/data/remote/pl
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemotePl)).c_str()).c_str())   || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemotePl) ).c_str()) && status.remoteTune )) {
-    radio.remote_pl((char*)payload, length);
-  }
-
-// Remote_Begin_Lora       -m "[437.7,125.0,11,8,18,11,120,8,0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/begin_lora
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteBl)).c_str()).c_str())   || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteBl) ).c_str()) && status.remoteTune )) {
-    radio.remote_begin_lora((char*)payload, length);
-  }
-// Remote_Begin_FSK       -m "[433.5,100.0,10.0,250.0,10,100,16,0,0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/begin_fsk
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFs)).c_str()).c_str())   || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteFs) ).c_str()) && status.remoteTune )) {
-    radio.remote_begin_fsk((char*)payload, length);
-  }
-
-// Remote_FSK_BitRate      -m "[250]" -t fossa/g4lile0/test_G4lile0_new/data/remote/br
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteBr)).c_str()).c_str())   || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteBr) ).c_str()) && status.remoteTune )) {
-    radio.remote_br((char*)payload, length);
-  }
-
-// Remote_FSK_FrequencyDeviation  -m "[10.0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/Fd
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFd)).c_str()).c_str())   || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteFd) ).c_str()) && status.remoteTune )) {
-    radio.remote_fd((char*)payload, length);
-  }
-
-// Remote_FSK_RxBandwidth       -m "[125]" -t fossa/g4lile0/test_G4lile0_new/data/remote/fbw
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFbw)).c_str()).c_str())  || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteFbw) ).c_str()) && status.remoteTune )) {
-    radio.remote_fbw((char*)payload, length);
-  }
-
-// Remote_FSK_syncword          -m "[8,1,2,3,4,5,6,7,8,9]" -t fossa/g4lile0/test_G4lile0_new/data/remote/fsw
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFsw)).c_str()).c_str())  || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteFsw) ).c_str()) && status.remoteTune )) {
-    radio.remote_fsw((char*)payload, length);
-  }
-
-// Remote_FSK_Set_OOK + DataShapingOOK(only sx1278)     -m "[1,2]" -t fossa/g4lile0/test_G4lile0_new/data/remote/fok
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFook)).c_str()).c_str()) || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteFook) ).c_str()) && status.remoteTune )) {
-    radio.remote_fook((char*)payload, length);
-  }
-
-
-// Remote_Satellite_Name       -m "[\"FossaSat-3\" , 46494 ]" -t fossa/g4lile0/test_G4lile0_new/data/remote/sat
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteSat)).c_str()).c_str())  || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicRemoteSat) ).c_str()) && status.remoteTune )) {
-    radio.remote_sat((char*)payload, length);
-  }
-
-if ((!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteFrame)).c_str()).c_str()) && status.remoteTune ))
-{
-  uint8_t frameNumber = 0; // TODO: Parse the frame number from the mqtt topic. (pending to do the topic rewrite)
-  radio.remoteTextFrame((char*)payload, length, frameNumber);
-}
-// TODO: Handle the remote topic too
-// Remote_Frame_Local_A          -m "[]" -t fossa/global/global_frame
-//
-// [number of strings,
-// [font,TextAlignment,x,y,"string text"],
-// ...
-// ]
-//
-/*if (!strcmp(topic, "fossa/global/global_frame")) {    
-//if (!strcmp(topic, "fossa/g4lile0/test_G4lile0_new/data/remote/global_frame")) {    
-    radio.remote_global_frame((char*)payload, length);
-  }*/
-
-// Remote_Status       -m "[1]"     -t fossa/g4lile0/test_G4lile0_new/data/remote/status
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteStatus)).c_str()).c_str())) {
+    // Remote_Status       -m "[1]"     -t fossa/g4lile0/test_G4lile0_new/data/remote/status
+  if (!strcmp(command, commandStatus))
     radio.remote_status((char*)payload, length);
-  }
 
+  // ######################################################
+  // ############## Remote tune commands ##################
+  // ######################################################
+  if (ConfigManager::getInstance().getRemoteTune() && global)
+      return;
 
+  // Remote_Begin_Lora       -m "[437.7,125.0,11,8,18,11,120,8,0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/begin_lora
+  if (!strcmp(command, commandBeginLora))
+    radio.remote_begin_lora((char*)payload, length);
+
+  // Remote_Begin_FSK       -m "[433.5,100.0,10.0,250.0,10,100,16,0,0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/begin_fsk
+  if (!strcmp(command, commandBeginFSK))
+    radio.remote_begin_fsk((char*)payload, length);
+
+  // Remote_Frequency       -m "[434.8]" -t fossa/g4lile0/test_G4lile0_new/data/remote/freq
+  if (!strcmp(command, commandFreq))
+    radio.remote_freq((char*)payload, length);
+
+  // Remote_Lora_Bandwidth  -m "[250]" -t fossa/g4lile0/test_G4lile0_new/data/remote/bw
+  if (!strcmp(command, commandBw))
+    radio.remote_bw((char*)payload, length);
+
+  // Remote_spreading factor -m "[11]" -t fossa/g4lile0/test_G4lile0_new/data/remote/sf 
+  if (!strcmp(command, commandSf))
+    radio.remote_sf((char*)payload, length);
+
+  // Remote_Coding rate       -m "[8]" -t fossa/g4lile0/test_G4lile0_new/data/remote/cr
+  if (!strcmp(command, commandCr))
+    radio.remote_cr((char*)payload, length);
+
+  // Remote_Crc               -m "[0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/crc
+  if (!strcmp(command, commandCrc))
+    radio.remote_crc((char*)payload, length);
+
+  // Remote_LoRa_syncword          -m "[8,1,2,3,4,5,6,7,8,9]" -t fossa/g4lile0/test_G4lile0_new/data/remote/lsw
+  if (!strcmp(command, commandCrc))
+    radio.remote_lsw((char*)payload, length);
+
+  // Remote_Force LDRO        -m "[0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/fldro
+  if (!strcmp(command, commandFldro))
+    radio.remote_fldro((char*)payload, length);
+
+  // Remote_auto LDRO        -m "[0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/aldro
+  if (!strcmp(command, commandAldro))
+    radio.remote_aldro((char*)payload, length);
+
+  // Remote_Preamble Lenght   -m "[8]" -t fossa/g4lile0/test_G4lile0_new/data/remote/pl
+  if (!strcmp(command, commandPl))
+    radio.remote_pl((char*)payload, length);
+
+  // Remote_FSK_BitRate      -m "[250]" -t fossa/g4lile0/test_G4lile0_new/data/remote/br
+  if (!strcmp(command, commandBr))
+    radio.remote_br((char*)payload, length);
+
+  // Remote_FSK_FrequencyDeviation  -m "[10.0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/Fd
+  if (!strcmp(command, commandFd))
+    radio.remote_fd((char*)payload, length);
+
+  // Remote_FSK_RxBandwidth       -m "[125]" -t fossa/g4lile0/test_G4lile0_new/data/remote/fbw
+  if (!strcmp(command, commandFbw))
+    radio.remote_fbw((char*)payload, length);
+
+  // Remote_FSK_syncword          -m "[8,1,2,3,4,5,6,7,8,9]" -t fossa/g4lile0/test_G4lile0_new/data/remote/fsw
+  if (!strcmp(command, commandFsw))
+    radio.remote_fsw((char*)payload, length);
+
+  // Remote_FSK_Set_OOK + DataShapingOOK(only sx1278)     -m "[1,2]" -t fossa/g4lile0/test_G4lile0_new/data/remote/fok
+  if (!strcmp(command, commandFook))
+    radio.remote_fook((char*)payload, length);
+
+  // Remote_Satellite_Name       -m "[\"FossaSat-3\" , 46494 ]" -t fossa/g4lile0/test_G4lile0_new/data/remote/sat
+  if (!strcmp(command, commandSatPos))
+    radio.remote_sat((char*)payload, length);
+
+  // GOD MODE  With great power comes great responsibility!
+  // SPIsetRegValue  (only sx1278)     -m "[1,2,3,4,5]" -t fossa/g4lile0/test_G4lile0_new/data/remote/SPIsetRegValue
+  if (!strcmp(command, commandSPIsetRegValue))
+    radio.remote_SPIsetRegValue((char*)payload, length);
+
+  // SPIwriteRegister  (only sx1278)     -m "[1,2]" -t fossa/g4lile0/test_G4lile0_new/data/remote/SPIwriteRegister
+  if (!strcmp(command, commandSPIwriteRegister))
+    radio.remote_SPIwriteRegister((char*)payload, length);
+
+  // SPIreadRegister            -m "[1]" -t fossa/g4lile0/test_G4lile0_new/data/remote/SPIreadRegister
+  if (!strcmp(command, commandSPIreadRegister))
+    radio.remote_SPIreadRegister((char*)payload, length);
+
+/*
+TODO: Rebuild
 // Remote_Status       -m "[1]"     -t fossa/g4lile0/test_G4lile0_new/data/remote/JSON
 if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteJSON)).c_str()).c_str())) {
     
   Serial.println("JSON");
-  DynamicJsonDocument doc(2048);
-  char payloadStr[length+1];
-  memcpy(payloadStr, payload, length);
-  payloadStr[length] = '\0';                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
-  deserializeJson(doc, payloadStr);
+  DynamicJsonDocument doc(2048);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+  deserializeJson(doc, payload, length);
   JsonObject root = doc.as<JsonObject>();
   for (JsonPair kv : root) {
     
@@ -585,30 +479,10 @@ if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteJSON)).c_
       }        
 
   }
- }
+ }*/
 
-
-
-
-
- // GOD MODE  With great power comes great responsibility!
-// SPIsetRegValue  (only sx1278)     -m "[1,2,3,4,5]" -t fossa/g4lile0/test_G4lile0_new/data/remote/SPIsetRegValue
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicSPIsetRegValue)).c_str()).c_str()) || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicSPIsetRegValue) ).c_str()) && status.remoteTune )) {
-    radio.remote_SPIsetRegValue((char*)payload, length);
-  }
-// SPIwriteRegister  (only sx1278)     -m "[1,2]" -t fossa/g4lile0/test_G4lile0_new/data/remote/SPIwriteRegister
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicSPIwriteRegister)).c_str()).c_str()) || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicSPIwriteRegister) ).c_str()) && status.remoteTune )) {
-    radio.remote_SPIwriteRegister((char*)payload, length);
-  }
-
-// SPIreadRegister            -m "[1]" -t fossa/g4lile0/test_G4lile0_new/data/remote/SPIreadRegister
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicSPIreadRegister)).c_str()).c_str()) || (!strcmp(topic, (String(topicGlobalRemote)+ String(topicSPIreadRegister) ).c_str()) && status.remoteTune )) {
-    radio.remote_SPIreadRegister((char*)payload, length);
-  }
-// END GOD MODE
 
 }
-
 
 void MQTT_Client::manageSatPosOled(char* payload, size_t payload_len) {
   DynamicJsonDocument doc(60);

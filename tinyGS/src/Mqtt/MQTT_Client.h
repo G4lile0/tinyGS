@@ -78,10 +78,7 @@ public:
   void begin();
   void loop();
   void sendWelcome();
-  void sendSystemInfo();
-  void sendPong();
-  void sendMessage(char* frame, size_t respLen);
-  void sendRawPacket(String packet);
+  void sendRx(String packet);
   void manageMQTTData(char *topic, uint8_t *payload, unsigned int length);
   void sendStatus();
 
@@ -95,7 +92,7 @@ protected:
 
 private:
   MQTT_Client();
-  String buildTopic(const char * topic);
+  String buildTopic(const char * baseTopic, const char * cmnd);
   void subscribeToAll();
   void manageSatPosOled(char* payload, size_t payload_len);
 
@@ -107,52 +104,50 @@ private:
   const unsigned long reconnectionInterval = 5 * 1000;
   uint16_t connectionTimeout = 5 * 60 * 1000 / reconnectionInterval;
 
-  const char* topicStart PROGMEM = "tinygs";
+  const char* globalTopic PROGMEM = "/tinygs/global/%cmnd%";
+  const char* cmndTopic PROGMEM = "/tinygs/%user%/%station%/cmnd/%cmnd%";
+  const char* teleTopic PROGMEM = "/tinygs/%user%/%station%/tele/%cmnd%";
+  const char* statTopic PROGMEM = "/tinygs/%user%/%station%/stat/%cmnd%";
+
+  // tele
   const char* topicWelcome PROGMEM = "welcome";
-  const char* topicStatus PROGMEM = "status";
-  const char* topicSysInfo PROGMEM = "sys_info";
-  const char* topicPong PROGMEM= "pong";
-  const char* topicMsg PROGMEM= "msg";
-  const char* topicMiniTTN PROGMEM= "miniTTN";
-  const char* topicData PROGMEM= "data/#";
   const char* topicPing PROGMEM= "ping";
-  const char* topicRawPacket PROGMEM= "raw_packet";
-  const char* topicSendStatus PROGMEM= "gs_status";
-  
-  const char* topicRemote PROGMEM= "data/remote/";
-  const char* topicGlobalRemote PROGMEM= "tinygs/global/remote/";
-  const char* topicRemoteReset PROGMEM= "reset";
-  const char* topicRemotePing PROGMEM= "ping";
-  const char* topicRemoteFreq PROGMEM= "freq";
-  const char* topicRemoteBw PROGMEM= "bw";
-  const char* topicRemoteSf PROGMEM= "sf";
-  const char* topicRemoteCr PROGMEM= "cr";
-  const char* topicRemoteCrc PROGMEM= "crc";
-  const char* topicRemoteLsw PROGMEM= "lsw";
-  const char* topicRemoteFldro PROGMEM= "fldro";
-  const char* topicRemoteAldro PROGMEM= "aldro";
-  const char* topicRemotePl PROGMEM= "pl";
-  const char* topicRemoteBl PROGMEM= "begin_lora";
-  const char* topicRemoteFs PROGMEM= "begin_fsk";
-  const char* topicRemoteBr PROGMEM= "br";
-  const char* topicRemoteFd PROGMEM= "Fd";
-  const char* topicRemoteFbw PROGMEM= "fbw";
-  const char* topicRemoteFsw PROGMEM= "fsw";
-  const char* topicRemoteFook PROGMEM= "fok";
-  const char* topicRemoteFrame PROGMEM= "frame";
-  const char* topicRemoteSat PROGMEM= "sat";
-  const char* topicRemoteStatus PROGMEM= "status";
-  const char* topicRemoteTest PROGMEM= "test";
-  const char* topicRemoteremoteTune PROGMEM= "remoteTune";
-  const char* topicRemotetelemetry3rd PROGMEM= "telemetry3rd";
-  const char* topicRemoteJSON PROGMEM= "json";
-  
-    // GOD MODE  With great power comes great responsibility!
-  const char* topicSPIsetRegValue PROGMEM= "SPIsetRegValue";
-  const char* topicSPIwriteRegister PROGMEM= "SPIwriteRegister";
-  const char* topicSPIreadRegister PROGMEM= "SPIreadRegister";
-  
-  
+  const char* topicStatus PROGMEM = "status";
+  const char* topicRx PROGMEM= "rx";
+
+  // command
+  const char* commandSatPos PROGMEM= "sat_pos_oled";
+  const char* commandReset PROGMEM= "reset";
+  const char* commandFreq PROGMEM= "freq";
+  const char* commandBw PROGMEM= "bw";
+  const char* commandSf PROGMEM= "sf";
+  const char* commandCr PROGMEM= "cr";
+  const char* commandCrc PROGMEM= "crc";
+  const char* commandLsw PROGMEM= "lsw";
+  const char* commandFldro PROGMEM= "fldro";
+  const char* commandAldro PROGMEM= "aldro";
+  const char* commandPl PROGMEM= "pl";
+  const char* commandBeginLora PROGMEM= "begin_lora";
+  const char* commandBeginFSK PROGMEM= "begin_fsk";
+  const char* commandBr PROGMEM= "br";
+  const char* commandFd PROGMEM= "Fd";
+  const char* commandFbw PROGMEM= "fbw";
+  const char* commandFsw PROGMEM= "fsw";
+  const char* commandFook PROGMEM= "fok";
+  const char* commandFrame PROGMEM= "frame";
+  const char* commandSat PROGMEM= "sat";
+  const char* commandStatus PROGMEM= "status";
+  const char* commandTest PROGMEM= "test";
+  const char* commandRemoteTune PROGMEM= "remoteTune";
+  const char* commandRemotetelemetry3rd PROGMEM= "telemetry3rd";
+  // GOD MODE  With great power comes great responsibility!
+  const char* commandSPIsetRegValue PROGMEM= "SPIsetRegValue";
+  const char* commandSPIwriteRegister PROGMEM= "SPIwriteRegister";
+  const char* commandSPIreadRegister PROGMEM= "SPIreadRegister";
+
+
+  // TODO: find appropiate name
+  const char* commandJSON PROGMEM= "json";
 };
 
 #endif

@@ -130,7 +130,7 @@ void Radio::disableInterrupt()
   eInterrupt = false;
 }
 
-int Radio::sendFrame(uint8_t functionId, const char* data)
+int Radio::sendTx(uint8_t functionId, const char* data)
 {
   // TODO: Rebuild this method
   /*if (!status.tx)
@@ -169,6 +169,7 @@ int Radio::sendFrame(uint8_t functionId, const char* data)
   delete[] frame;
 
   return state;*/
+  return 1; // delete
 }
 
 
@@ -208,7 +209,6 @@ uint8_t Radio::listen()
     state = l->readData(respFrame, respLen);
     status.lastPacketInfo.rssi = l->getRSSI();
     status.lastPacketInfo.snr = l->getSNR();
-    //status.lastPacketInfo.frequencyerror = l->getFrequencyError();
   }
  
 
@@ -225,14 +225,14 @@ uint8_t Radio::listen()
   {
     status.lastPacketInfo.crc_error = false;
     String encoded = base64::encode(respFrame, respLen); 
-    MQTT_Client::getInstance().sendRawPacket(encoded);
+    MQTT_Client::getInstance().sendRx(encoded);
   }
   else if (state == ERR_CRC_MISMATCH) 
   {
     // packet was received, but is malformed
     status.lastPacketInfo.crc_error = true;
     String error_encoded = base64::encode("Error_CRC");
-    MQTT_Client::getInstance().sendRawPacket(error_encoded);
+    MQTT_Client::getInstance().sendRx(error_encoded);
   } 
 
   delete[] respFrame;
@@ -303,7 +303,6 @@ uint8_t Radio::listen()
   }
 }
 
-
 void Radio::readState(int state)
 {
   if (state == ERR_NONE)
@@ -318,36 +317,11 @@ void Radio::readState(int state)
   }
 }
 
-
-void Radio::readState_sent(int state) 
-{
-  if (state == ERR_NONE)
-  {
-    Serial.println(F("sent successfully!"));
-    return;
-  }
-
-  if (status.tx) 
-  {
-      Serial.print(F("failed, code "));
-      Serial.println(state);
-      Serial.println(String(F("Go to the config panel (")) + WiFi.localIP().toString() + F(") and check if the board selected matches your hardware."));
-  }
-  else
-  {
-      Serial.println(String(F("Go to the config panel (")) + WiFi.localIP().toString() + F(") to enable TX."));
-  }
-}
-
-
 // remote
 void Radio::remote_freq(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   float frequency = doc[0];
   Serial.println("");
   Serial.print(F("Set Frequency: ")); Serial.print(frequency, 3);Serial.println(F(" MHz"));
@@ -377,10 +351,7 @@ void Radio::remote_freq(char* payload, size_t payload_len)
 void Radio::remote_bw(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   float bw = doc[0];
   Serial.println("");
   Serial.print(F("Set bandwidth: ")); Serial.print(bw, 3);Serial.println(F(" kHz"));
@@ -410,10 +381,7 @@ void Radio::remote_bw(char* payload, size_t payload_len)
 void Radio::remote_sf(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   uint8_t sf = doc[0];
   Serial.println("");
   Serial.print(F("Set spreading factor: ")); Serial.println(sf);
@@ -445,10 +413,7 @@ void Radio::remote_sf(char* payload, size_t payload_len)
 void Radio::remote_cr(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   uint8_t cr = doc[0];
   Serial.println("");
   Serial.print(F("Set coding rate: ")); Serial.println(cr);
@@ -478,10 +443,7 @@ void Radio::remote_cr(char* payload, size_t payload_len)
 void Radio::remote_crc(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   bool crc = doc[0];
   Serial.println("");
   Serial.print(F("Set CRC "));  if (crc) Serial.println(F("ON")); else Serial.println(F("OFF"));
@@ -507,10 +469,7 @@ void Radio::remote_crc(char* payload, size_t payload_len)
 void Radio::remote_lsw(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   uint8_t sw = doc[0];
   Serial.println("");
   Serial.print(F(" 0x"));Serial.print(sw,HEX);
@@ -528,10 +487,7 @@ void Radio::remote_lsw(char* payload, size_t payload_len)
 void Radio::remote_fldro(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   bool ldro = doc[0];
   Serial.println("");
   Serial.print(F("Set ForceLDRO "));  if (ldro) Serial.println(F("ON")); else Serial.println(F("OFF"));
@@ -562,14 +518,8 @@ void Radio::remote_fldro(char* payload, size_t payload_len)
 
 void Radio::remote_aldro(char* payload, size_t payload_len)
 {
-  //DynamicJsonDocument doc(60);
-  //char payloadStr[payload_len+1];
-  // memcpy(payloadStr, payload, payload_len);
-  // payloadStr[payload_len] = '\0';
-  // deserializeJson(doc, payloadStr);
-  // bool ldro = doc[0]; // FIXME this is not used becasue autoLDRO has no parameter!!!! does it need if???
   Serial.println("");
-  Serial.print(F("Set AutoLDRO ")); // if (ldro) Serial.println(F("ON")); else Serial.println(F("OFF"));
+  Serial.print(F("Set AutoLDRO ")); 
   int state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
@@ -592,10 +542,7 @@ void Radio::remote_aldro(char* payload, size_t payload_len)
 void Radio::remote_pl(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   uint16_t pl = doc[0];
   Serial.println("");
   Serial.print(F("Set Preamble ")); Serial.println(pl);
@@ -624,10 +571,7 @@ void Radio::remote_pl(char* payload, size_t payload_len)
 void Radio::remote_begin_lora(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(256);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   float   freq = doc[0];
   float   bw  =  doc[1];
   uint8_t sf  =  doc[2];
@@ -682,10 +626,7 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len)
 void Radio::remote_begin_fsk(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(256);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   float   freq  = doc[0];
   float  	br    = doc[1];
   float   freqDev  =  doc[2];
@@ -738,10 +679,7 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len)
 void Radio::remote_br(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   uint8_t br = doc[0];
   Serial.println("");
   Serial.print(F("Set FSK Bit rate: ")); Serial.println(br);
@@ -760,10 +698,7 @@ void Radio::remote_br(char* payload, size_t payload_len)
 void Radio::remote_fd(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   uint8_t fd = doc[0];
   Serial.println("");
   Serial.print(F("Set FSK Frequency Des. : ")); Serial.println(fd);
@@ -783,10 +718,7 @@ void Radio::remote_fd(char* payload, size_t payload_len)
 void Radio::remote_fbw(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   float frequency = doc[0];
   Serial.println("");
   Serial.print(F("Set FSK bandwidth: ")); Serial.print(frequency, 3); Serial.println(F(" kHz"));
@@ -805,10 +737,7 @@ void Radio::remote_fbw(char* payload, size_t payload_len)
 void Radio::remote_fsw(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(256);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   uint8_t syncWord[7];
   uint8_t synnwordsize = doc[0];
 
@@ -833,10 +762,7 @@ void Radio::remote_fsw(char* payload, size_t payload_len)
 void Radio::remote_fook(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   bool    enableOOK = doc[0];
   uint8_t ook_shape = doc[1];
 
@@ -861,10 +787,7 @@ void Radio::remote_fook(char* payload, size_t payload_len)
 void Radio::remote_SPIwriteRegister(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   uint8_t     reg = doc[0];
   uint8_t     data = doc[1];
   Serial.println("");
@@ -886,10 +809,7 @@ void Radio::remote_SPIwriteRegister(char* payload, size_t payload_len)
 void Radio::remote_SPIreadRegister(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   uint8_t     reg = doc[0];
   uint8_t     data = 0 ;
   Serial.println("");
@@ -914,10 +834,7 @@ void Radio::remote_SPIreadRegister(char* payload, size_t payload_len)
 void Radio::remote_SPIsetRegValue(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(120);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   uint8_t reg = doc[0];
   uint8_t value = doc[1];
   uint8_t msb = doc[2];
@@ -950,10 +867,7 @@ void Radio::remote_SPIsetRegValue(char* payload, size_t payload_len)
 void Radio::remote_sat(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(256);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   const char* satellite = doc[0];
   uint32_t  NORAD     =  doc[1];
   status.modeminfo.NORAD = NORAD;
@@ -968,10 +882,7 @@ void Radio::remote_sat(char* payload, size_t payload_len)
 void Radio::remoteTextFrame(char* payload, size_t payload_len, uint8_t frameNumber)
 {
   DynamicJsonDocument doc(256);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   status.remoteTextFrameLength[frameNumber] = doc[0];
   Serial.println("");
   Serial.print(F("received frame: ")); Serial.print(status.remoteTextFrameLength[frameNumber]);
@@ -995,10 +906,7 @@ void Radio::remoteTextFrame(char* payload, size_t payload_len, uint8_t frameNumb
 void Radio::remote_status(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payloadStr);
+  deserializeJson(doc, payload, payload_len);
   uint8_t status = doc[0];
   Serial.println("");
   Serial.print(F("Remote status requested: ")); Serial.println(status);     // right now just one mode

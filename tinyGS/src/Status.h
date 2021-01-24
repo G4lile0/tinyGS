@@ -20,20 +20,6 @@
 #ifndef Status_h
 #define Status_h
 
-struct SysInfo {
-  float batteryChargingVoltage = 0.0f;
-  float batteryChargingCurrent = 0.0f;
-  float batteryVoltage = 0.0f;
-  float solarCellAVoltage = 0.0f;
-  float solarCellBVoltage = 0.0f;
-  float solarCellCVoltage = 0.0f;
-  float batteryTemperature = 0.0f;
-  float boardTemperature = 0.0f;
-  int mcuTemperature = 0;
-  int resetCounter = 0;
-  char powerConfig = 0b11111111;
-};
-
 struct PacketInfo {
   String time = "Waiting         ";
   float rssi = 0;
@@ -41,7 +27,6 @@ struct PacketInfo {
   float frequencyerror = 0;
   bool crc_error = false;
 };
-
 
 struct ModemInfo {
   String satellite     = "Norby Sat               ";
@@ -71,26 +56,16 @@ struct TextFrame {
   String text = "123456789012345678901234567890";
 };
 
-
-
 struct Status {
   const uint32_t version = 21011701; // version year month day release
   const char* git_version = GIT_VERSION;
   bool mqtt_connected = false;
-  SysInfo sysInfo;
   PacketInfo lastPacketInfo;
   ModemInfo modeminfo;
   float satPos[2] = {0, 0};
   uint8_t remoteTextFrameLength[4] = {0, 0, 0, 0};
   TextFrame remoteTextFrame[4][15];
-  bool tx = false;
-  bool remoteTune = true;
-  bool telemetry3rd = true;
-  bool testMode = true;
   float time_offset = 0;
-
  };
-
-
 
 #endif

@@ -143,11 +143,13 @@ void drawRemoteFrame(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x,
 
 void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y)
 {
+  ConfigManager& configManager = ConfigManager::getInstance();
+
   display->drawXbm(x +10, y , Logo_width, Logo_height, Logo_bits);
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString( x+70, y + 32, "Sta: "+ String(ConfigManager::getInstance().getThingName()));
-  display->drawString( x+70, y + 44, status.testMode  ? "Test mode ON" : "Test mode OFF");
+  display->drawString( x+70, y + 32, "Sta: " + String(configManager.getThingName()));
+  display->drawString( x+70, y + 44, String(configManager.getTestMode())  ? "Test mode ON" : "Test mode OFF");
 }
 
 void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y)
@@ -243,15 +245,15 @@ void drawFrame7(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 void drawFrame8(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y)
 {
   display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->drawString( x+2,  16+y, "MQTT:" );
-  if (status.mqtt_connected ) { display->drawString( x+7,  26+y, "ON" );}  else {display->drawString( x+5,  26+y, "OFF" ); }
-  display->drawString( x+90,  10+y, "Remote" );
-  display->drawString( x+95,  21+y, "TUNE" );
-  if (status.remoteTune ) { display->drawString( x+101,  31+y, "ON" );}  else {display->drawString( x+98,  31+y, "OFF" ); }
+  display->drawString(x+2, 16+y, "MQTT:" );
+  if (status.mqtt_connected) { display->drawString( x+7,  26+y, "ON"); }  else { display->drawString( x+5,  26+y, "OFF"); }
+  display->drawString(x+90, 10+y, "Remote");
+  display->drawString(x+95, 21+y, "TUNE" );
+  if (ConfigManager::getInstance().getRemoteTune()) { display->drawString(x+101, 31+y, "ON"); }  else { display->drawString(x+98,  31+y, "OFF"); }
   display->drawXbm(x + 32, y + 4, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
   // The coordinates define the center of the text
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->drawString(64 + x, 42 + y, "Connected "+(WiFi.localIP().toString()));
+  display->drawString(64 + x, 42 + y, "Connected " + (WiFi.localIP().toString()));
 }  
 
 void displayShowConnected()

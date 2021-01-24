@@ -98,8 +98,6 @@ Radio& radio = Radio::getInstance();
 TaskHandle_t dispUpdate_handle;
 
 const char* ntpServer = "time.cloudflare.com";
-//const long  gmtOffset_sec = 0; // 3600;         // 3600 for Spain
-//const int   daylightOffset_sec = 0; // 3600;
 void printLocalTime();
 
 // Global status
@@ -113,8 +111,8 @@ void ntp_cb (NTPEvent_t e)
   switch (e.event) {
     case timeSyncd:
     case partlySync:
-      Serial.printf ("[NTP Event] %s\n", NTP.ntpEvent2str (e));
-      status.testMode=e.info.offset;
+      //Serial.printf ("[NTP Event] %s\n", NTP.ntpEvent2str (e));
+      status.time_offset = e.info.offset;
       break;
     default:
       break;
@@ -317,20 +315,16 @@ void loop() {
 
 void switchTestmode()
 {  
-
   if (configManager.getTestMode())
   {
-      // TODO getTestMode to false
+      configManager.setTestMode(false);
       Serial.println(F("Changed from test mode to normal mode"));
   }
   else
   {
-      // TODO getTestMode to true
+      configManager.setTestMode(false);
       Serial.println(F("Changed from normal mode to test mode"));
   }
-
-  configManager.saveConfig();
-  status.testMode = configManager.getTestMode();
 }
 
 void printLocalTime()
