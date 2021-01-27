@@ -44,25 +44,25 @@ public:
   void disableInterrupt();
   uint8_t listen();
   bool isReady() { return ready; }
-  void remote_freq(char* payload, size_t payload_len);
-  void remote_bw(char* payload, size_t payload_len);
-  void remote_sf(char* payload, size_t payload_len);
-  void remote_cr(char* payload, size_t payload_len);
-  void remote_crc(char* payload, size_t payload_len);
-  void remote_lsw(char* payload, size_t payload_len);
-  void remote_fldro(char* payload, size_t payload_len);
-  void remote_aldro(char* payload, size_t payload_len);
-  void remote_pl(char* payload, size_t payload_len);
-  void remote_begin_lora(char* payload, size_t payload_len);
-  void remote_begin_fsk(char* payload, size_t payload_len);
-  void remote_br(char* payload, size_t payload_len);
-  void remote_fd(char* payload, size_t payload_len);
-  void remote_fbw(char* payload, size_t payload_len);
-  void remote_fsw(char* payload, size_t payload_len);
-  void remote_fook(char* payload, size_t payload_len);
-  void remote_SPIsetRegValue(char* payload, size_t payload_len);
+  int16_t remote_freq(char* payload, size_t payload_len);
+  int16_t remote_bw(char* payload, size_t payload_len);
+  int16_t remote_sf(char* payload, size_t payload_len);
+  int16_t remote_cr(char* payload, size_t payload_len);
+  int16_t remote_crc(char* payload, size_t payload_len);
+  int16_t remote_lsw(char* payload, size_t payload_len);
+  int16_t remote_fldro(char* payload, size_t payload_len);
+  int16_t remote_aldro(char* payload, size_t payload_len);
+  int16_t remote_pl(char* payload, size_t payload_len);
+  int16_t remote_begin_lora(char* payload, size_t payload_len);
+  int16_t remote_begin_fsk(char* payload, size_t payload_len);
+  int16_t remote_br(char* payload, size_t payload_len);
+  int16_t remote_fd(char* payload, size_t payload_len);
+  int16_t remote_fbw(char* payload, size_t payload_len);
+  int16_t remote_fsw(char* payload, size_t payload_len);
+  int16_t remote_fook(char* payload, size_t payload_len);
+  int16_t remote_SPIsetRegValue(char* payload, size_t payload_len);
   void remote_SPIwriteRegister(char* payload, size_t payload_len);
-  void remote_SPIreadRegister(char* payload, size_t payload_len);
+  int16_t remote_SPIreadRegister(char* payload, size_t payload_len);
   int sendTx(const char* data, size_t length);
   
    
@@ -73,6 +73,9 @@ private:
   static void setFlag();
   bool ready = false;
   SPIClass spi;
+
+  double _atof(const char* buff, size_t length);
+  int _atoi(const char* buff, size_t length);
 };
 
 // Code from fossa

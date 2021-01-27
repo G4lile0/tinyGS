@@ -241,18 +241,15 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
   }
 
   command = strtok(NULL, "/");
+  uint16_t result = 0xFF;
 
   if (!strcmp(command, commandSatPos)) {
     manageSatPosOled((char*)payload, length);
   }
 
-  // Remote_Reset        -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/reset
   if (!strcmp(command, commandReset))
-  {
     ESP.restart();
-  }
 
-  // Remote_setTestmode(       -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/test
   if (!strcmp(command, commandTest))
   {
     if (length < 1) return;
@@ -260,9 +257,9 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     bool test = payload[0] - '0';
     Serial.print(F("Set Test Mode to ")); if (test) Serial.println(F("ON")); else Serial.println(F("OFF"));
     configManager.setTestMode(test);
+    result = 0;
   }
 
-  // Remote_topicRemoteremoteTune       -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/remoteTune
   if (!strcmp(command, commandRemoteTune))
   {
     if (length < 1) return;
@@ -271,9 +268,9 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     Serial.println("");
     Serial.print(F("Set Remote Tune to ")); if (tune) Serial.println(F("ON")); else Serial.println(F("OFF"));
     configManager.setRemoteTune(tune);
+    result = 0;
   }
 
-  // Remote_topicRemotetelemetry3rd      -m "[1]" -t fossa/g4lile0/test_G4lile0_new/remote/telemetry3rd
   if (!strcmp(command, commandRemoteTune))
   {
     if (length < 1) return;
@@ -281,6 +278,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     bool telemetry3rd = payload[0] - '0';
     Serial.print(F("Third party telemetry (sat owners,  satnog... ) "));  if (telemetry3rd) Serial.println(F("ON")); else Serial.println(F("OFF"));
     configManager.setTelemetry3rd(telemetry3rd);
+    result = 0;
   }
 
   if (!strcmp(command, commandFrame))
@@ -309,110 +307,106 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
       Serial.print(F(" Pos y "));Serial.print(status.remoteTextFrame[frameNumber][n].text_pos_y);
       Serial.print(F(" -> "));Serial.print(status.remoteTextFrame[frameNumber][n].text);
     }
+
+    result = 0;
   }
 
-    // Remote_Status       -m "[1]"     -t fossa/g4lile0/test_G4lile0_new/data/remote/status
   if (!strcmp(command, commandStatus)) 
   {
     uint8_t mode = payload[0] - '0';
     Serial.print(F("Remote status requested: ")); Serial.println(mode);     // right now just one mode
     sendStatus();
+    return;
   }
 
   // ######################################################
   // ############## Remote tune commands ##################
   // ######################################################
   if (ConfigManager::getInstance().getRemoteTune() && global)
-      return;
+    return;
 
-  // Remote_Begin_Lora       -m "[437.7,125.0,11,8,18,11,120,8,0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/begin_lora
+  // Remote_Begin_Lora [437.7,125.0,11,8,18,11,120,8,0]
   if (!strcmp(command, commandBeginLora))
-    radio.remote_begin_lora((char*)payload, length);
+    result = radio.remote_begin_lora((char*)payload, length);
 
-  // Remote_Begin_FSK       -m "[433.5,100.0,10.0,250.0,10,100,16,0,0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/begin_fsk
+  // Remote_Begin_FSK [433.5,100.0,10.0,250.0,10,100,16,0,0]
   if (!strcmp(command, commandBeginFSK))
-    radio.remote_begin_fsk((char*)payload, length);
+    result = radio.remote_begin_fsk((char*)payload, length);
 
-  // Remote_Frequency       -m "[434.8]" -t fossa/g4lile0/test_G4lile0_new/data/remote/freq
   if (!strcmp(command, commandFreq))
-    radio.remote_freq((char*)payload, length);
+    result = radio.remote_freq((char*)payload, length);
 
-  // Remote_Lora_Bandwidth  -m "[250]" -t fossa/g4lile0/test_G4lile0_new/data/remote/bw
   if (!strcmp(command, commandBw))
-    radio.remote_bw((char*)payload, length);
+    result = radio.remote_bw((char*)payload, length);
 
-  // Remote_spreading factor -m "[11]" -t fossa/g4lile0/test_G4lile0_new/data/remote/sf 
   if (!strcmp(command, commandSf))
-    radio.remote_sf((char*)payload, length);
+    result = radio.remote_sf((char*)payload, length);
 
-  // Remote_Coding rate       -m "[8]" -t fossa/g4lile0/test_G4lile0_new/data/remote/cr
   if (!strcmp(command, commandCr))
-    radio.remote_cr((char*)payload, length);
+    result = radio.remote_cr((char*)payload, length);
 
-  // Remote_Crc               -m "[0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/crc
   if (!strcmp(command, commandCrc))
-    radio.remote_crc((char*)payload, length);
+    result = radio.remote_crc((char*)payload, length);
 
-  // Remote_LoRa_syncword          -m "[8,1,2,3,4,5,6,7,8,9]" -t fossa/g4lile0/test_G4lile0_new/data/remote/lsw
+  // Remote_LoRa_syncword [8,1,2,3,4,5,6,7,8,9]
   if (!strcmp(command, commandCrc))
-    radio.remote_lsw((char*)payload, length);
+    result = radio.remote_lsw((char*)payload, length);
 
-  // Remote_Force LDRO        -m "[0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/fldro
   if (!strcmp(command, commandFldro))
-    radio.remote_fldro((char*)payload, length);
+    result = radio.remote_fldro((char*)payload, length);
 
-  // Remote_auto LDRO        -m "[0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/aldro
   if (!strcmp(command, commandAldro))
-    radio.remote_aldro((char*)payload, length);
+    result = radio.remote_aldro((char*)payload, length);
 
-  // Remote_Preamble Lenght   -m "[8]" -t fossa/g4lile0/test_G4lile0_new/data/remote/pl
   if (!strcmp(command, commandPl))
-    radio.remote_pl((char*)payload, length);
+    result = radio.remote_pl((char*)payload, length);
 
-  // Remote_FSK_BitRate      -m "[250]" -t fossa/g4lile0/test_G4lile0_new/data/remote/br
   if (!strcmp(command, commandBr))
-    radio.remote_br((char*)payload, length);
+    result = radio.remote_br((char*)payload, length);
 
-  // Remote_FSK_FrequencyDeviation  -m "[10.0]" -t fossa/g4lile0/test_G4lile0_new/data/remote/Fd
   if (!strcmp(command, commandFd))
-    radio.remote_fd((char*)payload, length);
+    result = radio.remote_fd((char*)payload, length);
 
-  // Remote_FSK_RxBandwidth       -m "[125]" -t fossa/g4lile0/test_G4lile0_new/data/remote/fbw
   if (!strcmp(command, commandFbw))
-    radio.remote_fbw((char*)payload, length);
+    result = radio.remote_fbw((char*)payload, length);
 
-  // Remote_FSK_syncword          -m "[8,1,2,3,4,5,6,7,8,9]" -t fossa/g4lile0/test_G4lile0_new/data/remote/fsw
+  // Remote_FSK_syncword [8,1,2,3,4,5,6,7,8,9]
   if (!strcmp(command, commandFsw))
-    radio.remote_fsw((char*)payload, length);
+    result = radio.remote_fsw((char*)payload, length);
 
-  // Remote_FSK_Set_OOK + DataShapingOOK(only sx1278)     -m "[1,2]" -t fossa/g4lile0/test_G4lile0_new/data/remote/fok
+  // Remote_FSK_Set_OOK + DataShapingOOK(only sx1278) [1,2]
   if (!strcmp(command, commandFook))
-    radio.remote_fook((char*)payload, length);
+    result = radio.remote_fook((char*)payload, length);
 
-  // Remote_Satellite_Name       -m "[\"FossaSat-3\" , 46494 ]" -t fossa/g4lile0/test_G4lile0_new/data/remote/sat
+  // Remote_Satellite_Name [\"FossaSat-3\" , 46494 ]
   if (!strcmp(command, commandSat))
+  {
     remoteSatCmnd((char*)payload, length);
+    result = 0;
+  }
 
   // GOD MODE  With great power comes great responsibility!
-  // SPIsetRegValue  (only sx1278)     -m "[1,2,3,4,5]" -t fossa/g4lile0/test_G4lile0_new/data/remote/SPIsetRegValue
+  // SPIsetRegValue  (only sx1278) [1,2,3,4,5]
   if (!strcmp(command, commandSPIsetRegValue))
-    radio.remote_SPIsetRegValue((char*)payload, length);
+    result = radio.remote_SPIsetRegValue((char*)payload, length);
 
-  // SPIwriteRegister  (only sx1278)     -m "[1,2]" -t fossa/g4lile0/test_G4lile0_new/data/remote/SPIwriteRegister
+  // SPIwriteRegister  (only sx1278) [1,2]
   if (!strcmp(command, commandSPIwriteRegister))
+  {
     radio.remote_SPIwriteRegister((char*)payload, length);
+    result = 0;
+  }
 
-  // SPIreadRegister            -m "[1]" -t fossa/g4lile0/test_G4lile0_new/data/remote/SPIreadRegister
-  if (!strcmp(command, commandSPIreadRegister))
-    radio.remote_SPIreadRegister((char*)payload, length);
+  if (!strcmp(command, commandSPIreadRegister) && !global)
+    result = radio.remote_SPIreadRegister((char*)payload, length);
 
-  // Remote_Status       -m "[1]"     -t fossa/g4lile0/test_G4lile0_new/data/remote/JSON
   if (!strcmp(command, commandBatchConf))
   {
     Serial.println("JSON");
     DynamicJsonDocument doc(2048);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
     deserializeJson(doc, payload, length);
     JsonObject root = doc.as<JsonObject>();
+    result = 0;
 
     for (JsonPair kv : root)
     {
@@ -427,63 +421,69 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
       size_t len = strlen(value);
 
       if (!strcmp(key, commandCrc))        
-        radio.remote_crc(value, len);
+        result = radio.remote_crc(value, len);
 
       else if (!strcmp(key, commandFreq))
-        radio.remote_freq(value, len);
+        result = radio.remote_freq(value, len);
 
       else if (!strcmp(key, commandBeginLora))
-        radio.remote_begin_lora(value, len);
+        result = radio.remote_begin_lora(value, len);
 
       else if (!strcmp(key, commandBw))
-        radio.remote_bw(value, len);
+        result = radio.remote_bw(value, len);
 
       else if (!strcmp(key, commandSf))
-        radio.remote_sf(value, len);
+        result = radio.remote_sf(value, len);
 
       else if (!strcmp(key, commandLsw))
-        radio.remote_lsw(value, len);
+        result = radio.remote_lsw(value, len);
 
       else if (!strcmp(key, commandFldro))
-        radio.remote_fldro(value, len);
+        result = radio.remote_fldro(value, len);
 
       else if (!strcmp(key, commandAldro))
-        radio.remote_aldro(value, len);
+        result = radio.remote_aldro(value, len);
 
       else if (!strcmp(key, commandPl))
-        radio.remote_pl(value, len);
+        result = radio.remote_pl(value, len);
 
       else if (!strcmp(key, commandBeginFSK))
-        radio.remote_begin_fsk(value, len);
+        result = radio.remote_begin_fsk(value, len);
 
       else if (!strcmp(key, commandBr))
-        radio.remote_br(value, len);
+        result = radio.remote_br(value, len);
 
       else if (!strcmp(key, commandFd))
-        radio.remote_fd(value, len);
+        result = radio.remote_fd(value, len);
 
       else if (!strcmp(key, commandFbw))
-        radio.remote_fbw(value, len);
+        result = radio.remote_fbw(value, len);
 
       else if (!strcmp(key, commandFsw))
-        radio.remote_fsw(value, len);
+        result = radio.remote_fsw(value, len);
 
       else if (!strcmp(key, commandFook))
-        radio.remote_fook(value, len);
+        result = radio.remote_fook(value, len);
 
       else if (!strcmp(key, commandSat))
         remoteSatCmnd(value, len);
 
       else if (!strcmp(key, commandSPIsetRegValue))
-        radio.remote_SPIsetRegValue(value, len);
+        result = radio.remote_SPIsetRegValue(value, len);
 
       else if (!strcmp(key, commandSPIwriteRegister))
         radio.remote_SPIwriteRegister(value, len);
-
-      else if (!strcmp(key, commandSPIreadRegister))
-        radio.remote_SPIreadRegister(value, len);
+      
+      if (result) // there was an error
+      {
+        Serial.println(F("Error ocurred during batch config!!"));
+        break;
+      }
     }
   }
+
+  if (!global)
+    publish(buildTopic(statTopic, command).c_str(), (uint8_t*)&result, 2U, false);
 }
 
 void MQTT_Client::manageSatPosOled(char* payload, size_t payload_len)

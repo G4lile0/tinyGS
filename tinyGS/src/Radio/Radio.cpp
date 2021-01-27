@@ -302,14 +302,13 @@ void Radio::readState(int state)
 }
 
 // remote
-void Radio::remote_freq(char* payload, size_t payload_len)
+int16_t Radio::remote_freq(char* payload, size_t payload_len)
 {
-  DynamicJsonDocument doc(60);
-  deserializeJson(doc, payload, payload_len);
-  float frequency = doc[0];
+  float frequency = _atof(payload, payload_len);
+
   Serial.println("");
   Serial.print(F("Set Frequency: ")); Serial.print(frequency, 3);Serial.println(F(" MHz"));
-  int state = 0;
+  int16_t state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X) 
   {
@@ -326,19 +325,18 @@ void Radio::remote_freq(char* payload, size_t payload_len)
  
   readState(state);
   if (state == ERR_NONE)
-  {
     status.modeminfo.frequency  = frequency;
-  }
+  
+  return state;
 }
 
-void Radio::remote_bw(char* payload, size_t payload_len)
+int16_t Radio::remote_bw(char* payload, size_t payload_len)
 {
-  DynamicJsonDocument doc(60);
-  deserializeJson(doc, payload, payload_len);
-  float bw = doc[0];
+  float bw = _atof(payload, payload_len);
+
   Serial.println("");
   Serial.print(F("Set bandwidth: ")); Serial.print(bw, 3);Serial.println(F(" kHz"));
-  int state = 0;
+  int16_t state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
@@ -351,24 +349,22 @@ void Radio::remote_bw(char* payload, size_t payload_len)
     state = ((SX1268*)lora)->setBandwidth(bw);
     ((SX1268*)lora)->startReceive();
     ((SX1268*)lora)->setDio1Action(setFlag);
-  
   }
 
   readState(state);
   if (state == ERR_NONE)
-  {
     status.modeminfo.bw = bw;
-  }
+  
+  return state;
 }
 
-void Radio::remote_sf(char* payload, size_t payload_len)
+int16_t Radio::remote_sf(char* payload, size_t payload_len)
 {
-  DynamicJsonDocument doc(60);
-  deserializeJson(doc, payload, payload_len);
-  uint8_t sf = doc[0];
+  uint8_t sf = _atof(payload, payload_len);
+
   Serial.println("");
   Serial.print(F("Set spreading factor: ")); Serial.println(sf);
-  int state = 0;
+  int16_t state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
@@ -386,20 +382,18 @@ void Radio::remote_sf(char* payload, size_t payload_len)
   readState(state);
 
   if (state == ERR_NONE)
-  {
     status.modeminfo.sf = sf;
-  }
 
+  return state;
 }
 
-void Radio::remote_cr(char* payload, size_t payload_len)
+int16_t Radio::remote_cr(char* payload, size_t payload_len)
 {
-  DynamicJsonDocument doc(60);
-  deserializeJson(doc, payload, payload_len);
-  uint8_t cr = doc[0];
+  uint8_t cr = _atoi(payload, payload_len);
+
   Serial.println("");
   Serial.print(F("Set coding rate: ")); Serial.println(cr);
-  int state = 0;
+  int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
     state = ((SX1278*)lora)->setCodingRate(cr);
@@ -416,44 +410,43 @@ void Radio::remote_cr(char* payload, size_t payload_len)
   readState(state);
 
   if (state == ERR_NONE)
-  {
     status.modeminfo.cr = cr;
-  }
+
+  return state;
 }
 
-void Radio::remote_crc(char* payload, size_t payload_len)
+int16_t Radio::remote_crc(char* payload, size_t payload_len)
 {
-  DynamicJsonDocument doc(60);
-  deserializeJson(doc, payload, payload_len);
-  bool crc = doc[0];
+  bool crc = _atoi(payload, payload_len);
+
   Serial.println("");
   Serial.print(F("Set CRC "));  if (crc) Serial.println(F("ON")); else Serial.println(F("OFF"));
-  int state = 0;
+  int16_t state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
-    state = ((SX1278*)lora)->setCRC (crc);
+    state = ((SX1278*)lora)->setCRC(crc);
     ((SX1278*)lora)->startReceive();
     ((SX1278*)lora)->setDio0Action(setFlag); 
   }
   else
   {
-    state = ((SX1268*)lora)->setCRC (crc);
+    state = ((SX1268*)lora)->setCRC(crc);
     ((SX1268*)lora)->startReceive();
     ((SX1268*)lora)->setDio1Action(setFlag);
   }
 
   readState(state);
+  return state;
 }
 
-void Radio::remote_lsw(char* payload, size_t payload_len)
+int16_t Radio::remote_lsw(char* payload, size_t payload_len)
 {
-  DynamicJsonDocument doc(60);
-  deserializeJson(doc, payload, payload_len);
-  uint8_t sw = doc[0];
+  uint8_t sw = _atoi(payload, payload_len);
+
   Serial.println("");
   Serial.print(F(" 0x"));Serial.print(sw,HEX);
-  int state = 0;
+  int16_t state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     state = ((SX1278*)lora)->setSyncWord(sw);
@@ -461,16 +454,16 @@ void Radio::remote_lsw(char* payload, size_t payload_len)
     state = ((SX1268*)lora)->setSyncWord(sw, 0x44);
 
   readState(state);
+  return state;
 }
 
-void Radio::remote_fldro(char* payload, size_t payload_len)
+int16_t Radio::remote_fldro(char* payload, size_t payload_len)
 {
-  DynamicJsonDocument doc(60);
-  deserializeJson(doc, payload, payload_len);
-  bool ldro = doc[0];
+  bool ldro = _atoi(payload, payload_len);
+
   Serial.println("");
   Serial.print(F("Set ForceLDRO "));  if (ldro) Serial.println(F("ON")); else Serial.println(F("OFF"));
-  int state = 0;
+  int16_t state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
@@ -493,13 +486,15 @@ void Radio::remote_fldro(char* payload, size_t payload_len)
     else 
       status.modeminfo.fldro=false;
   }
+
+  return state;
 }
 
-void Radio::remote_aldro(char* payload, size_t payload_len)
+int16_t Radio::remote_aldro(char* payload, size_t payload_len)
 {
   Serial.println("");
   Serial.print(F("Set AutoLDRO ")); 
-  int state = 0;
+  int16_t state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
@@ -515,16 +510,15 @@ void Radio::remote_aldro(char* payload, size_t payload_len)
   }
 
   readState(state);
+  return state;
 }
 
-void Radio::remote_pl(char* payload, size_t payload_len)
+int16_t Radio::remote_pl(char* payload, size_t payload_len)
 {
-  DynamicJsonDocument doc(60);
-  deserializeJson(doc, payload, payload_len);
-  uint16_t pl = doc[0];
+  uint16_t pl = _atoi(payload, payload_len);
   Serial.println("");
   Serial.print(F("Set Preamble ")); Serial.println(pl);
-  int state = 0;
+  int16_t state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
@@ -541,12 +535,12 @@ void Radio::remote_pl(char* payload, size_t payload_len)
 
   readState(state);
   if (state == ERR_NONE)
-  {
     status.modeminfo.preambleLength = pl;
-  }
+
+  return state;
 }
 
-void Radio::remote_begin_lora(char* payload, size_t payload_len)
+int16_t Radio::remote_begin_lora(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(256);
   deserializeJson(doc, payload, payload_len);
@@ -572,7 +566,7 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len)
   Serial.print(F("Set C limit: ")); Serial.println(current_limit);
   Serial.print(F("Set Preamble: ")); Serial.println(preambleLength);
   Serial.print(F("Set Gain: ")); Serial.println(gain);
-  int state = 0;
+  int16_t state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
@@ -599,9 +593,11 @@ void Radio::remote_begin_lora(char* payload, size_t payload_len)
     status.modeminfo.sf         = sf;
     status.modeminfo.cr         = cr;
   }
+
+  return state;
 }
 
-void Radio::remote_begin_fsk(char* payload, size_t payload_len)
+int16_t Radio::remote_begin_fsk(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(256);
   deserializeJson(doc, payload, payload_len);
@@ -626,7 +622,7 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len)
   Serial.print(F("OOK Modulation "));  if (enableOOK) Serial.println(F("ON")); else Serial.println(F("OFF"));
   Serial.print(F("Set datashaping ")); Serial.println(dataShaping);
 
-  int state = 0;
+  int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
     state = ((SX1278*)lora)->beginFSK(freq, br, freqDev, rxBw, power, preambleLength, enableOOK);
     ((SX1278*)lora)->setDataShaping(dataShaping);
@@ -652,16 +648,16 @@ void Radio::remote_begin_fsk(char* payload, size_t payload_len)
     status.modeminfo.freqDev    = freqDev;
     status.modeminfo.dataShaping= dataShaping;
   }
+
+  return state;
 }
 
-void Radio::remote_br(char* payload, size_t payload_len)
+int16_t Radio::remote_br(char* payload, size_t payload_len)
 {
-  DynamicJsonDocument doc(60);
-  deserializeJson(doc, payload, payload_len);
-  uint8_t br = doc[0];
+  uint8_t br = _atoi(payload, payload_len);
   Serial.println("");
   Serial.print(F("Set FSK Bit rate: ")); Serial.println(br);
-  int state = 0;
+  int16_t state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     state = ((SX1278*)lora)->setBitRate(br);
@@ -671,37 +667,36 @@ void Radio::remote_br(char* payload, size_t payload_len)
   readState(state);
   if (state == ERR_NONE)
     status.modeminfo.bitrate = br;
+  
+  return state;
 }
 
-void Radio::remote_fd(char* payload, size_t payload_len)
+int16_t Radio::remote_fd(char* payload, size_t payload_len)
 {
-  DynamicJsonDocument doc(60);
-  deserializeJson(doc, payload, payload_len);
-  uint8_t fd = doc[0];
+  uint8_t fd = _atoi(payload, payload_len);
   Serial.println("");
   Serial.print(F("Set FSK Frequency Des. : ")); Serial.println(fd);
 
-  int state = 0;
+  int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     state = ((SX1278*)lora)->setFrequencyDeviation(fd);
   else
     state = ((SX1268*)lora)->setFrequencyDeviation(fd);
 
   readState(state);
-   if (state == ERR_NONE) {
+   if (state == ERR_NONE)
     status.modeminfo.freqDev = fd;
-  }
+
+  return state;
 }
 
-void Radio::remote_fbw(char* payload, size_t payload_len)
+int16_t Radio::remote_fbw(char* payload, size_t payload_len)
 {
-  DynamicJsonDocument doc(60);
-  deserializeJson(doc, payload, payload_len);
-  float frequency = doc[0];
+  float frequency = _atof(payload, payload_len);
   Serial.println("");
   Serial.print(F("Set FSK bandwidth: ")); Serial.print(frequency, 3); Serial.println(F(" kHz"));
 
-  int state = 0;
+  int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     state = ((SX1278*)lora)->setRxBandwidth(frequency);
   else
@@ -710,9 +705,11 @@ void Radio::remote_fbw(char* payload, size_t payload_len)
   readState(state);
   if (state == ERR_NONE)
     status.modeminfo.rxBw  = frequency;
+  
+  return state;
 }
 
-void Radio::remote_fsw(char* payload, size_t payload_len)
+int16_t Radio::remote_fsw(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(256);
   deserializeJson(doc, payload, payload_len);
@@ -728,16 +725,17 @@ void Radio::remote_fsw(char* payload, size_t payload_len)
     Serial.print(F(" 0x"));Serial.print(syncWord[words],HEX);Serial.print(F(", "));
   }
 
-  int state = 0;
+  int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     state = ((SX1278*)lora)->setSyncWord(syncWord, synnwordsize);
   else
     state = ((SX1268*)lora)->setSyncWord(syncWord, synnwordsize);
 
   readState(state);
+  return state;
 }
 
-void Radio::remote_fook(char* payload, size_t payload_len)
+int16_t Radio::remote_fook(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
   deserializeJson(doc, payload, payload_len);
@@ -756,7 +754,7 @@ void Radio::remote_fook(char* payload, size_t payload_len)
   else
   {
     Serial.println(F("OOK not supported by the selected lora module!"));
-    return;
+    return -1;
   }
 
   readState(state);
@@ -765,6 +763,7 @@ void Radio::remote_fook(char* payload, size_t payload_len)
       state = ((SX1278*)lora)->setDataShapingOOK(ook_shape);
 
   readState(state);
+  return state;
 }
 
 void Radio::remote_SPIwriteRegister(char* payload, size_t payload_len)
@@ -786,17 +785,15 @@ void Radio::remote_SPIwriteRegister(char* payload, size_t payload_len)
     ((SX1268*)lora)->_mod->SPIwriteRegister(reg,data);
 }
 
-void Radio::remote_SPIreadRegister(char* payload, size_t payload_len)
+int16_t Radio::remote_SPIreadRegister(char* payload, size_t payload_len)
 {
-  DynamicJsonDocument doc(60);
-  deserializeJson(doc, payload, payload_len);
-  uint8_t     reg = doc[0];
+  uint8_t     reg = _atoi(payload, payload_len);
   uint8_t     data = 0 ;
   Serial.println("");
 
   Serial.print(F("REG ID: 0x"));
   Serial.print(reg, HEX);
-  int state = 0;
+  int16_t state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     data = ((SX1278*)lora)->_mod->SPIreadRegister(reg);
@@ -809,9 +806,10 @@ void Radio::remote_SPIreadRegister(char* payload, size_t payload_len)
   Serial.println(data, BIN);
   
   readState(state);
+  return data;
 }
 
-void Radio::remote_SPIsetRegValue(char* payload, size_t payload_len)
+int16_t Radio::remote_SPIsetRegValue(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(120);
   deserializeJson(doc, payload, payload_len);
@@ -835,7 +833,7 @@ void Radio::remote_SPIsetRegValue(char* payload, size_t payload_len)
   Serial.print(F("check_interval : "));
   Serial.println(checkinterval);
 
-  int state = 0;
+  int16_t state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     state = ((SX1278*)lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
@@ -843,4 +841,21 @@ void Radio::remote_SPIsetRegValue(char* payload, size_t payload_len)
     state = ((SX1268*)lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
   
   readState(state);
+  return state;
+}
+
+double Radio::_atof(const char* buff, size_t length)
+{
+  char* str = new char[length+1];
+  memcpy(str, buff, length);
+  str[length] = '\n';
+  return atof(str);
+}
+
+int Radio::_atoi(const char* buff, size_t length)
+{
+  char* str = new char[length+1];
+  memcpy(str, buff, length);
+  str[length] = '\n';
+  return atoi(str);
 }
