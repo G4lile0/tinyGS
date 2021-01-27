@@ -380,108 +380,84 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
   if (!strcmp(command, commandSPIreadRegister))
     radio.remote_SPIreadRegister((char*)payload, length);
 
-/*
-TODO: Rebuild
-// Remote_Status       -m "[1]"     -t fossa/g4lile0/test_G4lile0_new/data/remote/JSON
-if (!strcmp(topic, buildTopic((String(topicRemote) + String(topicRemoteJSON)).c_str()).c_str())) {
-    
-  Serial.println("JSON");
-  DynamicJsonDocument doc(2048);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
-  deserializeJson(doc, payload, length);
-  JsonObject root = doc.as<JsonObject>();
-  for (JsonPair kv : root) {
-    
-    Serial.print(kv.key().c_str());
-    Serial.print("  ");
-    Serial.print(kv.value().as<char*>());
-    Serial.print("  ");
-    Serial.println(strlen(kv.value().as<char*>()));
-    
-      if (!strcmp(kv.key().c_str(),topicRemoteCrc)) {        
-        radio.remote_crc((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()) );
-      }
+  // Remote_Status       -m "[1]"     -t fossa/g4lile0/test_G4lile0_new/data/remote/JSON
+  if (!strcmp(command, commandBatchConf))
+  {
+    Serial.println("JSON");
+    DynamicJsonDocument doc(2048);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+    deserializeJson(doc, payload, length);
+    JsonObject root = doc.as<JsonObject>();
 
-      if (!strcmp(kv.key().c_str(),topicRemoteFreq)){
-        radio.remote_freq((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }
+    for (JsonPair kv : root)
+    {
+      Serial.print(kv.key().c_str());
+      Serial.print("  ");
+      Serial.print(kv.value().as<char*>());
+      Serial.print("  ");
+      Serial.println(strlen(kv.value().as<char*>()));
 
-      if (!strcmp(kv.key().c_str(),topicRemoteBl)){
-        radio.remote_begin_lora((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }
+      const char* key = kv.key().c_str();
+      char* value = (char*)kv.value().as<char*>();
+      size_t len = strlen(value);
 
-      if (!strcmp(kv.key().c_str(),topicRemoteBw)){
-        radio.remote_bw((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }
+      if (!strcmp(key, commandCrc))        
+        radio.remote_crc(value, len);
 
-      if (!strcmp(kv.key().c_str(),topicRemoteSf)){
-        radio.remote_sf((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }
+      else if (!strcmp(key, commandFreq))
+        radio.remote_freq(value, len);
 
-      if (!strcmp(kv.key().c_str(),topicRemoteLsw)){
-        radio.remote_lsw((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }
+      else if (!strcmp(key, commandBeginLora))
+        radio.remote_begin_lora(value, len);
 
-      if (!strcmp(kv.key().c_str(),topicRemoteFldro)){
-        radio.remote_fldro((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }
+      else if (!strcmp(key, commandBw))
+        radio.remote_bw(value, len);
 
-      if (!strcmp(kv.key().c_str(),topicRemoteAldro)){
-        radio.remote_aldro((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }
+      else if (!strcmp(key, commandSf))
+        radio.remote_sf(value, len);
 
-      if (!strcmp(kv.key().c_str(),topicRemotePl)){
-        radio.remote_pl((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }
+      else if (!strcmp(key, commandLsw))
+        radio.remote_lsw(value, len);
 
-      if (!strcmp(kv.key().c_str(),topicRemoteFs)){
-        radio.remote_begin_fsk((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }
+      else if (!strcmp(key, commandFldro))
+        radio.remote_fldro(value, len);
 
-      if (!strcmp(kv.key().c_str(),topicRemoteBr)){
-        radio.remote_br((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }      
+      else if (!strcmp(key, commandAldro))
+        radio.remote_aldro(value, len);
 
-      if (!strcmp(kv.key().c_str(),topicRemoteFd)){
-        radio.remote_fd((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }
+      else if (!strcmp(key, commandPl))
+        radio.remote_pl(value, len);
 
-      if (!strcmp(kv.key().c_str(),topicRemoteFbw)){
-        radio.remote_fbw((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }      
+      else if (!strcmp(key, commandBeginFSK))
+        radio.remote_begin_fsk(value, len);
 
-      if (!strcmp(kv.key().c_str(),topicRemoteFsw)){
-        radio.remote_fbw((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }      
+      else if (!strcmp(key, commandBr))
+        radio.remote_br(value, len);
 
-      if (!strcmp(kv.key().c_str(),topicRemoteFbw)){
-        radio.remote_fsw((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }      
+      else if (!strcmp(key, commandFd))
+        radio.remote_fd(value, len);
 
+      else if (!strcmp(key, commandFbw))
+        radio.remote_fbw(value, len);
 
-      if (!strcmp(kv.key().c_str(),topicRemoteFook)){
-        radio.remote_fook((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }      
+      else if (!strcmp(key, commandFsw))
+        radio.remote_fsw(value, len);
 
-     if (!strcmp(kv.key().c_str(),topicRemoteSat)){
-        radio.remote_sat((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }      
+      else if (!strcmp(key, commandFook))
+        radio.remote_fook(value, len);
 
-     if (!strcmp(kv.key().c_str(),topicSPIsetRegValue)){
-        radio.remote_SPIsetRegValue((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }  
+      else if (!strcmp(key, commandSat))
+        radio.remote_sat(value, len);
 
-     if (!strcmp(kv.key().c_str(),topicSPIwriteRegister)){
-        radio.remote_SPIwriteRegister((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }  
+      else if (!strcmp(key, commandSPIsetRegValue))
+        radio.remote_SPIsetRegValue(value, len);
 
-     if (!strcmp(kv.key().c_str(),topicSPIreadRegister)){
-        radio.remote_SPIreadRegister((char*)kv.value().as<char*>(),strlen(kv.value().as<char*>()));
-      }        
+      else if (!strcmp(key, commandSPIwriteRegister))
+        radio.remote_SPIwriteRegister(value, len);
 
+      else if (!strcmp(key, commandSPIreadRegister))
+        radio.remote_SPIreadRegister(value, len);
+    }
   }
- }*/
-
-
 }
 
 void MQTT_Client::manageSatPosOled(char* payload, size_t payload_len) {

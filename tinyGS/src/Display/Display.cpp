@@ -240,8 +240,6 @@ void drawFrame7(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   drawRemoteFrame(display, state, x, y, 3);
 }
 
-
-
 void drawFrame8(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y)
 {
   display->setTextAlignment(TEXT_ALIGN_LEFT);
