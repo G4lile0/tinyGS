@@ -63,15 +63,14 @@ public:
   void remote_SPIsetRegValue(char* payload, size_t payload_len);
   void remote_SPIwriteRegister(char* payload, size_t payload_len);
   void remote_SPIreadRegister(char* payload, size_t payload_len);
+  int sendTx(const char* data, size_t length);
   
    
 private:
   Radio();
   PhysicalLayer* lora;
-  void processReceivedFrame(uint8_t functionId, uint8_t *respOptData, size_t respLen);
   void readState(int state);
   static void setFlag();
-  int sendTx(uint8_t functionId, const char* data = "");
   bool ready = false;
   SPIClass spi;
 };

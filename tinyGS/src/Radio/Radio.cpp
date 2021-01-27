@@ -22,7 +22,6 @@
 #include "ArduinoJson.h"
 #include <base64.h>
 
-char callsign[] = "FOSSASAT-1";
 bool received = false;
 bool eInterrupt = true;
 
@@ -80,7 +79,6 @@ void Radio::init()
   // set the function that will be called
   // when new packet is received
   // attach the ISR to radio interrupt
-  
   if (board.L_SX127X)
   {
     ((SX1278*)lora)->setDio0Action(setFlag);
@@ -130,46 +128,32 @@ void Radio::disableInterrupt()
   eInterrupt = false;
 }
 
-int Radio::sendTx(uint8_t functionId, const char* data)
+int Radio::sendTx(const char* data, size_t length)
 {
-  // TODO: Rebuild this method
-  /*if (!status.tx)
+  if (!ConfigManager::getInstance().getAllowTx())
   {
-      Serial.println(F("TX disable by config"));
+      Serial.println(F("TX disabled by config"));
       return -1;
   }
-
-  // build frame
-  uint8_t optDataLen = strlen(data);
-
-  // build frame
-  uint8_t len = FCP_Get_Frame_Length(callsign, optDataLen);
-  uint8_t* frame = new uint8_t[len];
-  if (optDataLen > 0)
-    FCP_Encode(frame, callsign, functionId, optDataLen, (uint8_t*)data);
-  else
-    FCP_Encode(frame, callsign, functionId);
 
   // send data
   int state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
     SX1278* l = (SX1278*)lora;
-    state = l->transmit(frame, len);
+    state = l->transmit(data, length);
     l->setDio0Action(setFlag);
     l->startReceive();
   }
   else
   {
     SX1268* l = (SX1268*)lora;
-    state = l->transmit(frame, len);
+    state = l->transmit(data, length);
     l->setDio1Action(setFlag);
     l->startReceive();
   }
-  delete[] frame;
 
-  return state;*/
-  return 1; // delete
+  return state;
 }
 
 
@@ -214,11 +198,11 @@ uint8_t Radio::listen()
 
   if ((respLen > 0) && !(state == ERR_CRC_MISMATCH))
   {
-      // read optional data
-      Serial.print(F("Packet ("));
-      Serial.print(respLen);
-      Serial.println(F(" bytes):"));
-      PRINT_BUFF(respFrame, respLen)
+    // read optional data
+    Serial.print(F("Packet ("));
+    Serial.print(respLen);
+    Serial.println(F(" bytes):"));
+    PRINT_BUFF(respFrame, respLen)
   }
 
   if (state == ERR_NONE)
@@ -347,7 +331,6 @@ void Radio::remote_freq(char* payload, size_t payload_len)
   }
 }
 
-
 void Radio::remote_bw(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
@@ -360,21 +343,21 @@ void Radio::remote_bw(char* payload, size_t payload_len)
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
     state = ((SX1278*)lora)->setBandwidth(bw);
-            ((SX1278*)lora)->startReceive();
-            ((SX1278*)lora)->setDio0Action(setFlag);
+    ((SX1278*)lora)->startReceive();
+    ((SX1278*)lora)->setDio0Action(setFlag);
   }
   else
   {
     state = ((SX1268*)lora)->setBandwidth(bw);
-            ((SX1268*)lora)->startReceive();
-            ((SX1268*)lora)->setDio1Action(setFlag);
+    ((SX1268*)lora)->startReceive();
+    ((SX1268*)lora)->setDio1Action(setFlag);
   
   }
 
   readState(state);
   if (state == ERR_NONE)
   {
-    status.modeminfo.bw         = bw;
+    status.modeminfo.bw = bw;
   }
 }
 
@@ -409,7 +392,6 @@ void Radio::remote_sf(char* payload, size_t payload_len)
 
 }
 
-
 void Radio::remote_cr(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
@@ -439,7 +421,6 @@ void Radio::remote_cr(char* payload, size_t payload_len)
   }
 }
 
-
 void Radio::remote_crc(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
@@ -465,7 +446,6 @@ void Radio::remote_crc(char* payload, size_t payload_len)
   readState(state);
 }
 
-
 void Radio::remote_lsw(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
@@ -476,13 +456,12 @@ void Radio::remote_lsw(char* payload, size_t payload_len)
   int state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-      state = ((SX1278*)lora)->setSyncWord(sw);
+    state = ((SX1278*)lora)->setSyncWord(sw);
   else
-      state = ((SX1268*)lora)->setSyncWord(sw, 0x44);
+    state = ((SX1268*)lora)->setSyncWord(sw, 0x44);
 
   readState(state);
 }
-
 
 void Radio::remote_fldro(char* payload, size_t payload_len)
 {
@@ -537,7 +516,6 @@ void Radio::remote_aldro(char* payload, size_t payload_len)
 
   readState(state);
 }
-
 
 void Radio::remote_pl(char* payload, size_t payload_len)
 {
@@ -705,9 +683,9 @@ void Radio::remote_fd(char* payload, size_t payload_len)
 
   int state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-      state = ((SX1278*)lora)->setFrequencyDeviation(fd);
+    state = ((SX1278*)lora)->setFrequencyDeviation(fd);
   else
-      state = ((SX1268*)lora)->setFrequencyDeviation(fd);
+    state = ((SX1268*)lora)->setFrequencyDeviation(fd);
 
   readState(state);
    if (state == ERR_NONE) {
@@ -725,9 +703,9 @@ void Radio::remote_fbw(char* payload, size_t payload_len)
 
   int state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-      state = ((SX1278*)lora)->setRxBandwidth(frequency);
+    state = ((SX1278*)lora)->setRxBandwidth(frequency);
   else
-      state = ((SX1268*)lora)->setRxBandwidth(frequency);
+    state = ((SX1268*)lora)->setRxBandwidth(frequency);
 
   readState(state);
   if (state == ERR_NONE)
@@ -752,9 +730,9 @@ void Radio::remote_fsw(char* payload, size_t payload_len)
 
   int state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-      state = ((SX1278*)lora)->setSyncWord(syncWord, synnwordsize);
+    state = ((SX1278*)lora)->setSyncWord(syncWord, synnwordsize);
   else
-      state = ((SX1268*)lora)->setSyncWord(syncWord, synnwordsize);
+    state = ((SX1268*)lora)->setSyncWord(syncWord, synnwordsize);
 
   readState(state);
 }
@@ -772,15 +750,20 @@ void Radio::remote_fook(char* payload, size_t payload_len)
   int state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-      state = ((SX1278*)lora)->setOOK(enableOOK);
+  {
+    state = ((SX1278*)lora)->setOOK(enableOOK);
+  }
   else
-//      state = ((SX1268*)lora)->setOOK(enableOOK);
+  {
+    Serial.println(F("OOK not supported by the selected lora module!"));
+    return;
+  }
+
   readState(state);
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
       state = ((SX1278*)lora)->setDataShapingOOK(ook_shape);
-  else
-//      state = ((SX1268*)lora)->setDataShapingOOK(ook_shape);
+
   readState(state);
 }
 
@@ -797,13 +780,10 @@ void Radio::remote_SPIwriteRegister(char* payload, size_t payload_len)
   Serial.print(F("to : 0x"));
   Serial.println(data, HEX);
 
-  int state = 0;
-
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     ((SX1278*)lora)->_mod->SPIwriteRegister(reg,data);
-//  else
-//      state = ((SX1268*)lora)->setOOK(enableOOK);
-  readState(state);
+  else
+    ((SX1268*)lora)->_mod->SPIwriteRegister(reg,data);
 }
 
 void Radio::remote_SPIreadRegister(char* payload, size_t payload_len)
@@ -820,15 +800,15 @@ void Radio::remote_SPIreadRegister(char* payload, size_t payload_len)
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     data = ((SX1278*)lora)->_mod->SPIreadRegister(reg);
-//  else
-//      state = ((SX1268*)lora)->setOOK(enableOOK);
+  else
+    data = ((SX1268*)lora)->_mod->SPIreadRegister(reg);
+
   Serial.print(F(" HEX : 0x"));
   Serial.print(data, HEX);
   Serial.print(F(" BIN : "));
   Serial.println(data, BIN);
   
   readState(state);
-
 }
 
 void Radio::remote_SPIsetRegValue(char* payload, size_t payload_len)
@@ -859,8 +839,8 @@ void Radio::remote_SPIsetRegValue(char* payload, size_t payload_len)
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     state = ((SX1278*)lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
-// else
-//      state = ((SX1268*)lora)->setOOK(enableOOK);
+  else
+    state = ((SX1268*)lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
+  
   readState(state);
 }
-
