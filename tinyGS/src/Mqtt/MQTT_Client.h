@@ -95,6 +95,7 @@ private:
   String buildTopic(const char * baseTopic, const char * cmnd);
   void subscribeToAll();
   void manageSatPosOled(char* payload, size_t payload_len);
+  void remoteSatCmnd(char* payload, size_t payload_len);
 
   unsigned long lastPing = 0;
   unsigned long lastConnectionAtempt = 0;
@@ -147,7 +148,7 @@ private:
 
 
   // TODO: find appropiate name
-  const char* commandJSON PROGMEM= "json";
+  const char* commandBatchConf PROGMEM= "batch_conf";
 };
 
 #endif

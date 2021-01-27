@@ -286,12 +286,38 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
   if (!strcmp(command, commandFrame))
   {
     uint8_t frameNumber = atoi(strtok(NULL, "/"));
-    radio.remoteTextFrame((char*)payload, length, frameNumber);
+    
+    DynamicJsonDocument doc(256);
+    deserializeJson(doc, payload, length);
+    status.remoteTextFrameLength[frameNumber] = doc[0];
+    Serial.print(F("received frame: ")); Serial.print(status.remoteTextFrameLength[frameNumber]);
+  
+    for (uint8_t n=0; n<status.remoteTextFrameLength[frameNumber];n++)
+    {
+      status.remoteTextFrame[frameNumber][n].text_font = doc[n+1][0];
+      status.remoteTextFrame[frameNumber][n].text_alignment = doc[n+1][1];
+      status.remoteTextFrame[frameNumber][n].text_pos_x = doc[n+1][2];
+      status.remoteTextFrame[frameNumber][n].text_pos_y = doc[n+1][3];
+      String text = doc[n+1][4];
+      status.remoteTextFrame[frameNumber][n].text = text;  
+      
+      Serial.println("");
+      Serial.print(F("Text "));Serial.print(n);
+      Serial.print(F(" Font "));Serial.print(status.remoteTextFrame[frameNumber][n].text_font);
+      Serial.print(F(" Alig "));Serial.print(status.remoteTextFrame[frameNumber][n].text_alignment);
+      Serial.print(F(" Pos x "));Serial.print(status.remoteTextFrame[frameNumber][n].text_pos_x);
+      Serial.print(F(" Pos y "));Serial.print(status.remoteTextFrame[frameNumber][n].text_pos_y);
+      Serial.print(F(" -> "));Serial.print(status.remoteTextFrame[frameNumber][n].text);
+    }
   }
 
     // Remote_Status       -m "[1]"     -t fossa/g4lile0/test_G4lile0_new/data/remote/status
-  if (!strcmp(command, commandStatus))
-    radio.remote_status((char*)payload, length);
+  if (!strcmp(command, commandStatus)) 
+  {
+    uint8_t mode = payload[0] - '0';
+    Serial.print(F("Remote status requested: ")); Serial.println(mode);     // right now just one mode
+    sendStatus();
+  }
 
   // ######################################################
   // ############## Remote tune commands ##################
@@ -364,8 +390,8 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     radio.remote_fook((char*)payload, length);
 
   // Remote_Satellite_Name       -m "[\"FossaSat-3\" , 46494 ]" -t fossa/g4lile0/test_G4lile0_new/data/remote/sat
-  if (!strcmp(command, commandSatPos))
-    radio.remote_sat((char*)payload, length);
+  if (!strcmp(command, commandSat))
+    remoteSatCmnd((char*)payload, length);
 
   // GOD MODE  With great power comes great responsibility!
   // SPIsetRegValue  (only sx1278)     -m "[1,2,3,4,5]" -t fossa/g4lile0/test_G4lile0_new/data/remote/SPIsetRegValue
@@ -446,7 +472,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
         radio.remote_fook(value, len);
 
       else if (!strcmp(key, commandSat))
-        radio.remote_sat(value, len);
+        remoteSatCmnd(value, len);
 
       else if (!strcmp(key, commandSPIsetRegValue))
         radio.remote_SPIsetRegValue(value, len);
@@ -460,23 +486,36 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
   }
 }
 
-void MQTT_Client::manageSatPosOled(char* payload, size_t payload_len) {
+void MQTT_Client::manageSatPosOled(char* payload, size_t payload_len)
+{
   DynamicJsonDocument doc(60);
-  char payloadStr[payload_len+1];
-  memcpy(payloadStr, payload, payload_len);
-  payloadStr[payload_len] = '\0';
-  deserializeJson(doc, payload);
+  deserializeJson(doc, payload, payload_len);
   status.satPos[0] = doc[0];
   status.satPos[1] = doc[1];
 }
 
+void MQTT_Client::remoteSatCmnd(char* payload, size_t payload_len)
+{
+  DynamicJsonDocument doc(256);
+  deserializeJson(doc, payload, payload_len);
+  String satellite = doc[0];
+  uint32_t NORAD = doc[1];
+  status.modeminfo.NORAD = NORAD;
+  status.modeminfo.satellite = satellite;
+
+  Serial.print(F("Listening Satellite: ")); Serial.print(satellite);
+  Serial.print(F(" NORAD: "));Serial.println(NORAD);
+}
+
 // Helper class to use as a callback
-void manageMQTTDataCallback(char *topic, uint8_t *payload, unsigned int length) {
+void manageMQTTDataCallback(char *topic, uint8_t *payload, unsigned int length)
+{
   ESP_LOGI (LOG_TAG,"Received MQTT message: %s : %.*s\n", topic, length, payload);
   MQTT_Client::getInstance().manageMQTTData(topic, payload, length);
 }
 
-void MQTT_Client::begin() {
+void MQTT_Client::begin()
+{
   ConfigManager& configManager = ConfigManager::getInstance();
   setServer(configManager.getMqttServer(), configManager.getMqttPort());
   setCallback(manageMQTTDataCallback);

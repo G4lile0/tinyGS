@@ -60,9 +60,6 @@ public:
   void remote_fbw(char* payload, size_t payload_len);
   void remote_fsw(char* payload, size_t payload_len);
   void remote_fook(char* payload, size_t payload_len);
-  void remoteTextFrame(char* payload, size_t payload_len, uint8_t frameNumber);
-  void remote_sat(char* payload, size_t payload_len);
-  void remote_status(char* payload, size_t payload_len);
   void remote_SPIsetRegValue(char* payload, size_t payload_len);
   void remote_SPIwriteRegister(char* payload, size_t payload_len);
   void remote_SPIreadRegister(char* payload, size_t payload_len);
