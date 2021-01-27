@@ -21,7 +21,7 @@
 #define Status_h
 
 struct PacketInfo {
-  String time = "Waiting         ";
+  String time = "Waiting";
   float rssi = 0;
   float snr = 0;
   float frequencyerror = 0;
@@ -29,18 +29,18 @@ struct PacketInfo {
 };
 
 struct ModemInfo {
-  String satellite     = "Norby Sat               ";
+  String satellite    = "Norby Sat";
   String  modem_mode  = "LoRa" ;     // 1-LoRa  2-FSK  3-GMSK
   float   frequency   = 436.703; // MHz  
   float   bw          = 250.0; // kHz dual sideban
-  uint8_t sf          =  10 ;
-  uint8_t cr          =   5 ;
-  int8_t  power       =   5 ;
+  uint8_t sf          = 10 ;
+  uint8_t cr          = 5 ;
+  int8_t  power       = 5 ;
   uint16_t preambleLength = 8;
-  float  	bitrate    =  9.6 ;
-  float   freqDev    =  5.0;
-  float   rxBw       =  39.0;
-  bool    enableOOK  =  false;
+  float  	bitrate     = 9.6 ;
+  float   freqDev     = 5.0;
+  float   rxBw        = 39.0;
+  bool    enableOOK   = false;
   int     dataShaping = 0;    // 0 disable  1 -> 0.3  2-> 0.5  3 -> 0.6  4-> 1.0
   bool    crc         = true;
   byte    fldro       = true;
