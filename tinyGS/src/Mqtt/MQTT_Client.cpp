@@ -100,7 +100,6 @@ void MQTT_Client::sendWelcome()
 
   const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(11) + 22 + 20;
   DynamicJsonDocument doc(capacity);
-  doc["station"] = configManager.getThingName();
   JsonArray station_location = doc.createNestedArray("station_location");
   station_location.add(configManager.getLatitude());
   station_location.add(configManager.getLongitude());
@@ -127,9 +126,8 @@ void  MQTT_Client::sendRx(String packet)
   struct timeval tv;
   gettimeofday(&tv, NULL);
 
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(22);
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(21);
   DynamicJsonDocument doc(capacity);
-  doc["station"] = configManager.getThingName();
   JsonArray station_location = doc.createNestedArray("station_location");
   station_location.add(configManager.getLatitude());
   station_location.add(configManager.getLongitude());
@@ -176,7 +174,6 @@ void  MQTT_Client::sendStatus()
   gettimeofday(&tv, NULL);
   const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(28);
   DynamicJsonDocument doc(capacity);
-  doc["station"] = configManager.getThingName();
   JsonArray station_location = doc.createNestedArray("station_location");
   station_location.add(configManager.getLatitude());
   station_location.add(configManager.getLongitude());
