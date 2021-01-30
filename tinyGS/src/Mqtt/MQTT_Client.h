@@ -105,10 +105,10 @@ private:
   const unsigned long reconnectionInterval = 5 * 1000;
   uint16_t connectionTimeout = 5 * 60 * 1000 / reconnectionInterval;
 
-  const char* globalTopic PROGMEM = "/tinygs/global/%cmnd%";
-  const char* cmndTopic PROGMEM = "/tinygs/%user%/%station%/cmnd/%cmnd%";
-  const char* teleTopic PROGMEM = "/tinygs/%user%/%station%/tele/%cmnd%";
-  const char* statTopic PROGMEM = "/tinygs/%user%/%station%/stat/%cmnd%";
+  const char* globalTopic PROGMEM = "tinygs/global/%cmnd%";
+  const char* cmndTopic PROGMEM = "tinygs/%user%/%station%/cmnd/%cmnd%";
+  const char* teleTopic PROGMEM = "tinygs/%user%/%station%/tele/%cmnd%";
+  const char* statTopic PROGMEM = "tinygs/%user%/%station%/stat/%cmnd%";
 
   // tele
   const char* topicWelcome PROGMEM = "welcome";

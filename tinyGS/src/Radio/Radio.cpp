@@ -49,7 +49,8 @@ void Radio::init()
   board_type board = ConfigManager::getInstance().getBoardConfig();
   
   spi.begin(board.L_SCK, board.L_MISO, board.L_MOSI, board.L_NSS);
-  int state = 0;
+  uint16_t state = 0;
+
   if (board.L_SX127X)
   {
     lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
@@ -128,7 +129,7 @@ void Radio::disableInterrupt()
   eInterrupt = false;
 }
 
-int Radio::sendTx(const char* data, size_t length)
+uint16_t Radio::sendTx(const char* data, size_t length)
 {
   if (!ConfigManager::getInstance().getAllowTx())
   {
@@ -137,7 +138,7 @@ int Radio::sendTx(const char* data, size_t length)
   }
 
   // send data
-  int state = 0;
+  uint16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
     SX1278* l = (SX1278*)lora;
@@ -156,6 +157,10 @@ int Radio::sendTx(const char* data, size_t length)
   return state;
 }
 
+uint16_t Radio::sendTestPacket()
+{
+  return sendTx(TEST_STRING, strlen(TEST_STRING) + 1);
+}
 
 uint8_t Radio::listen()
 {

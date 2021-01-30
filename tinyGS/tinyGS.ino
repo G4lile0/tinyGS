@@ -281,7 +281,15 @@ void loop() {
       case 'b':
         ESP.restart();
         break;
-       
+      case 'p':
+        static long lastTestPacketTime = 0;
+        if (millis() - lastTestPacketTime < 20*1000)
+        {
+          Serial.println(F("Please wait a few seconds to send another test packet."));
+          break;
+        }
+        radio.sendTestPacket();
+        break;
       default:
         Serial.print(F("Unknown command: "));
         Serial.println(serialCmd);
