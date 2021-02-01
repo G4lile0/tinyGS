@@ -18,6 +18,7 @@
 */
 
 #include "ConfigManager.h"
+#include "../Mqtt/MQTT_Client.h"
 
 ConfigManager::ConfigManager()
 : IotWebConf2(thingName, &dnsServer, &server, initialApPassword, configVersion)
@@ -48,6 +49,7 @@ ConfigManager::ConfigManager()
   setHtmlFormatProvider(&gsConfigHtmlFormatProvider);
   formValidatorStd = std::bind(&ConfigManager::formValidator, this, std::placeholders::_1);
   setFormValidator(formValidatorStd);
+  setConfigSavedCallback([this]{ configSavedCallback(); });
   skipApStartup();
   
 
@@ -169,7 +171,6 @@ bool ConfigManager::formValidator(iotwebconf2::WebRequestWrapper* webRequestWrap
 
   for (const char* c = name.c_str(); *c != '\0'; c++)
   {
-    Serial.println(*c);
     if (!((*c >= '0' && *c <= '9') || (*c >= 'A' && *c <= 'Z') || *c == '_' || (*c >= 'a' && *c <= 'z')))
     {
       this->getThingNameParameter()->errorMessage = "Allowed characters are: [0-9 A-Z a-z _]";
@@ -304,10 +305,18 @@ void ConfigManager::printConfig()
   Serial.println(getAllowTx() ? "Enable" : "Disable");
   Serial.print(F("Remote Tune "));
   Serial.println(getRemoteTune() ? "Allowed" : "Blocked");
-  Serial.print(F("Third party telemetry (sat owners,  satnog... ) "));
+  Serial.print(F("Send telemetry to third party"));
   Serial.println(getTelemetry3rd() ? "Allowed" : "Blocked");
   Serial.print(F("Test mode "));
   Serial.println(getTestMode()  ? "Enable" : "Disable");
   Serial.print(F("Auto Update "));
   Serial.println(getAutoUpdate()  ? "Enable" : "Disable");
+}
+
+void ConfigManager::configSavedCallback()
+{
+  MQTT_Client& mqtt = MQTT_Client::getInstance();
+
+  if (mqtt.connected()) // already running and connected
+    mqtt.sendWelcome();
 }
