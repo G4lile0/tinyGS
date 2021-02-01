@@ -259,7 +259,6 @@ void displayShowConnected()
   display->clear();
   display->drawXbm(34, 0 , WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
   
-  Serial.println(" CONNECTED");
   display->drawString(64 , 35 , "Connected " + String(ConfigManager::getInstance().getWiFiSSID()));
   display->drawString(64 ,53 , (WiFi.localIP().toString()));
   display->display();

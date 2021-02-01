@@ -113,7 +113,7 @@ void MQTT_Client::sendWelcome()
   doc["test"] = configManager.getTestMode();
   doc["unix_GS_time"] = now;
   doc["autoUpdate"] = configManager.getAutoUpdate();
-  serializeJson(doc, Serial);
+
   char buffer[512];
   serializeJson(doc, buffer);
   publish(buildTopic(teleTopic, topicWelcome).c_str(), buffer, false);
@@ -160,7 +160,7 @@ void  MQTT_Client::sendRx(String packet)
   doc["NORAD"] = status.modeminfo.NORAD;
   doc["test"] = configManager.getTestMode();
 
-  serializeJson(doc, Serial);
+  //serializeJson(doc, Serial);
   char buffer[1536];
   serializeJson(doc, buffer);
   publish(buildTopic(teleTopic, topicRx).c_str(), buffer, false);
@@ -218,7 +218,7 @@ void  MQTT_Client::sendStatus()
   doc["usec_time"] = (int64_t)tv.tv_usec + tv.tv_sec * 1000000ll;
   doc["time_offset"] = status.time_offset;
     
-  serializeJson(doc, Serial);
+  //serializeJson(doc, Serial);
   char buffer[1024];
   serializeJson(doc, buffer);
   publish(buildTopic(statTopic, topicStatus).c_str(), buffer, false);
@@ -274,7 +274,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     if (length < 1) return;
     ConfigManager& configManager = ConfigManager::getInstance();
     bool telemetry3rd = payload[0] - '0';
-    Serial.print(F("Third party telemetry (sat owners,  satnog... ) "));  if (telemetry3rd) Serial.println(F("ON")); else Serial.println(F("OFF"));
+    Serial.print(F("Send rx to third parties "));  if (telemetry3rd) Serial.println(F("ON")); else Serial.println(F("OFF"));
     configManager.setTelemetry3rd(telemetry3rd);
     result = 0;
   }

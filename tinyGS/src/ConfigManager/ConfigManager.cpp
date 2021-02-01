@@ -234,7 +234,7 @@ boolean ConfigManager::init()
 void ConfigManager::boardDetection()
 {
   // List all compatible boards configuration
-  Serial.println(F("\nSupported boards:"));
+  /*Serial.println(F("\nSupported boards:"));
   for (uint8_t ite=0; ite<((sizeof(boards)/sizeof(boards[0])));ite++)
   {
     Serial.println("");
@@ -255,10 +255,10 @@ void ConfigManager::boardDetection()
     if (boards[ite].L_DI01) {Serial.print(F(" DI01:")); Serial.print(boards[ite].L_DI01);}
     if (boards[ite].L_BUSSY) {Serial.print(F(" BUSSY:")); Serial.print(boards[ite].L_BUSSY);}
     Serial.println("");   
-  }
+  }*/
   
   // test OLED configuration
-  Serial.println(F("Seaching for a compatible BOARD"));
+  Serial.println(F("Automatic board detection running... "));
   for (uint8_t ite=0; ite<((sizeof(boards)/sizeof(boards[0])));ite++)
   {
     Serial.print(boards[ite].BOARD);
@@ -276,7 +276,7 @@ void ConfigManager::boardDetection()
     }
     else 
     {
-      Serial.println(F("  Not Compatible"));
+      Serial.println(F("  Not Compatible board found, please select it manually on the web config panel"));
     } 
   }
 }
@@ -305,7 +305,7 @@ void ConfigManager::printConfig()
   Serial.println(getAllowTx() ? "Enable" : "Disable");
   Serial.print(F("Remote Tune "));
   Serial.println(getRemoteTune() ? "Allowed" : "Blocked");
-  Serial.print(F("Send telemetry to third party"));
+  Serial.print(F("Send telemetry to third party "));
   Serial.println(getTelemetry3rd() ? "Allowed" : "Blocked");
   Serial.print(F("Test mode "));
   Serial.println(getTestMode()  ? "Enable" : "Disable");

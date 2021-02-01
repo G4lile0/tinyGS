@@ -128,7 +128,7 @@ void displayUpdate_task (void* arg)
 
 void wifiConnected()
 {
-  configManager.printConfig();
+  configManager.printConfig(); Serial.println();
   arduino_ota_setup();
   displayShowConnected();
 
@@ -153,7 +153,7 @@ void wifiConnected()
       delay (100);
   }
 
-  printLocalTime();
+  printLocalTime(); Serial.println();
   configManager.delay(1000); // wait to show the connected screen
 
   mqtt.begin();
@@ -276,19 +276,26 @@ void loop() {
         break;
       case 't':
         switchTestmode();
-        ESP.restart();
         break;
       case 'b':
         ESP.restart();
         break;
       case 'p':
+        if (!configManager.getAllowTx())
+        {
+          Serial.println(F("Radio transmission is not allowed by config! Check your config on the web panel and make sure transmission is allowed by local regulations"));
+        }
+
         static long lastTestPacketTime = 0;
         if (millis() - lastTestPacketTime < 20*1000)
         {
           Serial.println(F("Please wait a few seconds to send another test packet."));
           break;
         }
+        
         radio.sendTestPacket();
+        lastTestPacketTime = millis();
+        Serial.println(F("Sending test packet to nearby stations!"));
         break;
       default:
         Serial.print(F("Unknown command: "));
@@ -353,5 +360,6 @@ void printControls()
   Serial.println(F("t - change the test mode and restart"));
   Serial.println(F("e - erase board config and reset"));
   Serial.println(F("b - reboot the board"));
+  Serial.println(F("p - send test packet to nearby stations (to check transmission)"));
   Serial.println(F("------------------------------------"));
 }
