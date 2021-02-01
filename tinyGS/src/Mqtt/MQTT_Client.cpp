@@ -243,6 +243,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
 
   if (!strcmp(command, commandSatPos)) {
     manageSatPosOled((char*)payload, length);
+    return; // no ack
   }
 
   if (!strcmp(command, commandReset))
