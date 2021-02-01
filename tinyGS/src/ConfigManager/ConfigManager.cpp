@@ -152,23 +152,32 @@ void ConfigManager::handleRestart()
 bool ConfigManager::formValidator(iotwebconf2::WebRequestWrapper* webRequestWrapper)
 {
   Serial.println("Validating form.");
-  boolean valid = true;
 
   String name = webRequestWrapper->arg(this->getThingNameParameter()->getId());
   
   if (name.length() < 3)
   {
     this->getThingNameParameter()->errorMessage = "Your ground station name must have more then 3 characters and less then 25 and should be unique.";
-    valid = false;
+    return false;
   }
 
   if (!strcmp(name.c_str(), thingName))
   {
     this->getThingNameParameter()->errorMessage = "Please, change your station name to something unique. Be creative!";
-    valid = false;
+    return false;
   }
 
-  return valid;
+  for (const char* c = name.c_str(); *c != '\0'; c++)
+  {
+    Serial.println(*c);
+    if (!((*c >= '0' && *c <= '9') || (*c >= 'A' && *c <= 'Z') || *c == '_' || (*c >= 'a' && *c <= 'z')))
+    {
+      this->getThingNameParameter()->errorMessage = "Allowed characters are: [0-9 A-Z a-z _]";
+      return false;
+    }
+  }
+
+  return true;
 }
 
 void ConfigManager::resetAPConfig()

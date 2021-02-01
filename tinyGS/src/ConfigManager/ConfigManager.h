@@ -19,6 +19,7 @@
 #ifndef ConfigManager_h
 #define ConfigManager_h
 
+#define IOTWEBCONF_DEBUG_DISABLED 1
 #include "IotWebConf2.h"
 #include "logos.h"
 #include <Wire.h>
