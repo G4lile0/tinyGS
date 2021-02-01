@@ -206,7 +206,7 @@ private:
   iotwebconf2::NumberParameter oledBrightParam = iotwebconf2::NumberParameter("OLED Bright", "oled_bright", oledBright, NUMBER_LEN, "100", "0..100", "min='0' max='100' step='1'");
   iotwebconf2::CheckboxParameter AllowTxParam  = iotwebconf2::CheckboxParameter("Enable TX (HAM licence/ no preamp)", "tx", allowTx, CHECKBOX_LENGTH, true);
   iotwebconf2::CheckboxParameter remoteTuneParam = iotwebconf2::CheckboxParameter("Allow Remote Tunning","remote_tune",remoteTune, CHECKBOX_LENGTH, true);
-  iotwebconf2::CheckboxParameter telemetry3rdParam = iotwebconf2::CheckboxParameter("Allow third party telemetry (sat owners,  satnog... )","telemetry3rd",telemetry3rd, CHECKBOX_LENGTH, true);
+  iotwebconf2::CheckboxParameter telemetry3rdParam = iotwebconf2::CheckboxParameter("Allow sending telemetry to third party","telemetry3rd",telemetry3rd, CHECKBOX_LENGTH, true);
   iotwebconf2::CheckboxParameter testParam = iotwebconf2::CheckboxParameter("Test mode","test",testMode, CHECKBOX_LENGTH, false);
   iotwebconf2::CheckboxParameter autoUpdateParam = iotwebconf2::CheckboxParameter("Automatic Firmware Update","auto_update",autoUpdate, CHECKBOX_LENGTH, true);
 };

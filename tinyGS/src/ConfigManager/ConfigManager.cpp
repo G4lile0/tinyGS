@@ -193,6 +193,14 @@ void ConfigManager::resetAllConfig()
   strncpy(mqttServerParam.valueBuffer, MQTT_DEFAULT_SERVER, MQTT_SERVER_LENGTH);
   mqttUserParam.valueBuffer[0] = '\0';
   mqttPassParam.valueBuffer[0] = '\0';
+  latitude[0]  = '\0';
+  longitude[0]  = '\0';
+  oledBright[0]  = '\0';
+  allowTx[0]  = '\0';
+  remoteTune[0]  = '\0';
+  telemetry3rd[0]  = '\0';
+  testMode[0]  = '\0';
+  autoUpdate[0]  = '\0';
 
   saveConfig();
 }
@@ -291,4 +299,6 @@ void ConfigManager::printConfig()
   Serial.println(getTelemetry3rd() ? "Allowed" : "Blocked");
   Serial.print(F("Test mode "));
   Serial.println(getTestMode()  ? "Enable" : "Disable");
+  Serial.print(F("Auto Update "));
+  Serial.println(getAutoUpdate()  ? "Enable" : "Disable");
 }
