@@ -284,6 +284,7 @@ void loop() {
         if (!configManager.getAllowTx())
         {
           Serial.println(F("Radio transmission is not allowed by config! Check your config on the web panel and make sure transmission is allowed by local regulations"));
+          break;
         }
 
         static long lastTestPacketTime = 0;
