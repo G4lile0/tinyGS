@@ -117,6 +117,8 @@ private:
   const char* topicRx PROGMEM= "rx";
 
   // command
+  const char* commandBatchConf PROGMEM= "batch_conf";
+  const char* commandUpdate PROGMEM= "update";
   const char* commandSatPos PROGMEM= "sat_pos_oled";
   const char* commandReset PROGMEM= "reset";
   const char* commandFreq PROGMEM= "freq";
@@ -145,10 +147,6 @@ private:
   const char* commandSPIsetRegValue PROGMEM= "SPIsetRegValue";
   const char* commandSPIwriteRegister PROGMEM= "SPIwriteRegister";
   const char* commandSPIreadRegister PROGMEM= "SPIreadRegister";
-
-
-  // TODO: find appropiate name
-  const char* commandBatchConf PROGMEM= "batch_conf";
 };
 
 #endif

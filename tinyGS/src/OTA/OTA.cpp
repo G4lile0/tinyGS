@@ -33,11 +33,7 @@ void OTA::update()
 #endif
 
   Serial.print("Checking for OTA Updates...  ");
-  uint64_t chipId = ESP.getEfuseMac();
-  char clientId[13];
-  sprintf(clientId, "%04X%08X",(uint16_t)(chipId>>32), (uint32_t)chipId);
-
-  t_httpUpdate_return ret = httpUpdate.update(client, String(OTA_URL) + clientId, status.git_version);
+  t_httpUpdate_return ret = httpUpdate.update(client, OTA_URL, status.git_version);
 
   switch (ret) {
     case HTTP_UPDATE_FAILED:

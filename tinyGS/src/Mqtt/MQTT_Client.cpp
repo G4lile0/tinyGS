@@ -21,6 +21,7 @@
 #define ARDUINOJSON_USE_LONG_LONG 1
 #include "ArduinoJson.h"
 #include "../Radio/Radio.h"
+#include "../OTA/OTA.h"
 
 MQTT_Client::MQTT_Client() 
 : PubSubClient(espClient)
@@ -248,6 +249,11 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
 
   if (!strcmp(command, commandReset))
     ESP.restart();
+
+  if (!strcmp(command, commandUpdate)) {
+    OTA::update();
+    return; // no ack
+  }
 
   if (!strcmp(command, commandTest))
   {
