@@ -25,7 +25,7 @@
 #include <HTTPClient.h>
 #include <HTTPUpdate.h>
 
-constexpr auto MIN_TIME_BEFORE_UPDATE = 600000;
+constexpr auto MIN_TIME_BEFORE_UPDATE = 20000;
 constexpr auto TIME_BETTWEN_UPDATE_CHECK = 3600000;
 constexpr auto OTA_URL = "https://api.tinygs.com/updates/tinygs.bin";
 
