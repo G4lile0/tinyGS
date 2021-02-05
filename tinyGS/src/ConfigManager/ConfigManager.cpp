@@ -107,11 +107,42 @@ void ConfigManager::handleDashboard()
 {
   String s = String(FPSTR(IOTWEBCONF_HTML_HEAD));
   s += "<style>" + String(FPSTR(IOTWEBCONF_HTML_STYLE_INNER)) + "</style>";
+  s += "<style>" + String(FPSTR(IOTWEBCONF_DASHBOARD_STYLE_INNER)) + "</style>";
   s += FPSTR(IOTWEBCONF_HTML_HEAD_END);
-  s += FPSTR(IOTWEBCONF_HTML_BODY_INNER);
+  s += FPSTR(IOTWEBCONF_DASHBOARD_BODY_INNER);
   s += String(FPSTR(LOGO)) + "<br />";
-  s += "We are still working on this feature. It will be ready soon.<br /><br/>";
-  s += "<button onclick=\"window.location.href='" + String(ROOT_URL) + "';\">Go Back</button><br /><br />";
+  s += F("</table></div><div class=\"card\"><h3>Groundstation Status</h3><table>");
+  s += "<tr><td>Name </td><td>" + String(getThingName()) + "</td></tr>";
+  s += "<tr><td>Version </td><td>" + String(status.version) + "</td></tr>";
+  s += "<tr><td>MQTT Server </td><td>" + String(status.mqtt_connected?"<span class='G'>CONNECTED</span>":"<span class='R'>NOT CONNECTED</span>") + "</td></tr>";
+  s += "<tr><td>WiFi </td><td>" + String(WiFi.isConnected()?"<span class='G'>CONNECTED</span>":"<span class='R'>NOT CONNECTED</span>") + "</td></tr>";
+  s += "<tr><td>Test Mode </td><td>" + String(getTestMode()?"ENABLED":"DISABLED") + "</td></tr>";
+  s += F("</table></div>");
+  s += F("<div class=\"card\"><h3>Modem Configuration</h3><table>");
+  s += "<tr><td>Listening to </td><td>" + String(status.modeminfo.satellite) + "</td></tr>";
+  s += "<tr><td>Modulation </td><td>" + String(status.modeminfo.modem_mode) + "</td></tr>";
+  s += "<tr><td>Frequency </td><td>" + String(status.modeminfo.frequency) + "</td></tr>";
+  if (status.modeminfo.satellite == "LoRa")
+  {
+    s += "<tr><td>Spreading Factor </td><td>" + String(status.modeminfo.sf) + "</td></tr>";
+    s += "<tr><td>Coding Rate </td><td>" + String(status.modeminfo.cr) + "</td></tr>";
+    s += "<tr><td>Bandwidth </td><td>" + String(status.modeminfo.bw) + "</td></tr>";
+  }
+  else
+  {
+    s += "<tr><td>Bitrate </td><td>" + String(status.modeminfo.bitrate) + "</td></tr>";
+    s += "<tr><td>Frequency dev </td><td>" + String(status.modeminfo.freqDev) + "</td></tr>";
+    s += "<tr><td>Bandwidth </td><td>" + String(status.modeminfo.bw) + "</td></tr>";
+  }
+  s += F("</table></div><div class=\"card\"><h3>Last Packet Received</h3><table>");
+  s += "<tr><td>Received at </td><td>" + String(status.lastPacketInfo.time) + "</td></tr>";
+  s += "<tr><td>Signal RSSI </td><td>" + String(status.lastPacketInfo.rssi) + "</td></tr>";
+  s += "<tr><td>Signal SNR </td><td>" + String(status.lastPacketInfo.snr) + "</td></tr>";
+  s += "<tr><td>Frequiency error </td><td>" + String(status.lastPacketInfo.frequencyerror) + "</td></tr>";
+  s += "<tr><td colspan=\"2\" style=\"text-align:center;\">" + String(status.lastPacketInfo.crc_error?"CRC ERROR!":"") + "</td></tr>";
+  s += F("</table></div>");
+  s += FPSTR(IOTWEBCONF_CONSOLE_BODY_INNER);
+  s += "<br /><button style='max-width: 1080px;' onclick=\"window.location.href='" + String(ROOT_URL) + "';\">Go Back</button><br /><br />";
   s += FPSTR(IOTWEBCONF_HTML_END);
 
   s.replace("{v}", FPSTR(TITLE_TEXT));

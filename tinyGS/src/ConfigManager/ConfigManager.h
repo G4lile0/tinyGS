@@ -23,7 +23,7 @@
 #include "IotWebConf2.h"
 #include "logos.h"
 #include <Wire.h>
-#include "htmlOptions.h"
+#include "html.h"
 
 #ifdef ESP8266
   #include "ESP8266HTTPUpdateServer.h"
