@@ -25,16 +25,17 @@
 class Log {
 public:
   enum LoggingLevels {LOG_LEVEL_NONE, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_DEBUG};
-  void console(const char* logData);
-  void error(const char* logData);
-  void info(const char* logData);
-  void debug(const char* logData);
-  void GetLog(uint32_t idx, char** entry_pp, size_t* len_p);
+  static void console(const char* logData);
+  static void error(const char* logData);
+  static void info(const char* logData);
+  static void debug(const char* logData);
+  static void getLog(uint32_t idx, char** entry_pp, size_t* len_p);
+  static char getLogIdx();
 
 private:
-  void AddLog(LoggingLevels logLevel, const char* logData);
-  size_t strchrspn(const char *str1, int character);
-  char log[MAX_LOG_SIZE];
-  char logIdx = 1;
-  LoggingLevels logLevel = LOG_LEVEL;
+  static void AddLog(LoggingLevels logLevel, const char* logData);
+  static size_t strchrspn(const char *str1, int character);
+  static char log[MAX_LOG_SIZE];
+  static char logIdx;
+  static LoggingLevels logLevel;
 };

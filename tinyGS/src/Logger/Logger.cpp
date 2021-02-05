@@ -19,6 +19,10 @@
 
 #include "Logger.h"
 
+char Log::logIdx = 1;
+Log::LoggingLevels Log::logLevel = LOG_LEVEL;
+char Log::log[MAX_LOG_SIZE] = "";
+
 void Log::console(const char* logData)
 {
   AddLog(LOG_LEVEL_NONE, logData);
@@ -42,18 +46,18 @@ void Log::debug(const char* logData)
 // Based on arendst/Tasmota addLog (support.ino)
 void Log::AddLog(Log::LoggingLevels loglevel, const char* logData)
 {
-  if (logLevel > this->logLevel)
+  if (logLevel > Log::logLevel)
     return;
 
   char time[10];  // "13:45:21 "
   struct tm timeinfo;
-  if(!getLocalTime(&timeinfo))
-    snprintf_P(time, sizeof(time), PSTR("%02d:%02d:%02d "), timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+  if(getLocalTime(&timeinfo))
+    snprintf_P(time, sizeof(time), "%02d:%02d:%02d ", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
   else
     time[0] = '\0';
+  
+  Serial.printf(PSTR("%s%s"), time, logData);
 
-  Serial.printf(PSTR("%s%s"), logData);
-    
   // Delimited, zero-terminated buffer of log lines.
   // Each entry has this format: [index][log data]['\1']
   while (logIdx == log[0] ||  // If log already holds the next index, remove it
@@ -65,14 +69,15 @@ void Log::AddLog(Log::LoggingLevels loglevel, const char* logData)
     it++;                                // Skip delimiting "\1"
     memmove(log, it, MAX_LOG_SIZE -(it-log));  // Move buffer forward to remove oldest log line
   }
+  
   snprintf_P(log, sizeof(log), PSTR("%s%c%s%s\1"), log, logIdx++, time, logData);
 
   logIdx &= 0xFF;
   if (!logIdx) 
-    logIdx++;       // Index 0 is not allowed as it is the end of char string
+    logIdx++;       // Index 0 is not allowed as it is the end of char string*/
 }
 
-void Log::GetLog(uint32_t idx, char** entry_pp, size_t* len_p)
+void Log::getLog(uint32_t idx, char** entry_pp, size_t* len_p)
 {
   char* entry_p = nullptr;
   size_t len = 0;
@@ -104,4 +109,9 @@ size_t Log::strchrspn(const char *str1, int character)
   char *end = strchr(str1, character);
   if (end) ret = end - start;
   return ret;
+}
+
+char Log::getLogIdx()
+{
+  return logIdx;
 }

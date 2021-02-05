@@ -47,6 +47,7 @@ constexpr auto CONFIG_URL = "/config";
 constexpr auto DASHBOARD_URL = "/dashboard";
 constexpr auto UPDATE_URL = "/firmware";
 constexpr auto RESTART_URL = "/restart";
+constexpr auto REFRESH_CONSOLE_URL = "/cs";
 
 const char TITLE_TEXT[] PROGMEM = "TinyGS Configuration";
 
@@ -160,6 +161,7 @@ private:
   ConfigManager();
   void handleRoot();
   void handleDashboard();
+  void handleRefreshConsole();
   void handleRestart();
   bool formValidator(iotwebconf2::WebRequestWrapper* webRequestWrapper);
   void boardDetection();

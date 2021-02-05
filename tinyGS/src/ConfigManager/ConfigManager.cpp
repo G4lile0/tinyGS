@@ -19,6 +19,7 @@
 
 #include "ConfigManager.h"
 #include "../Mqtt/MQTT_Client.h"
+#include "../Logger/Logger.h"
 
 ConfigManager::ConfigManager()
 : IotWebConf2(thingName, &dnsServer, &server, initialApPassword, configVersion)
@@ -43,6 +44,7 @@ ConfigManager::ConfigManager()
   server.on(CONFIG_URL, [this]{ handleConfig(); });
   server.on(DASHBOARD_URL, [this]{ handleDashboard(); });
   server.on(RESTART_URL, [this]{ handleRestart(); });
+  server.on(REFRESH_CONSOLE_URL, [this]{ handleRefreshConsole(); });
   setupUpdateServer(
     [this](const char* updatePath) { httpUpdater.setup(&server, updatePath); },
     [this](const char* userName, char* password) { httpUpdater.updateCredentials(userName, password); });
@@ -105,9 +107,22 @@ void ConfigManager::handleRoot()
 
 void ConfigManager::handleDashboard()
 {
+  if (getState() == IOTWEBCONF_STATE_ONLINE)
+  {
+    // -- Authenticate
+    if (!server.authenticate(IOTWEBCONF_ADMIN_USER_NAME, getApPasswordParameter()->valueBuffer))
+    {
+      IOTWEBCONF_DEBUG_LINE(F("Requesting authentication."));
+      server.requestAuthentication();
+      return;
+    }
+  }
+
+  uint64_t time = millis();
   String s = String(FPSTR(IOTWEBCONF_HTML_HEAD));
   s += "<style>" + String(FPSTR(IOTWEBCONF_HTML_STYLE_INNER)) + "</style>";
   s += "<style>" + String(FPSTR(IOTWEBCONF_DASHBOARD_STYLE_INNER)) + "</style>";
+  s += "<script>" + String(FPSTR(IOTWEBCONF_CONSOLE_SCRIPT)) + "</script>";
   s += FPSTR(IOTWEBCONF_HTML_HEAD_END);
   s += FPSTR(IOTWEBCONF_DASHBOARD_BODY_INNER);
   s += String(FPSTR(LOGO)) + "<br />";
@@ -117,6 +132,7 @@ void ConfigManager::handleDashboard()
   s += "<tr><td>MQTT Server </td><td>" + String(status.mqtt_connected?"<span class='G'>CONNECTED</span>":"<span class='R'>NOT CONNECTED</span>") + "</td></tr>";
   s += "<tr><td>WiFi </td><td>" + String(WiFi.isConnected()?"<span class='G'>CONNECTED</span>":"<span class='R'>NOT CONNECTED</span>") + "</td></tr>";
   s += "<tr><td>Test Mode </td><td>" + String(getTestMode()?"ENABLED":"DISABLED") + "</td></tr>";
+  //s += "<tr><td>Uptime </td><td>" + // process and update in js + "</td></tr>";
   s += F("</table></div>");
   s += F("<div class=\"card\"><h3>Modem Configuration</h3><table>");
   s += "<tr><td>Listening to </td><td>" + String(status.modeminfo.satellite) + "</td></tr>";
@@ -149,6 +165,63 @@ void ConfigManager::handleDashboard()
 
   server.sendHeader("Content-Length", String(s.length()));
   server.send(200, "text/html; charset=UTF-8", s);
+}
+
+void ConfigManager::handleRefreshConsole()
+{
+  if (getState() == IOTWEBCONF_STATE_ONLINE)
+  {
+    // -- Authenticate
+    if (!server.authenticate(IOTWEBCONF_ADMIN_USER_NAME, getApPasswordParameter()->valueBuffer))
+    {
+      IOTWEBCONF_DEBUG_LINE(F("Requesting authentication."));
+      server.requestAuthentication();
+      return;
+    }
+  }
+
+  uint32_t counter = 0; 
+
+  String svalue = server.arg("c1");
+  if (svalue.length()) {
+    Log::console(svalue.c_str());
+    // TODO: Execute command
+  }
+
+  char stmp[8];
+  String s = server.arg("c2");
+  strlcpy(stmp, s.c_str(), sizeof(stmp));
+  if (strlen(stmp)) { counter = atoi(stmp); }
+  server.client().flush();
+  server.sendHeader(F("Cache-Control"), F("no-cache, no-store, must-revalidate"));
+  server.sendHeader(F("Pragma"), F("no-cache"));
+  server.sendHeader(F("Expires"), F("-1"));
+  server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  server.send(200, F("text/plain"), "");
+  server.sendContent(String((uint8_t)Log::getLogIdx()) + "\n");
+  if (counter != Log::getLogIdx()) {
+    if (!counter) {
+      counter = Log::getLogIdx();
+    }
+    do {
+      char* tmp;
+      size_t len;
+      Log::getLog(counter, &tmp, &len);
+      if (len) {
+        char stemp[len +1];
+        memcpy(stemp, tmp, len);
+        stemp[len-1] = '\n';
+        stemp[len] = '\0';
+        server.sendContent(stemp);
+      }
+      counter++;
+      counter &= 0xFF;
+      if (!counter) { counter++; }  // Skip log index 0 as it is not allowed
+    } while (counter != Log::getLogIdx());
+  }
+
+  server.sendContent("");
+  server.client().stop();
 }
 
 void ConfigManager::handleRestart()
@@ -184,8 +257,6 @@ void ConfigManager::handleRestart()
 
 bool ConfigManager::formValidator(iotwebconf2::WebRequestWrapper* webRequestWrapper)
 {
-  Serial.println("Validating form.");
-
   String name = webRequestWrapper->arg(this->getThingNameParameter()->getId());
   
   if (name.length() < 3)
