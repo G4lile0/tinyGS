@@ -21,6 +21,7 @@
 #define ARDUINOJSON_USE_LONG_LONG 1
 #include "ArduinoJson.h"
 #include <base64.h>
+#include "../Logger/Logger.h"
 
 bool received = false;
 bool eInterrupt = true;
@@ -45,7 +46,7 @@ Radio::Radio()
 
 void Radio::init()
 {
-  Serial.print(F("[SX12xx] Initializing ... "));
+  Log::console(PSTR("[SX12xx] Initializing ... "));
   board_type board = ConfigManager::getInstance().getBoardConfig();
   
   spi.begin(board.L_SCK, board.L_MISO, board.L_MOSI, board.L_NSS);
@@ -68,12 +69,11 @@ void Radio::init()
   
   if (state == ERR_NONE)
   {
-    Serial.println(F("success!"));
+    Log::console(PSTR("success!"));
   } 
   else
   {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
+    Log::console(PSTR("failed, code %u"), state);
     return;
   }
 
@@ -90,7 +90,7 @@ void Radio::init()
   }
 
   // start listening for LoRa packets
-  Serial.print(F("[SX12x8] Starting to listen ... "));
+  Log::console(PSTR("[SX12x8] Starting to listen ... "));
   if (board.L_SX127X)
     state = ((SX1278*)lora)->startReceive();
   else
@@ -98,13 +98,11 @@ void Radio::init()
 
   if (state == ERR_NONE)
   {
-    Serial.println(F("success!"));
+    Log::console(PSTR("success!"));
   } 
   else
   {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    Serial.println(String("Go to the config panel (") + WiFi.localIP().toString() + ") and check if the board selected matches your hardware.");
+    Log::console(PSTR("failed, code %u\nGo to the config panel (%s) and check if the board selected matches your hardware."), state, WiFi.localIP().toString());
     return;
   }
 
@@ -133,7 +131,7 @@ uint16_t Radio::sendTx(const char* data, size_t length)
 {
   if (!ConfigManager::getInstance().getAllowTx())
   {
-      Serial.println(F("TX disabled by config"));
+      Log::error(PSTR("TX disabled by config"));
       return -1;
   }
 
@@ -199,15 +197,18 @@ uint8_t Radio::listen()
     status.lastPacketInfo.rssi = l->getRSSI();
     status.lastPacketInfo.snr = l->getSNR();
   }
- 
 
   if ((respLen > 0) && !(state == ERR_CRC_MISMATCH))
   {
     // read optional data
-    Serial.print(F("Packet ("));
-    Serial.print(respLen);
-    Serial.println(F(" bytes):"));
-    PRINT_BUFF(respFrame, respLen)
+    Log::console(PSTR("Packet (%u bytes):"), respLen);
+    char* byteStr = new char[respLen*2+1];
+    for(int i = 0; i < respLen; i++)
+    {
+      sprintf(byteStr+i*2, "%02x", respFrame[i]);
+    }
+    Log::console(PSTR("%s"), byteStr);
+    delete[] byteStr;
   }
 
   if (state == ERR_NONE)
@@ -229,7 +230,7 @@ uint8_t Radio::listen()
   struct tm timeinfo;
   if(!getLocalTime(&timeinfo))
   {
-    Serial.println("Failed to obtain time");
+    Log::error(PSTR("Failed to obtain time"));
     status.lastPacketInfo.time = "";
   }
   else
@@ -248,19 +249,7 @@ uint8_t Radio::listen()
   }
 
   // print RSSI (Received Signal Strength Indicator)
-  Serial.print(F("[SX12x8] RSSI:\t\t"));
-  Serial.print(status.lastPacketInfo.rssi);
-  Serial.println(F(" dBm"));
-
-  // print SNR (Signal-to-Noise Ratio)
-  Serial.print(F("[SX12x8] SNR:\t\t"));
-  Serial.print(status.lastPacketInfo.snr);
-  Serial.println(F(" dB"));
-
-  // print frequency error
-  Serial.print(F("[SX12x8] Frequency error:\t"));
-  Serial.print(status.lastPacketInfo.frequencyerror);
-  Serial.println(F(" Hz"));
+  Log::console(PSTR("[SX12x8] RSSI:\t\t%f dBm\n[SX12x8] SNR:\t\t%f dB\n[SX12x8] Frequency error:\t%f Hz"), status.lastPacketInfo.rssi, status.lastPacketInfo.snr, status.lastPacketInfo.frequencyerror);
 
 
   // put module back to listen mode
@@ -280,14 +269,13 @@ uint8_t Radio::listen()
   else if (state == ERR_CRC_MISMATCH)
   {
     // packet was received, but is malformed
-    Serial.println(F("[SX12x8] CRC error!"));
+    Log::console(PSTR("[SX12x8] CRC error!"));
     return 2;
   }
   else
   {
     // some other error occurred
-    Serial.print(F("[SX12x8] Failed, code "));
-    Serial.println(state);
+    Log::console(PSTR("[SX12x8] Failed, code %u"), state);
     return 3;
   }
 }
@@ -296,12 +284,11 @@ void Radio::readState(int state)
 {
   if (state == ERR_NONE)
   {
-    Serial.println(F("success!"));
+    Log::error(PSTR("success!"));
   } 
   else
   {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
+    Log::error(PSTR("failed, code %u"), state);
     return;
   }
 }
@@ -310,11 +297,9 @@ void Radio::readState(int state)
 int16_t Radio::remote_freq(char* payload, size_t payload_len)
 {
   float frequency = _atof(payload, payload_len);
+  Log::console(PSTR("Set Frequency: %.3f MHz"), frequency);
 
-  Serial.println("");
-  Serial.print(F("Set Frequency: ")); Serial.print(frequency, 3);Serial.println(F(" MHz"));
   int16_t state = 0;
-
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X) 
   {
     ((SX1278*)lora)->sleep();   // sleep mandatory if FastHop isn't ON.
@@ -338,11 +323,9 @@ int16_t Radio::remote_freq(char* payload, size_t payload_len)
 int16_t Radio::remote_bw(char* payload, size_t payload_len)
 {
   float bw = _atof(payload, payload_len);
+  Log::console(PSTR("Set bandwidth: %.3f MHz"), bw);
 
-  Serial.println("");
-  Serial.print(F("Set bandwidth: ")); Serial.print(bw, 3);Serial.println(F(" kHz"));
   int16_t state = 0;
-
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
     state = ((SX1278*)lora)->setBandwidth(bw);
@@ -366,11 +349,9 @@ int16_t Radio::remote_bw(char* payload, size_t payload_len)
 int16_t Radio::remote_sf(char* payload, size_t payload_len)
 {
   uint8_t sf = _atof(payload, payload_len);
+  Log::console(PSTR("Set spreading factor: %u"), sf);
 
-  Serial.println("");
-  Serial.print(F("Set spreading factor: ")); Serial.println(sf);
   int16_t state = 0;
-
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
     state = ((SX1278*)lora)->setSpreadingFactor(sf);
@@ -395,9 +376,8 @@ int16_t Radio::remote_sf(char* payload, size_t payload_len)
 int16_t Radio::remote_cr(char* payload, size_t payload_len)
 {
   uint8_t cr = _atoi(payload, payload_len);
-
-  Serial.println("");
-  Serial.print(F("Set coding rate: ")); Serial.println(cr);
+  Log::console(PSTR("Set coding rate: %u"), cr);
+  
   int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
@@ -423,9 +403,7 @@ int16_t Radio::remote_cr(char* payload, size_t payload_len)
 int16_t Radio::remote_crc(char* payload, size_t payload_len)
 {
   bool crc = _atoi(payload, payload_len);
-
-  Serial.println("");
-  Serial.print(F("Set CRC "));  if (crc) Serial.println(F("ON")); else Serial.println(F("OFF"));
+  Log::console(PSTR("Set CRC: %s"), crc ? F("ON") : F("OFF"));
   int16_t state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
@@ -448,11 +426,11 @@ int16_t Radio::remote_crc(char* payload, size_t payload_len)
 int16_t Radio::remote_lsw(char* payload, size_t payload_len)
 {
   uint8_t sw = _atoi(payload, payload_len);
-
-  Serial.println("");
-  Serial.print(F(" 0x"));Serial.print(sw,HEX);
+  char strHex[2];
+  sprintf(strHex, "%1x", sw);
+  Log::console(PSTR("Set lsw: %s"), strHex);
+  
   int16_t state = 0;
-
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     state = ((SX1278*)lora)->setSyncWord(sw);
   else
@@ -465,11 +443,9 @@ int16_t Radio::remote_lsw(char* payload, size_t payload_len)
 int16_t Radio::remote_fldro(char* payload, size_t payload_len)
 {
   bool ldro = _atoi(payload, payload_len);
+  Log::console(PSTR("Set ForceLDRO: %s"), ldro ? F("ON") : F("OFF"));
 
-  Serial.println("");
-  Serial.print(F("Set ForceLDRO "));  if (ldro) Serial.println(F("ON")); else Serial.println(F("OFF"));
   int16_t state = 0;
-
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
     state = ((SX1278*)lora)->forceLDRO(ldro);
@@ -497,8 +473,7 @@ int16_t Radio::remote_fldro(char* payload, size_t payload_len)
 
 int16_t Radio::remote_aldro(char* payload, size_t payload_len)
 {
-  Serial.println("");
-  Serial.print(F("Set AutoLDRO ")); 
+  Log::console(PSTR("Set AutoLDRO ")); 
   int16_t state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
@@ -521,8 +496,7 @@ int16_t Radio::remote_aldro(char* payload, size_t payload_len)
 int16_t Radio::remote_pl(char* payload, size_t payload_len)
 {
   uint16_t pl = _atoi(payload, payload_len);
-  Serial.println("");
-  Serial.print(F("Set Preamble ")); Serial.println(pl);
+  Log::console(PSTR("Set Preamble %u"), pl);
   int16_t state = 0;
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
@@ -560,19 +534,14 @@ int16_t Radio::remote_begin_lora(char* payload, size_t payload_len)
   uint8_t gain = doc[8];
   uint16_t syncWord68 =  doc[4];
 
-  Serial.println("");
-  Serial.print(F("Set Frequency: ")); Serial.print(freq, 3);Serial.println(F(" MHz"));
-  Serial.print(F("Set bandwidth: ")); Serial.print(bw, 3);Serial.println(F(" kHz"));
-  Serial.print(F("Set spreading factor: ")); Serial.println(sf);
-  Serial.print(F("Set coding rate: ")); Serial.println(cr);
-  Serial.print(F("Set sync Word 127x: 0x")); Serial.println(syncWord78,HEX);
-  Serial.print(F("Set sync Word 126x: 0x")); Serial.println(syncWord68,HEX);
-  Serial.print(F("Set Power: ")); Serial.println(power);
-  Serial.print(F("Set C limit: ")); Serial.println(current_limit);
-  Serial.print(F("Set Preamble: ")); Serial.println(preambleLength);
-  Serial.print(F("Set Gain: ")); Serial.println(gain);
-  int16_t state = 0;
+  char sw78StrHex[2];
+  char sw68StrHex[3];
+  sprintf(sw78StrHex, "%1x", syncWord78);
+  sprintf(sw68StrHex, "%2x", syncWord68);
+  Log::console(PSTR("Set Frequency: %.3f MHz\nSet bandwidth: %.3f MHz\nSet spreading factor: %u\nSet coding rate: %u\nSet sync Word 127x: 0x%s\nSet sync Word 126x: 0x%s"), freq, bw, sf, cr, sw78StrHex, sw68StrHex);
+  Log::console(PSTR("Set Power: %u\nSet C limit: %u\nSet Preamble: %u\nSet Gain: %u"), power, current_limit, preambleLength, gain);
 
+  int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
     ((SX1278*)lora)->sleep();   // sleep mandatory if FastHop isn't ON.
@@ -616,16 +585,8 @@ int16_t Radio::remote_begin_fsk(char* payload, size_t payload_len)
   bool    enableOOK = doc[7];
   uint8_t   dataShaping = doc[8];
 
-  Serial.println("");
-  Serial.print(F("Set Frequency: ")); Serial.print(freq, 3);Serial.println(F(" MHz"));
-  Serial.print(F("Set bit rate: ")); Serial.print(br, 3);Serial.println(F(" kbps"));
-  Serial.print(F("Set Frequency deviation: ")); Serial.print(freqDev, 3);Serial.println(F(" kHz"));
-  Serial.print(F("Set receiver bandwidth: ")); Serial.print(rxBw, 3);Serial.println(F(" kHz"));
-  Serial.print(F("Set Power: ")); Serial.println(power);
-  Serial.print(F("Set Current limit: ")); Serial.println(currentlimit);
-  Serial.print(F("Set Preamble Length: ")); Serial.println(preambleLength);
-  Serial.print(F("OOK Modulation "));  if (enableOOK) Serial.println(F("ON")); else Serial.println(F("OFF"));
-  Serial.print(F("Set datashaping ")); Serial.println(dataShaping);
+  Log::console(PSTR("Set Frequency: %.3f MHz\nSet bit rate: %.3f\nSet Frequency deviation: %.3f kHz\nSet receiver bandwidth: %.3f kHz\nSet Power: %u"), freq, br, freqDev, rxBw, power);
+  Log::console(PSTR("Set Current limit: %u\nSet Preamble Length: %u\nOOK Modulation %s\nSet datashaping %u"), currentlimit, preambleLength, enableOOK ? F("ON") : F("OFF"), dataShaping);
 
   int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
@@ -660,10 +621,9 @@ int16_t Radio::remote_begin_fsk(char* payload, size_t payload_len)
 int16_t Radio::remote_br(char* payload, size_t payload_len)
 {
   uint8_t br = _atoi(payload, payload_len);
-  Serial.println("");
-  Serial.print(F("Set FSK Bit rate: ")); Serial.println(br);
-  int16_t state = 0;
+  Log::console(PSTR("Set FSK Bit rate: %u"), br);
 
+  int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     state = ((SX1278*)lora)->setBitRate(br);
   else
@@ -679,8 +639,7 @@ int16_t Radio::remote_br(char* payload, size_t payload_len)
 int16_t Radio::remote_fd(char* payload, size_t payload_len)
 {
   uint8_t fd = _atoi(payload, payload_len);
-  Serial.println("");
-  Serial.print(F("Set FSK Frequency Des. : ")); Serial.println(fd);
+  Log::console(PSTR("Set FSK Frequency Dev.: %u"), fd);
 
   int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
@@ -698,8 +657,7 @@ int16_t Radio::remote_fd(char* payload, size_t payload_len)
 int16_t Radio::remote_fbw(char* payload, size_t payload_len)
 {
   float frequency = _atof(payload, payload_len);
-  Serial.println("");
-  Serial.print(F("Set FSK bandwidth: ")); Serial.print(frequency, 3); Serial.println(F(" kHz"));
+  Log::console(PSTR("Set FSK bandwidth: %.3f kHz"), frequency);
 
   int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
@@ -747,18 +705,17 @@ int16_t Radio::remote_fook(char* payload, size_t payload_len)
   bool    enableOOK = doc[0];
   uint8_t ook_shape = doc[1];
 
-  Serial.println("");
-  Serial.print(F("OOK Modulation "));  if (enableOOK) Serial.println(F("ON")); else Serial.println(F("OFF"));
-  Serial.print(F("Set OOK datashaping ")); Serial.println(ook_shape);
-  int state = 0;
+  Log::console(PSTR("OOK Modulation: %s"), enableOOK ? F("ON") : F("OFF"));
+  Log::console(PSTR("Set OOK datashaping: %u"), ook_shape);
 
+  int state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
     state = ((SX1278*)lora)->setOOK(enableOOK);
   }
   else
   {
-    Serial.println(F("OOK not supported by the selected lora module!"));
+    Log::error(PSTR("OOK not supported by the selected lora module!"));
     return -1;
   }
 
@@ -775,14 +732,9 @@ void Radio::remote_SPIwriteRegister(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(60);
   deserializeJson(doc, payload, payload_len);
-  uint8_t     reg = doc[0];
-  uint8_t     data = doc[1];
-  Serial.println("");
-
-  Serial.print(F("REG ID: 0x"));
-  Serial.println(reg, HEX);
-  Serial.print(F("to : 0x"));
-  Serial.println(data, HEX);
+  uint8_t reg = doc[0];
+  uint8_t data = doc[1];
+  Log::console(PSTR("REG ID: 0x%x to 0x%x"), reg, data);
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     ((SX1278*)lora)->_mod->SPIwriteRegister(reg,data);
@@ -792,23 +744,16 @@ void Radio::remote_SPIwriteRegister(char* payload, size_t payload_len)
 
 int16_t Radio::remote_SPIreadRegister(char* payload, size_t payload_len)
 {
-  uint8_t     reg = _atoi(payload, payload_len);
-  uint8_t     data = 0 ;
-  Serial.println("");
+  uint8_t reg = _atoi(payload, payload_len);
+  uint8_t data = 0;
 
-  Serial.print(F("REG ID: 0x"));
-  Serial.print(reg, HEX);
   int16_t state = 0;
-
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     data = ((SX1278*)lora)->_mod->SPIreadRegister(reg);
   else
     data = ((SX1268*)lora)->_mod->SPIreadRegister(reg);
 
-  Serial.print(F(" HEX : 0x"));
-  Serial.print(data, HEX);
-  Serial.print(F(" BIN : "));
-  Serial.println(data, BIN);
+  Log::console(PSTR("REG ID: 0x%x HEX : 0x%x BIN : %b"), reg, data, data);
   
   readState(state);
   return data;
