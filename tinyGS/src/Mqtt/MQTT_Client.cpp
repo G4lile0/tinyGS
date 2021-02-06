@@ -289,19 +289,18 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
   if (!strcmp(command, commandFrame))
   {
     uint8_t frameNumber = atoi(strtok(NULL, "/"));
-    
-    DynamicJsonDocument doc(256);
+    DynamicJsonDocument doc(JSON_ARRAY_SIZE(5) * 15 + JSON_ARRAY_SIZE(15));
     deserializeJson(doc, payload, length);
-    status.remoteTextFrameLength[frameNumber] = doc[0];
+    status.remoteTextFrameLength[frameNumber] = doc.size();
     Log::debug(PSTR("Received frame: %u"), status.remoteTextFrameLength[frameNumber]);
   
     for (uint8_t n=0; n<status.remoteTextFrameLength[frameNumber];n++)
     {
-      status.remoteTextFrame[frameNumber][n].text_font = doc[n+1][0];
-      status.remoteTextFrame[frameNumber][n].text_alignment = doc[n+1][1];
-      status.remoteTextFrame[frameNumber][n].text_pos_x = doc[n+1][2];
-      status.remoteTextFrame[frameNumber][n].text_pos_y = doc[n+1][3];
-      String text = doc[n+1][4];
+      status.remoteTextFrame[frameNumber][n].text_font = doc[n][0];
+      status.remoteTextFrame[frameNumber][n].text_alignment = doc[n][1];
+      status.remoteTextFrame[frameNumber][n].text_pos_x = doc[n][2];
+      status.remoteTextFrame[frameNumber][n].text_pos_y = doc[n][3];
+      String text = doc[n][4];
       status.remoteTextFrame[frameNumber][n].text = text;  
       
       Log::debug(PSTR("Text: %u Font: %u Alig: %u Pos x: %u Pos y: %u -> %s"), n, 
@@ -309,7 +308,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
                                       status.remoteTextFrame[frameNumber][n].text_alignment, 
                                       status.remoteTextFrame[frameNumber][n].text_pos_x,
                                       status.remoteTextFrame[frameNumber][n].text_pos_y,
-                                      status.remoteTextFrame[frameNumber][n].text);
+                                      status.remoteTextFrame[frameNumber][n].text.c_str());
     }
 
     result = 0;
@@ -508,7 +507,7 @@ void MQTT_Client::remoteSatCmnd(char* payload, size_t payload_len)
 // Helper class to use as a callback
 void manageMQTTDataCallback(char *topic, uint8_t *payload, unsigned int length)
 {
-  Log::debug(PSTR("Received MQTT message: %s : %.*s\n"), topic, length, payload);
+  Log::debug(PSTR("Received MQTT message: %s : %.*s"), topic, length, payload);
   MQTT_Client::getInstance().manageMQTTData(topic, payload, length);
 }
 
