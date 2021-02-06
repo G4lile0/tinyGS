@@ -73,6 +73,7 @@
 #include "src/OTA/OTA.h"
 #include <ESPNtpClient.h>
 #include <FailSafe.h>
+#include "src/Logger/Logger.h"
 
 #if MQTT_MAX_PACKET_SIZE != 1000
 "Remeber to change libraries/PubSubClient/src/PubSubClient.h"
@@ -128,17 +129,6 @@ void displayUpdate_task (void* arg)
 
 void wifiConnected()
 {
-  configManager.printConfig(); Serial.println();
-  arduino_ota_setup();
-  displayShowConnected();
-
-  radio.init();
-  if (!radio.isReady())
-  {
-    Serial.println("LoRa initialization failed. Please connect to " + WiFi.localIP().toString() + " and make sure the board selected matches your hardware.");
-    displayShowLoRaError();
-  }
-
   NTP.setInterval (120); // Sync each 2 minutes
   NTP.setTimeZone (configManager.getTZ ()); // Get TX from config manager
   NTP.onNTPSyncEvent (ntp_cb); // Register event callback
@@ -150,10 +140,22 @@ void wifiConnected()
   time_t startedSync = millis ();
   while (NTP.syncStatus() != syncd && millis() - startedSync < 5000) // Wait 5 seconds to get sync
   {
-      delay (100);
+    delay (100);
   }
 
-  printLocalTime(); Serial.println();
+  printLocalTime();
+
+  configManager.printConfig();
+  arduino_ota_setup();
+  displayShowConnected();
+
+  radio.init();
+  if (!radio.isReady())
+  {
+    Serial.println("LoRa initialization failed. Please connect to " + WiFi.localIP().toString() + " and make sure the board selected matches your hardware.");
+    displayShowLoRaError();
+  }
+
   configManager.delay(1000); // wait to show the connected screen
 
   mqtt.begin();
@@ -170,9 +172,9 @@ void setup()
 
   FailSafe.checkBoot (MAX_CONSECUTIVE_BOOT); // Parameters are optional
   if (FailSafe.isActive ()) // Skip all user setup if fail safe mode is activated
-      return;
+    return;
 
-  Serial.printf("TinyGS Version %d - %s\n", status.version, status.git_version);
+  Log::console(PSTR("TinyGS Version %d - %s"), status.version, status.git_version);
   configManager.setWifiConnectionCallback(wifiConnected);
   configManager.init();
   // make sure to call doLoop at least once before starting to use the configManager
@@ -185,7 +187,7 @@ void setup()
 #define RESET_BUTTON_TIME 5000
   unsigned long start_waiting_for_button = millis ();
   unsigned long button_pushed_at;
-  ESP_LOGI (LOG_TAG, "Waiting for reset config button");
+  Log::debug(PSTR("Waiting for reset config button"));
   bool button_pushed = false;
   while (millis () - start_waiting_for_button < WAIT_FOR_BUTTON)
   {
@@ -193,19 +195,19 @@ void setup()
     {
 		  button_pushed = true;
 		  button_pushed_at = millis ();
-		  ESP_LOGI (LOG_TAG, "Reset button pushed");
+		  Log::debug(PSTR("Reset button pushed"));
 		  while (millis () - button_pushed_at < RESET_BUTTON_TIME)
       {
 			  if (digitalRead (configManager.getBoardConfig().PROG__BUTTON))
         {
-				  ESP_LOGI (LOG_TAG, "Reset button released");
+				  Log::debug(PSTR("Reset button released"));
 				  button_pushed = false;
 				  break;
 			  }
 		  }
 		  if (button_pushed)
       {
-			  ESP_LOGI (LOG_TAG, "Reset config triggered");
+			  Log::debug(PSTR("Reset config triggered"));
 			  WiFi.begin ("0", "0");
 			  WiFi.disconnect ();
 		  }
@@ -283,24 +285,23 @@ void loop() {
       case 'p':
         if (!configManager.getAllowTx())
         {
-          Serial.println(F("Radio transmission is not allowed by config! Check your config on the web panel and make sure transmission is allowed by local regulations"));
+          Log::console(PSTR("Radio transmission is not allowed by config! Check your config on the web panel and make sure transmission is allowed by local regulations"));
           break;
         }
 
         static long lastTestPacketTime = 0;
         if (millis() - lastTestPacketTime < 20*1000)
         {
-          Serial.println(F("Please wait a few seconds to send another test packet."));
+          Log::console(PSTR("Please wait a few seconds to send another test packet."));
           break;
         }
         
         radio.sendTestPacket();
         lastTestPacketTime = millis();
-        Serial.println(F("Sending test packet to nearby stations!"));
+        Log::console(PSTR("Sending test packet to nearby stations!"));
         break;
       default:
-        Serial.print(F("Unknown command: "));
-        Serial.println(serialCmd);
+        Log::console(PSTR("Unknown command: %c"), serialCmd);
         break;
     }
 
@@ -334,12 +335,12 @@ void switchTestmode()
   if (configManager.getTestMode())
   {
       configManager.setTestMode(false);
-      Serial.println(F("Changed from test mode to normal mode"));
+      Log::console(PSTR("Changed from test mode to normal mode"));
   }
   else
   {
       configManager.setTestMode(false);
-      Serial.println(F("Changed from normal mode to test mode"));
+      Log::console(PSTR("Changed from normal mode to test mode"));
   }
 }
 
@@ -348,7 +349,7 @@ void printLocalTime()
   struct tm timeinfo;
   if(!getLocalTime(&timeinfo))
   {
-    Serial.println("Failed to obtain time");
+    Log::error(PSTR("Failed to obtain time"));
     return;
   }
   Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
@@ -357,10 +358,10 @@ void printLocalTime()
 // function to print controls
 void printControls()
 {
-  Serial.println(F("------------- Controls -------------"));
-  Serial.println(F("t - change the test mode and restart"));
-  Serial.println(F("e - erase board config and reset"));
-  Serial.println(F("b - reboot the board"));
-  Serial.println(F("p - send test packet to nearby stations (to check transmission)"));
-  Serial.println(F("------------------------------------"));
+  Log::console(PSTR("------------- Controls -------------"));
+  Log::console(PSTR("t - change the test mode and restart"));
+  Log::console(PSTR("e - erase board config and reset"));
+  Log::console(PSTR("b - reboot the board"));
+  Log::console(PSTR("p - send test packet to nearby stations (to check transmission)"));
+  Log::console(PSTR("------------------------------------"));
 }

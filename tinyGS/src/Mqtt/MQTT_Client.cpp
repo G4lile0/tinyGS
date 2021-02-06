@@ -22,6 +22,7 @@
 #include "ArduinoJson.h"
 #include "../Radio/Radio.h"
 #include "../OTA/OTA.h"
+#include "../Logger/Logger.h"
 
 MQTT_Client::MQTT_Client() 
 : PubSubClient(espClient)
@@ -33,6 +34,7 @@ void MQTT_Client::loop() {
     lastConnectionAtempt = millis();
     connectionAtempts++;
     status.mqtt_connected = false;
+    lastPing = millis();
     reconnect();
   }
   else
@@ -43,14 +45,14 @@ void MQTT_Client::loop() {
 
   if (connectionAtempts > connectionTimeout)
   {
-    Serial.println("Unable to connect to MQTT Server after many atempts. Restarting...");
+    Log::console(PSTR("Unable to connect to MQTT Server after many atempts. Restarting..."));
     ESP.restart();
   }
 
   PubSubClient::loop();
 
   unsigned long now = millis();
-  if (now - lastPing > pingInterval)
+  if (now - lastPing > pingInterval && connected())
   {
     lastPing = now;
     publish(buildTopic(teleTopic, topicPing).c_str(), "1");
@@ -64,16 +66,15 @@ void MQTT_Client::reconnect()
   char clientId[13];
   sprintf(clientId, "%04X%08X",(uint16_t)(chipId>>32), (uint32_t)chipId);
 
-  Serial.print("Attempting MQTT connection...");
-  Serial.println ("If this is taking more than expected, connect to the config panel on the ip: " + WiFi.localIP().toString() + " to review the MQTT connection credentials.");
+  Log::console(PSTR("Attempting MQTT connection..."));
+  Log::console(PSTR("If this is taking more than expected, connect to the config panel on the ip: %s to review the MQTT connection credentials."), WiFi.localIP().toString().c_str());
   if (connect(clientId, configManager.getMqttUser(), configManager.getMqttPass(), buildTopic(teleTopic, topicStatus).c_str(), 2, false, "0")) {
-    Serial.println("connected");
+    Log::console(PSTR("Connected to MQTT!"));
     subscribeToAll();
     sendWelcome();
   }
   else {
-    Serial.print("failed, rc=");
-    Serial.print(state());
+    Log::console(PSTR("failed, rc=%i"), state());
   }
 }
 
@@ -161,9 +162,9 @@ void  MQTT_Client::sendRx(String packet)
   doc["NORAD"] = status.modeminfo.NORAD;
   doc["test"] = configManager.getTestMode();
 
-  //serializeJson(doc, Serial);
   char buffer[1536];
   serializeJson(doc, buffer);
+  Log::debug(PSTR("%s"), buffer);
   publish(buildTopic(teleTopic, topicRx).c_str(), buffer, false);
 }
 
@@ -219,7 +220,6 @@ void  MQTT_Client::sendStatus()
   doc["usec_time"] = (int64_t)tv.tv_usec + tv.tv_sec * 1000000ll;
   doc["time_offset"] = status.time_offset;
     
-  //serializeJson(doc, Serial);
   char buffer[1024];
   serializeJson(doc, buffer);
   publish(buildTopic(statTopic, topicStatus).c_str(), buffer, false);
@@ -260,7 +260,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     if (length < 1) return;
     ConfigManager& configManager = ConfigManager::getInstance();
     bool test = payload[0] - '0';
-    Serial.print(F("Set Test Mode to ")); if (test) Serial.println(F("ON")); else Serial.println(F("OFF"));
+    Log::console(PSTR("Set Test Mode to %s"), test ? F("ON") : F("OFF"));
     configManager.setTestMode(test);
     result = 0;
   }
@@ -270,8 +270,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     if (length < 1) return;
     ConfigManager& configManager = ConfigManager::getInstance();
     bool tune = payload[0] - '0';
-    Serial.println("");
-    Serial.print(F("Set Remote Tune to ")); if (tune) Serial.println(F("ON")); else Serial.println(F("OFF"));
+    Log::console(PSTR("Set Remote Tune to %s"), tune ? F("ON") : F("OFF"));
     configManager.setRemoteTune(tune);
     result = 0;
   }
@@ -281,7 +280,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     if (length < 1) return;
     ConfigManager& configManager = ConfigManager::getInstance();
     bool telemetry3rd = payload[0] - '0';
-    Serial.print(F("Send rx to third parties "));  if (telemetry3rd) Serial.println(F("ON")); else Serial.println(F("OFF"));
+    Log::console(PSTR("Send rx to third parties %s"), telemetry3rd ? F("ON") : F("OFF"));
     configManager.setTelemetry3rd(telemetry3rd);
     result = 0;
   }
@@ -293,7 +292,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     DynamicJsonDocument doc(256);
     deserializeJson(doc, payload, length);
     status.remoteTextFrameLength[frameNumber] = doc[0];
-    Serial.print(F("received frame: ")); Serial.print(status.remoteTextFrameLength[frameNumber]);
+    Log::debug(PSTR("Received frame: %u"), status.remoteTextFrameLength[frameNumber]);
   
     for (uint8_t n=0; n<status.remoteTextFrameLength[frameNumber];n++)
     {
@@ -304,13 +303,12 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
       String text = doc[n+1][4];
       status.remoteTextFrame[frameNumber][n].text = text;  
       
-      Serial.println("");
-      Serial.print(F("Text "));Serial.print(n);
-      Serial.print(F(" Font "));Serial.print(status.remoteTextFrame[frameNumber][n].text_font);
-      Serial.print(F(" Alig "));Serial.print(status.remoteTextFrame[frameNumber][n].text_alignment);
-      Serial.print(F(" Pos x "));Serial.print(status.remoteTextFrame[frameNumber][n].text_pos_x);
-      Serial.print(F(" Pos y "));Serial.print(status.remoteTextFrame[frameNumber][n].text_pos_y);
-      Serial.print(F(" -> "));Serial.print(status.remoteTextFrame[frameNumber][n].text);
+      Log::debug(PSTR("Text: %u Font: %u Alig: %u Pos x: %u Pos y: %u -> %s"), n, 
+                                      status.remoteTextFrame[frameNumber][n].text_font, 
+                                      status.remoteTextFrame[frameNumber][n].text_alignment, 
+                                      status.remoteTextFrame[frameNumber][n].text_pos_x,
+                                      status.remoteTextFrame[frameNumber][n].text_pos_y,
+                                      status.remoteTextFrame[frameNumber][n].text);
     }
 
     result = 0;
@@ -319,7 +317,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
   if (!strcmp(command, commandStatus)) 
   {
     uint8_t mode = payload[0] - '0';
-    Serial.print(F("Remote status requested: ")); Serial.println(mode);     // right now just one mode
+    Log::debug(PSTR("Remote status requested: %u"), mode);     // right now just one mode
     sendStatus();
     return;
   }
@@ -407,7 +405,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
 
   if (!strcmp(command, commandBatchConf))
   {
-    Serial.println("JSON");
+    Log::debug(PSTR("BatchConfig"));
     DynamicJsonDocument doc(2048);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
     deserializeJson(doc, payload, length);
     JsonObject root = doc.as<JsonObject>();
@@ -415,15 +413,10 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
 
     for (JsonPair kv : root)
     {
-      Serial.print(kv.key().c_str());
-      Serial.print("  ");
-      Serial.print(kv.value().as<char*>());
-      Serial.print("  ");
-      Serial.println(strlen(kv.value().as<char*>()));
-
       const char* key = kv.key().c_str();
       char* value = (char*)kv.value().as<char*>();
       size_t len = strlen(value);
+      Log::debug(PSTR("%s %s %u"), key, value, len);
 
       if (!strcmp(key, commandCrc))        
         result = radio.remote_crc(value, len);
@@ -481,7 +474,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
       
       if (result) // there was an error
       {
-        Serial.println(F("Error ocurred during batch config!!"));
+        Log::debug(PSTR("Error ocurred during batch config!!"));
         break;
       }
     }
@@ -508,14 +501,13 @@ void MQTT_Client::remoteSatCmnd(char* payload, size_t payload_len)
   status.modeminfo.NORAD = NORAD;
   status.modeminfo.satellite = satellite;
 
-  Serial.print(F("Listening Satellite: ")); Serial.print(satellite);
-  Serial.print(F(" NORAD: "));Serial.println(NORAD);
+  Log::debug(PSTR("Listening Satellite: %s NORAD: %u"), satellite, NORAD);
 }
 
 // Helper class to use as a callback
 void manageMQTTDataCallback(char *topic, uint8_t *payload, unsigned int length)
 {
-  ESP_LOGI (LOG_TAG,"Received MQTT message: %s : %.*s\n", topic, length, payload);
+  Log::debug(PSTR("Received MQTT message: %s : %.*s\n"), topic, length, payload);
   MQTT_Client::getInstance().manageMQTTData(topic, payload, length);
 }
 

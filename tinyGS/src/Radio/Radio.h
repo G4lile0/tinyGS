@@ -81,14 +81,4 @@ private:
   int _atoi(const char* buff, size_t length);
 };
 
-// Code from fossa
-#define PRINT_BUFF(BUFF, LEN) { \
-  for(size_t i = 0; i < LEN; i++) { \
-    Serial.print(F("0x")); \
-    Serial.print(BUFF[i], HEX); \
-    Serial.print('\t'); \
-    Serial.write(BUFF[i]); \
-    Serial.println(); \
-  } }
-
 #endif

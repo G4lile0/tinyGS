@@ -25,10 +25,10 @@
 class Log {
 public:
   enum LoggingLevels {LOG_LEVEL_NONE, LOG_LEVEL_ERROR, LOG_LEVEL_INFO, LOG_LEVEL_DEBUG};
-  static void console(const char* logData);
-  static void error(const char* logData);
-  static void info(const char* logData);
-  static void debug(const char* logData);
+  static void console(const char* logData, ...);
+  static void error(const char* logData, ...);
+  static void info(const char* logData, ...);
+  static void debug(const char* logData, ...);
   static void getLog(uint32_t idx, char** entry_pp, size_t* len_p);
   static char getLogIdx();
 

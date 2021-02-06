@@ -23,40 +23,60 @@ char Log::logIdx = 1;
 Log::LoggingLevels Log::logLevel = LOG_LEVEL;
 char Log::log[MAX_LOG_SIZE] = "";
 
-void Log::console(const char* logData)
+void Log::console(const char* formatP, ...)
 {
-  AddLog(LOG_LEVEL_NONE, logData);
+  va_list arg;
+  char buffer[256];
+  va_start(arg, formatP);
+  vsnprintf_P(buffer, sizeof(buffer), formatP, arg);
+  va_end(arg);
+  AddLog(LOG_LEVEL_NONE, buffer);
 }
 
-void Log::error(const char* logData)
+void Log::error(const char* formatP, ...)
 {
-  AddLog(LOG_LEVEL_ERROR, logData);
+  va_list arg;
+  char buffer[256];
+  va_start(arg, formatP);
+  vsnprintf_P(buffer, sizeof(buffer), formatP, arg);
+  va_end(arg);
+  AddLog(LOG_LEVEL_ERROR, buffer);
 }
 
-void Log::info(const char* logData)
+void Log::info(const char* formatP, ...)
 {
-  AddLog(LOG_LEVEL_INFO, logData);
+  va_list arg;
+  char buffer[256];
+  va_start(arg, formatP);
+  vsnprintf_P(buffer, sizeof(buffer), formatP, arg);
+  va_end(arg);
+  AddLog(LOG_LEVEL_INFO, buffer);
 }
 
-void Log::debug(const char* logData)
+void Log::debug(const char* formatP, ...)
 {
-  AddLog(LOG_LEVEL_DEBUG, logData);
+  va_list arg;
+  char buffer[256];
+  va_start(arg, formatP);
+  vsnprintf_P(buffer, sizeof(buffer), formatP, arg);
+  va_end(arg);
+  AddLog(LOG_LEVEL_DEBUG, buffer);
 }
 
 // Based on arendst/Tasmota addLog (support.ino)
-void Log::AddLog(Log::LoggingLevels loglevel, const char* logData)
+void Log::AddLog(Log::LoggingLevels level, const char* logData)
 {
-  if (logLevel > Log::logLevel)
+  if (level > Log::logLevel)
     return;
 
   char time[10];  // "13:45:21 "
   struct tm timeinfo;
-  if(getLocalTime(&timeinfo))
+  if(getLocalTime(&timeinfo), 1)
     snprintf_P(time, sizeof(time), "%02d:%02d:%02d ", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
   else
     time[0] = '\0';
   
-  Serial.printf(PSTR("%s%s"), time, logData);
+  Serial.printf(PSTR("%s%s\n"), time, logData);
 
   // Delimited, zero-terminated buffer of log lines.
   // Each entry has this format: [index][log data]['\1']

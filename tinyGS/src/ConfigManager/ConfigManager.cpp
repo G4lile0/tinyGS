@@ -360,7 +360,7 @@ void ConfigManager::boardDetection()
   }*/
   
   // test OLED configuration
-  Serial.println(F("Automatic board detection running... "));
+  Log::error(PSTR("Automatic board detection running... "));
   for (uint8_t ite=0; ite<((sizeof(boards)/sizeof(boards[0])));ite++)
   {
     Serial.print(boards[ite].BOARD);
@@ -372,47 +372,23 @@ void ConfigManager::boardDetection()
     Wire.beginTransmission(boards[ite].OLED__address);
     if (!Wire.endTransmission())
     { 
-      Serial.println(F("  Compatible OLED FOUND")); 
+      Log::error(PSTR("Compatible OLED FOUND")); 
       itoa(ite, board, 10);
       break;
     }
     else 
     {
-      Serial.println(F("  Not Compatible board found, please select it manually on the web config panel"));
+      Log::error(PSTR("Not Compatible board found, please select it manually on the web config panel"));
     } 
   }
 }
 
 void ConfigManager::printConfig()
 {
-  Serial.print(F("MQTT Port: "));
-  Serial.println(getMqttPort());
-  Serial.print(F("MQTT Server: "));
-  Serial.println(getMqttServer());
-  Serial.print(F("MQTT Pass: "));
-  Serial.println(getMqttPass());
-  Serial.print(F("Latitude: "));
-  Serial.println(getLatitude());
-  Serial.print(F("Longitude: "));
-  Serial.println(getLongitude());
-  Serial.print(F("tz: "));
-  Serial.println(getTZ());
-  Serial.print(F("board: "));
-  Serial.print(getBoard());
-  Serial.print(F(" -->  "));
-  Serial.println(boards[getBoard()].BOARD);
-  Serial.print(F("OLED Bright: "));
-  Serial.println(getOledBright());
-  Serial.print(F("TX "));
-  Serial.println(getAllowTx() ? "Enable" : "Disable");
-  Serial.print(F("Remote Tune "));
-  Serial.println(getRemoteTune() ? "Allowed" : "Blocked");
-  Serial.print(F("Send telemetry to third party "));
-  Serial.println(getTelemetry3rd() ? "Allowed" : "Blocked");
-  Serial.print(F("Test mode "));
-  Serial.println(getTestMode()  ? "Enable" : "Disable");
-  Serial.print(F("Auto Update "));
-  Serial.println(getAutoUpdate()  ? "Enable" : "Disable");
+  Log::debug(PSTR("MQTT Port: %u\nMQTT Server: %s\nMQTT Pass: %s\nLatitude: %f\nLongitude: %f"), getMqttPort(), getMqttServer(), getMqttPass(), getLatitude(), getLongitude());
+  Log::debug(PSTR("tz: %s\nboard: %u --> %s\nOLED Bright: %u\nTX %s"),getTZ(), getBoard(), boards[getBoard()].BOARD.c_str(), getOledBright(), getAllowTx() ? "Enable" : "Disable");
+  Log::debug(PSTR("Remote Tune %\nSend telemetry to third party %s"), getRemoteTune() ? "Allowed" : "Blocked", getTelemetry3rd() ? "Allowed" : "Blocked"); 
+  Log::debug(PSTR("Test mode %s\nAuto Update %s"), getTestMode()  ? "Enable" : "Disable", getAutoUpdate()  ? "Enable" : "Disable");
 }
 
 void ConfigManager::configSavedCallback()
