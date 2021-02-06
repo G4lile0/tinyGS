@@ -62,16 +62,23 @@ constexpr auto configVersion = "0.04"; //max 4 chars
 constexpr auto AP_TIMEOUT_MS = "300000";
 
 enum boardNum {
-  HELTEC_V1 = 0,
-  HELTEC_V2,
-  TTGO_V1,
-  TTGO_V2,
-  TBEAM_OLED,
+  HELTEC_V1_LF = 0,
+  HELTEC_V1_HF,
+  HELTEC_V2_LF,
+  HELTEC_V2_HF,
+  TTGO_V1_LF,
+  TTGO_V1_HF,
+  TTGO_V2_LF,
+  TTGO_V2_HF,
+  TBEAM_OLED_LF,
+  TBEAM_OLED_HF,
   ESP32_SX126X_XTAL,
   TTGO_V2_SX126X_XTAL,
   ESP32_SX126X_TXC0_1,
   ESP32_SX126X_TXC0_2,
   TBEAM_OLED_v1_0,
+  ESP32_SX126X_TXC0_1W_LF,
+  ESP32_SX126X_TXC0_1W_HF,
 
   NUM_BOARDS //this line always has to be the last one
 };
@@ -83,7 +90,7 @@ typedef struct {
    uint8_t  OLED__RST;
    uint8_t  PROG__BUTTON;
    uint8_t  BOARD_LED;
-   bool     L_SX127X;
+   uint8_t  L_SX127X;     // 0 SX1262  1 SX1278
    uint8_t  L_NSS;        // CS
    uint8_t  L_DI00;        
    uint8_t  L_DI01;
