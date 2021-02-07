@@ -55,7 +55,7 @@ void Radio::init()
   if (board.L_SX127X)
   {
     lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
-    state = ((SX1278*)lora)->begin(LORA_CARRIER_FREQUENCY, LORA_BANDWIDTH, LORA_SPREADING_FACTOR, LORA_CODING_RATE, SYNC_WORD, LORA_OUTPUT_POWER);
+    state = ((SX1278*)lora)->begin(LORA_CARRIER_FREQUENCY, LORA_BANDWIDTH, LORA_SPREADING_FACTOR, LORA_CODING_RATE, SYNC_WORD, LORA_OUTPUT_POWER,LORA_PREAMBLE_LENGTH ,0);
     ((SX1278*)lora)->forceLDRO(true);
     ((SX1278*)lora)->setCRC(true);
   }
