@@ -146,7 +146,7 @@ void ConfigManager::handleDashboard()
   s += "<tr><td>Listening to </td><td>" + String(status.modeminfo.satellite) + "</td></tr>";
   s += "<tr><td>Modulation </td><td>" + String(status.modeminfo.modem_mode) + "</td></tr>";
   s += "<tr><td>Frequency </td><td>" + String(status.modeminfo.frequency) + "</td></tr>";
-  if (status.modeminfo.satellite == "LoRa")
+  if (status.modeminfo.modem_mode == "LoRa")
   {
     s += "<tr><td>Spreading Factor </td><td>" + String(status.modeminfo.sf) + "</td></tr>";
     s += "<tr><td>Coding Rate </td><td>" + String(status.modeminfo.cr) + "</td></tr>";
@@ -162,7 +162,7 @@ void ConfigManager::handleDashboard()
   s += "<tr><td>Received at </td><td>" + String(status.lastPacketInfo.time) + "</td></tr>";
   s += "<tr><td>Signal RSSI </td><td>" + String(status.lastPacketInfo.rssi) + "</td></tr>";
   s += "<tr><td>Signal SNR </td><td>" + String(status.lastPacketInfo.snr) + "</td></tr>";
-  s += "<tr><td>Frequiency error </td><td>" + String(status.lastPacketInfo.frequencyerror) + "</td></tr>";
+  s += "<tr><td>Frequency error </td><td>" + String(status.lastPacketInfo.frequencyerror) + "</td></tr>";
   s += "<tr><td colspan=\"2\" style=\"text-align:center;\">" + String(status.lastPacketInfo.crc_error?"CRC ERROR!":"") + "</td></tr>";
   s += F("</table></div>");
   s += FPSTR(IOTWEBCONF_CONSOLE_BODY_INNER);
