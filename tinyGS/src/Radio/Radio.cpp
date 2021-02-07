@@ -127,7 +127,7 @@ void Radio::disableInterrupt()
   eInterrupt = false;
 }
 
-uint16_t Radio::sendTx(const char* data, size_t length)
+uint16_t Radio::sendTx(uint8_t* data, size_t length)
 {
   if (!ConfigManager::getInstance().getAllowTx())
   {
@@ -157,7 +157,7 @@ uint16_t Radio::sendTx(const char* data, size_t length)
 
 uint16_t Radio::sendTestPacket()
 {
-  return sendTx(TEST_STRING, strlen(TEST_STRING) + 1);
+  return sendTx((uint8_t*)TEST_STRING, strlen(TEST_STRING));
 }
 
 uint8_t Radio::listen()

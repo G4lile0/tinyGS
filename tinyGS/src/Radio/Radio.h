@@ -63,7 +63,7 @@ public:
   int16_t remote_SPIsetRegValue(char* payload, size_t payload_len);
   void remote_SPIwriteRegister(char* payload, size_t payload_len);
   int16_t remote_SPIreadRegister(char* payload, size_t payload_len);
-  uint16_t sendTx(const char* data, size_t length);
+  uint16_t sendTx(uint8_t* data, size_t length);
   uint16_t sendTestPacket();
 
   
