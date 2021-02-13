@@ -85,6 +85,12 @@ ConfigManager::ConfigManager()
   groupBoardConfig.addItem(&testParam);
   groupBoardConfig.addItem(&autoUpdateParam);
   addParameterGroup(&groupBoardConfig);
+
+  groupAdvanced.addItem(&boardTemplateParam);
+  groupAdvanced.addItem(&modemParam);
+  groupAdvanced.addItem(&advancedConfigParam);
+  addParameterGroup(&groupAdvanced);
+
 }
 
 void ConfigManager::handleRoot()
@@ -192,7 +198,8 @@ void ConfigManager::handleRefreshConsole()
 
   String svalue = server.arg("c1");
   if (svalue.length()) {
-    Log::console(svalue.c_str());
+    Log::console(PSTR("COMMAND: %s"), svalue.c_str());
+    Log::console(PSTR("%s"), F("The web console still doesn't support input commands. We are working on it!"));
     // TODO: Execute command
   }
 

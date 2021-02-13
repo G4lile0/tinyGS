@@ -39,6 +39,9 @@ constexpr auto MQTT_USER_LENGTH = 31;
 constexpr auto MQTT_PASS_LENGTH = 31;
 constexpr auto CHECKBOX_LENGTH = 9;
 constexpr auto NUMBER_LEN = 32;
+constexpr auto TEMPLATE_LEN = 256;
+constexpr auto MODEM_LEN = 256;
+constexpr auto ADVANCED_LEN = 256;
 constexpr auto CB_SELECTED_STR = "selected";
 
 
@@ -54,7 +57,7 @@ const char TITLE_TEXT[] PROGMEM = "TinyGS Configuration";
 
 constexpr auto thingName = "My TinyGS";
 constexpr auto initialApPassword = "";
-constexpr auto configVersion = "0.04"; //max 4 chars
+constexpr auto configVersion = "0.05"; //max 4 chars
 
 #define MQTT_DEFAULT_SERVER "mqtt.tinygs.com"
 #define MQTT_DEFAULT_PORT  "8883"
@@ -199,8 +202,9 @@ private:
   char telemetry3rd[CHECKBOX_LENGTH] = "";
   char testMode[CHECKBOX_LENGTH] = "";
   char autoUpdate[CHECKBOX_LENGTH] = "";
-
-
+  char boardTemplate[TEMPLATE_LEN] = "";
+  char modemStartup[MODEM_LEN] = "";
+  char advancedConfig[ADVANCED_LEN] = "";
 
   iotwebconf2::NumberParameter latitudeParam = iotwebconf2::NumberParameter("Latitude (will be public)", "lat", latitude, COORDINATE_LENGTH, NULL, NULL, "required min='-180' max='180' step='0.001'");
   iotwebconf2::NumberParameter longitudeParam = iotwebconf2::NumberParameter("Longitude (will be public)", "lng", longitude, COORDINATE_LENGTH, NULL, NULL, "required min='-180' max='180' step='0.001'");
@@ -220,6 +224,11 @@ private:
   iotwebconf2::CheckboxParameter telemetry3rdParam = iotwebconf2::CheckboxParameter("Allow sending telemetry to third party","telemetry3rd",telemetry3rd, CHECKBOX_LENGTH, true);
   iotwebconf2::CheckboxParameter testParam = iotwebconf2::CheckboxParameter("Test mode","test",testMode, CHECKBOX_LENGTH, false);
   iotwebconf2::CheckboxParameter autoUpdateParam = iotwebconf2::CheckboxParameter("Automatic Firmware Update","auto_update",autoUpdate, CHECKBOX_LENGTH, true);
+
+  iotwebconf2::ParameterGroup groupAdvanced = iotwebconf2::ParameterGroup("Advanced config" , "Advanced Config (do not modify unless you know what you are doing)");
+  iotwebconf2::TextParameter boardTemplateParam = iotwebconf2::TextParameter("Board Template", "board_template", boardTemplate, TEMPLATE_LEN, NULL, NULL, "type=\"text\" maxlength=255");
+  iotwebconf2::TextParameter modemParam = iotwebconf2::TextParameter("Modem startup", "modem_startup", modemStartup, MODEM_LEN, NULL, NULL, "type=\"text\" maxlength=255");
+  iotwebconf2::TextParameter advancedConfigParam = iotwebconf2::TextParameter("Avanced parameters", "advanced_config", advancedConfig, ADVANCED_LEN, NULL, NULL, "type=\"text\" maxlength=255");
 };
 
 #endif
