@@ -51,7 +51,7 @@ void Radio::init()
   begin();
 }
 
-void Radio::begin()
+int16_t Radio::begin()
 {
   board_type board = ConfigManager::getInstance().getBoardConfig();
   const char* modemConfig = ConfigManager::getInstance().getModemStartup();
@@ -64,9 +64,9 @@ void Radio::begin()
   m.satellite = doc["sat"].as<String>();
   m.NORAD = doc["NORAD"];
 
-  uint16_t state = 0;
+  int16_t state = 0;
 
-  if (m.modem_mode == "loRa")
+  if (m.modem_mode == "LoRa")
   {
     m.frequency = doc["freq"];
     m.bw = doc["bw"];
@@ -156,7 +156,7 @@ void Radio::begin()
   else
   {
     Log::console(PSTR("failed, code %u"), state);
-    return;
+    return state;
   }
 
   // set the function that will be called
@@ -185,10 +185,11 @@ void Radio::begin()
   else
   {
     Log::console(PSTR("failed, code %u\nGo to the config panel (%s) and check if the board selected matches your hardware."), state, WiFi.localIP().toString());
-    return;
+    return state;
   }
 
   ready = true;
+  return state;
 }
 
 void Radio::setFlag()

@@ -333,8 +333,9 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     char buff[length+1];
     memcpy(buff, payload, length);
     buff[length] = '\0';
+    Log::debug(PSTR("%s"), buff);
     ConfigManager::getInstance().setModemStartup(buff);
-    radio.begin();
+    result = radio.begin();
   }
 
   // Remote_Begin_Lora [437.7,125.0,11,8,18,11,120,8,0]
