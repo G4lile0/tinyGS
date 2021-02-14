@@ -100,7 +100,7 @@ void MQTT_Client::sendWelcome()
   time_t now;
   time(&now);
 
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(11) + 22 + 20 +1;
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(12) + 22 + 20 +1;
   DynamicJsonDocument doc(capacity);
   JsonArray station_location = doc.createNestedArray("station_location");
   station_location.add(configManager.getLatitude());
@@ -116,8 +116,9 @@ void MQTT_Client::sendWelcome()
   doc["unix_GS_time"] = now;
   doc["autoUpdate"] = configManager.getAutoUpdate();
   doc["local_ip"]= WiFi.localIP().toString().c_str();
+  doc["modem_conf"].set(configManager.getModemStartup());
 
-  char buffer[512];
+  char buffer[1024];
   serializeJson(doc, buffer);
   publish(buildTopic(teleTopic, topicWelcome).c_str(), buffer, false);
 }
@@ -149,7 +150,7 @@ void  MQTT_Client::sendRx(String packet)
   {
     doc["bitrate"] = status.modeminfo.bitrate;
     doc["freqdev"] = status.modeminfo.freqDev;
-    doc["rxBw"] = status.modeminfo.rxBw;
+    doc["rxBw"] = status.modeminfo.bw;
   }
 
   doc["rssi"] = status.lastPacketInfo.rssi;
@@ -204,14 +205,13 @@ void  MQTT_Client::sendStatus()
   {
     doc["bitrate"] = status.modeminfo.bitrate;
     doc["freqdev"] = status.modeminfo.freqDev;
-    doc["rxBw"] = status.modeminfo.rxBw;
+    doc["rxBw"] = status.modeminfo.bw;
   }
 
   doc["pl"] = status.modeminfo.preambleLength;
   doc["CRC"] = status.modeminfo.crc;
   doc["FLDRO"] = status.modeminfo.fldro;
-  doc["OOK"] = status.modeminfo.enableOOK;
-  doc["Shaping"] = status.modeminfo.dataShaping;
+  doc["OOK"] = status.modeminfo.OOK;
 
   doc["rssi"] = status.lastPacketInfo.rssi;
   doc["snr"] = status.lastPacketInfo.snr;
@@ -327,6 +327,15 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
   // ######################################################
   if (ConfigManager::getInstance().getRemoteTune() && global)
     return;
+  
+  if (!strcmp(command, commandBegin))
+  {
+    char buff[length+1];
+    memcpy(buff, payload, length);
+    buff[length] = '\0';
+    ConfigManager::getInstance().setModemStartup(buff);
+    radio.begin();
+  }
 
   // Remote_Begin_Lora [437.7,125.0,11,8,18,11,120,8,0]
   if (!strcmp(command, commandBeginLora))

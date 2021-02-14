@@ -20,6 +20,7 @@
 #include "ConfigManager.h"
 #include "../Mqtt/MQTT_Client.h"
 #include "../Logger/Logger.h"
+#include "../Radio/Radio.h"
 
 ConfigManager::ConfigManager()
 : IotWebConf2(thingName, &dnsServer, &server, initialApPassword, configVersion)
@@ -412,4 +413,6 @@ void ConfigManager::configSavedCallback()
 
   if (mqtt.connected()) // already running and connected
     mqtt.sendWelcome();
+  
+  Radio::getInstance().begin();
 }

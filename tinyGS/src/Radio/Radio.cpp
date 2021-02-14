@@ -26,18 +26,6 @@
 bool received = false;
 bool eInterrupt = true;
 
-// modem configuration
-#define LORA_CARRIER_FREQUENCY        436.703f  // MHz
-#define LORA_BANDWIDTH                250.0f  // kHz dual sideband
-#define LORA_SPREADING_FACTOR         10
-#define LORA_SPREADING_FACTOR_ALT     10
-#define LORA_CODING_RATE              5       // 4/8, Extended Hamming
-#define LORA_OUTPUT_POWER             5       // dBm
-#define LORA_CURRENT_LIMIT_7X         120     // mA
-#define LORA_CURRENT_LIMIT_6X         120.0f     // mA
-#define SYNC_WORD                     0x12    // sync word 
-#define LORA_PREAMBLE_LENGTH          8U
-
 Radio::Radio()
 : spi(VSPI)
 {
@@ -48,24 +36,118 @@ void Radio::init()
 {
   Log::console(PSTR("[SX12xx] Initializing ... "));
   board_type board = ConfigManager::getInstance().getBoardConfig();
-  
+
   spi.begin(board.L_SCK, board.L_MISO, board.L_MOSI, board.L_NSS);
-  uint16_t state = 0;
 
   if (board.L_SX127X)
   {
     lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
-    state = ((SX1278*)lora)->begin(LORA_CARRIER_FREQUENCY, LORA_BANDWIDTH, LORA_SPREADING_FACTOR, LORA_CODING_RATE, SYNC_WORD, LORA_OUTPUT_POWER,LORA_PREAMBLE_LENGTH ,0);
-    ((SX1278*)lora)->forceLDRO(true);
-    ((SX1278*)lora)->setCRC(true);
   }
   else
   {
     lora = new SX1268(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
-    state = ((SX1268*)lora)->begin(LORA_CARRIER_FREQUENCY, LORA_BANDWIDTH, LORA_SPREADING_FACTOR, LORA_CODING_RATE, SYNC_WORD, LORA_OUTPUT_POWER, LORA_PREAMBLE_LENGTH, board.L_TCXO_V);
-    ((SX1268*)lora)->forceLDRO(true);
-    ((SX1268*)lora)->setCRC(true);
   }
+
+  begin();
+}
+
+void Radio::begin()
+{
+  board_type board = ConfigManager::getInstance().getBoardConfig();
+  const char* modemConfig = ConfigManager::getInstance().getModemStartup();
+  size_t size = JSON_ARRAY_SIZE(10) + 10*JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(15) + JSON_ARRAY_SIZE(8) + 60;
+  DynamicJsonDocument doc(size);
+  deserializeJson(doc, modemConfig);
+
+  ModemInfo& m = status.modeminfo;
+  m.modem_mode = doc["mode"].as<String>();
+  m.satellite = doc["sat"].as<String>();
+  m.NORAD = doc["NORAD"];
+
+  uint16_t state = 0;
+
+  if (m.modem_mode == "loRa")
+  {
+    m.frequency = doc["freq"];
+    m.bw = doc["bw"];
+    m.sf = doc["sf"];
+    m.cr = doc["cr"];
+    m.sw = doc["sw"];
+    m.power = doc["pwr"];
+    m.preambleLength = doc["pl"];
+    m.gain = doc["gain"];
+    m.crc = doc["crc"];
+    m.fldro = doc["fldro"];
+
+    if (board.L_SX127X)
+    {
+      state = ((SX1278*)lora)->begin(m.frequency, m.bw, m.sf, m.cr, m.sw, m.power,m.preambleLength,m.gain);
+      if (m.fldro == 2)
+        ((SX1278*)lora)->autoLDRO();
+      else
+        ((SX1278*)lora)->forceLDRO(m.fldro);
+
+      ((SX1278*)lora)->setCRC(m.crc);
+    }
+    else
+    {
+      state = ((SX1268*)lora)->begin(m.frequency, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, board.L_TCXO_V);
+      if (m.fldro == 2)
+        ((SX1268*)lora)->autoLDRO();
+      else
+        ((SX1268*)lora)->forceLDRO(m.fldro);
+
+      ((SX1268*)lora)->setCRC(m.crc);
+    }
+  }
+  else 
+  {
+    m.frequency = doc["freq"];
+    m.bw = doc["bw"];
+    m.bitrate = doc["br"];
+    m.freqDev = doc["fd"];
+    m.power = doc["pwr"];
+    m.preambleLength = doc["pl"];
+    m.OOK = doc["ook"];
+    uint8_t swSize = doc["fsw"].size();
+    for (int i=0; i<8; i++) 
+    {
+      if (i < swSize)
+        m.fsw[i] = doc["fsw"][i];
+      else
+        m.fsw[i] = 0;
+    }
+    
+
+    if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+      state = ((SX1278*)lora)->beginFSK(m.frequency, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, (m.OOK != 255));
+      ((SX1278*)lora)->setDataShaping(m.OOK);
+      ((SX1278*)lora)->startReceive();
+      ((SX1278*)lora)->setDio0Action(setFlag);
+      ((SX1278*)lora)->setSyncWord(m.fsw, swSize);
+
+    } else {
+      state = ((SX1268*)lora)->beginFSK(m.frequency, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
+      ((SX1268*)lora)->setDataShaping(m.OOK);
+      ((SX1268*)lora)->startReceive();
+      ((SX1268*)lora)->setDio1Action(setFlag);
+      state = ((SX1268*)lora)->setSyncWord(m.fsw, swSize);
+    }
+  }
+
+  // registers
+  JsonArray regs = doc.as<JsonArray>();
+  for (int i=0; i<regs.size(); i++) {
+    JsonObject reg = regs[i];
+    uint16_t regValue = reg["ref"];
+    uint32_t regMask = reg["mask"];
+
+    if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+      state = ((SX1278*)lora)->_mod->SPIsetRegValue((regValue>>8)&0x0F, regValue&0x0F, (regMask>>16)&0x0F, (regMask>>8)&0x0F, regMask&0x0F);
+    else
+      state = ((SX1268*)lora)->_mod->SPIsetRegValue((regValue>>8)&0x0F, regValue&0x0F, (regMask>>16)&0x0F, (regMask>>8)&0x0F, regMask&0x0F);
+  }
+  
   
   if (state == ERR_NONE)
   {
@@ -582,22 +664,21 @@ int16_t Radio::remote_begin_fsk(char* payload, size_t payload_len)
   int8_t  power = doc[4];
   uint8_t currentlimit = doc[5];
   uint16_t preambleLength = doc[6];
-  bool    enableOOK = doc[7];
-  uint8_t   dataShaping = doc[8];
+  uint8_t  ook = doc[7]; // 
 
   Log::console(PSTR("Set Frequency: %.3f MHz\nSet bit rate: %.3f\nSet Frequency deviation: %.3f kHz\nSet receiver bandwidth: %.3f kHz\nSet Power: %u"), freq, br, freqDev, rxBw, power);
-  Log::console(PSTR("Set Current limit: %u\nSet Preamble Length: %u\nOOK Modulation %s\nSet datashaping %u"), currentlimit, preambleLength, enableOOK ? F("ON") : F("OFF"), dataShaping);
+  Log::console(PSTR("Set Current limit: %u\nSet Preamble Length: %u\nOOK Modulation %s\nSet datashaping %u"), currentlimit, preambleLength, (ook != 255) ? F("ON") : F("OFF"), ook);
 
   int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
-    state = ((SX1278*)lora)->beginFSK(freq, br, freqDev, rxBw, power, preambleLength, enableOOK);
-    ((SX1278*)lora)->setDataShaping(dataShaping);
+    state = ((SX1278*)lora)->beginFSK(freq, br, freqDev, rxBw, power, preambleLength, (ook != 255));
+    ((SX1278*)lora)->setDataShaping(ook);
     ((SX1278*)lora)->startReceive();
     ((SX1278*)lora)->setDio0Action(setFlag);
 
   } else {
     state = ((SX1268*)lora)->beginFSK(freq, br, freqDev, rxBw, power, preambleLength, ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
-    ((SX1268*)lora)->setDataShaping(dataShaping);
+    ((SX1268*)lora)->setDataShaping(ook);
     ((SX1268*)lora)->startReceive();
     ((SX1268*)lora)->setDio1Action(setFlag);
   }
@@ -607,12 +688,12 @@ int16_t Radio::remote_begin_fsk(char* payload, size_t payload_len)
   {
     status.modeminfo.modem_mode = "FSK";
     status.modeminfo.frequency  = freq;
-    status.modeminfo.rxBw       = rxBw;
-    status.modeminfo.power      = power ;
+    status.modeminfo.bw       = rxBw;
+    status.modeminfo.power      = power;
     status.modeminfo.preambleLength = preambleLength;
     status.modeminfo.bitrate    = br;
     status.modeminfo.freqDev    = freqDev;
-    status.modeminfo.dataShaping= dataShaping;
+    status.modeminfo.OOK        = ook;
   }
 
   return state;
@@ -667,7 +748,7 @@ int16_t Radio::remote_fbw(char* payload, size_t payload_len)
 
   readState(state);
   if (state == ERR_NONE)
-    status.modeminfo.rxBw  = frequency;
+    status.modeminfo.bw  = frequency;
   
   return state;
 }
@@ -676,8 +757,8 @@ int16_t Radio::remote_fsw(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(256);
   deserializeJson(doc, payload, payload_len);
-  uint8_t syncWord[7];
-  uint8_t synnwordsize = doc[0];
+  uint8_t synnwordsize = doc.size();
+  uint8_t syncWord[synnwordsize];
 
   Serial.println("");
   Serial.print(F("Set SyncWord Size ")); Serial.print(synnwordsize); Serial.print(F("-> "));

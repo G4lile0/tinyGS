@@ -61,6 +61,7 @@ constexpr auto configVersion = "0.05"; //max 4 chars
 
 #define MQTT_DEFAULT_SERVER "mqtt.tinygs.com"
 #define MQTT_DEFAULT_PORT  "8883"
+#define MODEM_DEFAULT "{\"mode\":\"loRa\",\"freq\":436.703,\"bw\":250.0,\"sf\":10,\"cr\":5,\"sw\":18,\"pwr\":5,\"cl\":120,\"pl\":8,\"gain\":0,\"crc\":true\"fldro\":1,\"sat\":\"Norbi\",\"NORAD\":46494}"
 
 constexpr auto AP_TIMEOUT_MS = "300000";
 
@@ -138,6 +139,8 @@ public:
   void setTelemetry3rd(bool status) { if (status) strcpy(telemetry3rd, CB_SELECTED_STR); else telemetry3rd[0] = '\0'; this->saveConfig(); }
   void setTestMode(bool status) { if (status) strcpy(testMode, CB_SELECTED_STR); else testMode[0] = '\0'; this->saveConfig(); }
   void setAutoUpdate(bool status) { if (status) strcpy(autoUpdate, CB_SELECTED_STR); else autoUpdate[0] = '\0'; this->saveConfig(); }
+  const char* getModemStartup() { return modemStartup; }
+  void setModemStartup(const char* modemStr) { strcpy(modemStartup, modemStr); }
 
   const char* getWiFiSSID() { return getWifiSsidParameter()->valueBuffer; }
   bool isApMode() { return (getState() != IOTWEBCONF_STATE_CONNECTING && getState() != IOTWEBCONF_STATE_ONLINE); }
@@ -203,7 +206,7 @@ private:
   char testMode[CHECKBOX_LENGTH] = "";
   char autoUpdate[CHECKBOX_LENGTH] = "";
   char boardTemplate[TEMPLATE_LEN] = "";
-  char modemStartup[MODEM_LEN] = "";
+  char modemStartup[MODEM_LEN] = MODEM_DEFAULT;
   char advancedConfig[ADVANCED_LEN] = "";
 
   iotwebconf2::NumberParameter latitudeParam = iotwebconf2::NumberParameter("Latitude (will be public)", "lat", latitude, COORDINATE_LENGTH, NULL, NULL, "required min='-180' max='180' step='0.001'");
@@ -227,7 +230,7 @@ private:
 
   iotwebconf2::ParameterGroup groupAdvanced = iotwebconf2::ParameterGroup("Advanced config" , "Advanced Config (do not modify unless you know what you are doing)");
   iotwebconf2::TextParameter boardTemplateParam = iotwebconf2::TextParameter("Board Template", "board_template", boardTemplate, TEMPLATE_LEN, NULL, NULL, "type=\"text\" maxlength=255");
-  iotwebconf2::TextParameter modemParam = iotwebconf2::TextParameter("Modem startup", "modem_startup", modemStartup, MODEM_LEN, NULL, NULL, "type=\"text\" maxlength=255");
+  iotwebconf2::TextParameter modemParam = iotwebconf2::TextParameter("Modem startup", "modem_startup", modemStartup, MODEM_LEN, MODEM_DEFAULT, MODEM_DEFAULT, "type=\"text\" maxlength=255");
   iotwebconf2::TextParameter advancedConfigParam = iotwebconf2::TextParameter("Avanced parameters", "advanced_config", advancedConfig, ADVANCED_LEN, NULL, NULL, "type=\"text\" maxlength=255");
 };
 

@@ -40,6 +40,7 @@ public:
   }
 
   void init();
+  void begin();
   void enableInterrupt();
   void disableInterrupt();
   uint8_t listen();

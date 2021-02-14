@@ -20,7 +20,7 @@
 #include "Arduino.h"
 
 #define MAX_LOG_SIZE 4000
-#define LOG_LEVEL    LOG_LEVEL_NONE
+#define LOG_LEVEL    LOG_LEVEL_DEBUG
 
 class Log {
 public:
