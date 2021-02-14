@@ -141,10 +141,12 @@ public:
   void setAutoUpdate(bool status) { if (status) strcpy(autoUpdate, CB_SELECTED_STR); else autoUpdate[0] = '\0'; this->saveConfig(); }
   const char* getModemStartup() { return modemStartup; }
   void setModemStartup(const char* modemStr) { strcpy(modemStartup, modemStr); this->saveConfig(); }
+  const char* getBoardTemplate() { return boardTemplate; }
+  void setBoardTemplate(const char* boardTemplateStr) { strcpy(boardTemplate, boardTemplateStr); this->saveConfig(); }
 
   const char* getWiFiSSID() { return getWifiSsidParameter()->valueBuffer; }
-  bool isApMode() { return (getState() != IOTWEBCONF_STATE_CONNECTING && getState() != IOTWEBCONF_STATE_ONLINE); }
   bool isConnected() { return getState() == IOTWEBCONF_STATE_ONLINE; };
+  bool isApMode() { return (getState() != IOTWEBCONF_STATE_CONNECTING && getState() != IOTWEBCONF_STATE_ONLINE); }
   board_type getBoardConfig(){ return boards[getBoard()]; }
 
 
@@ -223,13 +225,13 @@ private:
   iotwebconf2::SelectParameter boardParam = iotwebconf2::SelectParameter("Board type", "board", board, BOARD_LENGTH, (char*)BOARD_VALUES, (char*)BOARD_NAMES, sizeof(BOARD_VALUES) / BOARD_LENGTH, BOARD_NAME_LENGTH);
   iotwebconf2::NumberParameter oledBrightParam = iotwebconf2::NumberParameter("OLED Bright", "oled_bright", oledBright, NUMBER_LEN, "100", "0..100", "min='0' max='100' step='1'");
   iotwebconf2::CheckboxParameter AllowTxParam  = iotwebconf2::CheckboxParameter("Enable TX (HAM licence/ no preamp)", "tx", allowTx, CHECKBOX_LENGTH, true);
-  iotwebconf2::CheckboxParameter remoteTuneParam = iotwebconf2::CheckboxParameter("Allow Remote Tunning","remote_tune",remoteTune, CHECKBOX_LENGTH, true);
+  iotwebconf2::CheckboxParameter remoteTuneParam = iotwebconf2::CheckboxParameter("Allow Automatic Tunning","remote_tune",remoteTune, CHECKBOX_LENGTH, true);
   iotwebconf2::CheckboxParameter telemetry3rdParam = iotwebconf2::CheckboxParameter("Allow sending telemetry to third party","telemetry3rd",telemetry3rd, CHECKBOX_LENGTH, true);
   iotwebconf2::CheckboxParameter testParam = iotwebconf2::CheckboxParameter("Test mode","test",testMode, CHECKBOX_LENGTH, false);
   iotwebconf2::CheckboxParameter autoUpdateParam = iotwebconf2::CheckboxParameter("Automatic Firmware Update","auto_update",autoUpdate, CHECKBOX_LENGTH, true);
 
   iotwebconf2::ParameterGroup groupAdvanced = iotwebconf2::ParameterGroup("Advanced config" , "Advanced Config (do not modify unless you know what you are doing)");
-  iotwebconf2::TextParameter boardTemplateParam = iotwebconf2::TextParameter("Board Template", "board_template", boardTemplate, TEMPLATE_LEN, NULL, NULL, "type=\"text\" maxlength=255");
+  iotwebconf2::TextParameter boardTemplateParam = iotwebconf2::TextParameter("Board Template (requires manual restart)", "board_template", boardTemplate, TEMPLATE_LEN, NULL, NULL, "type=\"text\" maxlength=255");
   iotwebconf2::TextParameter modemParam = iotwebconf2::TextParameter("Modem startup", "modem_startup", modemStartup, MODEM_LEN, MODEM_DEFAULT, MODEM_DEFAULT, "type=\"text\" maxlength=255");
   iotwebconf2::TextParameter advancedConfigParam = iotwebconf2::TextParameter("Avanced parameters", "advanced_config", advancedConfig, ADVANCED_LEN, NULL, NULL, "type=\"text\" maxlength=255");
 };

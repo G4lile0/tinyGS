@@ -100,7 +100,7 @@ void MQTT_Client::sendWelcome()
   time_t now;
   time(&now);
 
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(12) + 22 + 20 +1;
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(14) + 22 + 20 +1;
   DynamicJsonDocument doc(capacity);
   JsonArray station_location = doc.createNestedArray("station_location");
   station_location.add(configManager.getLatitude());
@@ -117,8 +117,9 @@ void MQTT_Client::sendWelcome()
   doc["autoUpdate"] = configManager.getAutoUpdate();
   doc["local_ip"]= WiFi.localIP().toString().c_str();
   doc["modem_conf"].set(configManager.getModemStartup());
+  doc["boardTemplate"].set(configManager.getBoardTemplate());
 
-  char buffer[1024];
+  char buffer[1048];
   serializeJson(doc, buffer);
   publish(buildTopic(teleTopic, topicWelcome).c_str(), buffer, false);
 }

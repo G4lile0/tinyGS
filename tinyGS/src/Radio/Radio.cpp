@@ -35,8 +35,36 @@ Radio::Radio()
 void Radio::init()
 {
   Log::console(PSTR("[SX12xx] Initializing ... "));
-  board_type board = ConfigManager::getInstance().getBoardConfig();
-
+  board_type board;
+  
+  if (strlen(ConfigManager::getInstance().getBoardTemplate()) > 0)
+  {
+    size_t size = JSON_OBJECT_SIZE(17);
+    DynamicJsonDocument doc(size);
+    char* boardTemplate = (char*)ConfigManager::getInstance().getBoardTemplate();
+    deserializeJson(doc, boardTemplate);
+    board.OLED__address = doc["aADDR"];
+    board.OLED__SDA = doc["oSDA"];
+    board.OLED__SCL = doc["oSCL"];
+    board.OLED__RST = doc["oRST"];
+    board.PROG__BUTTON = doc["pBut"];
+    board.BOARD_LED = doc["led"];
+    board.L_SX127X = doc["radio"];
+    board.L_NSS = doc["lNSS"];
+    board.L_DI00 = doc["lDIO0"];
+    board.L_DI01 = doc["lDIO1"];
+    board.L_BUSSY = doc["lBUSSY"];
+    board.L_RST = doc["lRST"];
+    board.L_MISO = doc["lMISO"];
+    board.L_MOSI = doc["lMOSI"];
+    board.L_SCK = doc["lSCK"];
+    board.L_TCXO_V = doc["lTCXOV"];
+  }
+  else
+  {
+    board = ConfigManager::getInstance().getBoardConfig();
+  }
+   
   spi.begin(board.L_SCK, board.L_MISO, board.L_MOSI, board.L_NSS);
 
   if (board.L_SX127X)
