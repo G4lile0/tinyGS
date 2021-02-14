@@ -232,14 +232,13 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
 
   bool global = true;
   char* command;
-  strtok(topic, "/");
-  strtok(NULL, "/"); // tinygs
+  strtok(topic, "/");  // tinygs
   if (strcmp(strtok(NULL, "/"), "global")) // user
   {
     global = false;
     strtok(NULL, "/"); // station
   }
-
+  strtok(NULL, "/"); // cmnd
   command = strtok(NULL, "/");
   uint16_t result = 0xFF;
 
@@ -335,7 +334,6 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     buff[length] = '\0';
     Log::debug(PSTR("%s"), buff);
     ConfigManager::getInstance().setModemStartup(buff);
-    result = radio.begin();
   }
 
   // Remote_Begin_Lora [437.7,125.0,11,8,18,11,120,8,0]
