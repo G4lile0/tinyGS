@@ -140,7 +140,7 @@ public:
   void setTestMode(bool status) { if (status) strcpy(testMode, CB_SELECTED_STR); else testMode[0] = '\0'; this->saveConfig(); }
   void setAutoUpdate(bool status) { if (status) strcpy(autoUpdate, CB_SELECTED_STR); else autoUpdate[0] = '\0'; this->saveConfig(); }
   const char* getModemStartup() { return modemStartup; }
-  void setModemStartup(const char* modemStr) { strcpy(modemStartup, modemStr); }
+  void setModemStartup(const char* modemStr) { strcpy(modemStartup, modemStr); this->saveConfig(); }
 
   const char* getWiFiSSID() { return getWifiSsidParameter()->valueBuffer; }
   bool isApMode() { return (getState() != IOTWEBCONF_STATE_CONNECTING && getState() != IOTWEBCONF_STATE_ONLINE); }
