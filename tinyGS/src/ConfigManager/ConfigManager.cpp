@@ -1,6 +1,6 @@
 /*
   ConfigManager.cpp - Config Manager class
-  
+
   Copyright (C) 2020 -2021 @G4lile0, @gmag12 and @dev_4m1g0
 
   This program is free software: you can redistribute it and/or modify
@@ -27,7 +27,7 @@ ConfigManager::ConfigManager()
 , server(80)
 , gsConfigHtmlFormatProvider(*this)
 , boards({
-  //OLED_add, OLED_SDA,  OLED_SCL, OLED_RST, PROG_BUTTON, BOARD_LED, L_SX127X?, L_NSS, L_DI00, L_DI01, L_BUSSY, L_RST,  L_MISO, L_MOSI, L_SCK, L_TCXO_V, BOARD 
+  //OLED_add, OLED_SDA,  OLED_SCL, OLED_RST, PROG_BUTTON, BOARD_LED, L_SX127X?, L_NSS, L_DI00, L_DI01, L_BUSSY, L_RST,  L_MISO, L_MOSI, L_SCK, L_TCXO_V, BOARD
   {      0x3c,        4,        15,       16,           0,        25,      1,    18,     26,     12,      0,    14,      19,     27,     5,     0.0f, "433Mhz HELTEC WiFi LoRA 32 V1" }, // @4m1g0
   {      0x3c,        4,        15,       16,           0,        25,      1,    18,     26,     12,      0,    14,      19,     27,     5,     0.0f, "863-928Mhz HELTEC WiFi LoRA 32 V1" }, 
   {      0x3c,        4,        15,       16,           0,        25,      1,    18,     26,     35,      0,    14,      19,     27,     5,     0.0f, "433Mhz HELTEC WiFi LoRA 32 V2" }, // @4m1g0
@@ -36,7 +36,7 @@ ConfigManager::ConfigManager()
   {      0x3c,        4,        15,       16,           0,         2,      1,    18,     26,      0,      0,    14,      19,     27,     5,     0.0f, "868-915Mhz TTGO LoRa 32 v1"        }, // 
   {      0x3c,       21,        22,       16,           0,        22,      1,    18,     26,     33,      0,    14,      19,     27,     5,     0.0f, "433 Mhz TTGO LoRA 32 v2"        }, // @TCRobotics
   {      0x3c,       21,        22,       16,           0,        22,      1,    18,     26,     33,      0,    14,      19,     27,     5,     0.0f, "868-915Mhz TTGO LoRA 32 v2"        }, // 
-  {      0x3c,       21,        22,       16,          39,        22,      1,    18,     26,     33,     32,    14,      19,     27,     5,     0.0f, "433Mhz T-BEAM + OLED"        }, 
+  {      0x3c,       21,        22,       16,          39,        22,      1,    18,     26,     33,     32,    14,      19,     27,     5,     0.0f, "433Mhz T-BEAM + OLED"        },
   {      0x3c,       21,        22,       16,          39,        22,      1,    18,     26,     33,     32,    14,      19,     27,     5,     0.0f, "868-915Mhz T-BEAM + OLED"        }, 
   {      0x3c,       21,        22,       16,           0,        25,      0,     5,      0,     27,     26,    14,      19,     23,    18,     0.0f, "Custom ESP32 Wroom + SX126x (Crystal)"  }, // @4m1g0, @lillefyr
   {      0x3c,       21,        22,       16,           0,        25,      0,    18,      0,     33,     32,    14,      19,     27,     5,     0.0f, "TTGO LoRa 32 V2 Modified with module SX126x (crystal)"  },// @TCRobotics
@@ -45,8 +45,6 @@ ConfigManager::ConfigManager()
   {      0x3c,       21,        22,       16,          38,        22,      1,    18,     26,     33,      0,    14,      19,     27,     5,     0.0f, "T-BEAM V1.0 + OLED"     }, // @fafu
   {      0x3c,       21,        22,       16,           0,         2,      0,     5,      0,     34,     32,    14,      19,     27,    18,     1.6f, "433Mhz FOSSA 1W Ground Station"  }, // @jgromes
   {      0x3c,       21,        22,       16,           0,         2,      0,     5,      0,     34,     32,    14,      19,     27,    18,     1.6f, "868-915Mhz FOSSA 1W Ground Station"  }, // @jgromes
-  
-
   })
 {
   server.on(ROOT_URL, [this]{ handleRoot(); });
