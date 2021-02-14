@@ -39,10 +39,9 @@ void Radio::init()
   
   if (strlen(ConfigManager::getInstance().getBoardTemplate()) > 0)
   {
-    size_t size = JSON_OBJECT_SIZE(17);
+    size_t size = 512;
     DynamicJsonDocument doc(size);
-    char* boardTemplate = (char*)ConfigManager::getInstance().getBoardTemplate();
-    deserializeJson(doc, boardTemplate);
+    deserializeJson(doc, ConfigManager::getInstance().getBoardTemplate());
     board.OLED__address = doc["aADDR"];
     board.OLED__SDA = doc["oSDA"];
     board.OLED__SCL = doc["oSCL"];

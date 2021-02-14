@@ -23,7 +23,7 @@
   <td id="projectlogo"><img alt="Logo" src="ESPNTPClient-logo.png"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">ESPNtpClient
-   &#160;<span id="projectnumber">0.2.2</span>
+   &#160;<span id="projectnumber">0.2.3</span>
    </div>
    <div id="projectbrief">Library to get system sync from a NTP server with microseconds accuracy in ESP8266 and ESP32</div>
   </td>
@@ -158,12 +158,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a50afcc3b24639375c620c2bb6366da38"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNTPClient.html#a50afcc3b24639375c620c2bb6366da38">getTimeDateStringUs</a> ()</td></tr>
 <tr class="memdesc:a50afcc3b24639375c620c2bb6366da38"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts current time and date to a char string.  <a href="classNTPClient.html#a50afcc3b24639375c620c2bb6366da38">More...</a><br /></td></tr>
 <tr class="separator:a50afcc3b24639375c620c2bb6366da38"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abceb565617f0078cdc310da1fe3d7276"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNTPClient.html#abceb565617f0078cdc310da1fe3d7276">getTimeDateString</a> (timeval moment)</td></tr>
-<tr class="memdesc:abceb565617f0078cdc310da1fe3d7276"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts given time and date to a char string.  <a href="classNTPClient.html#abceb565617f0078cdc310da1fe3d7276">More...</a><br /></td></tr>
-<tr class="separator:abceb565617f0078cdc310da1fe3d7276"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afb98c0c491f428f75124e90b8b8b5123"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNTPClient.html#afb98c0c491f428f75124e90b8b8b5123">getTimeDateString</a> (time_t moment)</td></tr>
-<tr class="memdesc:afb98c0c491f428f75124e90b8b8b5123"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts given time and date to a char string.  <a href="classNTPClient.html#afb98c0c491f428f75124e90b8b8b5123">More...</a><br /></td></tr>
-<tr class="separator:afb98c0c491f428f75124e90b8b8b5123"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adb2b4ae34a124f279142cc60a1603b03"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNTPClient.html#adb2b4ae34a124f279142cc60a1603b03">getTimeDateStringForJS</a> ()</td></tr>
+<tr class="memdesc:adb2b4ae34a124f279142cc60a1603b03"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts current time and date to a char string.  <a href="classNTPClient.html#adb2b4ae34a124f279142cc60a1603b03">More...</a><br /></td></tr>
+<tr class="separator:adb2b4ae34a124f279142cc60a1603b03"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2568fa3772d950187188c6de90703eb4"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNTPClient.html#a2568fa3772d950187188c6de90703eb4">getTimeDateString</a> (timeval moment, const char *format=&quot;%02d/%02m/%04Y %02H:%02M:%02S&quot;)</td></tr>
+<tr class="memdesc:a2568fa3772d950187188c6de90703eb4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts given time and date to a char string.  <a href="classNTPClient.html#a2568fa3772d950187188c6de90703eb4">More...</a><br /></td></tr>
+<tr class="separator:a2568fa3772d950187188c6de90703eb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a46c54a5361fb69ce03e258ac61e88364"><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNTPClient.html#a46c54a5361fb69ce03e258ac61e88364">getTimeDateString</a> (time_t moment, const char *format=&quot;%02d/%02m/%04Y %02H:%02M:%02S&quot;)</td></tr>
+<tr class="memdesc:a46c54a5361fb69ce03e258ac61e88364"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts given time and date to a char string.  <a href="classNTPClient.html#a46c54a5361fb69ce03e258ac61e88364">More...</a><br /></td></tr>
+<tr class="separator:a46c54a5361fb69ce03e258ac61e88364"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a69a5f48f5f00cafaea54267bd80d3169"><td class="memItemLeft" align="right" valign="top">timeval&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classNTPClient.html#a69a5f48f5f00cafaea54267bd80d3169">getLastNTPSyncUs</a> ()</td></tr>
 <tr class="memdesc:a69a5f48f5f00cafaea54267bd80d3169"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets last successful sync time in UNIX format, with microseconds.  <a href="classNTPClient.html#a69a5f48f5f00cafaea54267bd80d3169">More...</a><br /></td></tr>
 <tr class="separator:a69a5f48f5f00cafaea54267bd80d3169"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -646,7 +649,7 @@ Protected Attributes</h2></td></tr>
 <p>Converts current date to a char string. </p>
 <dl class="section return"><dt>Returns</dt><dd>String built from current date </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00553">553</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00552">552</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -683,7 +686,7 @@ Protected Attributes</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>String built from given time </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00572">572</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00571">571</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -720,7 +723,7 @@ Protected Attributes</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>String built from given time </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00563">563</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00562">562</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -750,7 +753,7 @@ Protected Attributes</h2></td></tr>
 <p>Gets first successful synchronization time after boot. </p>
 <dl class="section return"><dt>Returns</dt><dd>First sync time </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00666">666</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00675">675</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -780,7 +783,7 @@ Protected Attributes</h2></td></tr>
 <p>Gets first successful synchronization time after boot. </p>
 <dl class="section return"><dt>Returns</dt><dd>First sync time </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00658">658</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00667">667</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -840,7 +843,7 @@ Protected Attributes</h2></td></tr>
 <p>Gets last successful sync time in UNIX format. </p>
 <dl class="section return"><dt>Returns</dt><dd>Last successful sync time. 0 equals never </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00635">635</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00644">644</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -870,7 +873,7 @@ Protected Attributes</h2></td></tr>
 <p>Gets last successful sync time in UNIX format, with microseconds. </p>
 <dl class="section return"><dt>Returns</dt><dd>Last successful sync time. 0 equals never </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00626">626</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00635">635</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -1017,12 +1020,12 @@ Protected Attributes</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00582">582</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00581">581</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
-<a id="afb98c0c491f428f75124e90b8b8b5123"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afb98c0c491f428f75124e90b8b8b5123">&#9670;&nbsp;</a></span>getTimeDateString() <span class="overload">[2/3]</span></h2>
+<a id="a46c54a5361fb69ce03e258ac61e88364"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a46c54a5361fb69ce03e258ac61e88364">&#9670;&nbsp;</a></span>getTimeDateString() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1034,8 +1037,18 @@ Protected Attributes</h2></td></tr>
           <td class="memname">char* NTPClient::getTimeDateString </td>
           <td>(</td>
           <td class="paramtype">time_t&#160;</td>
-          <td class="paramname"><em>moment</em></td><td>)</td>
+          <td class="paramname"><em>moment</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>format</em> = <code>&quot;%02d/%02m/%04Y&#160;%02H:%02M:%02S&quot;</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -1049,17 +1062,18 @@ Protected Attributes</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">moment</td><td><code>time_t</code> value (UNIX time) to convert to char string </td></tr>
+    <tr><td class="paramname">format</td><td>Format as printf </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Char string built from current time </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00615">615</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00624">624</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
-<a id="abceb565617f0078cdc310da1fe3d7276"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abceb565617f0078cdc310da1fe3d7276">&#9670;&nbsp;</a></span>getTimeDateString() <span class="overload">[3/3]</span></h2>
+<a id="a2568fa3772d950187188c6de90703eb4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2568fa3772d950187188c6de90703eb4">&#9670;&nbsp;</a></span>getTimeDateString() <span class="overload">[3/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1071,8 +1085,18 @@ Protected Attributes</h2></td></tr>
           <td class="memname">char* NTPClient::getTimeDateString </td>
           <td>(</td>
           <td class="paramtype">timeval&#160;</td>
-          <td class="paramname"><em>moment</em></td><td>)</td>
+          <td class="paramname"><em>moment</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>format</em> = <code>&quot;%02d/%02m/%04Y&#160;%02H:%02M:%02S&quot;</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -1086,12 +1110,43 @@ Protected Attributes</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">moment</td><td><code>timeval</code> object to convert to String </td></tr>
+    <tr><td class="paramname">format</td><td>Format as printf </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Char string built from current time </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00602">602</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00610">610</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+
+</div>
+</div>
+<a id="adb2b4ae34a124f279142cc60a1603b03"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adb2b4ae34a124f279142cc60a1603b03">&#9670;&nbsp;</a></span>getTimeDateStringForJS()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">char* NTPClient::getTimeDateStringForJS </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Converts current time and date to a char string. </p>
+<dl class="section return"><dt>Returns</dt><dd>Char string built from current time </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00600">600</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -1121,7 +1176,7 @@ Protected Attributes</h2></td></tr>
 <p>Converts current time and date to a char string. </p>
 <dl class="section return"><dt>Returns</dt><dd>Char string built from current time </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00591">591</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00590">590</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -1255,7 +1310,7 @@ Protected Attributes</h2></td></tr>
 <p>Gets uptime in UNIX format, time since MCU was last rebooted. </p>
 <dl class="section return"><dt>Returns</dt><dd>Uptime </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00649">649</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00658">658</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -1307,7 +1362,7 @@ Protected Attributes</h2></td></tr>
 <p>Gets microseconds since 1-Jan-1970 00:00 UTC. </p>
 <dl class="section return"><dt>Returns</dt><dd>microseconds since 1-Jan-1970 00:00 UTC </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00694">694</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00703">703</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -1337,7 +1392,7 @@ Protected Attributes</h2></td></tr>
 <p>Gets milliseconds since 1-Jan-1970 00:00 UTC. </p>
 <dl class="section return"><dt>Returns</dt><dd>Milliseconds since 1-Jan-1970 00:00 UTC </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00682">682</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00691">691</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -1996,7 +2051,7 @@ Protected Attributes</h2></td></tr>
 <p>Returns sync status. </p>
 <dl class="section return"><dt>Returns</dt><dd>Sync status as NTPStatus_t </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00674">674</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00683">683</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>

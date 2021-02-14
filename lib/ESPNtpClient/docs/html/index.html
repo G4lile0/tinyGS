@@ -23,7 +23,7 @@
   <td id="projectlogo"><img alt="Logo" src="ESPNTPClient-logo.png"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">ESPNtpClient
-   &#160;<span id="projectnumber">0.2.2</span>
+   &#160;<span id="projectnumber">0.2.3</span>
    </div>
    <div id="projectbrief">Library to get system sync from a NTP server with microseconds accuracy in ESP8266 and ESP32</div>
   </td>
@@ -77,6 +77,9 @@ $(function() {
 <p>This library implementation uses time offset calculation as stated in <a href="https://tools.ietf.org/html/rfc5905">RFC5905 NTP standard</a>. It is not a complete implementation of NTP protocol in other aspects, although this allows getting precision very close to 1 millisecond.</p>
 <p>Many of the methods used in my old NTPClientLib library are the same in this one. I've added some methods to get <code>timeval</code> times, that include microseconds information.</p>
 <p>ESPNtpClient do not have any external dependency.</p>
+<hr  />
+<p><b>Important</b>: This library task is only related to time synchronization and, as NTP protocol does, works using UTC time internally. All time management including local time conversion, time zones, daylight savings, etc. is done by Espressif sdk time subsystem that is based on GNU time C library. <a href="https://kirste.userpage.fu-berlin.de/chemnet/use/info/libc/libc_17.html">https://kirste.userpage.fu-berlin.de/chemnet/use/info/libc/libc_17.html</a></p>
+<hr  />
 <p>(Attribution) Clock logo taken from <a href="https://www.visualpharm.com/free-icons/clock-595b40b75ba036ed117d92ff">https://www.visualpharm.com/free-icons/clock-595b40b75ba036ed117d92ff</a></p>
 <h2>Description</h2>
 <p>This is a NTP library to be able to get time from NTP server with my connected microcontrollers.</p>
