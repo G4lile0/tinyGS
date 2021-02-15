@@ -172,7 +172,12 @@ void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   if (String(status.modeminfo.modem_mode)=="LoRa")
   {
     display->drawString(x,  23 + y, "SF: " + String(status.modeminfo.sf));
-    display->drawString(x,  34 + y, "Pwr:"+ String(status.modeminfo.power) + "dBm");
+      if (ConfigManager::getInstance().getAllowTx()) {
+  
+          display->drawString(x,  34 + y, "Pwr:"+ String(status.modeminfo.power) + "dBm"); 
+      } else {
+          display->drawString(x,  34 + y, "TX OFF"); 
+      }
     display->setTextAlignment(TEXT_ALIGN_RIGHT);
     display->drawString(128 + x,  23 + y, "BW:"+ String(status.modeminfo.bw)+ "kHz");
     display->drawString(128 + x,  34 + y, "CR: "+ String(status.modeminfo.cr));
@@ -180,7 +185,11 @@ void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   else
   {
     display->drawString(x,  23 + y, "FD/BW: " );
-    display->drawString(x,  34 + y, "P:"+ String(status.modeminfo.power) + "dBm");
+      if (ConfigManager::getInstance().getAllowTx()) {
+          display->drawString(x,  34 + y, "P:"+ String(status.modeminfo.power) + "dBm"); 
+      } else {
+          display->drawString(x,  34 + y, "TX OFF"); 
+      }
     display->setTextAlignment(TEXT_ALIGN_RIGHT);
     display->drawString(128 + x,  23 + y, String(status.modeminfo.freqDev)+ "/" + String(status.modeminfo.bw)+ "kHz");
     display->drawString(128 + x,  34 + y, String(status.modeminfo.bitrate)+ "kbps");
