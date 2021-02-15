@@ -3,7 +3,7 @@ import subprocess
 revision = ""
 try:
     revision = (
-        subprocess.check_output(["git", "describe", "--tags", "--always"])
+        subprocess.check_output(["git", "describe", "--tags", "--always"], stderr=devnull)
         .strip()
         .decode("utf-8")
     )
