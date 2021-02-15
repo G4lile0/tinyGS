@@ -42,7 +42,7 @@ void OTA::update()
   sprintf_P(url, PSTR("%s?user=%s&mac=%s&version=%d"), OTA_URL, c.getMqttUser(), clientId, status.version);
 
   Log::info(PSTR("Checking for OTA Updates...  "));
-  t_httpUpdate_return ret = httpUpdate.update(client, OTA_URL, status.git_version);
+  t_httpUpdate_return ret = httpUpdate.update(client, url, status.git_version);
 
   switch (ret) {
     case HTTP_UPDATE_FAILED:

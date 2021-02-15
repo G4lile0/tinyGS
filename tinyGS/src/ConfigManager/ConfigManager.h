@@ -181,6 +181,7 @@ private:
   bool formValidator(iotwebconf2::WebRequestWrapper* webRequestWrapper);
   void boardDetection();
   void configSavedCallback();
+  void parseAdvancedConf();
   
   std::function<boolean(iotwebconf2::WebRequestWrapper*)> formValidatorStd;
   DNSServer dnsServer;

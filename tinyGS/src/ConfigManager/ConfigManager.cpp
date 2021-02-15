@@ -21,6 +21,8 @@
 #include "../Mqtt/MQTT_Client.h"
 #include "../Logger/Logger.h"
 #include "../Radio/Radio.h"
+#define ARDUINOJSON_USE_LONG_LONG 1
+#include "ArduinoJson.h"
 
 ConfigManager::ConfigManager()
 : IotWebConf2(thingName, &dnsServer, &server, initialApPassword, configVersion)
@@ -131,7 +133,7 @@ void ConfigManager::handleDashboard()
     }
   }
 
-  uint64_t time = millis();
+  // uint64_t time = millis(); // TODO: add current time
   String s = String(FPSTR(IOTWEBCONF_HTML_HEAD));
   s += "<style>" + String(FPSTR(IOTWEBCONF_HTML_STYLE_INNER)) + "</style>";
   s += "<style>" + String(FPSTR(IOTWEBCONF_DASHBOARD_STYLE_INNER)) + "</style>";
@@ -407,6 +409,7 @@ void ConfigManager::printConfig()
 
 void ConfigManager::configSavedCallback()
 {
+  parseAdvancedConf();
   MQTT_Client& mqtt = MQTT_Client::getInstance();
 
   if (mqtt.connected()) // already running and connected
@@ -414,4 +417,19 @@ void ConfigManager::configSavedCallback()
   
   if (Radio::getInstance().isReady())
     Radio::getInstance().begin();
+}
+
+void ConfigManager::parseAdvancedConf()
+{
+  if (!strlen(advancedConfig))
+    return;
+
+  size_t size = 512;
+  DynamicJsonDocument doc(size);
+  deserializeJson(doc, advancedConfig);
+
+  if (doc.containsKey(F("dmode")))
+  {
+    Log::setLogLevel(doc["dmode"]);
+  }
 }

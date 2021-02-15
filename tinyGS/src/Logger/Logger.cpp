@@ -135,3 +135,8 @@ char Log::getLogIdx()
 {
   return logIdx;
 }
+
+void Log::setLogLevel(LoggingLevels level)
+{
+  logLevel = level;
+}
