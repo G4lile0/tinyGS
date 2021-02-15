@@ -20,6 +20,7 @@
 #include "OTA.h"
 #include "../ConfigManager/ConfigManager.h"
 #include "../Status.h"
+#include "../Logger/Logger.h"
 
 extern Status status;
 
@@ -32,20 +33,28 @@ void OTA::update()
     WiFiClient client;
 #endif
 
-  Serial.print("Checking for OTA Updates...  ");
+  uint64_t chipId = ESP.getEfuseMac();
+  char clientId[13];
+  sprintf(clientId, "%04X%08X",(uint16_t)(chipId>>32), (uint32_t)chipId);
+
+  ConfigManager& c = ConfigManager::getInstance();
+  char url[255];
+  sprintf_P(url, PSTR("%s?user=%s&mac=%s&version=%d"), OTA_URL, c.getMqttUser(), clientId, status.version);
+
+  Log::info(PSTR("Checking for OTA Updates...  "));
   t_httpUpdate_return ret = httpUpdate.update(client, OTA_URL, status.git_version);
 
   switch (ret) {
     case HTTP_UPDATE_FAILED:
-      Serial.printf("Update failed Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
+      Log::info(PSTR("Update failed Error (%d): %s\n"), httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
       break;
 
     case HTTP_UPDATE_NO_UPDATES: // server 304
-      Serial.println("No updates required");
+      Log::info(PSTR("No updates required"));
       break;
 
     case HTTP_UPDATE_OK:
-      Serial.println("Update ok but ESP has not restarted!!! (This should never be printed)");
+      Log::info(PSTR("Update ok but ESP has not restarted!!! (This should never be printed)"));
       break;
   }
 }

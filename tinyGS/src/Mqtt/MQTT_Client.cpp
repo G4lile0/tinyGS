@@ -100,6 +100,11 @@ void MQTT_Client::sendWelcome()
   time_t now;
   time(&now);
 
+  uint64_t chipId = ESP.getEfuseMac();
+  char clientId[13];
+  sprintf(clientId, "%04X%08X",(uint16_t)(chipId>>32), (uint32_t)chipId);
+
+
   const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(14) + 22 + 20 +1;
   DynamicJsonDocument doc(capacity);
   JsonArray station_location = doc.createNestedArray("station_location");
@@ -108,7 +113,7 @@ void MQTT_Client::sendWelcome()
   doc["version"] = status.version;
   doc["git_version"] = status.git_version;
   doc["board"] = configManager.getBoard();
-  doc["mac"] = ESP.getEfuseMac();
+  doc["mac"] = clientId;
   doc["tx"] = configManager.getAllowTx();
   doc["remoteTune"] = configManager.getRemoteTune();
   doc["telemetry3d"] = configManager.getTelemetry3rd();
