@@ -412,5 +412,6 @@ void ConfigManager::configSavedCallback()
   if (mqtt.connected()) // already running and connected
     mqtt.sendWelcome();
   
-  Radio::getInstance().begin();
+  if (Radio::getInstance().isReady())
+    Radio::getInstance().begin();
 }
