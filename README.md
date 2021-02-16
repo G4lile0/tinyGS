@@ -86,15 +86,11 @@ We are using Telegram as the main communication channel for the project. There a
 
 # History
 
-When we heard about the FossaSAT-1 LoRa satellite project launch, as passionate about LoRa and space we developed &quot;ESP32-OLED-Fossa-GroundStation&quot; as a weekend project to learn an experiment about radio and space.
+Initially TinyGS was born under the name ESP32 Fossa Groundstation, it was developed as a "weekend" project for the FossaSAT-1 LoRa satellite. We are passionate about space and created this project to be able to track and use the satellites and to learn and experiment about radio. Currently the network is open to any LoRa satellite and we also support other flying objects that have a compatible radio modulation with our hardware such as FSK, GFSK, MSK, GMSK, LoRa and OOK. And the project was renamed to TinyGS.
 
-While we have no relation with the Fossa team in charge of the mission, we created this project to be able to track and use the satellites as well as supporting the mission.
+Even though we have no relation with the Fossa team, they inspired this project and we are excited to support their new launched satellites into our network.
 
-Later the project community grow so much, and after the FossaSat-1experience, we started to support other new LoRa satellites so we renamed the project to TinyGS.
-
-Currently the network is open to any LoRa satellite and we also support other flying objects that have a compatible radio modulation with our hardware such as FSK and GFSK for the moment.
-
-This are the more important moments of the project
+This are the more important moments of the project:
 
 - Nov 28, 2019 ESP32-OLED-Fossa-GroundStation project born.
 - Dec 6, 2019 FossaSAT-1 deployed with an Electron rocket by Rocket Lab.
@@ -115,7 +111,7 @@ You can contribute to TinyGS by
 
 # Documentation
 
-Check our [wiki](/wiki)!
+Check our [wiki](https://github.com/G4lile0/tinyGS/wiki)!
 
 # Project dependencies
 
@@ -129,6 +125,10 @@ This project relies on several third party libraries:
 - ESPNTPClient
 - FailSafeMode
 
+You might also want to check out the other parts of this project:
+ * The web application: https://github.com/4m1g0/tinyGS-webapp
+ * The decoder modules: https://github.com/4m1g0/tinygs-decoders
+
 # TinyGS team
 
 The main TinyGS developer team is:
@@ -136,6 +136,9 @@ The main TinyGS developer team is:
 - [4m1g0](https://github.com/4m1g0)
 - [G4lile0](https://github.com/G4lile0)
 - [gmag11](https://github.com/gmag11)
+
+# Contributors
+There are many people that contributed to this project in many different forms. We have a great active community in our Telegram group and we would really like to thank all the community support from contributions to the project to useful tips on the group. And, if your are still not part of it we would like to invite you to join it on [Telegram](https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q).
 
 
 # License
