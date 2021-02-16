@@ -1130,6 +1130,13 @@ uint32_t SX126x::getTimeOnAir(size_t len) {
   }
 }
 
+float SX126x::getRSSIInst() {
+  uint8_t data[3] = {0, 0, 0};  // RssiInst, Status, RFU
+  SPIreadCommand(SX126X_CMD_GET_RSSI_INST, data, 3);
+
+  return (float)data[0] / (-2.0);
+}
+
 int16_t SX126x::implicitHeader(size_t len) {
   return(setHeaderType(SX126X_LORA_HEADER_IMPLICIT, len));
 }
@@ -1717,7 +1724,7 @@ int16_t SX126x::SPItransfer(uint8_t* cmd, uint8_t cmdLen, bool write, uint8_t* d
     // some faster platforms require a short delay here
     // not sure why, but it seems that long enough SPI transaction
     // (e.g. setPacketParams for GFSK) will fail without it
-    #if defined(ARDUINO_ARCH_STM32) || defined(SAMD_SERIES)
+    #if defined(RADIOLIB_SPI_SLOWDOWN)
       Module::delay(1);
     #endif
   #endif
