@@ -12,10 +12,10 @@ Currently we are officially supporting the following proven LoRa boards:
 
 - **Heltec WiFi LoRa 32 V1 (433MHz &amp; 863-928MHz versions)**
 - **Heltec WiFi LoRa 32 V2 (433MHz &amp; 863-928MHz versions)**
-- **TTGO LoRa32 V1**** (433MHz &amp; 868-915MHz versions)**
+- **TTGO LoRa32 V1 (433MHz &amp; 868-915MHz versions)**
 - **TTGO LoRa32 V2 (433MHz &amp; 868-915MHz versions)**
 - **TTGO LoRa32 V2 (Manually swapped SX1267 to SX1278)**
-- **T-BEAM + OLED**** (433MHz &amp; 868-915MHz versions)**
+- **T-BEAM + OLED (433MHz &amp; 868-915MHz versions)**
 - **T-BEAM V1.0 + OLED**
 - **FOSSA 1W Ground Station (433MHz &amp; 868-915MHz versions)**
 - **ESP32 dev board + SX126X with crystal (Custom build, OLED optional)**
