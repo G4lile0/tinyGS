@@ -22,19 +22,19 @@ Currently we are officially supporting the following proven LoRa boards:
 - **ESP32 dev board + SX126X with TCXO (Custom build, OLED optional)**
 - **ESP32 dev board + SX127X (Custom build, OLED optional)**
 
-However, any ESP32 board with sx126x or sx127x módule can be configured using templates. You can find more info about them [here](/wiki/Board-Templates).
+However, any ESP32 board with sx126x or sx127x módule can be configured using templates. You can find more info about them [here](https://github.com/G4lile0/tinyGS/wiki/Board-Templates).
 
 # Install
 
-The first time download the latest [release](/releases) and flash it with PlatformIO. If you dont know PlatformIO here you have our [PlatformIO guide](/wiki/Platformio).
+The first time download the latest [release](https://github.com/G4lile0/tinyGS/releases) and flash it with PlatformIO. If you dont know PlatformIO here you have our [PlatformIO guide](https://github.com/G4lile0/tinyGS/wiki/Platformio).
 
-Later you can update your Ground Station via [local web OTA or auto update method](/#ota-update-and-auto-tuning).
+Later you can update your Ground Station via [local web OTA or auto update method](https://github.com/G4lile0/tinyGS/wiki/OTA-Update).
 
-You can also use Arduino IDE, but is a longer and hard path, because you need to install all dependencies. [Arduino guide](/wiki/Arduino-IDE)
+You can also use Arduino IDE, but is a longer and hard path, because you need to install all dependencies. [Arduino guide](https://github.com/G4lile0/tinyGS/wiki/Arduino-IDE)
 
 # Configuration
 
-Check our wiki [configuration page](/wiki/Ground-Station-configuration)
+Check our wiki [configuration page](https://github.com/G4lile0/tinyGS/wiki/Ground-Station-configuration)
 
 # Main data website
 
@@ -70,9 +70,9 @@ Also you can use the serial port of your board to see the basic console.
 
 # OTA update and Auto Tuning
 
-Once your Ground Station is alive and connected it can be automagically updated with the last version by the server via [OTA](/wiki/OTA-Update).
+Once your Ground Station is alive and connected it can be automagically updated with the last version by the server via [OTA](https://github.com/G4lile0/tinyGS/wiki/OTA-Update).
 
-Also the Ground stations can be remote configured automagically ([Auto Tuning](/wiki/Radio-Tuning-Guide)) to be able to hear the next satellite pass with the correct settings.
+Also the Ground stations can be remote configured automagically ([Auto Tuning](https://github.com/G4lile0/tinyGS/wiki/Radio-Tuning-Guide)) to be able to hear the next satellite pass with the correct settings.
 
 Both systems are optional and you can opt-out at your Ground Station configuration, for example if you want to only support one specific satellite. But we recommend activating both to maintain the network health.
 
@@ -137,11 +137,6 @@ The main TinyGS developer team is:
 - [G4lile0](https://github.com/G4lile0)
 - [gmag11](https://github.com/gmag11)
 
-# Credits
-
-Community members that helped to grow this project:
-
--
 
 # License
 
