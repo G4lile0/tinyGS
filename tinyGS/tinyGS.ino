@@ -18,34 +18,40 @@
 
   ***********************************************************************
 
-  The aim of this project is to create an open network of ground stations
-  for the LoRa Satellites distributed all over the world and connected
-  through Internet.
+  TinyGS is an open network of Ground Stations distributed around the
+  world to receive and operate LoRa satellites, weather probes and other
+  flying objects, using cheap and versatile modules.
+
   This project is based on ESP32 boards and is compatible with sx126x and
   sx127x you can build you own board using one of these modules but most
   of us use a development board like the ones listed in the Supported
   boards section.
-  The developers of this project have no relation with the Fossa team in
-  charge of the mission, we are passionate about space and created this
-  project to be able to track and use the satellites as well as supporting
-  the mission.
 
   Supported boards
-    Heltec WiFi LoRa 32 V1 (433MHz SX1278)
-    Heltec WiFi LoRa 32 V2 (433MHz SX1278)
-    TTGO LoRa32 V1 (433MHz SX1278)
-    TTGO LoRa32 V2 (433MHz SX1278)
+    Heltec WiFi LoRa 32 V1 (433MHz & 863-928MHz versions)
+    Heltec WiFi LoRa 32 V2 (433MHz & 863-928MHz versions)
+    TTGO LoRa32 V1 (433MHz & 868-915MHz versions)
+    TTGO LoRa32 V2 (433MHz & 868-915MHz versions)
+    TTGO LoRa32 V2 (Manually swapped SX1267 to SX1278)
+    T-BEAM + OLED (433MHz & 868-915MHz versions)
+    T-BEAM V1.0 + OLED
+    FOSSA 1W Ground Station (433MHz & 868-915MHz versions)
+    ESP32 dev board + SX126X with crystal (Custom build, OLED optional)
+    ESP32 dev board + SX126X with TCXO (Custom build, OLED optional)
+    ESP32 dev board + SX127X (Custom build, OLED optional)
 
   Supported modules
     sx126x
     sx127x
 
     World Map with active Ground Stations and satellite stimated position 
+    Web of the project: https://tinygs.com/
+    Github: https://github.com/G4lile0/tinyGS
     Main community chat: https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q
 
-    In order to onfigure your Ground Station please open a private chat to get your credentials https://t.me/fossa_updates_bot
-    Data channel (station status and received packets): https://t.me/FOSSASAT_DATA
-    Test channel (simulator packets received by test groundstations): https://t.me/FOSSASAT_TEST
+    In order to onfigure your Ground Station please open a private chat to get your credentials https://t.me/tinygs_personal_bot
+    Data channel (station status and received packets): https://t.me/tinyGS_Telemetry
+    Test channel (simulator packets received by test groundstations): https://t.me/TinyGS_Test
 
     Developers:
       @gmag12       https://twitter.com/gmag12
