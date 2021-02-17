@@ -288,7 +288,7 @@ void displayShowInitialCredits()
 {
   display->setFont(ArialMT_Plain_16);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->drawString(0,5,"tinnyGS");
+  display->drawString(0,5,"tinyGS");
   display->setFont(ArialMT_Plain_10);
   display->drawString(50,23,"ver. " + String(status.version));
 
