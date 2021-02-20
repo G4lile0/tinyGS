@@ -70,10 +70,12 @@ void MQTT_Client::reconnect()
   Log::console(PSTR("If this is taking more than expected, connect to the config panel on the ip: %s to review the MQTT connection credentials."), WiFi.localIP().toString().c_str());
   if (connect(clientId, configManager.getMqttUser(), configManager.getMqttPass(), buildTopic(teleTopic, topicStatus).c_str(), 2, false, "0")) {
     Log::console(PSTR("Connected to MQTT!"));
+    status.mqtt_connected = true;
     subscribeToAll();
     sendWelcome();
   }
   else {
+    status.mqtt_connected = false;
     Log::console(PSTR("failed, rc=%i"), state());
   }
 }
