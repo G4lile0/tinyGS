@@ -122,7 +122,7 @@ void MQTT_Client::sendWelcome()
   doc["test"] = configManager.getTestMode();
   doc["unix_GS_time"] = now;
   doc["autoUpdate"] = configManager.getAutoUpdate();
-  doc["local_ip"]= WiFi.localIP().toString().c_str();
+  doc["local_ip"]= WiFi.localIP().toString();
   doc["modem_conf"].set(configManager.getModemStartup());
   doc["boardTemplate"].set(configManager.getBoardTemplate());
 
