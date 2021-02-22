@@ -171,8 +171,8 @@ int16_t Radio::begin()
 
     if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
       state = ((SX1278*)lora)->_mod->SPIsetRegValue((regValue>>8)&0x0F, regValue&0x0F, (regMask>>16)&0x0F, (regMask>>8)&0x0F, regMask&0x0F);
-    else
-      state = ((SX1268*)lora)->_mod->SPIsetRegValue((regValue>>8)&0x0F, regValue&0x0F, (regMask>>16)&0x0F, (regMask>>8)&0x0F, regMask&0x0F);
+   // else
+   //   state = ((SX1268*)lora)->_mod->SPIsetRegValue((regValue>>8)&0x0F, regValue&0x0F, (regMask>>16)&0x0F, (regMask>>8)&0x0F, regMask&0x0F);
   }
   
   
@@ -847,8 +847,8 @@ void Radio::remote_SPIwriteRegister(char* payload, size_t payload_len)
 
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     ((SX1278*)lora)->_mod->SPIwriteRegister(reg,data);
-  else
-    ((SX1268*)lora)->_mod->SPIwriteRegister(reg,data);
+//  else
+ //   ((SX1268*)lora)->_mod->SPIwriteRegister(reg,data);
 }
 
 int16_t Radio::remote_SPIreadRegister(char* payload, size_t payload_len)
@@ -859,8 +859,8 @@ int16_t Radio::remote_SPIreadRegister(char* payload, size_t payload_len)
   int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     data = ((SX1278*)lora)->_mod->SPIreadRegister(reg);
-  else
-    data = ((SX1268*)lora)->_mod->SPIreadRegister(reg);
+ // else
+ //   data = ((SX1268*)lora)->_mod->SPIreadRegister(reg);
 
   Log::console(PSTR("REG ID: 0x%x HEX : 0x%x BIN : %b"), reg, data, data);
   
@@ -897,7 +897,7 @@ int16_t Radio::remote_SPIsetRegValue(char* payload, size_t payload_len)
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     state = ((SX1278*)lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
   else
-    state = ((SX1268*)lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
+ //   state = ((SX1268*)lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
   
   readState(state);
   return state;
