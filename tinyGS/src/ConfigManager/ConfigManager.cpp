@@ -91,7 +91,6 @@ ConfigManager::ConfigManager()
   groupAdvanced.addItem(&modemParam);
   groupAdvanced.addItem(&advancedConfigParam);
   addParameterGroup(&groupAdvanced);
-
 }
 
 void ConfigManager::handleRoot()
@@ -370,6 +369,9 @@ boolean ConfigManager::init()
     boardDetection();
   }
 
+  if (strlen(advancedConfig))
+    parseAdvancedConf();
+
   return validConfig;
 }
 
@@ -450,10 +452,17 @@ void ConfigManager::parseAdvancedConf()
 
   size_t size = 512;
   DynamicJsonDocument doc(size);
-  deserializeJson(doc, advancedConfig);
+  deserializeJson(doc, (const char*)advancedConfig);
 
   if (doc.containsKey(F("dmode")))
   {
     Log::setLogLevel(doc["dmode"]);
+  }
+
+  Serial.print("FlipOled ");
+  if (doc.containsKey(F("flipOled")))
+  {
+    advancedConf.flipOled = doc["flipOled"];
+    Serial.println(advancedConf.flipOled);
   }
 }

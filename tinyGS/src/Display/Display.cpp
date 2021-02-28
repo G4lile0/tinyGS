@@ -66,7 +66,13 @@ void displayInit()
   delay(50);
   digitalWrite(board.OLED__RST, HIGH);   
   display->init();
-  display->flipScreenVertically();
+
+  if (ConfigManager::getInstance().getFlipOled())
+  {
+    display->flipScreenVertically();
+    Serial.println("Flip");
+  }
+    
 }
 
 void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state)

@@ -107,6 +107,11 @@ typedef struct {
    String   BOARD;
 } board_type;
 
+typedef struct {
+   uint8_t  flipOled = true;
+} AdvancedConfig;
+
+
 class ConfigManager : public IotWebConf2
 {
 public:
@@ -148,6 +153,7 @@ public:
   bool isConnected() { return getState() == IOTWEBCONF_STATE_ONLINE; };
   bool isApMode() { return (getState() != IOTWEBCONF_STATE_CONNECTING && getState() != IOTWEBCONF_STATE_ONLINE); }
   board_type getBoardConfig(){ return boards[getBoard()]; }
+  bool getFlipOled(){ return advancedConf.flipOled; }
 
 
 private:
@@ -193,6 +199,7 @@ private:
 #endif
   GSConfigHtmlFormatProvider gsConfigHtmlFormatProvider;
   board_type boards[NUM_BOARDS]; 
+  AdvancedConfig advancedConf;
 
   char latitude[COORDINATE_LENGTH] = "";
   char longitude[COORDINATE_LENGTH] = "";
