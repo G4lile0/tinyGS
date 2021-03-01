@@ -459,10 +459,13 @@ void ConfigManager::parseAdvancedConf()
     Log::setLogLevel(doc["dmode"]);
   }
 
-  Serial.print("FlipOled ");
   if (doc.containsKey(F("flipOled")))
   {
     advancedConf.flipOled = doc["flipOled"];
-    Serial.println(advancedConf.flipOled);
+  }
+
+  if (doc.containsKey(F("dnOled")))
+  {
+    advancedConf.dnOled = doc["dnOled"];
   }
 }

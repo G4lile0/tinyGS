@@ -68,11 +68,7 @@ void displayInit()
   display->init();
 
   if (ConfigManager::getInstance().getFlipOled())
-  {
     display->flipScreenVertically();
-    Serial.println("Flip");
-  }
-    
 }
 
 void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state)
@@ -97,7 +93,10 @@ void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state)
   const char* newTime = (const char*) thisTime.c_str();
   display->drawString(128, 0, newTime);
 
-  if (timeinfo.tm_hour < 6 || timeinfo.tm_hour > 18) display->normalDisplay(); else display->invertDisplay(); // change the OLED according to the time. 
+  if (ConfigManager::getInstance().getDayNightOled())
+  {
+    if (timeinfo.tm_hour < 6 || timeinfo.tm_hour > 18) display->normalDisplay(); else display->invertDisplay(); // change the OLED according to the time. 
+  }
 
   if (oldOledBright!=ConfigManager::getInstance().getOledBright())
   {

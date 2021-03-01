@@ -108,7 +108,8 @@ typedef struct {
 } board_type;
 
 typedef struct {
-   uint8_t  flipOled = true;
+  bool flipOled = true;
+  bool dnOled = true;
 } AdvancedConfig;
 
 
@@ -154,6 +155,7 @@ public:
   bool isApMode() { return (getState() != IOTWEBCONF_STATE_CONNECTING && getState() != IOTWEBCONF_STATE_ONLINE); }
   board_type getBoardConfig(){ return boards[getBoard()]; }
   bool getFlipOled(){ return advancedConf.flipOled; }
+  bool getDayNightOled(){ return advancedConf.dnOled; }
 
 
 private:
