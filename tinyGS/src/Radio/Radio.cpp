@@ -182,7 +182,7 @@ int16_t Radio::begin()
   } 
   else
   {
-    Log::console(PSTR("failed, code %u"), state);
+    Log::console(PSTR("failed, code %d"), state);
     return state;
   }
 
@@ -211,7 +211,7 @@ int16_t Radio::begin()
   } 
   else
   {
-    Log::console(PSTR("failed, code %u\nGo to the config panel (%s) and check if the board selected matches your hardware."), state, WiFi.localIP().toString());
+    Log::console(PSTR("failed, code %d\nGo to the config panel (%s) and check if the board selected matches your hardware."), state, WiFi.localIP().toString());
     return state;
   }
 
@@ -237,7 +237,7 @@ void Radio::disableInterrupt()
   eInterrupt = false;
 }
 
-uint16_t Radio::sendTx(uint8_t* data, size_t length)
+int16_t Radio::sendTx(uint8_t* data, size_t length)
 {
   if (!ConfigManager::getInstance().getAllowTx())
   {
@@ -246,7 +246,7 @@ uint16_t Radio::sendTx(uint8_t* data, size_t length)
   }
 
   // send data
-  uint16_t state = 0;
+  int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
     SX1278* l = (SX1278*)lora;
@@ -265,7 +265,7 @@ uint16_t Radio::sendTx(uint8_t* data, size_t length)
   return state;
 }
 
-uint16_t Radio::sendTestPacket()
+int16_t Radio::sendTestPacket()
 {
   return sendTx((uint8_t*)TEST_STRING, strlen(TEST_STRING));
 }
@@ -285,7 +285,7 @@ uint8_t Radio::listen()
 
   size_t respLen = 0;
   uint8_t* respFrame = 0;
-  int state = 0;
+  int16_t state = 0;
   status.lastPacketInfo.crc_error = 0;
   // read received data
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
@@ -385,7 +385,7 @@ uint8_t Radio::listen()
   else
   {
     // some other error occurred
-    Log::console(PSTR("[SX12x8] Failed, code %u"), state);
+    Log::console(PSTR("[SX12x8] Failed, code %d"), state);
     return 3;
   }
 }
@@ -398,7 +398,7 @@ void Radio::readState(int state)
   } 
   else
   {
-    Log::error(PSTR("failed, code %u"), state);
+    Log::error(PSTR("failed, code %d"), state);
     return;
   }
 }
@@ -649,7 +649,7 @@ int16_t Radio::remote_begin_lora(char* payload, size_t payload_len)
   sprintf(sw78StrHex, "%1x", syncWord78);
   sprintf(sw68StrHex, "%2x", syncWord68);
   Log::console(PSTR("Set Frequency: %.3f MHz\nSet bandwidth: %.3f MHz\nSet spreading factor: %u\nSet coding rate: %u\nSet sync Word 127x: 0x%s\nSet sync Word 126x: 0x%s"), freq, bw, sf, cr, sw78StrHex, sw68StrHex);
-  Log::console(PSTR("Set Power: %u\nSet C limit: %u\nSet Preamble: %u\nSet Gain: %u"), power, current_limit, preambleLength, gain);
+  Log::console(PSTR("Set Power: %d\nSet C limit: %u\nSet Preamble: %u\nSet Gain: %u"), power, current_limit, preambleLength, gain);
 
   int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
@@ -694,7 +694,7 @@ int16_t Radio::remote_begin_fsk(char* payload, size_t payload_len)
   uint16_t preambleLength = doc[6];
   uint8_t  ook = doc[7]; // 
 
-  Log::console(PSTR("Set Frequency: %.3f MHz\nSet bit rate: %.3f\nSet Frequency deviation: %.3f kHz\nSet receiver bandwidth: %.3f kHz\nSet Power: %u"), freq, br, freqDev, rxBw, power);
+  Log::console(PSTR("Set Frequency: %.3f MHz\nSet bit rate: %.3f\nSet Frequency deviation: %.3f kHz\nSet receiver bandwidth: %.3f kHz\nSet Power: %d"), freq, br, freqDev, rxBw, power);
   Log::console(PSTR("Set Current limit: %u\nSet Preamble Length: %u\nOOK Modulation %s\nSet datashaping %u"), currentlimit, preambleLength, (ook != 255) ? F("ON") : F("OFF"), ook);
 
   int16_t state = 0;
