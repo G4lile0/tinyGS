@@ -26,7 +26,9 @@
 
 MQTT_Client::MQTT_Client() 
 : PubSubClient(espClient)
-{ }
+{
+    espClient.setCACert (DSTroot_CA);
+}
 
 void MQTT_Client::loop() {
   if (!connected() && millis() - lastConnectionAtempt > reconnectionInterval)
