@@ -203,6 +203,7 @@ void wifiConnected()
   NTP.settimeSyncThreshold (1000); // Sync only if calculated offset absolute value is greater than 1 ms
   NTP.setMaxNumSyncRetry (2); // 2 resync trials if accuracy not reached
   NTP.begin (ntpServer); // Start NTP client
+  Serial.printf ("NTP started");
   
   time_t startedSync = millis ();
   while (NTP.syncStatus() != syncd && millis() - startedSync < 5000) // Wait 5 seconds to get sync
@@ -414,13 +415,16 @@ void switchTestmode()
 
 void printLocalTime()
 {
-  struct tm timeinfo;
-  if(!getLocalTime(&timeinfo))
-  {
-    Log::error(PSTR("Failed to obtain time"));
-    return;
-  }
-  Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
+    time_t currenttime = time (NULL);
+    if (currenttime < 0) {
+        Log::error (PSTR ("Failed to obtain time: %d"), currenttime);
+        return;
+    }
+    struct tm* timeinfo;
+    
+    timeinfo = localtime (&currenttime);
+  
+  Serial.println(timeinfo, "%A, %B %d %Y %H:%M:%S");
 }
 
 // function to print controls
