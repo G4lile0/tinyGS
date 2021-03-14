@@ -566,6 +566,7 @@ void MQTT_Client::manageMQTTDataCallback (void* handler_args, esp_event_base_t b
 
         Log::debug (PSTR ("Received MQTT message: %s : %.*s"), topic, length, payload);
         mqttclient.manageMQTTData (topic, payload, length);
+        free (topic);
     }
         break;
     case MQTT_EVENT_ERROR:
@@ -625,11 +626,11 @@ void MQTT_Client::begin()
     if (!(mqtt_client = esp_mqtt_client_init (&mqtt_cfg))) {
         Log::console (PSTR ("Error configuring MQTT client"));
     }
-    if (result = esp_mqtt_client_register_event (mqtt_client, MQTT_EVENT_ANY, manageMQTTDataCallback, this)) {
+    if ((result = esp_mqtt_client_register_event (mqtt_client, MQTT_EVENT_ANY, manageMQTTDataCallback, this))) {
         Log::console (PSTR ("Error registering MQTT event handler: %s"), esp_err_to_name (result));
     }
 
-    if (result = esp_mqtt_client_start (mqtt_client)) {
+    if ((result = esp_mqtt_client_start (mqtt_client))) {
         Log::console (PSTR ("Error starting MQTT client: %s"), esp_err_to_name(result));
     }
     
