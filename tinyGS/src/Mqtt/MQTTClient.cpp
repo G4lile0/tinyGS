@@ -492,14 +492,21 @@ void MQTT_Client::manageMQTTDataCallback (void* handler_args, esp_event_base_t b
 
         break;
     case MQTT_EVENT_DISCONNECTED:
+    {
+        Serial.printf (PSTR ("MQTT disconnected\n"));
         mqttclient.connectionAtempts++;
         status.mqtt_connected = false;
         mqttclient.mqtt_connected = false;
         mqttclient.lastPing = millis ();
+        // esp_err_t result;
+        // if ((result = esp_mqtt_client_start (mqttclient.mqtt_client))) {
+        //     Log::console (PSTR ("Error starting MQTT client: %d: %s"), result, esp_err_to_name (result));
+        // }
         if (mqttclient.connectionAtempts > mqttclient.connectionTimeout) {
             Log::console (PSTR ("Unable to connect to MQTT Server after many atempts. Restarting..."));
             ESP.restart ();
         }
+    }
         break;
     case MQTT_EVENT_SUBSCRIBED:
         break;
@@ -521,6 +528,7 @@ void MQTT_Client::manageMQTTDataCallback (void* handler_args, esp_event_base_t b
     }
         break;
     case MQTT_EVENT_ERROR:
+        Log::debug (PSTR ("MQTT Error"));
         if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
             Log::debug (PSTR("Last error code reported from esp-tls: 0x%x"), event->error_handle->esp_tls_last_esp_err);
             Log::debug (PSTR ("Last tls stack error number: 0x%x"), event->error_handle->esp_tls_stack_err);
