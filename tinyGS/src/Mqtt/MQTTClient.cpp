@@ -18,42 +18,13 @@
 */
 
 #include "MQTTClient.h"
-#include "mqtt_client.h"
 #define ARDUINOJSON_USE_LONG_LONG 1
 #include "ArduinoJson.h"
 #include "../Radio/Radio.h"
 #include "../OTA/OTA.h"
 #include "../Logger/Logger.h"
 
-// MQTT_Client::MQTT_Client() 
-// : PubSubClient(espClient)
-// {
-//     espClient.setCACert (DSTroot_CA);
-// }
-
 void MQTT_Client::loop() {
-//   if (!connected() && millis() - lastConnectionAtempt > reconnectionInterval)
-//   {
-    //lastConnectionAtempt = millis();
-    //connectionAtempts++;
-    // status.mqtt_connected = false;
-    // lastPing = millis();
-    // reconnect();
-//   }
-//   else
-//   {
-//     connectionAtempts = 0;
-//     status.mqtt_connected = true;
-//   }
-
-//   if (connectionAtempts > connectionTimeout)
-//   {
-//     Log::console(PSTR("Unable to connect to MQTT Server after many atempts. Restarting..."));
-//     ESP.restart();
-//   }
-
-//   PubSubClient::loop();
-
   unsigned long now = millis();
   if (now - lastPing > pingInterval && connected())
   {
@@ -61,27 +32,6 @@ void MQTT_Client::loop() {
     publish(buildTopic(teleTopic, topicPing).c_str(), "1");
   }
 }
-
-// void MQTT_Client::reconnect()
-// {
-//   ConfigManager& configManager = ConfigManager::getInstance();
-//   uint64_t chipId = ESP.getEfuseMac();
-//   char clientId[13];
-//   sprintf(clientId, "%04X%08X",(uint16_t)(chipId>>32), (uint32_t)chipId);
-
-//   Log::console(PSTR("Attempting MQTT connection..."));
-//   Log::console(PSTR("If this is taking more than expected, connect to the config panel on the ip: %s to review the MQTT connection credentials."), WiFi.localIP().toString().c_str());
-//   if (connect(clientId, configManager.getMqttUser(), configManager.getMqttPass(), buildTopic(teleTopic, topicStatus).c_str(), 2, false, "0")) {
-//     Log::console(PSTR("Connected to MQTT!"));
-//     status.mqtt_connected = true;
-//     subscribeToAll();
-//     sendWelcome();
-//   }
-//   else {
-//     status.mqtt_connected = false;
-//     Log::console(PSTR("failed, rc=%i"), state());
-//   }
-// }
 
 String MQTT_Client::buildTopic(const char* baseTopic, const char* cmnd)
 {

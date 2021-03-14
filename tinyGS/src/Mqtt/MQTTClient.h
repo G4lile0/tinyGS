@@ -26,7 +26,6 @@
 #include "../ConfigManager/ConfigManager.h"
 #include "../Status.h"
 #define MQTT_MAX_PACKET_SIZE 1000
-//#include <PubSubClient.h>
 #include "mqtt_client.h"
 #ifdef SECURE_MQTT
 #include <WiFiClientSecure.h>
@@ -51,8 +50,6 @@ R8srzJmwN0jP41ZL9c8PDHIyh8bwRLtTcm1D9SZImlJnt1ir/md2cXjbDaJWFBM5
 JDGFoqgCWjBH4d1QB7wCCZAA62RjYJsWvIjJEubSfZGL+T0yjWW06XyxV3bqxbYo
 Ob8VZRzI9neWagqNdwvYkQsEjgfbKbYK7p2CNTUQ
 -----END CERTIFICATE-----)EOF";
-//#else
-//#include <WiFiClient.h>
 #endif
 
 extern Status status;
@@ -78,16 +75,7 @@ public:
   boolean publish (const char* topic, const uint8_t* payload, unsigned int plength);
   boolean publish (const char* topic, const uint8_t* payload, unsigned int plength, boolean retained);
   
-//protected:
-//#ifdef SECURE_MQTT
-//  WiFiClientSecure espClient;
-//#else
-//  WiFiClient espClient;
-//#endif
-//  void reconnect();
-
 private:
-  //MQTT_Client();
   String buildTopic(const char * baseTopic, const char * cmnd);
   void subscribeToAll();
   void manageSatPosOled(char* payload, size_t payload_len);
