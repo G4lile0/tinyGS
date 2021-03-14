@@ -656,8 +656,9 @@ boolean MQTT_Client::publish (const char* topic, const uint8_t* payload, unsigne
         return false;
     }
 
-    if (mqtt_connected) {
-        return !esp_mqtt_client_publish (mqtt_client, topic, (char*)payload, plength, 0, retained);
+    if (!mqtt_connected) {
+        return false;
     }
     
+    return !esp_mqtt_client_publish (mqtt_client, topic, (char*)payload, plength, 0, retained);
 }
