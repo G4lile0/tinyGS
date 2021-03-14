@@ -26,7 +26,9 @@
 
 MQTT_Client::MQTT_Client() 
 : PubSubClient(espClient)
-{ }
+{
+    espClient.setCACert (DSTroot_CA);
+}
 
 void MQTT_Client::loop() {
   if (!connected() && millis() - lastConnectionAtempt > reconnectionInterval)
@@ -70,10 +72,12 @@ void MQTT_Client::reconnect()
   Log::console(PSTR("If this is taking more than expected, connect to the config panel on the ip: %s to review the MQTT connection credentials."), WiFi.localIP().toString().c_str());
   if (connect(clientId, configManager.getMqttUser(), configManager.getMqttPass(), buildTopic(teleTopic, topicStatus).c_str(), 2, false, "0")) {
     Log::console(PSTR("Connected to MQTT!"));
+    status.mqtt_connected = true;
     subscribeToAll();
     sendWelcome();
   }
   else {
+    status.mqtt_connected = false;
     Log::console(PSTR("failed, rc=%i"), state());
   }
 }
@@ -120,7 +124,7 @@ void MQTT_Client::sendWelcome()
   doc["test"] = configManager.getTestMode();
   doc["unix_GS_time"] = now;
   doc["autoUpdate"] = configManager.getAutoUpdate();
-  doc["local_ip"]= WiFi.localIP().toString().c_str();
+  doc["local_ip"]= WiFi.localIP().toString();
   doc["modem_conf"].set(configManager.getModemStartup());
   doc["boardTemplate"].set(configManager.getBoardTemplate());
 

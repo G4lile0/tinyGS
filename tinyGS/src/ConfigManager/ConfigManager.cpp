@@ -91,7 +91,6 @@ ConfigManager::ConfigManager()
   groupAdvanced.addItem(&modemParam);
   groupAdvanced.addItem(&advancedConfigParam);
   addParameterGroup(&groupAdvanced);
-
 }
 
 void ConfigManager::handleRoot()
@@ -201,9 +200,32 @@ void ConfigManager::handleRefreshConsole()
   String svalue = server.arg("c1");
   if (svalue.length()) {
     Log::console(PSTR("COMMAND: %s"), svalue.c_str());
-    Log::console(PSTR("%s"), F("The web console still doesn't support input commands. We are working on it!"));
+  //  Log::console(PSTR("%s"), F("The web console still doesn't support input commands. We are working on it!"));
     // TODO: Execute command
+
+    if (strcmp(svalue.c_str(), "p") == 0) {
+        if (!getAllowTx())
+        {
+          Log::console(PSTR("Radio transmission is not allowed by config! Check your config on the web panel and make sure transmission is allowed by local regulations"));
+           } else {
+
+                     static long lastTestPacketTime = 0;
+                     if (millis() - lastTestPacketTime < 20*1000)
+                 {
+                    Log::console(PSTR("Please wait a few seconds to send another test packet."));
+       
+                 } else {
+                        Radio::getInstance().sendTestPacket();
+                        lastTestPacketTime = millis();
+                        Log::console(PSTR("Sending test packet to nearby stations!"));
+                  }
+           }
+     }
+   else {
+          Log::console(PSTR("%s"), F("The web console still doesn't support input commands. We are working on it!"));
+         }
   }
+
 
   char stmp[8];
   String s = server.arg("c2");
@@ -347,6 +369,9 @@ boolean ConfigManager::init()
     boardDetection();
   }
 
+  if (strlen(advancedConfig))
+    parseAdvancedConf();
+
   return validConfig;
 }
 
@@ -427,10 +452,20 @@ void ConfigManager::parseAdvancedConf()
 
   size_t size = 512;
   DynamicJsonDocument doc(size);
-  deserializeJson(doc, advancedConfig);
+  deserializeJson(doc, (const char*)advancedConfig);
 
   if (doc.containsKey(F("dmode")))
   {
     Log::setLogLevel(doc["dmode"]);
+  }
+
+  if (doc.containsKey(F("flipOled")))
+  {
+    advancedConf.flipOled = doc["flipOled"];
+  }
+
+  if (doc.containsKey(F("dnOled")))
+  {
+    advancedConf.dnOled = doc["dnOled"];
   }
 }
