@@ -126,6 +126,67 @@ void ntp_cb (NTPEvent_t e)
   }
 }
 
+void wifiEvent_cb (system_event_id_t event, system_event_info_t info) {
+    static bool wasConnected = false;
+
+    switch (event) {
+    case SYSTEM_EVENT_WIFI_READY:                  /**< ESP32 WiFi ready */
+        Serial.printf ("WiFi ready\n");
+        break;
+    case SYSTEM_EVENT_SCAN_DONE:                   /**< ESP32 finish scanning AP */
+        Serial.printf ("WiFi finish scanning AP\n");
+        break;
+    case SYSTEM_EVENT_STA_START:                   /**< ESP32 station start */
+        Serial.printf ("WiFi station start\n");
+        break;
+    case SYSTEM_EVENT_STA_STOP:                    /**< ESP32 station stop */
+        Serial.printf ("WiFi station stop\n");
+        break;
+    case SYSTEM_EVENT_STA_CONNECTED:               /**< ESP32 station connected to AP */
+        Serial.printf ("WiFi station connected to AP\n");
+        break;
+    case SYSTEM_EVENT_STA_DISCONNECTED:            /**< ESP32 station disconnected from AP */
+        Serial.printf ("WiFi station disconnected from AP\n");
+        if (wasConnected) {
+            wasConnected = false;
+            Serial.printf ("Wifi reconnection\n");
+            WiFi.reconnect ();
+        }
+        break;
+    case SYSTEM_EVENT_STA_AUTHMODE_CHANGE:         /**< the auth mode of AP connected by ESP32 station changed */
+        Serial.printf ("WiFi auth mode of connected AP changed\n");
+        break;
+    case SYSTEM_EVENT_STA_GOT_IP:                  /**< ESP32 station got IP from connected AP */
+        wasConnected = true;
+        Serial.printf ("WiFi station got IP\n");
+        break;
+    case SYSTEM_EVENT_STA_LOST_IP:                 /**< ESP32 station lost IP and the IP is reset to 0 */
+        Serial.printf ("WiFi station lost IP and the IP is reset to 0\n");
+        break;
+    case SYSTEM_EVENT_AP_START:                    /**< ESP32 soft-AP start */
+        Serial.printf ("WiFi soft-AP start\n");
+        break;
+    case SYSTEM_EVENT_AP_STOP:                     /**< ESP32 soft-AP stop */
+        Serial.printf ("WiFi soft-AP stop\n");
+        break;
+    case SYSTEM_EVENT_AP_STACONNECTED:             /**< a station connected to ESP32 soft-AP */
+        Serial.printf ("WiFi station connected to soft-AP\n");
+        break;
+    case SYSTEM_EVENT_AP_STADISCONNECTED:          /**< a station disconnected from ESP32 soft-AP */
+        Serial.printf ("WiFi station disconnected from soft-AP\n");
+        break;
+    case SYSTEM_EVENT_AP_STAIPASSIGNED:            /**< ESP32 soft-AP assign an IP to a connected station */
+        Serial.printf ("WiFi soft-AP assign an IP to a connected station\n");
+        break;
+    case SYSTEM_EVENT_AP_PROBEREQRECVED:           /**< Receive probe request packet in soft-AP interface */
+        Serial.printf ("WiFi probe request packet in soft-AP\n");
+        break;
+    default:
+        Serial.printf ("WiFi other event: %d\n", event);
+        break;
+    }
+}
+
 void displayUpdate_task (void* arg)
 {
   for (;;){
@@ -180,6 +241,7 @@ void setup()
   if (FailSafe.isActive ()) // Skip all user setup if fail safe mode is activated
     return;
 
+  WiFi.onEvent (wifiEvent_cb);
   Log::console(PSTR("TinyGS Version %d - %s"), status.version, status.git_version);
   configManager.setWifiConnectionCallback(wifiConnected);
   configManager.init();
