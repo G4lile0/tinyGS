@@ -18,17 +18,18 @@
 */
 
 #include "MQTT_Client.h"
+#include "mqtt_client.h"
 #define ARDUINOJSON_USE_LONG_LONG 1
 #include "ArduinoJson.h"
 #include "../Radio/Radio.h"
 #include "../OTA/OTA.h"
 #include "../Logger/Logger.h"
 
-MQTT_Client::MQTT_Client() 
-: PubSubClient(espClient)
-{
-    espClient.setCACert (DSTroot_CA);
-}
+// MQTT_Client::MQTT_Client() 
+// : PubSubClient(espClient)
+// {
+//     espClient.setCACert (DSTroot_CA);
+// }
 
 void MQTT_Client::loop() {
   if (!connected() && millis() - lastConnectionAtempt > reconnectionInterval)
@@ -523,7 +524,8 @@ void MQTT_Client::remoteSatCmnd(char* payload, size_t payload_len)
 }
 
 // Helper class to use as a callback
-void manageMQTTDataCallback(char *topic, uint8_t *payload, unsigned int length)
+void manageMQTTDataCallback (void* handler_args, esp_event_base_t base, int32_t event_id, void* event_data)
+    //char* topic, uint8_t* payload, unsigned int length)
 {
   Log::debug(PSTR("Received MQTT message: %s : %.*s"), topic, length, payload);
   MQTT_Client::getInstance().manageMQTTData(topic, payload, length);
@@ -531,7 +533,43 @@ void manageMQTTDataCallback(char *topic, uint8_t *payload, unsigned int length)
 
 void MQTT_Client::begin()
 {
-  ConfigManager& configManager = ConfigManager::getInstance();
-  setServer(configManager.getMqttServer(), configManager.getMqttPort());
-  setCallback(manageMQTTDataCallback);
+    ConfigManager& configManager = ConfigManager::getInstance ();
+
+    //ConfigManager& configManager = ConfigManager::getInstance ();
+    uint64_t chipId = ESP.getEfuseMac ();
+    sprintf (clientId, "%04X%08X", (uint16_t)(chipId >> 32), (uint32_t)chipId);
+    
+    randomSeed (micros ());
+
+    mqtt_cfg.host = configManager.getMqttServer ();
+    mqtt_cfg.port = configManager.getMqttPort ();
+    mqtt_cfg.client_id = clientId;
+#ifdef SECURE_MQTT
+    mqtt_cfg.cert_pem = DSTroot_CA;
+    mqtt_cfg.transport = MQTT_TRANSPORT_OVER_SSL;
+#else
+    mqtt_cfg.transport = MQTT_TRANSPORT_OVER_TCP;
+#endif
+    mqtt_cfg.username = configManager.getMqttUser ();
+    mqtt_cfg.password = configManager.getMqttPass ();
+    mqtt_cfg.lwt_topic = buildTopic (teleTopic, topicStatus).c_str ();
+    mqtt_cfg.lwt_msg = "0";
+    mqtt_cfg.lwt_msg_len = 1;
+    mqtt_cfg.lwt_qos = 0;
+    mqtt_cfg.lwt_retain = false;
+    //mqtt_cfg.keepalive = 30;
+
+    esp_err_t result;
+        
+    if (!(mqtt_client = esp_mqtt_client_init (&mqtt_cfg))) {
+        Log::console (PSTR ("Error configuring MQTT client"));
+    }
+    if (result = esp_mqtt_client_register_event (client, MQTT_EVENT_ANY, manageMQTTDataCallback, this)) {
+        Log::console (PSTR ("Error registering MQTT event handler: %s"), esp_err_to_name (result));
+    }
+
+    if (result = esp_mqtt_client_start (client)) {
+        Log::console (PSTR ("Error starting MQTT client: %s"), esp_err_to_name(result));
+    }
+    
 }

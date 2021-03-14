@@ -26,12 +26,12 @@
 #include "../ConfigManager/ConfigManager.h"
 #include "../Status.h"
 #define MQTT_MAX_PACKET_SIZE 1000
-#include <PubSubClient.h>
+//#include <PubSubClient.h>
+#include "mqtt_client.h"
 #ifdef SECURE_MQTT
 #include <WiFiClientSecure.h>
 
-static const char DSTroot_CA[] PROGMEM = R"EOF(
------BEGIN CERTIFICATE-----
+static const char DSTroot_CA[] PROGMEM = R"EOF(-----BEGIN CERTIFICATE-----
 MIIDSjCCAjKgAwIBAgIQRK+wgNajJ7qJMDmGLvhAazANBgkqhkiG9w0BAQUFADA/
 MSQwIgYDVQQKExtEaWdpdGFsIFNpZ25hdHVyZSBUcnVzdCBDby4xFzAVBgNVBAMT
 DkRTVCBSb290IENBIFgzMB4XDTAwMDkzMDIxMTIxOVoXDTIxMDkzMDE0MDExNVow
@@ -50,15 +50,14 @@ AvHRAosZy5Q6XkjEGB5YGV8eAlrwDPGxrancWYaLbumR9YbK+rlmM6pZW87ipxZz
 R8srzJmwN0jP41ZL9c8PDHIyh8bwRLtTcm1D9SZImlJnt1ir/md2cXjbDaJWFBM5
 JDGFoqgCWjBH4d1QB7wCCZAA62RjYJsWvIjJEubSfZGL+T0yjWW06XyxV3bqxbYo
 Ob8VZRzI9neWagqNdwvYkQsEjgfbKbYK7p2CNTUQ
------END CERTIFICATE-----
-)EOF";
-#else
-#include <WiFiClient.h>
+-----END CERTIFICATE-----)EOF";
+//#else
+//#include <WiFiClient.h>
 #endif
 
 extern Status status;
 
-class MQTT_Client : public PubSubClient {
+class MQTT_Client {
 public:
   static MQTT_Client& getInstance()
   {
@@ -73,12 +72,12 @@ public:
   void sendStatus();
 
 protected:
-#ifdef SECURE_MQTT
-  WiFiClientSecure espClient;
-#else
-  WiFiClient espClient;
-#endif
-  void reconnect();
+//#ifdef SECURE_MQTT
+//  WiFiClientSecure espClient;
+//#else
+//  WiFiClient espClient;
+//#endif
+//  void reconnect();
 
 private:
   MQTT_Client();
@@ -87,6 +86,9 @@ private:
   void manageSatPosOled(char* payload, size_t payload_len);
   void remoteSatCmnd(char* payload, size_t payload_len);
 
+  esp_mqtt_client_config_t mqtt_cfg;
+  esp_mqtt_client_handle_t mqtt_client;
+  char clientId[13];
   unsigned long lastPing = 0;
   unsigned long lastConnectionAtempt = 0;
   uint8_t connectionAtempts = 0;
