@@ -72,7 +72,7 @@
 #endif
 #include "src/ConfigManager/ConfigManager.h"
 #include "src/Display/Display.h"
-#include "src/Mqtt/MQTT_Client.h"
+#include "src/Mqtt/MQTTClient.h"
 #include "src/Status.h"
 #include "src/Radio/Radio.h"
 #include "src/ArduinoOTA/ArduinoOTA.h"

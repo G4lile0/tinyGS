@@ -18,7 +18,7 @@
 */
 
 #include "ConfigManager.h"
-#include "../Mqtt/MQTT_Client.h"
+#include "../Mqtt/MQTTClient.h"
 #include "../Logger/Logger.h"
 #include "../Radio/Radio.h"
 #define ARDUINOJSON_USE_LONG_LONG 1

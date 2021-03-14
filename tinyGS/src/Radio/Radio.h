@@ -27,7 +27,7 @@
 #include <RadioLib.h>
 #include "../ConfigManager/ConfigManager.h"
 #include "../Status.h"
-#include "../Mqtt/MQTT_Client.h"
+#include "../Mqtt/MQTTClient.h"
 
 extern Status status;
 
