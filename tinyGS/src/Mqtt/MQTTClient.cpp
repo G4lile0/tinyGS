@@ -25,10 +25,11 @@
 #include "../Logger/Logger.h"
 
 void MQTT_Client::loop() {
-  unsigned long now = millis();
-  if (now - lastPing > pingInterval && connected())
+  //unsigned long now;
+  if (millis () - lastPing > pingInterval && connected())
   {
-    lastPing = now;
+      lastPing = millis();
+      Serial.printf ("Ping\n");
     publish(buildTopic(teleTopic, topicPing).c_str(), "1");
   }
 }
