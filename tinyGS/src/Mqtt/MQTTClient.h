@@ -69,9 +69,16 @@ public:
   void sendWelcome();
   void sendRx(String packet);
   void manageMQTTData(char *topic, uint8_t *payload, unsigned int length);
-  void sendStatus();
-
-protected:
+  void sendStatus ();
+  bool connected () {
+      return mqtt_connected;
+  }
+  boolean publish (const char* topic, const char* payload);
+  boolean publish (const char* topic, const char* payload, boolean retained);
+  boolean publish (const char* topic, const uint8_t* payload, unsigned int plength);
+  boolean publish (const char* topic, const uint8_t* payload, unsigned int plength, boolean retained);
+  
+//protected:
 //#ifdef SECURE_MQTT
 //  WiFiClientSecure espClient;
 //#else
@@ -80,14 +87,18 @@ protected:
 //  void reconnect();
 
 private:
-  MQTT_Client();
+  //MQTT_Client();
   String buildTopic(const char * baseTopic, const char * cmnd);
   void subscribeToAll();
   void manageSatPosOled(char* payload, size_t payload_len);
   void remoteSatCmnd(char* payload, size_t payload_len);
 
+  static void manageMQTTDataCallback (void* handler_args, esp_event_base_t base, int32_t event_id, void* event_data);
+  
   esp_mqtt_client_config_t mqtt_cfg;
   esp_mqtt_client_handle_t mqtt_client;
+  bool mqtt_connected = false;
+  
   char clientId[13];
   unsigned long lastPing = 0;
   unsigned long lastConnectionAtempt = 0;

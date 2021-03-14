@@ -17,7 +17,7 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "MQTT_Client.h"
+#include "MQTTClient.h"
 #include "mqtt_client.h"
 #define ARDUINOJSON_USE_LONG_LONG 1
 #include "ArduinoJson.h"
@@ -32,27 +32,27 @@
 // }
 
 void MQTT_Client::loop() {
-  if (!connected() && millis() - lastConnectionAtempt > reconnectionInterval)
-  {
-    lastConnectionAtempt = millis();
-    connectionAtempts++;
-    status.mqtt_connected = false;
-    lastPing = millis();
-    reconnect();
-  }
-  else
-  {
-    connectionAtempts = 0;
-    status.mqtt_connected = true;
-  }
+//   if (!connected() && millis() - lastConnectionAtempt > reconnectionInterval)
+//   {
+    //lastConnectionAtempt = millis();
+    //connectionAtempts++;
+    // status.mqtt_connected = false;
+    // lastPing = millis();
+    // reconnect();
+//   }
+//   else
+//   {
+//     connectionAtempts = 0;
+//     status.mqtt_connected = true;
+//   }
 
-  if (connectionAtempts > connectionTimeout)
-  {
-    Log::console(PSTR("Unable to connect to MQTT Server after many atempts. Restarting..."));
-    ESP.restart();
-  }
+//   if (connectionAtempts > connectionTimeout)
+//   {
+//     Log::console(PSTR("Unable to connect to MQTT Server after many atempts. Restarting..."));
+//     ESP.restart();
+//   }
 
-  PubSubClient::loop();
+//   PubSubClient::loop();
 
   unsigned long now = millis();
   if (now - lastPing > pingInterval && connected())
@@ -62,26 +62,26 @@ void MQTT_Client::loop() {
   }
 }
 
-void MQTT_Client::reconnect()
-{
-  ConfigManager& configManager = ConfigManager::getInstance();
-  uint64_t chipId = ESP.getEfuseMac();
-  char clientId[13];
-  sprintf(clientId, "%04X%08X",(uint16_t)(chipId>>32), (uint32_t)chipId);
+// void MQTT_Client::reconnect()
+// {
+//   ConfigManager& configManager = ConfigManager::getInstance();
+//   uint64_t chipId = ESP.getEfuseMac();
+//   char clientId[13];
+//   sprintf(clientId, "%04X%08X",(uint16_t)(chipId>>32), (uint32_t)chipId);
 
-  Log::console(PSTR("Attempting MQTT connection..."));
-  Log::console(PSTR("If this is taking more than expected, connect to the config panel on the ip: %s to review the MQTT connection credentials."), WiFi.localIP().toString().c_str());
-  if (connect(clientId, configManager.getMqttUser(), configManager.getMqttPass(), buildTopic(teleTopic, topicStatus).c_str(), 2, false, "0")) {
-    Log::console(PSTR("Connected to MQTT!"));
-    status.mqtt_connected = true;
-    subscribeToAll();
-    sendWelcome();
-  }
-  else {
-    status.mqtt_connected = false;
-    Log::console(PSTR("failed, rc=%i"), state());
-  }
-}
+//   Log::console(PSTR("Attempting MQTT connection..."));
+//   Log::console(PSTR("If this is taking more than expected, connect to the config panel on the ip: %s to review the MQTT connection credentials."), WiFi.localIP().toString().c_str());
+//   if (connect(clientId, configManager.getMqttUser(), configManager.getMqttPass(), buildTopic(teleTopic, topicStatus).c_str(), 2, false, "0")) {
+//     Log::console(PSTR("Connected to MQTT!"));
+//     status.mqtt_connected = true;
+//     subscribeToAll();
+//     sendWelcome();
+//   }
+//   else {
+//     status.mqtt_connected = false;
+//     Log::console(PSTR("failed, rc=%i"), state());
+//   }
+// }
 
 String MQTT_Client::buildTopic(const char* baseTopic, const char* cmnd)
 {
@@ -94,9 +94,9 @@ String MQTT_Client::buildTopic(const char* baseTopic, const char* cmnd)
   return topic;
 }
 
-void MQTT_Client::subscribeToAll() {
-  subscribe(buildTopic(globalTopic, "#").c_str());
-  subscribe(buildTopic(cmndTopic, "#").c_str());
+void MQTT_Client::subscribeToAll () {
+    esp_mqtt_client_subscribe (mqtt_client, buildTopic (globalTopic, "#").c_str(), 0);
+    esp_mqtt_client_subscribe (mqtt_client, buildTopic (cmndTopic, "#").c_str (), 0);
 }
 
 void MQTT_Client::sendWelcome()
@@ -524,15 +524,31 @@ void MQTT_Client::remoteSatCmnd(char* payload, size_t payload_len)
 }
 
 // Helper class to use as a callback
-void manageMQTTDataCallback (void* handler_args, esp_event_base_t base, int32_t event_id, void* event_data)
+void MQTT_Client::manageMQTTDataCallback (void* handler_args, esp_event_base_t base, int32_t event_id, void* event_data)
     //char* topic, uint8_t* payload, unsigned int length)
 {
     esp_mqtt_event_handle_t event = (esp_mqtt_event_handle_t)event_data;
+    MQTT_Client mqttclient = MQTT_Client::getInstance ();
 
     switch (event_id) {
     case MQTT_EVENT_CONNECTED:
+        mqttclient.connectionAtempts = 0;
+        status.mqtt_connected = true;
+        mqttclient.mqtt_connected = true;
+        Log::console (PSTR ("Connected to MQTT!"));
+        mqttclient.subscribeToAll ();
+        mqttclient.sendWelcome ();
+
         break;
     case MQTT_EVENT_DISCONNECTED:
+        mqttclient.connectionAtempts++;
+        status.mqtt_connected = false;
+        mqttclient.mqtt_connected = false;
+        mqttclient.lastPing = millis ();
+        if (mqttclient.connectionAtempts > mqttclient.connectionTimeout) {
+            Log::console (PSTR ("Unable to connect to MQTT Server after many atempts. Restarting..."));
+            ESP.restart ();
+        }
         break;
     case MQTT_EVENT_SUBSCRIBED:
         break;
@@ -541,15 +557,16 @@ void manageMQTTDataCallback (void* handler_args, esp_event_base_t base, int32_t 
     case MQTT_EVENT_PUBLISHED:
         break;
     case MQTT_EVENT_DATA:
+    {
         char* topic = (char*)malloc (event->topic_len + 1);
         memcpy (topic, event->topic, event->topic_len);
         topic[event->topic_len] = 0;
         unsigned int length = event->data_len;
-        uint8_t payload = (uint8_t*)(event->data);
-        
-        Log::debug (PSTR ("Received MQTT message: %s : %.*s"), topic, length, payload);
-        MQTT_Client::getInstance ().manageMQTTData (topic, payload, length);
+        uint8_t* payload = (uint8_t*)(event->data);
 
+        Log::debug (PSTR ("Received MQTT message: %s : %.*s"), topic, length, payload);
+        mqttclient.manageMQTTData (topic, payload, length);
+    }
         break;
     case MQTT_EVENT_ERROR:
         if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
@@ -566,6 +583,7 @@ void manageMQTTDataCallback (void* handler_args, esp_event_base_t base, int32_t 
     case MQTT_EVENT_BEFORE_CONNECT:
         Log::console (PSTR ("Attempting MQTT connection..."));
         Log::console (PSTR ("If this is taking more than expected, connect to the config panel on the ip: %s to review the MQTT connection credentials."), WiFi.localIP ().toString ().c_str ());
+        mqttclient.lastConnectionAtempt = millis ();
         break;
     default:
         //Log::console (PSTR("Unknown event id:%d"), event->event_id);
@@ -599,6 +617,7 @@ void MQTT_Client::begin()
     mqtt_cfg.lwt_msg_len = 1;
     mqtt_cfg.lwt_qos = 0;
     mqtt_cfg.lwt_retain = false;
+    mqtt_cfg.buffer_size = MQTT_MAX_PACKET_SIZE;
     //mqtt_cfg.keepalive = 30;
 
     esp_err_t result;
@@ -606,12 +625,39 @@ void MQTT_Client::begin()
     if (!(mqtt_client = esp_mqtt_client_init (&mqtt_cfg))) {
         Log::console (PSTR ("Error configuring MQTT client"));
     }
-    if (result = esp_mqtt_client_register_event (client, MQTT_EVENT_ANY, manageMQTTDataCallback, this)) {
+    if (result = esp_mqtt_client_register_event (mqtt_client, MQTT_EVENT_ANY, manageMQTTDataCallback, this)) {
         Log::console (PSTR ("Error registering MQTT event handler: %s"), esp_err_to_name (result));
     }
 
-    if (result = esp_mqtt_client_start (client)) {
+    if (result = esp_mqtt_client_start (mqtt_client)) {
         Log::console (PSTR ("Error starting MQTT client: %s"), esp_err_to_name(result));
+    }
+    
+}
+
+boolean MQTT_Client::publish (const char* topic, const char* payload) {
+    return publish (topic, (const uint8_t*)payload, payload ? strnlen (payload, MQTT_MAX_PACKET_SIZE) : 0, false);
+}
+
+boolean MQTT_Client::publish (const char* topic, const char* payload, boolean retained) {
+    return publish (topic, (const uint8_t*)payload, payload ? strnlen (payload, MQTT_MAX_PACKET_SIZE) : 0, retained);
+}
+
+boolean MQTT_Client::publish (const char* topic, const uint8_t* payload, unsigned int plength) {
+    return publish (topic, payload, plength, false);
+}
+
+boolean MQTT_Client::publish (const char* topic, const uint8_t* payload, unsigned int plength, boolean retained) {
+    if (!topic || !payload) {
+        return false;
+    }
+
+    if (!strlen (topic)) {
+        return false;
+    }
+
+    if (mqtt_connected) {
+        return !esp_mqtt_client_publish (mqtt_client, topic, (char*)payload, plength, 0, retained);
     }
     
 }
