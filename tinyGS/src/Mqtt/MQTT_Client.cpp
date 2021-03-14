@@ -527,8 +527,50 @@ void MQTT_Client::remoteSatCmnd(char* payload, size_t payload_len)
 void manageMQTTDataCallback (void* handler_args, esp_event_base_t base, int32_t event_id, void* event_data)
     //char* topic, uint8_t* payload, unsigned int length)
 {
-  Log::debug(PSTR("Received MQTT message: %s : %.*s"), topic, length, payload);
-  MQTT_Client::getInstance().manageMQTTData(topic, payload, length);
+    esp_mqtt_event_handle_t event = (esp_mqtt_event_handle_t)event_data;
+
+    switch (event_id) {
+    case MQTT_EVENT_CONNECTED:
+        break;
+    case MQTT_EVENT_DISCONNECTED:
+        break;
+    case MQTT_EVENT_SUBSCRIBED:
+        break;
+    case MQTT_EVENT_UNSUBSCRIBED:
+        break;
+    case MQTT_EVENT_PUBLISHED:
+        break;
+    case MQTT_EVENT_DATA:
+        char* topic = (char*)malloc (event->topic_len + 1);
+        memcpy (topic, event->topic, event->topic_len);
+        topic[event->topic_len] = 0;
+        unsigned int length = event->data_len;
+        uint8_t payload = (uint8_t*)(event->data);
+        
+        Log::debug (PSTR ("Received MQTT message: %s : %.*s"), topic, length, payload);
+        MQTT_Client::getInstance ().manageMQTTData (topic, payload, length);
+
+        break;
+    case MQTT_EVENT_ERROR:
+        if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
+            Log::debug (PSTR("Last error code reported from esp-tls: 0x%x"), event->error_handle->esp_tls_last_esp_err);
+            Log::debug (PSTR ("Last tls stack error number: 0x%x"), event->error_handle->esp_tls_stack_err);
+            Log::debug (PSTR ("Last captured errno : %d (%s)"), event->error_handle->esp_transport_sock_errno,
+                        strerror (event->error_handle->esp_transport_sock_errno));
+        } else if (event->error_handle->error_type == MQTT_ERROR_TYPE_CONNECTION_REFUSED) {
+            Log::debug (PSTR ("MQTT connection refused error: 0x%x"), event->error_handle->connect_return_code);
+        } else {
+            Log::debug (PSTR ("Unknown error type: 0x%x"), event->error_handle->error_type);
+        }
+        break;
+    case MQTT_EVENT_BEFORE_CONNECT:
+        Log::console (PSTR ("Attempting MQTT connection..."));
+        Log::console (PSTR ("If this is taking more than expected, connect to the config panel on the ip: %s to review the MQTT connection credentials."), WiFi.localIP ().toString ().c_str ());
+        break;
+    default:
+        //Log::console (PSTR("Unknown event id:%d"), event->event_id);
+        break;
+    }
 }
 
 void MQTT_Client::begin()
