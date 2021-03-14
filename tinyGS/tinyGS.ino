@@ -142,6 +142,7 @@ void wifiConnected()
   NTP.settimeSyncThreshold (1000); // Sync only if calculated offset absolute value is greater than 1 ms
   NTP.setMaxNumSyncRetry (2); // 2 resync trials if accuracy not reached
   NTP.begin (ntpServer); // Start NTP client
+  Serial.printf ("NTP started");
   
   time_t startedSync = millis ();
   while (NTP.syncStatus() != syncd && millis() - startedSync < 5000) // Wait 5 seconds to get sync

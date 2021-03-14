@@ -69,14 +69,17 @@ void Log::AddLog(Log::LoggingLevels level, const char* logData)
   if (level > Log::logLevel)
     return;
 
-  char time[10];  // "13:45:21 "
-  struct tm timeinfo;
-  if(getLocalTime(&timeinfo), 1)
-    snprintf_P(time, sizeof(time), "%02d:%02d:%02d ", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-  else
-    time[0] = '\0';
+  char timeStr[10];  // "13:45:21 "
+  time_t currentTime = time (NULL);
+  if (currentTime > 0) {
+      struct tm *timeinfo = localtime (&currentTime);
+      snprintf_P (timeStr, sizeof (timeStr), "%02d:%02d:%02d ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+  }
+  else {
+      timeStr[0] = '\0';
+  }
   
-  Serial.printf(PSTR("%s%s\n"), time, logData);
+  Serial.printf (PSTR ("%s%s\n"), timeStr, logData);
 
   // Delimited, zero-terminated buffer of log lines.
   // Each entry has this format: [index][log data]['\1']
@@ -90,7 +93,7 @@ void Log::AddLog(Log::LoggingLevels level, const char* logData)
     memmove(log, it, MAX_LOG_SIZE -(it-log));  // Move buffer forward to remove oldest log line
   }
   
-  snprintf_P(log, sizeof(log), PSTR("%s%c%s%s\1"), log, logIdx++, time, logData);
+  snprintf_P(log, sizeof(log), PSTR("%s%c%s%s\1"), log, logIdx++, timeStr, logData);
 
   logIdx &= 0xFF;
   if (!logIdx) 
