@@ -122,7 +122,6 @@ This project relies on several third party libraries:
 - ArduinoJson
 - ESP8266\_SSD1306
 - IoTWebConf2
-- PubSubClient
 - ESPNTPClient
 - FailSafeMode
 
