@@ -353,13 +353,16 @@ void switchTestmode()
 
 void printLocalTime()
 {
-  struct tm timeinfo;
-  if(!getLocalTime(&timeinfo))
-  {
-    Log::error(PSTR("Failed to obtain time"));
-    return;
-  }
-  Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
+    time_t currenttime = time (NULL);
+    if (currenttime < 0) {
+        Log::error (PSTR ("Failed to obtain time: %d"), currenttime);
+        return;
+    }
+    struct tm* timeinfo;
+    
+    timeinfo = localtime (&currenttime);
+  
+  Serial.println(timeinfo, "%A, %B %d %Y %H:%M:%S");
 }
 
 // function to print controls

@@ -337,22 +337,24 @@ uint8_t Radio::listen()
 
   delete[] respFrame;
 
-  struct tm timeinfo;
-  if(!getLocalTime(&timeinfo))
+  struct tm* timeinfo;
+  time_t currenttime = time (NULL);
+  if(currenttime < 0)
   {
     Log::error(PSTR("Failed to obtain time"));
     status.lastPacketInfo.time = "";
   }
   else
   {
+      timeinfo = localtime (&currenttime);
     // store time of the last packet received:
     String thisTime="";
-    if (timeinfo.tm_hour < 10){ thisTime=thisTime + " ";} // add leading space if required
-    thisTime=String(timeinfo.tm_hour) + ":";
-    if (timeinfo.tm_min < 10){ thisTime=thisTime + "0";} // add leading zero if required
-    thisTime=thisTime + String(timeinfo.tm_min) + ":";
-    if (timeinfo.tm_sec < 10){ thisTime=thisTime + "0";} // add leading zero if required
-    thisTime=thisTime + String(timeinfo.tm_sec);
+    if (timeinfo->tm_hour < 10){ thisTime=thisTime + " ";} // add leading space if required
+    thisTime = String (timeinfo->tm_hour) + ":";
+    if (timeinfo->tm_min < 10) { thisTime = thisTime + "0"; } // add leading zero if required
+    thisTime = thisTime + String (timeinfo->tm_min) + ":";
+    if (timeinfo->tm_sec < 10) { thisTime = thisTime + "0"; } // add leading zero if required
+    thisTime = thisTime + String (timeinfo->tm_sec);
     // const char* newTime = (const char*) thisTime.c_str();
     
     status.lastPacketInfo.time = thisTime;
