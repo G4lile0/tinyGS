@@ -200,9 +200,9 @@ void wifiConnected()
   NTP.setInterval (15, 120); // Sync each 2 minutes
   NTP.setTimeZone (configManager.getTZ ()); // Get TX from config manager
   NTP.onNTPSyncEvent (ntp_cb); // Register event callback
-  NTP.setMinSyncAccuracy (2000); // Sync accuracy target is 2 ms
-  NTP.settimeSyncThreshold (1000); // Sync only if calculated offset absolute value is greater than 1 ms
-  NTP.setMaxNumSyncRetry (2); // 2 resync trials if accuracy not reached
+  NTP.setMinSyncAccuracy (5000); // Sync accuracy target is 5 ms
+  NTP.settimeSyncThreshold (3000); // Sync only if calculated offset absolute value is greater than 3 ms
+  NTP.setMaxNumSyncRetry (0); // no resync trials if accuracy not reached
   NTP.setNTPTimeout (5000); // Set response timeout to 5 seconds
   NTP.begin (ntpServer); // Start NTP client
   Log::console (PSTR ("NTP started"));
