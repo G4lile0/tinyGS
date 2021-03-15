@@ -117,7 +117,7 @@ void ntp_cb (NTPEvent_t e)
 {
   switch (e.event) {
   case timeSyncd:
-      Log::console (PSTR ("Got NTP Time: %s"), NTP.getTimeDateString ());
+      //Log::console (PSTR ("Got NTP Time: %s"), NTP.getTimeDateString ());
   case partlySync:
       //Serial.printf ("[NTP Event] %s\n", NTP.ntpEvent2str (e));
       status.time_offset = e.info.offset;
