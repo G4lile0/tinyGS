@@ -131,58 +131,58 @@ void wifiEvent_cb (system_event_id_t event, system_event_info_t info) {
 
     switch (event) {
     case SYSTEM_EVENT_WIFI_READY:                  /**< ESP32 WiFi ready */
-        Serial.printf ("WiFi ready\n");
+        Log::console (PSTR("WiFi ready"));
         break;
     case SYSTEM_EVENT_SCAN_DONE:                   /**< ESP32 finish scanning AP */
-        Serial.printf ("WiFi finish scanning AP\n");
+        Log::console (PSTR ("WiFi finish scanning AP"));
         break;
     case SYSTEM_EVENT_STA_START:                   /**< ESP32 station start */
-        Serial.printf ("WiFi station start\n");
+        Log::console (PSTR ("WiFi station start"));
         break;
     case SYSTEM_EVENT_STA_STOP:                    /**< ESP32 station stop */
-        Serial.printf ("WiFi station stop\n");
+        Log::console (PSTR ("WiFi station stop"));
         break;
     case SYSTEM_EVENT_STA_CONNECTED:               /**< ESP32 station connected to AP */
-        Serial.printf ("WiFi station connected to AP\n");
+        Log::console (PSTR ("WiFi station connected to AP: %.*s"), info.connected.ssid_len, (char*)info.connected.ssid);
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:            /**< ESP32 station disconnected from AP */
-        Serial.printf ("WiFi station disconnected from AP\n");
+        Log::console (PSTR ("WiFi station disconnected from AP. Reason code: %d"), info.disconnected.reason);
         if (wasConnected) {
             wasConnected = false;
-            Serial.printf ("Wifi reconnection\n");
+            Log::console (PSTR ("Wifi reconnection"));
             WiFi.reconnect ();
         }
         break;
     case SYSTEM_EVENT_STA_AUTHMODE_CHANGE:         /**< the auth mode of AP connected by ESP32 station changed */
-        Serial.printf ("WiFi auth mode of connected AP changed\n");
+        Log::console (PSTR ("WiFi auth mode of connected AP changed"));
         break;
     case SYSTEM_EVENT_STA_GOT_IP:                  /**< ESP32 station got IP from connected AP */
         wasConnected = true;
-        Serial.printf ("WiFi station got IP\n");
+        Log::console (PSTR ("WiFi station got IP: %s"), IPAddress (info.got_ip.ip_info.ip.addr).toString ().c_str ());
         break;
     case SYSTEM_EVENT_STA_LOST_IP:                 /**< ESP32 station lost IP and the IP is reset to 0 */
-        Serial.printf ("WiFi station lost IP and the IP is reset to 0\n");
+        Log::console (PSTR ("WiFi station lost IP and the IP is reset to 0"));
         break;
     case SYSTEM_EVENT_AP_START:                    /**< ESP32 soft-AP start */
-        Serial.printf ("WiFi soft-AP start\n");
+        Log::console (PSTR ("WiFi soft-AP start"));
         break;
     case SYSTEM_EVENT_AP_STOP:                     /**< ESP32 soft-AP stop */
-        Serial.printf ("WiFi soft-AP stop\n");
+        Log::console (PSTR ("WiFi soft-AP stop"));
         break;
     case SYSTEM_EVENT_AP_STACONNECTED:             /**< a station connected to ESP32 soft-AP */
-        Serial.printf ("WiFi station connected to soft-AP\n");
+        Log::console (PSTR ("WiFi station connected to soft-AP"));
         break;
     case SYSTEM_EVENT_AP_STADISCONNECTED:          /**< a station disconnected from ESP32 soft-AP */
-        Serial.printf ("WiFi station disconnected from soft-AP\n");
+        Log::console (PSTR ("WiFi station disconnected from soft-AP"));
         break;
     case SYSTEM_EVENT_AP_STAIPASSIGNED:            /**< ESP32 soft-AP assign an IP to a connected station */
-        Serial.printf ("WiFi soft-AP assign an IP to a connected station\n");
+        Log::console (PSTR ("WiFi soft-AP assign an IP to a connected station: %s"), IPAddress (info.ap_staipassigned.ip.addr).toString ().c_str ());
         break;
     case SYSTEM_EVENT_AP_PROBEREQRECVED:           /**< Receive probe request packet in soft-AP interface */
-        Serial.printf ("WiFi probe request packet in soft-AP\n");
+        Log::console (PSTR ("WiFi probe request packet in soft-AP"));
         break;
     default:
-        Serial.printf ("WiFi other event: %d\n", event);
+        Log::console (PSTR ("WiFi other event: %d"), event);
         break;
     }
 }
@@ -203,7 +203,7 @@ void wifiConnected()
   NTP.settimeSyncThreshold (1000); // Sync only if calculated offset absolute value is greater than 1 ms
   NTP.setMaxNumSyncRetry (2); // 2 resync trials if accuracy not reached
   NTP.begin (ntpServer); // Start NTP client
-  Serial.printf ("NTP started");
+  Log::console (PSTR ("NTP started"));
   
   time_t startedSync = millis ();
   while (NTP.syncStatus() != syncd && millis() - startedSync < 5000) // Wait 5 seconds to get sync
