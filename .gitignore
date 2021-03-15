@@ -7,3 +7,5 @@
 scripts/
 tinyGS/tinyGS.ino.cpp
 .vscode/
+lib/ESPNtpClient/.github/workflows/platformio.yml
+lib/ESPNtpClient/.piopm
