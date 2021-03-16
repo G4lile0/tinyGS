@@ -19,7 +19,7 @@
 #define ONBOARDLED 2 // Built in LED on ESP-12/ESP-07
 #endif
 #define SHOW_TIME_PERIOD 1000
-#define NTP_TIMEOUT 1500
+#define NTP_TIMEOUT 5000
 
 const PROGMEM char* ntpServer = "pool.ntp.org";
 bool wifiFirstConnected = false;
@@ -115,8 +115,8 @@ void loop() {
         NTP.setTimeZone (TZ_Europe_Madrid);
         NTP.setInterval (600);
         NTP.setNTPTimeout (NTP_TIMEOUT);
-        // NTP.setMinSyncAccuracy (750);
-        // NTP.settimeSyncThreshold (500);
+        // NTP.setMinSyncAccuracy (5000);
+        // NTP.settimeSyncThreshold (3000);
         NTP.begin (ntpServer);
     }
 

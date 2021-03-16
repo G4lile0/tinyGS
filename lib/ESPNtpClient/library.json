@@ -1,7 +1,7 @@
 {
   "name": "ESPNtpClient",
   "frameworks": "arduino",
-  "version": "0.2.3",
+  "version": "0.2.5",
   "keywords": "time, date, hour, minute, second, day, week, month, year, RTC, NTP, millisecond",
   "platforms": ["espressif32", "espressif8266"],
   "description": "High accuracy NTP client library",
