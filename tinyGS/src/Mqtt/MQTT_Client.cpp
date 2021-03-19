@@ -31,13 +31,17 @@ MQTT_Client::MQTT_Client()
 }
 
 void MQTT_Client::loop() {
-  if (!connected() && millis() - lastConnectionAtempt > reconnectionInterval)
+  if (!connected())
   {
-    lastConnectionAtempt = millis();
-    connectionAtempts++;
     status.mqtt_connected = false;
-    lastPing = millis();
-    reconnect();
+    if (millis() - lastConnectionAtempt > reconnectionInterval)
+    {
+      lastConnectionAtempt = millis();
+      connectionAtempts++;
+
+      lastPing = millis();
+      reconnect();
+    }
   }
   else
   {
