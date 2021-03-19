@@ -312,7 +312,7 @@ uint8_t Radio::listen()
     status.lastPacketInfo.snr = l->getSNR();
   }
 
-  if ((respLen > 0) && !(state == ERR_CRC_MISMATCH))
+  if (state == ERR_NONE)
   {
     // read optional data
     Log::console(PSTR("Packet (%u bytes):"), respLen);
@@ -323,10 +323,7 @@ uint8_t Radio::listen()
     }
     Log::console(PSTR("%s"), byteStr);
     delete[] byteStr;
-  }
 
-  if (state == ERR_NONE)
-  {
     status.lastPacketInfo.crc_error = false;
     String encoded = base64::encode(respFrame, respLen); 
     MQTT_Client::getInstance().sendRx(encoded, noisyInterrupt);
@@ -385,7 +382,13 @@ uint8_t Radio::listen()
   else if (state == ERR_CRC_MISMATCH)
   {
     // packet was received, but is malformed
-    Log::console(PSTR("[SX12x8] CRC error!"));
+    Log::console(PSTR("[SX12x8] CRC error! Data cannot be retrieved"));
+    return 2;
+  }
+  else if (state == ERR_LORA_HEADER_DAMAGED)
+  {
+    // packet was received, but is malformed
+    Log::console(PSTR("[SX12x8] Damaged header! Data cannot be retrieved"));
     return 2;
   }
   else
