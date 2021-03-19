@@ -27,7 +27,7 @@ void displayShowConnected();
 void displayShowWaitingMqttConnection();
 void displayShowInitialCredits();
 void displayShowApMode();
-void displayShowStaMode();
+void displayShowStaMode(bool ap);
 void displayUpdate();
 void displayShowLoRaError();
 void displayShowRadioError();

@@ -230,7 +230,7 @@ void setup()
   if (configManager.isApMode())
     displayShowApMode();
   else 
-    displayShowStaMode();
+    displayShowStaMode(false);
   
   delay(500);  
 }
@@ -247,13 +247,11 @@ void loop() {
   static bool wasConnected = false;
   if (!configManager.isConnected())
   {
-    if (wasConnected)
-    {
-      if (configManager.isApMode())
-        displayShowApMode();
-      else 
-        displayShowStaMode();
-    }
+    if (configManager.isApMode() && wasConnected)
+      displayShowApMode();
+    else 
+      displayShowStaMode(configManager.isApMode());
+
     return;
   }
   wasConnected = true;
