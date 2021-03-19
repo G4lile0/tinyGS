@@ -109,7 +109,7 @@ void MQTT_Client::sendWelcome()
   sprintf(clientId, "%04X%08X",(uint16_t)(chipId>>32), (uint32_t)chipId);
 
 
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(14) + 22 + 20 +1;
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(14) + 22 + 20 + 20;
   DynamicJsonDocument doc(capacity);
   JsonArray station_location = doc.createNestedArray("station_location");
   station_location.add(configManager.getLatitude());
@@ -124,7 +124,7 @@ void MQTT_Client::sendWelcome()
   doc["test"] = configManager.getTestMode();
   doc["unix_GS_time"] = now;
   doc["autoUpdate"] = configManager.getAutoUpdate();
-  doc["local_ip"]= WiFi.localIP().toString();
+  doc["local_ip"]= WiFi.localIP().toString().c_str();
   doc["modem_conf"].set(configManager.getModemStartup());
   doc["boardTemplate"].set(configManager.getBoardTemplate());
 
