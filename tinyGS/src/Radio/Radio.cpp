@@ -290,6 +290,8 @@ uint8_t Radio::listen()
   size_t respLen = 0;
   uint8_t* respFrame = 0;
   int16_t state = 0;
+
+  PacketInfo newPacketInfo;
   status.lastPacketInfo.crc_error = 0;
   // read received data
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
@@ -298,9 +300,9 @@ uint8_t Radio::listen()
     respLen = l->getPacketLength();
     respFrame = new uint8_t[respLen];
     state = l->readData(respFrame, respLen);
-    status.lastPacketInfo.rssi = l->getRSSI();
-    status.lastPacketInfo.snr = l->getSNR();
-    status.lastPacketInfo.frequencyerror = l->getFrequencyError();
+    newPacketInfo.rssi = l->getRSSI();
+    newPacketInfo.snr = l->getSNR();
+    newPacketInfo.frequencyerror = l->getFrequencyError();
   }
   else
   {
@@ -308,9 +310,23 @@ uint8_t Radio::listen()
     respLen = l->getPacketLength();
     respFrame = new uint8_t[respLen];
     state = l->readData(respFrame, respLen);
-    status.lastPacketInfo.rssi = l->getRSSI();
-    status.lastPacketInfo.snr = l->getSNR();
+    newPacketInfo.rssi = l->getRSSI();
+    newPacketInfo.snr = l->getSNR();
   }
+
+  // check if the packet info is exactly the same as the last one
+  if (newPacketInfo.rssi == status.lastPacketInfo.rssi &&
+      newPacketInfo.snr == status.lastPacketInfo.snr &&
+      newPacketInfo.frequencyerror == status.lastPacketInfo.frequencyerror)
+  {
+    Log::console(PSTR("Interrupt triggered but no new data available. Check wiring and electrical interferences."));
+    delete[] respFrame;
+    return 4;
+  }
+
+  status.lastPacketInfo.rssi = newPacketInfo.rssi;
+  status.lastPacketInfo.snr = newPacketInfo.snr;
+  status.lastPacketInfo.frequencyerror = newPacketInfo.frequencyerror;
 
   if (state == ERR_NONE)
   {
