@@ -447,10 +447,7 @@ void ConfigManager::configSavedCallback()
   }
 
   parseAdvancedConf();
-  MQTT_Client& mqtt = MQTT_Client::getInstance();
-
-  if (mqtt.connected()) // already running and connected
-    mqtt.sendWelcome();
+  MQTT_Client::getInstance().scheduleRestart();
   
   if (Radio::getInstance().isReady())
     Radio::getInstance().begin();

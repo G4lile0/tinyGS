@@ -71,6 +71,7 @@ public:
   void sendRx(String packet, bool noisy);
   void manageMQTTData(char *topic, uint8_t *payload, unsigned int length);
   void sendStatus();
+  void scheduleRestart() { scheduledRestart = true; };
 
 protected:
 #ifdef SECURE_MQTT
@@ -90,6 +91,7 @@ private:
   unsigned long lastPing = 0;
   unsigned long lastConnectionAtempt = 0;
   uint8_t connectionAtempts = 0;
+  bool scheduledRestart = false;
 
   const unsigned long pingInterval = 1 * 60 * 1000;
   const unsigned long reconnectionInterval = 5 * 1000;

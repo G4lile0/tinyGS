@@ -61,7 +61,10 @@ void MQTT_Client::loop() {
   if (now - lastPing > pingInterval && connected())
   {
     lastPing = now;
-    publish(buildTopic(teleTopic, topicPing).c_str(), "1");
+    if (scheduledRestart)
+      sendWelcome();
+    else
+      publish(buildTopic(teleTopic, topicPing).c_str(), "1");
   }
 }
 
@@ -104,6 +107,7 @@ void MQTT_Client::subscribeToAll() {
 
 void MQTT_Client::sendWelcome()
 {
+  scheduledRestart = false;
   ConfigManager& configManager = ConfigManager::getInstance();
   time_t now;
   time(&now);
