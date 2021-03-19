@@ -376,6 +376,7 @@ boolean ConfigManager::init()
   if (strlen(advancedConfig))
     parseAdvancedConf();
 
+  strcpy(savedThingName, this->getThingName());
   return validConfig;
 }
 
@@ -439,6 +440,12 @@ void ConfigManager::printConfig()
 
 void ConfigManager::configSavedCallback()
 {
+  // If the station name changes we have to restart as it is considered a different station
+  if (strcmp(getThingName(), savedThingName))
+  {
+    ESP.restart();
+  }
+
   parseAdvancedConf();
   MQTT_Client& mqtt = MQTT_Client::getInstance();
 

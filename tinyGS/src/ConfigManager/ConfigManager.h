@@ -202,6 +202,7 @@ private:
   GSConfigHtmlFormatProvider gsConfigHtmlFormatProvider;
   board_type boards[NUM_BOARDS]; 
   AdvancedConfig advancedConf;
+  char savedThingName[IOTWEBCONF_WORD_LEN] = "";
 
   char latitude[COORDINATE_LENGTH] = "";
   char longitude[COORDINATE_LENGTH] = "";
