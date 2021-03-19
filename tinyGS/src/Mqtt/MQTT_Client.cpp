@@ -294,7 +294,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     result = 0;
   }
 
-  if (!strcmp(command, commandRemoteTune))
+  if (!strcmp(command, commandRemotetelemetry3rd))
   {
     if (length < 1) return;
     ConfigManager& configManager = ConfigManager::getInstance();
