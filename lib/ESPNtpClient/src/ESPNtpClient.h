@@ -1,7 +1,7 @@
 /**
   * @file ESPNtpClient.h
-  * @version 0.2.3
-  * @date 14/02/2021
+  * @version 0.2.5
+  * @date 16/03/2021
   * @author German Martin
   * @brief Library to get system sync from a NTP server with microseconds accuracy in ESP8266 and ESP32
   */
@@ -44,31 +44,47 @@ constexpr auto DEFAULT_NTP_SERVER = "pool.ntp.org"; ///< @brief Default internat
 constexpr auto DEFAULT_NTP_PORT = 123; ///< @brief Default local udp port. Select a different one if neccesary (usually not needed)
 constexpr auto DEFAULT_NTP_INTERVAL = 1800; ///< @brief Default sync interval 30 minutes
 constexpr auto DEFAULT_NTP_SHORTINTERVAL = 15; ///< @brief Sync interval when sync has not been achieved. 15 seconds
-constexpr auto FAST_NTP_SYNCNTERVAL = 2000; ///< @brief Sync interval when sync has not reached required accuracy in ms
-constexpr auto DEFAULT_NTP_TIMEOUT = 1500; ///< @brief Default NTP timeout ms
-constexpr auto MIN_NTP_TIMEOUT = 100; ///< @brief Minumum admisible ntp timeout in ms
-constexpr auto MIN_NTP_INTERVAL = 5; ///< @brief Minumum NTP request interval in seconds
+constexpr auto DEFAULT_NTP_TIMEOUT = 5000; ///< @brief Default NTP timeout ms
+//constexpr auto FAST_NTP_SYNCNTERVAL = DEFAULT_NTP_TIMEOUT * 1.1; ///< @brief Sync interval when sync has not reached required accuracy in ms
+constexpr auto MIN_NTP_TIMEOUT = 250; ///< @brief Minumum admisible ntp timeout in ms
+constexpr auto MIN_NTP_INTERVAL = 10; ///< @brief Minumum NTP request interval in seconds
 constexpr auto DEFAULT_MIN_SYNC_ACCURACY_US = 5000; ///< @brief Minimum sync accuracy in us
 constexpr auto DEFAULT_MAX_RESYNC_RETRY = 3; ///< @brief Maximum number of sync retrials if offset is above accuravy
+constexpr auto DEAULT_NUM_TIMEOUTS = 3; ///< @brief After this number of timeouts there is no more continiuos
 #ifdef ESP8266
 constexpr auto ESP8266_LOOP_TASK_INTERVAL = 500; ///< @brief Loop task period on ESP8266
 constexpr auto ESP8266_RECEIVER_TASK_INTERVAL = 100; ///< @brief Receiver task period on ESP8266
 #endif // ESP8266
 constexpr auto DEFAULT_TIME_SYNC_THRESHOLD = 2500; ///< @brief If calculated offset is less than this in us clock will not be corrected
-constexpr auto DEFAULT_NUM_OFFSET_AVE_ROUNDS = 3; ///< @brief Number of NTP request and response rounds to calculate offset average
+constexpr auto DEFAULT_NUM_OFFSET_AVE_ROUNDS = 1; ///< @brief Number of NTP request and response rounds to calculate offset average
+constexpr auto MAX_OFFSET_AVERAGE_ROUNDS = 5; ///< @brief Maximum number of NTP request for offset average calculation
 
 constexpr auto TZNAME_LENGTH = 60; ///< @brief Max TZ name description length
 constexpr auto SERVER_NAME_LENGTH = 40; ///< @brief Max server name (FQDN) length
 constexpr auto NTP_PACKET_SIZE = 48; ///< @brief NTP time is in the first 48 bytes of message
 
 /* Useful Constants */
+#ifndef SECS_PER_MIN
 constexpr auto SECS_PER_MIN = ((time_t)(60UL));
+#endif
+#ifndef SECS_PER_HOUR
 constexpr auto SECS_PER_HOUR = ((time_t)(3600UL));
+#endif
+#ifndef SECS_PER_DAY
 constexpr auto SECS_PER_DAY = ((time_t)(SECS_PER_HOUR * 24UL));
+#endif
+#ifndef DAYS_PER_WEEK
 constexpr auto DAYS_PER_WEEK = ((time_t)(7UL));
+#endif
+#ifndef SECS_PER_WEEK
 constexpr auto SECS_PER_WEEK = ((time_t)(SECS_PER_DAY * DAYS_PER_WEEK));
+#endif
+#ifndef SECS_PER_YEAR
 constexpr auto SECS_PER_YEAR = ((time_t)(SECS_PER_DAY * 365UL));
+#endif
+#ifndef SECS_YR_2000
 constexpr auto SECS_YR_2000 = ((time_t)(946684800UL)); ///< @brief The time at the start of y2k
+#endif
 
 #ifdef ESP32
 #include <WiFi.h>
@@ -236,19 +252,20 @@ protected:
     unsigned int actualInterval = DEFAULT_NTP_SHORTINTERVAL * 1000; ///< @brief Currently selected interval
     onSyncEvent_t onSyncEvent;      ///< @brief Event handler callback
     uint16_t ntpTimeout = DEFAULT_NTP_TIMEOUT;                      ///< @brief Response timeout for NTP requests
-    long minSyncAccuracyUs = DEFAULT_MIN_SYNC_ACCURACY_US;          ///< @brief Timeout configuration to wait for NTP response
+    long minSyncAccuracyUs = DEFAULT_MIN_SYNC_ACCURACY_US;          ///< @brief DEfault minimum offset value to consider a good sync
     uint maxNumSyncRetry = DEFAULT_MAX_RESYNC_RETRY;                ///< @brief Number of resync repetitions if minimum accuracy has not been reached
     uint numSyncRetry;              ///< @brief Current resync repetition
     uint maxDispersionErrors = DEFAULT_MAX_RESYNC_RETRY;            ///< @brief Number of resync repetitions if server has a dispersion value bigger than offset absolute value
     uint numDispersionErrors;
     long timeSyncThreshold = DEFAULT_TIME_SYNC_THRESHOLD;           ///< @brief If calculated offset is below this threshold it will not be applied. 
                                                                     //            This is to avoid continious innecesary glitches in clock
+    uint numTimeouts = 0;           ///< @brief After this number of timeout responses ntp sync time is increased
     NTPStatus_t status = unsyncd;   ///< @brief Sync status
     char ntpServerName[SERVER_NAME_LENGTH];                         ///< @brief  of NTP server on Internet or LAN
     IPAddress ntpServerIPAddress;   ///< @brief  IP address of NTP server on Internet or LAN
 public:
 #ifdef ESP32
-    bool terminateTasks = false;
+    //bool terminateTasks = false;
     TaskHandle_t loopHandle = NULL;                                 ///< @brief TimeSync loop task handle
     TaskHandle_t receiverHandle = NULL;                             ///< @brief NTP response receiver task handle
 #else
@@ -367,7 +384,16 @@ public:
       */
     void stop (){
 #ifdef ESP32
-        terminateTasks = true;
+        if (loopHandle) {
+            vTaskDelete (loopHandle);
+            //DEBUGLOGI ("Loop task handle deleted");
+            loopHandle = NULL;
+        }
+        if (receiverHandle) {
+            vTaskDelete (receiverHandle);
+            //DEBUGLOGI ("Receiver task handle deleted");
+            receiverHandle = NULL;
+        }
 #else
         loopTimer.detach ();
         receiverTimer.detach ();
@@ -715,6 +741,27 @@ public:
      */
     char* ntpEvent2str (NTPEvent_t e);
 
+    /**
+     * @brief Sets the number of sync attempts to calculate average offset
+     * @param rounds Number of average rounds 1.. MAX_OFFSET_AVERAGE_ROUNDS
+     */
+    void setnumAveRounds (int rounds) {
+        if (rounds < 1) {
+            numAveRounds = 1;
+        } else if (rounds > MAX_OFFSET_AVERAGE_ROUNDS) {
+            numAveRounds = MAX_OFFSET_AVERAGE_ROUNDS;
+        } else {
+            numAveRounds = rounds;
+        }
+    }
+
+    /**
+     * @brief Gets the number of sync attempts to calculate average offset
+     * @return Number of average rounds 1.. MAX_OFFSET_AVERAGE_ROUNDS
+     */
+    uint getnumAveRounds () {
+        return numAveRounds;
+    }
     
 };
 

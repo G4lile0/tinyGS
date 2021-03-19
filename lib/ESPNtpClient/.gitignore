@@ -8,3 +8,4 @@ include/
 lib/
 test/
 examples/WifiConfig.h
+examples/advancedExample/WifiConfig.h

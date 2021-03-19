@@ -23,7 +23,7 @@
   <td id="projectlogo"><img alt="Logo" src="ESPNTPClient-logo.png"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">ESPNtpClient
-   &#160;<span id="projectnumber">0.2.3</span>
+   &#160;<span id="projectnumber">0.2.5</span>
    </div>
    <div id="projectbrief">Library to get system sync from a NTP server with microseconds accuracy in ESP8266 and ESP32</div>
   </td>
@@ -140,16 +140,13 @@ Variables</h2></td></tr>
 <tr class="memitem:ad3134748c38f78387e2bedf441049c0c"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ESPNtpClient_8h.html#ad3134748c38f78387e2bedf441049c0c">DEFAULT_NTP_SHORTINTERVAL</a> = 15</td></tr>
 <tr class="memdesc:ad3134748c38f78387e2bedf441049c0c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sync interval when sync has not been achieved. 15 seconds.  <a href="ESPNtpClient_8h.html#ad3134748c38f78387e2bedf441049c0c">More...</a><br /></td></tr>
 <tr class="separator:ad3134748c38f78387e2bedf441049c0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a47dfdf92e081ffd69ae4e81378bca43a"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ESPNtpClient_8h.html#a47dfdf92e081ffd69ae4e81378bca43a">FAST_NTP_SYNCNTERVAL</a> = 2000</td></tr>
-<tr class="memdesc:a47dfdf92e081ffd69ae4e81378bca43a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sync interval when sync has not reached required accuracy in ms.  <a href="ESPNtpClient_8h.html#a47dfdf92e081ffd69ae4e81378bca43a">More...</a><br /></td></tr>
-<tr class="separator:a47dfdf92e081ffd69ae4e81378bca43a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1d7c99136a726e79cfefc05b9bb8ec1c"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ESPNtpClient_8h.html#a1d7c99136a726e79cfefc05b9bb8ec1c">DEFAULT_NTP_TIMEOUT</a> = 1500</td></tr>
+<tr class="memitem:a1d7c99136a726e79cfefc05b9bb8ec1c"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ESPNtpClient_8h.html#a1d7c99136a726e79cfefc05b9bb8ec1c">DEFAULT_NTP_TIMEOUT</a> = 5000</td></tr>
 <tr class="memdesc:a1d7c99136a726e79cfefc05b9bb8ec1c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default NTP timeout ms.  <a href="ESPNtpClient_8h.html#a1d7c99136a726e79cfefc05b9bb8ec1c">More...</a><br /></td></tr>
 <tr class="separator:a1d7c99136a726e79cfefc05b9bb8ec1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4225ca4c9809b1c8090f94eec14785e4"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ESPNtpClient_8h.html#a4225ca4c9809b1c8090f94eec14785e4">MIN_NTP_TIMEOUT</a> = 100</td></tr>
+<tr class="memitem:a4225ca4c9809b1c8090f94eec14785e4"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ESPNtpClient_8h.html#a4225ca4c9809b1c8090f94eec14785e4">MIN_NTP_TIMEOUT</a> = 250</td></tr>
 <tr class="memdesc:a4225ca4c9809b1c8090f94eec14785e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Minumum admisible ntp timeout in ms.  <a href="ESPNtpClient_8h.html#a4225ca4c9809b1c8090f94eec14785e4">More...</a><br /></td></tr>
 <tr class="separator:a4225ca4c9809b1c8090f94eec14785e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac6b173ed97582fa3df0b764c9fcf1456"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ESPNtpClient_8h.html#ac6b173ed97582fa3df0b764c9fcf1456">MIN_NTP_INTERVAL</a> = 5</td></tr>
+<tr class="memitem:ac6b173ed97582fa3df0b764c9fcf1456"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ESPNtpClient_8h.html#ac6b173ed97582fa3df0b764c9fcf1456">MIN_NTP_INTERVAL</a> = 10</td></tr>
 <tr class="memdesc:ac6b173ed97582fa3df0b764c9fcf1456"><td class="mdescLeft">&#160;</td><td class="mdescRight">Minumum NTP request interval in seconds.  <a href="ESPNtpClient_8h.html#ac6b173ed97582fa3df0b764c9fcf1456">More...</a><br /></td></tr>
 <tr class="separator:ac6b173ed97582fa3df0b764c9fcf1456"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a45f7103ef6735228c626dc9a8547f273"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ESPNtpClient_8h.html#a45f7103ef6735228c626dc9a8547f273">DEFAULT_MIN_SYNC_ACCURACY_US</a> = 5000</td></tr>
@@ -158,12 +155,18 @@ Variables</h2></td></tr>
 <tr class="memitem:ace41d9ce5500c6f7b41791baafda4f1d"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ESPNtpClient_8h.html#ace41d9ce5500c6f7b41791baafda4f1d">DEFAULT_MAX_RESYNC_RETRY</a> = 3</td></tr>
 <tr class="memdesc:ace41d9ce5500c6f7b41791baafda4f1d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum number of sync retrials if offset is above accuravy.  <a href="ESPNtpClient_8h.html#ace41d9ce5500c6f7b41791baafda4f1d">More...</a><br /></td></tr>
 <tr class="separator:ace41d9ce5500c6f7b41791baafda4f1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ef619f5c28bab05c76dc2f335e0923b"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ESPNtpClient_8h.html#a4ef619f5c28bab05c76dc2f335e0923b">DEAULT_NUM_TIMEOUTS</a> = 3</td></tr>
+<tr class="memdesc:a4ef619f5c28bab05c76dc2f335e0923b"><td class="mdescLeft">&#160;</td><td class="mdescRight">After this number of timeouts there is no more continiuos.  <a href="ESPNtpClient_8h.html#a4ef619f5c28bab05c76dc2f335e0923b">More...</a><br /></td></tr>
+<tr class="separator:a4ef619f5c28bab05c76dc2f335e0923b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a50b774c40020beee294a92ec525c8aa2"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ESPNtpClient_8h.html#a50b774c40020beee294a92ec525c8aa2">DEFAULT_TIME_SYNC_THRESHOLD</a> = 2500</td></tr>
 <tr class="memdesc:a50b774c40020beee294a92ec525c8aa2"><td class="mdescLeft">&#160;</td><td class="mdescRight">If calculated offset is less than this in us clock will not be corrected.  <a href="ESPNtpClient_8h.html#a50b774c40020beee294a92ec525c8aa2">More...</a><br /></td></tr>
 <tr class="separator:a50b774c40020beee294a92ec525c8aa2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf5fd69598c8c7f555db31dd04a45ae8"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ESPNtpClient_8h.html#acf5fd69598c8c7f555db31dd04a45ae8">DEFAULT_NUM_OFFSET_AVE_ROUNDS</a> = 3</td></tr>
+<tr class="memitem:acf5fd69598c8c7f555db31dd04a45ae8"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ESPNtpClient_8h.html#acf5fd69598c8c7f555db31dd04a45ae8">DEFAULT_NUM_OFFSET_AVE_ROUNDS</a> = 1</td></tr>
 <tr class="memdesc:acf5fd69598c8c7f555db31dd04a45ae8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of NTP request and response rounds to calculate offset average.  <a href="ESPNtpClient_8h.html#acf5fd69598c8c7f555db31dd04a45ae8">More...</a><br /></td></tr>
 <tr class="separator:acf5fd69598c8c7f555db31dd04a45ae8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aef0c55f99427089b497d711c1f356f6a"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ESPNtpClient_8h.html#aef0c55f99427089b497d711c1f356f6a">MAX_OFFSET_AVERAGE_ROUNDS</a> = 5</td></tr>
+<tr class="memdesc:aef0c55f99427089b497d711c1f356f6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum number of NTP request for offset average calculation.  <a href="ESPNtpClient_8h.html#aef0c55f99427089b497d711c1f356f6a">More...</a><br /></td></tr>
+<tr class="separator:aef0c55f99427089b497d711c1f356f6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6686880144c9ae5f8976db520efdc40a"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="ESPNtpClient_8h.html#a6686880144c9ae5f8976db520efdc40a">TZNAME_LENGTH</a> = 60</td></tr>
 <tr class="memdesc:a6686880144c9ae5f8976db520efdc40a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Max TZ name description length.  <a href="ESPNtpClient_8h.html#a6686880144c9ae5f8976db520efdc40a">More...</a><br /></td></tr>
 <tr class="separator:a6686880144c9ae5f8976db520efdc40a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -197,8 +200,8 @@ Variables</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Library to get system sync from a NTP server with microseconds accuracy in ESP8266 and ESP32. </p>
-<dl class="section version"><dt>Version</dt><dd>0.2.3 </dd></dl>
-<dl class="section date"><dt>Date</dt><dd>14/02/2021 </dd></dl>
+<dl class="section version"><dt>Version</dt><dd>0.2.5 </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>16/03/2021 </dd></dl>
 <dl class="section author"><dt>Author</dt><dd>German Martin </dd></dl>
 
 <p class="definition">Definition in file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
@@ -233,7 +236,7 @@ Variables</h2></td></tr>
 
 <p>Event notifier callback. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00219">219</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00235">235</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -257,7 +260,7 @@ Variables</h2></td></tr>
 <tr><td class="fieldname"><a id="aeb8b025505183f78dd68c428f897f549a87d93fd5a314e0cddfeb7c1d34522b93"></a>partialSync&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00085">85</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00101">101</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -282,7 +285,33 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00068">68</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00077">77</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+
+</div>
+</div>
+<a id="a4ef619f5c28bab05c76dc2f335e0923b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ef619f5c28bab05c76dc2f335e0923b">&#9670;&nbsp;</a></span>DEAULT_NUM_TIMEOUTS</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr auto DEAULT_NUM_TIMEOUTS = 3</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>After this number of timeouts there is no more continiuos. </p>
+
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00053">53</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -452,7 +481,7 @@ Variables</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr auto DEFAULT_NTP_TIMEOUT = 1500</td>
+          <td class="memname">constexpr auto DEFAULT_NTP_TIMEOUT = 5000</td>
         </tr>
       </table>
   </td>
@@ -464,7 +493,7 @@ Variables</h2></td></tr>
 
 <p>Default NTP timeout ms. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00048">48</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00047">47</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -478,7 +507,7 @@ Variables</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr auto DEFAULT_NUM_OFFSET_AVE_ROUNDS = 3</td>
+          <td class="memname">constexpr auto DEFAULT_NUM_OFFSET_AVE_ROUNDS = 1</td>
         </tr>
       </table>
   </td>
@@ -490,7 +519,7 @@ Variables</h2></td></tr>
 
 <p>Number of NTP request and response rounds to calculate offset average. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00058">58</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00059">59</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -516,12 +545,12 @@ Variables</h2></td></tr>
 
 <p>If calculated offset is less than this in us clock will not be corrected. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00057">57</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00058">58</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
-<a id="a47dfdf92e081ffd69ae4e81378bca43a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a47dfdf92e081ffd69ae4e81378bca43a">&#9670;&nbsp;</a></span>FAST_NTP_SYNCNTERVAL</h2>
+<a id="aef0c55f99427089b497d711c1f356f6a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aef0c55f99427089b497d711c1f356f6a">&#9670;&nbsp;</a></span>MAX_OFFSET_AVERAGE_ROUNDS</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -530,7 +559,7 @@ Variables</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr auto FAST_NTP_SYNCNTERVAL = 2000</td>
+          <td class="memname">constexpr auto MAX_OFFSET_AVERAGE_ROUNDS = 5</td>
         </tr>
       </table>
   </td>
@@ -540,9 +569,9 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Sync interval when sync has not reached required accuracy in ms. </p>
+<p>Maximum number of NTP request for offset average calculation. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00047">47</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00060">60</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -556,7 +585,7 @@ Variables</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr auto MIN_NTP_INTERVAL = 5</td>
+          <td class="memname">constexpr auto MIN_NTP_INTERVAL = 10</td>
         </tr>
       </table>
   </td>
@@ -582,7 +611,7 @@ Variables</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr auto MIN_NTP_TIMEOUT = 100</td>
+          <td class="memname">constexpr auto MIN_NTP_TIMEOUT = 250</td>
         </tr>
       </table>
   </td>
@@ -620,7 +649,7 @@ Variables</h2></td></tr>
 
 <p>Singleton <a class="el" href="classNTPClient.html" title="NTPClient class.">NTPClient</a> instance. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8cpp_source.html#l00072">72</a> of file <a class="el" href="ESPNtpClient_8cpp_source.html">ESPNtpClient.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8cpp_source.html#l00101">101</a> of file <a class="el" href="ESPNtpClient_8cpp_source.html">ESPNtpClient.cpp</a>.</p>
 
 </div>
 </div>
@@ -646,7 +675,7 @@ Variables</h2></td></tr>
 
 <p>NTP time is in the first 48 bytes of message. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00062">62</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00064">64</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -670,7 +699,7 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00067">67</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00074">74</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -694,7 +723,7 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00066">66</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00071">71</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -718,7 +747,7 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00065">65</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00068">68</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -742,7 +771,7 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00069">69</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00080">80</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -766,7 +795,7 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00070">70</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00083">83</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -792,7 +821,7 @@ Variables</h2></td></tr>
 
 <p>The time at the start of y2k. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00071">71</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00086">86</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -818,7 +847,7 @@ Variables</h2></td></tr>
 
 <p>Max server name (FQDN) length. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00061">61</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00063">63</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -844,7 +873,7 @@ Variables</h2></td></tr>
 
 <p>Temporary buffer for time and date strings. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00221">221</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00237">237</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -870,7 +899,7 @@ Variables</h2></td></tr>
 
 <p>Max TZ name description length. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00060">60</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00062">62</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>

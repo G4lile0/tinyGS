@@ -23,7 +23,7 @@
   <td id="projectlogo"><img alt="Logo" src="ESPNTPClient-logo.png"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">ESPNtpClient
-   &#160;<span id="projectnumber">0.2.3</span>
+   &#160;<span id="projectnumber">0.2.5</span>
    </div>
    <div id="projectbrief">Library to get system sync from a NTP server with microseconds accuracy in ESP8266 and ESP32</div>
   </td>
@@ -122,7 +122,7 @@ Public Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>NTP packet structure. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00129">129</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00145">145</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
 <a id="a203d167320b5f457eaad4c5c2287a601"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a203d167320b5f457eaad4c5c2287a601">&#9670;&nbsp;</a></span>clockPrecission</h2>
@@ -139,7 +139,7 @@ Public Attributes</h2></td></tr>
 <p>8-bit signed integer representing the precision of the system clock, in log2 seconds </p>
 <p>For instance, a value of -18 corresponds to a precision of about one microsecond. The precision can be determined when the service first starts up as the minimum time of several iterations to read the system clock </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00162">162</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00178">178</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -157,7 +157,7 @@ Public Attributes</h2></td></tr>
 
 <p>Time at the client when the reply arrived from the server, in NTP timestamp format. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00216">216</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00232">232</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -175,7 +175,7 @@ Public Attributes</h2></td></tr>
 
 <p>Total dispersion to the reference clock. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00166">166</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00182">182</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -193,7 +193,7 @@ Public Attributes</h2></td></tr>
 
 <p>NTP packet flags as <a class="el" href="structNTPFlags__t.html" title="Flags in NTP packet.">NTPFlags_t</a>. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00131">131</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00147">147</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -211,7 +211,7 @@ Public Attributes</h2></td></tr>
 
 <p>Time at the client when the request departed for the server. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00213">213</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00229">229</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -243,7 +243,7 @@ Public Attributes</h2></td></tr>
 <td class="markdownTableBodyCenter">17-255  </td><td class="markdownTableBodyNone">reserved   </td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00144">144</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00160">160</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -262,7 +262,7 @@ Public Attributes</h2></td></tr>
 <p>Maximum interval between successive messages, in seconds. </p>
 <p>Calculated from 8-bit signed integer representing log2 value. Suggested default limits for minimum and maximum poll intervals are 6 and 10, what represent 64 to 1024 seconds, respectively </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00152">152</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00168">168</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -280,7 +280,7 @@ Public Attributes</h2></td></tr>
 
 <p>Time at the server when the request arrived from the client. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00214">214</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00230">230</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -298,7 +298,7 @@ Public Attributes</h2></td></tr>
 
 <p>Time when the system clock was last set or corrected. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00212">212</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00228">228</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -361,7 +361,7 @@ Public Attributes</h2></td></tr>
 </table>
 <p>Above stratum 1 (secondary servers and clients): this is the reference identifier of the server and can be used to detect timing loops. If using the IPv4 address family, the identifier is the four-octet IPv4 address. If using the IPv6 address family, it is the first four octets of the MD5 hash of the IPv6 address. Note that, when using the IPv6 address family on an NTPv4 server with a NTPv3 client, the Reference Identifier field appears to be a random value and a timing loop might not be detected </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00210">210</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00226">226</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -379,7 +379,7 @@ Public Attributes</h2></td></tr>
 
 <p>Total round-trip delay to the reference clock. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00164">164</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00180">180</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -397,7 +397,7 @@ Public Attributes</h2></td></tr>
 
 <p>Time at the server when the response left for the client. </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00215">215</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00231">231</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
@@ -415,7 +415,7 @@ Public Attributes</h2></td></tr>
 
 <p>true if following data is valid </p>
 
-<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00130">130</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="ESPNtpClient_8h_source.html#l00146">146</a> of file <a class="el" href="ESPNtpClient_8h_source.html">ESPNtpClient.h</a>.</p>
 
 </div>
 </div>
