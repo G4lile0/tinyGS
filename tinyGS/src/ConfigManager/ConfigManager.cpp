@@ -200,30 +200,34 @@ void ConfigManager::handleRefreshConsole()
   String svalue = server.arg("c1");
   if (svalue.length()) {
     Log::console(PSTR("COMMAND: %s"), svalue.c_str());
-  //  Log::console(PSTR("%s"), F("The web console still doesn't support input commands. We are working on it!"));
-    // TODO: Execute command
 
     if (strcmp(svalue.c_str(), "p") == 0) {
-        if (!getAllowTx())
+      if (!getAllowTx())
+      {
+        Log::console(PSTR("Radio transmission is not allowed by config! Check your config on the web panel and make sure transmission is allowed by local regulations"));
+      }
+      else 
+      {
+        static long lastTestPacketTime = 0;
+        if (millis() - lastTestPacketTime < 20*1000)
         {
-          Log::console(PSTR("Radio transmission is not allowed by config! Check your config on the web panel and make sure transmission is allowed by local regulations"));
-           } else {
-
-                     static long lastTestPacketTime = 0;
-                     if (millis() - lastTestPacketTime < 20*1000)
-                 {
-                    Log::console(PSTR("Please wait a few seconds to send another test packet."));
-       
-                 } else {
-                        Radio::getInstance().sendTestPacket();
-                        lastTestPacketTime = millis();
-                        Log::console(PSTR("Sending test packet to nearby stations!"));
-                  }
-           }
-     }
-   else {
-          Log::console(PSTR("%s"), F("The web console still doesn't support input commands. We are working on it!"));
-         }
+          Log::console(PSTR("Please wait a few seconds to send another test packet."));
+        } 
+        else
+        {
+          Radio& radio = Radio::getInstance();
+          radio.disableInterrupt();
+          radio.sendTestPacket();
+          radio.enableInterrupt();
+          lastTestPacketTime = millis();
+          Log::console(PSTR("Sending test packet to nearby stations!"));
+        }
+      }
+    }
+    else 
+    {
+      Log::console(PSTR("%s"), F("Command still not supported in web serial console!"));
+    }
   }
 
 
