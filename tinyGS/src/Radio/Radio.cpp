@@ -200,7 +200,7 @@ int16_t Radio::begin()
   }
 
   // start listening for LoRa packets
-  Log::console(PSTR("[SX12x8] Starting to listen ... "));
+  Log::console(PSTR("[SX12x8] Starting to listen to %s"), m.satellite);
   if (board.L_SX127X)
     state = ((SX1278*)lora)->startReceive();
   else

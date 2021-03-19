@@ -332,12 +332,21 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     result = 0;
   }
 
-  if (!strcmp(command, commandStatus)) 
+  if (!strcmp(command, commandStatus))
   {
     uint8_t mode = payload[0] - '0';
     Log::debug(PSTR("Remote status requested: %u"), mode);     // right now just one mode
     sendStatus();
     return;
+  }
+
+  if (!strcmp(command, commandLog))
+  {
+    char logStr[length + 1];
+    memcpy(logStr, payload, length);
+    logStr[length] = '\0';
+    Log::console(PSTR("%s"), logStr);
+    return; // do not send ack for this one
   }
 
   // ######################################################
