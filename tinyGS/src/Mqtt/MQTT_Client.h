@@ -68,7 +68,7 @@ public:
   void begin();
   void loop();
   void sendWelcome();
-  void sendRx(String packet);
+  void sendRx(String packet, bool noisy);
   void manageMQTTData(char *topic, uint8_t *payload, unsigned int length);
   void sendStatus();
 

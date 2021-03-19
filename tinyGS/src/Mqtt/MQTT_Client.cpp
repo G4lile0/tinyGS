@@ -133,7 +133,7 @@ void MQTT_Client::sendWelcome()
   publish(buildTopic(teleTopic, topicWelcome).c_str(), buffer, false);
 }
 
-void  MQTT_Client::sendRx(String packet)
+void  MQTT_Client::sendRx(String packet, bool noisy)
 {
   ConfigManager& configManager = ConfigManager::getInstance();
   time_t now;
@@ -141,7 +141,7 @@ void  MQTT_Client::sendRx(String packet)
   struct timeval tv;
   gettimeofday(&tv, NULL);
 
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(21);
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(22);
   DynamicJsonDocument doc(capacity);
   JsonArray station_location = doc.createNestedArray("station_location");
   station_location.add(configManager.getLatitude());
@@ -173,6 +173,7 @@ void  MQTT_Client::sendRx(String packet)
   doc["data"] = packet.c_str();
   doc["NORAD"] = status.modeminfo.NORAD;
   doc["test"] = configManager.getTestMode();
+  doc["noisy"] = noisy;
 
   char buffer[1536];
   serializeJson(doc, buffer);

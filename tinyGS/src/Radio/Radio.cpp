@@ -25,6 +25,7 @@
 
 bool received = false;
 bool eInterrupt = true;
+bool noisyInterrupt = false;
 
 Radio::Radio()
 : spi(VSPI)
@@ -221,7 +222,10 @@ int16_t Radio::begin()
 
 void Radio::setFlag()
 {
-  if(!eInterrupt)
+  if (received || !eInterrupt)
+    noisyInterrupt = true;
+
+  if (!eInterrupt)
     return;
 
   received = true;
@@ -325,14 +329,14 @@ uint8_t Radio::listen()
   {
     status.lastPacketInfo.crc_error = false;
     String encoded = base64::encode(respFrame, respLen); 
-    MQTT_Client::getInstance().sendRx(encoded);
+    MQTT_Client::getInstance().sendRx(encoded, noisyInterrupt);
   }
   else if (state == ERR_CRC_MISMATCH) 
   {
     // packet was received, but is malformed
     status.lastPacketInfo.crc_error = true;
     String error_encoded = base64::encode("Error_CRC");
-    MQTT_Client::getInstance().sendRx(error_encoded);
+    MQTT_Client::getInstance().sendRx(error_encoded, noisyInterrupt);
   } 
 
   delete[] respFrame;
@@ -346,16 +350,15 @@ uint8_t Radio::listen()
   }
   else
   {
-      timeinfo = localtime (&currenttime);
     // store time of the last packet received:
-    String thisTime="";
+    timeinfo = localtime (&currenttime);
+    String thisTime = "";
     if (timeinfo->tm_hour < 10){ thisTime=thisTime + " ";} // add leading space if required
     thisTime = String (timeinfo->tm_hour) + ":";
     if (timeinfo->tm_min < 10) { thisTime = thisTime + "0"; } // add leading zero if required
     thisTime = thisTime + String (timeinfo->tm_min) + ":";
     if (timeinfo->tm_sec < 10) { thisTime = thisTime + "0"; } // add leading zero if required
     thisTime = thisTime + String (timeinfo->tm_sec);
-    // const char* newTime = (const char*) thisTime.c_str();
     
     status.lastPacketInfo.time = thisTime;
   }
@@ -370,6 +373,7 @@ uint8_t Radio::listen()
   else
     ((SX1268*)lora)->startReceive();
 
+  noisyInterrupt = false;
   // we're ready to receive more packets,
   // enable interrupt service routine
   enableInterrupt();
