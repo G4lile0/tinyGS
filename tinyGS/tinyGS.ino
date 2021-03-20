@@ -345,7 +345,7 @@ void switchTestmode()
   }
   else
   {
-      configManager.setTestMode(false);
+      configManager.setTestMode(true);
       Log::console(PSTR("Changed from normal mode to test mode"));
   }
 }
