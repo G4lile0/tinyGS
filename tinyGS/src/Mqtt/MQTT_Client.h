@@ -137,6 +137,7 @@ private:
   const char* commandRemoteTune PROGMEM= "remoteTune";
   const char* commandRemotetelemetry3rd PROGMEM= "telemetry3rd";
   const char* commandLog PROGMEM= "log";
+  const char* commandTx PROGMEM= "tx";
   // GOD MODE  With great power comes great responsibility!
   const char* commandSPIsetRegValue PROGMEM= "SPIsetRegValue";
   const char* commandSPIwriteRegister PROGMEM= "SPIwriteRegister";

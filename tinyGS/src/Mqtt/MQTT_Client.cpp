@@ -349,6 +349,11 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     return; // do not send ack for this one
   }
 
+  if (!strcmp(command, commandTx))
+  {
+    result = radio.sendTx(payload, length);
+  }
+
   // ######################################################
   // ############## Remote tune commands ##################
   // ######################################################
