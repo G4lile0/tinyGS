@@ -149,7 +149,7 @@ void  MQTT_Client::sendRx(String packet, bool noisy)
   struct timeval tv;
   gettimeofday(&tv, NULL);
 
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(22);
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(22) + 25;
   DynamicJsonDocument doc(capacity);
   JsonArray station_location = doc.createNestedArray("station_location");
   station_location.add(configManager.getLatitude());
@@ -196,7 +196,7 @@ void  MQTT_Client::sendStatus()
   time(&now);
   struct timeval tv;
   gettimeofday(&tv, NULL);
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(28);
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(28) + 25;
   DynamicJsonDocument doc(capacity);
   JsonArray station_location = doc.createNestedArray("station_location");
   station_location.add(configManager.getLatitude());
@@ -532,12 +532,11 @@ void MQTT_Client::remoteSatCmnd(char* payload, size_t payload_len)
 {
   DynamicJsonDocument doc(256);
   deserializeJson(doc, payload, payload_len);
-  String satellite = doc[0];
+  strcpy(status.modeminfo.satellite, doc[0]);
   uint32_t NORAD = doc[1];
   status.modeminfo.NORAD = NORAD;
-  status.modeminfo.satellite = satellite;
 
-  Log::debug(PSTR("Listening Satellite: %s NORAD: %u"), satellite, NORAD);
+  Log::debug(PSTR("Listening Satellite: %s NORAD: %u"), status.modeminfo.satellite, NORAD);
 }
 
 // Helper class to use as a callback

@@ -89,7 +89,7 @@ int16_t Radio::begin()
 
   ModemInfo& m = status.modeminfo;
   m.modem_mode = doc["mode"].as<String>();
-  m.satellite = doc["sat"].as<String>();
+  strcpy(m.satellite, doc["sat"].as<char*>());
   m.NORAD = doc["NORAD"];
 
   int16_t state = 0;
