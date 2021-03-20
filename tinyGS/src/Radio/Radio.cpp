@@ -248,6 +248,7 @@ int16_t Radio::sendTx(uint8_t* data, size_t length)
       Log::error(PSTR("TX disabled by config"));
       return -1;
   }
+  disableInterrupt();
 
   // send data
   int16_t state = 0;
@@ -266,6 +267,7 @@ int16_t Radio::sendTx(uint8_t* data, size_t length)
     l->startReceive();
   }
 
+  enableInterrupt();
   return state;
 }
 

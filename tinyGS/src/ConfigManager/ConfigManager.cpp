@@ -216,9 +216,7 @@ void ConfigManager::handleRefreshConsole()
         else
         {
           Radio& radio = Radio::getInstance();
-          radio.disableInterrupt();
           radio.sendTestPacket();
-          radio.enableInterrupt();
           lastTestPacketTime = millis();
           Log::console(PSTR("Sending test packet to nearby stations!"));
         }
