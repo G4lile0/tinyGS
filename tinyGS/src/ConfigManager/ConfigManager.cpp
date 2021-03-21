@@ -358,6 +358,13 @@ void ConfigManager::resetAllConfig()
   saveConfig();
 }
 
+void ConfigManager::resetModemConfig()
+{
+  strncpy(modemStartup, MODEM_DEFAULT, MODEM_LEN);
+  saveConfig();
+  ESP.restart();
+}
+
 boolean ConfigManager::init()
 {
   boolean validConfig = IotWebConf2::init();

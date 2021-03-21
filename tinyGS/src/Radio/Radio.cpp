@@ -42,7 +42,14 @@ void Radio::init()
   {
     size_t size = 512;
     DynamicJsonDocument doc(size);
-    deserializeJson(doc, ConfigManager::getInstance().getBoardTemplate());
+    DeserializationError error = deserializeJson(doc, ConfigManager::getInstance().getBoardTemplate());
+
+    if (error.code() != DeserializationError::Ok || doc.containsKey("aADDR"))
+    {
+      Log::console(PSTR("Error: Your Board template is not valid. Unable to init radio."));
+      return;
+    }
+
     board.OLED__address = doc["aADDR"];
     board.OLED__SDA = doc["oSDA"];
     board.OLED__SCL = doc["oSCL"];
@@ -85,7 +92,14 @@ int16_t Radio::begin()
   const char* modemConfig = ConfigManager::getInstance().getModemStartup();
   size_t size = JSON_ARRAY_SIZE(10) + 10*JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(15) + JSON_ARRAY_SIZE(8) + 60;
   DynamicJsonDocument doc(size);
-  deserializeJson(doc, modemConfig);
+  DeserializationError error = deserializeJson(doc, modemConfig);
+
+  if (error.code() != DeserializationError::Ok || !doc.containsKey("mode"))
+  {
+    Log::console(PSTR("ERROR: Your modem config is invalid. Resetting to default"));
+    ConfigManager::getInstance().resetModemConfig();
+    return -1;
+  }
 
   ModemInfo& m = status.modeminfo;
   m.modem_mode = doc["mode"].as<String>();

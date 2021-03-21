@@ -123,6 +123,7 @@ public:
   }
   void resetAPConfig();
   void resetAllConfig();
+  void resetModemConfig();
   boolean init();
   void printConfig();
 
