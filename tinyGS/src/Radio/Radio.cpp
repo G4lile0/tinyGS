@@ -35,16 +35,17 @@ Radio::Radio()
 
 void Radio::init()
 {
-  Log::console(PSTR("[SX12xx] Initializing ... "));
+Log::console(PSTR("[SX12xx] Initializing ... "));
   board_type board;
-  
+  bool useDefaultSPI = true;
+
   if (strlen(ConfigManager::getInstance().getBoardTemplate()) > 0)
   {
     size_t size = 512;
     DynamicJsonDocument doc(size);
     DeserializationError error = deserializeJson(doc, ConfigManager::getInstance().getBoardTemplate());
 
-    if (error.code() != DeserializationError::Ok || doc.containsKey("aADDR"))
+    if (error.code() != DeserializationError::Ok)
     {
       Log::console(PSTR("Error: Your Board template is not valid. Unable to init radio."));
       return;
@@ -57,30 +58,42 @@ void Radio::init()
     board.PROG__BUTTON = doc["pBut"];
     board.BOARD_LED = doc["led"];
     board.L_SX127X = doc["radio"];
-    board.L_NSS = doc["lNSS"];
     board.L_DI00 = doc["lDIO0"];
     board.L_DI01 = doc["lDIO1"];
     board.L_BUSSY = doc["lBUSSY"];
-    board.L_RST = doc["lRST"];
-    board.L_MISO = doc["lMISO"];
-    board.L_MOSI = doc["lMOSI"];
-    board.L_SCK = doc["lSCK"];
     board.L_TCXO_V = doc["lTCXOV"];
+    board.L_RST = doc["lRST"];
+    board.L_NSS = doc["lNSS"];
+
+    if (doc.containsKey("lMISO") && doc.containsKey("lMOSI") && doc.containsKey("lSCK"))
+    {
+      useDefaultSPI = false;
+      board.L_MISO = doc["lMISO"];
+      board.L_MOSI = doc["lMOSI"];
+      board.L_SCK = doc["lSCK"];
+    }
   }
   else
   {
     board = ConfigManager::getInstance().getBoardConfig();
   }
-   
-  spi.begin(board.L_SCK, board.L_MISO, board.L_MOSI, board.L_NSS);
+
+  if (!useDefaultSPI)
+  {
+    spi.begin(board.L_SCK, board.L_MISO, board.L_MOSI, board.L_NSS);
+  }
 
   if (board.L_SX127X)
   {
-    lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+    lora = !useDefaultSPI 
+      ? new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)))
+      : new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01));
   }
   else
   {
-    lora = new SX1268(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+    lora = !useDefaultSPI 
+      ? new SX1268(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)))
+      : new SX1268(new Module(board.L_NSS, board.L_DI00, board.L_DI01));
   }
 
   begin();
