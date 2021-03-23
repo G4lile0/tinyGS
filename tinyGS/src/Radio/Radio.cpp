@@ -946,16 +946,16 @@ int16_t Radio::remote_SPIsetRegValue(char* payload, size_t payload_len)
 
 double Radio::_atof(const char* buff, size_t length)
 {
-  char* str = new char[length+1];
+  char str[length+1];
   memcpy(str, buff, length);
-  str[length] = '\n';
+  str[length] = '\0';
   return atof(str);
 }
 
 int Radio::_atoi(const char* buff, size_t length)
 {
-  char* str = new char[length+1];
+  char str[length+1];
   memcpy(str, buff, length);
-  str[length] = '\n';
+  str[length] = '\0';
   return atoi(str);
 }
