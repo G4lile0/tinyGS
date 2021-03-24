@@ -65,6 +65,8 @@
 
 **************************************************************************/
 
+#define USE_NATIVE_NTP 1
+
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
 #else
@@ -77,7 +79,9 @@
 #include "src/Radio/Radio.h"
 #include "src/ArduinoOTA/ArduinoOTA.h"
 #include "src/OTA/OTA.h"
+#if !USE_NATIVE_NTP
 #include <ESPNtpClient.h>
+#endif // USE_NATIVE_NTP
 #include <FailSafe.h>
 #include "src/Logger/Logger.h"
 
@@ -113,6 +117,7 @@ Status status;
 void printControls();
 void switchTestmode();
 
+#if !USE_NATIVE_NTP
 void ntp_cb (NTPEvent_t e)
 {
   switch (e.event) {
@@ -125,6 +130,7 @@ void ntp_cb (NTPEvent_t e)
       break;
   }
 }
+#endif
 
 void displayUpdate_task (void* arg)
 {
@@ -135,6 +141,14 @@ void displayUpdate_task (void* arg)
 
 void wifiConnected()
 {
+#if USE_NATIVE_NTP
+    configTime (0, 0, ntpServer);
+    if (strcmp (configManager.getTZ (), "")) {
+        setenv ("TZ", configManager.getTZ (), 1);
+        Log::console ("Set timezone value as %s", configManager.getTZ ());
+        tzset ();
+    }
+#else
   NTP.setInterval (120); // Sync each 2 minutes
   NTP.setTimeZone (configManager.getTZ ()); // Get TX from config manager
   NTP.onNTPSyncEvent (ntp_cb); // Register event callback
@@ -142,14 +156,18 @@ void wifiConnected()
   NTP.settimeSyncThreshold (1000); // Sync only if calculated offset absolute value is greater than 1 ms
   NTP.setMaxNumSyncRetry (2); // 2 resync trials if accuracy not reached
   NTP.begin (ntpServer); // Start NTP client
+#endif
   Serial.printf ("NTP started");
   
+
+#if !USE_NATIVE_NTP
   time_t startedSync = millis ();
   while (NTP.syncStatus() != syncd && millis() - startedSync < 5000) // Wait 5 seconds to get sync
   {
     delay (100);
   }
-
+#endif
+  
   printLocalTime();
 
   configManager.printConfig();
