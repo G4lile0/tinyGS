@@ -247,7 +247,7 @@ void loop() {
   static bool wasConnected = false;
   if (!configManager.isConnected())
   {
-    if (configManager.isApMode() && wasConnected)
+    if (configManager.isApMode() && !wasConnected)
       displayShowApMode();
     else 
       displayShowStaMode(configManager.isApMode());
