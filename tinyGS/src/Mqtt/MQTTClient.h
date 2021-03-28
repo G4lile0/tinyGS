@@ -64,9 +64,10 @@ public:
   void begin();
   void loop();
   void sendWelcome();
-  void sendRx(String packet);
+  void sendRx(String packet, bool noisy);
   void manageMQTTData(char *topic, uint8_t *payload, unsigned int length);
   void sendStatus ();
+  void scheduleRestart () { scheduledRestart = true; };
   bool connected () {
       return mqtt_connected;
   }
@@ -91,6 +92,7 @@ private:
   unsigned long lastPing = 0;
   unsigned long lastConnectionAtempt = 0;
   uint8_t connectionAtempts = 0;
+  bool scheduledRestart = false;
 
   const unsigned long pingInterval = 1 * 60 * 1000;
   const unsigned long reconnectionInterval = 5 * 1000;
@@ -135,6 +137,8 @@ private:
   const char* commandTest PROGMEM= "test";
   const char* commandRemoteTune PROGMEM= "remoteTune";
   const char* commandRemotetelemetry3rd PROGMEM= "telemetry3rd";
+  const char* commandLog PROGMEM= "log";
+  const char* commandTx PROGMEM= "tx";
   // GOD MODE  With great power comes great responsibility!
   const char* commandSPIsetRegValue PROGMEM= "SPIsetRegValue";
   const char* commandSPIwriteRegister PROGMEM= "SPIwriteRegister";

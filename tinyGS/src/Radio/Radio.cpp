@@ -25,6 +25,7 @@
 
 bool received = false;
 bool eInterrupt = true;
+bool noisyInterrupt = false;
 
 Radio::Radio()
 : spi(VSPI)
@@ -41,7 +42,14 @@ void Radio::init()
   {
     size_t size = 512;
     DynamicJsonDocument doc(size);
-    deserializeJson(doc, ConfigManager::getInstance().getBoardTemplate());
+    DeserializationError error = deserializeJson(doc, ConfigManager::getInstance().getBoardTemplate());
+
+    if (error.code() != DeserializationError::Ok || doc.containsKey("aADDR"))
+    {
+      Log::console(PSTR("Error: Your Board template is not valid. Unable to init radio."));
+      return;
+    }
+
     board.OLED__address = doc["aADDR"];
     board.OLED__SDA = doc["oSDA"];
     board.OLED__SCL = doc["oSCL"];
@@ -84,11 +92,18 @@ int16_t Radio::begin()
   const char* modemConfig = ConfigManager::getInstance().getModemStartup();
   size_t size = JSON_ARRAY_SIZE(10) + 10*JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(15) + JSON_ARRAY_SIZE(8) + 60;
   DynamicJsonDocument doc(size);
-  deserializeJson(doc, modemConfig);
+  DeserializationError error = deserializeJson(doc, modemConfig);
+
+  if (error.code() != DeserializationError::Ok || !doc.containsKey("mode"))
+  {
+    Log::console(PSTR("ERROR: Your modem config is invalid. Resetting to default"));
+    ConfigManager::getInstance().resetModemConfig();
+    return -1;
+  }
 
   ModemInfo& m = status.modeminfo;
   m.modem_mode = doc["mode"].as<String>();
-  m.satellite = doc["sat"].as<String>();
+  strcpy(m.satellite, doc["sat"].as<char*>());
   m.NORAD = doc["NORAD"];
 
   int16_t state = 0;
@@ -199,7 +214,7 @@ int16_t Radio::begin()
   }
 
   // start listening for LoRa packets
-  Log::console(PSTR("[SX12x8] Starting to listen ... "));
+  Log::console(PSTR("[SX12x8] Starting to listen to %s"), m.satellite);
   if (board.L_SX127X)
     state = ((SX1278*)lora)->startReceive();
   else
@@ -221,7 +236,10 @@ int16_t Radio::begin()
 
 void Radio::setFlag()
 {
-  if(!eInterrupt)
+  if (received || !eInterrupt)
+    noisyInterrupt = true;
+
+  if (!eInterrupt)
     return;
 
   received = true;
@@ -244,6 +262,7 @@ int16_t Radio::sendTx(uint8_t* data, size_t length)
       Log::error(PSTR("TX disabled by config"));
       return -1;
   }
+  disableInterrupt();
 
   // send data
   int16_t state = 0;
@@ -262,6 +281,7 @@ int16_t Radio::sendTx(uint8_t* data, size_t length)
     l->startReceive();
   }
 
+  enableInterrupt();
   return state;
 }
 
@@ -286,6 +306,8 @@ uint8_t Radio::listen()
   size_t respLen = 0;
   uint8_t* respFrame = 0;
   int16_t state = 0;
+
+  PacketInfo newPacketInfo;
   status.lastPacketInfo.crc_error = 0;
   // read received data
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
@@ -294,9 +316,9 @@ uint8_t Radio::listen()
     respLen = l->getPacketLength();
     respFrame = new uint8_t[respLen];
     state = l->readData(respFrame, respLen);
-    status.lastPacketInfo.rssi = l->getRSSI();
-    status.lastPacketInfo.snr = l->getSNR();
-    status.lastPacketInfo.frequencyerror = l->getFrequencyError();
+    newPacketInfo.rssi = l->getRSSI();
+    newPacketInfo.snr = l->getSNR();
+    newPacketInfo.frequencyerror = l->getFrequencyError();
   }
   else
   {
@@ -304,11 +326,25 @@ uint8_t Radio::listen()
     respLen = l->getPacketLength();
     respFrame = new uint8_t[respLen];
     state = l->readData(respFrame, respLen);
-    status.lastPacketInfo.rssi = l->getRSSI();
-    status.lastPacketInfo.snr = l->getSNR();
+    newPacketInfo.rssi = l->getRSSI();
+    newPacketInfo.snr = l->getSNR();
   }
 
-  if ((respLen > 0) && !(state == ERR_CRC_MISMATCH))
+  // check if the packet info is exactly the same as the last one
+  if (newPacketInfo.rssi == status.lastPacketInfo.rssi &&
+      newPacketInfo.snr == status.lastPacketInfo.snr &&
+      newPacketInfo.frequencyerror == status.lastPacketInfo.frequencyerror)
+  {
+    Log::console(PSTR("Interrupt triggered but no new data available. Check wiring and electrical interferences."));
+    delete[] respFrame;
+    return 4;
+  }
+
+  status.lastPacketInfo.rssi = newPacketInfo.rssi;
+  status.lastPacketInfo.snr = newPacketInfo.snr;
+  status.lastPacketInfo.frequencyerror = newPacketInfo.frequencyerror;
+
+  if (state == ERR_NONE)
   {
     // read optional data
     Log::console(PSTR("Packet (%u bytes):"), respLen);
@@ -319,20 +355,17 @@ uint8_t Radio::listen()
     }
     Log::console(PSTR("%s"), byteStr);
     delete[] byteStr;
-  }
 
-  if (state == ERR_NONE)
-  {
     status.lastPacketInfo.crc_error = false;
     String encoded = base64::encode(respFrame, respLen); 
-    MQTT_Client::getInstance().sendRx(encoded);
+    MQTT_Client::getInstance().sendRx(encoded, noisyInterrupt);
   }
   else if (state == ERR_CRC_MISMATCH) 
   {
     // packet was received, but is malformed
     status.lastPacketInfo.crc_error = true;
     String error_encoded = base64::encode("Error_CRC");
-    MQTT_Client::getInstance().sendRx(error_encoded);
+    MQTT_Client::getInstance().sendRx(error_encoded, noisyInterrupt);
   } 
 
   delete[] respFrame;
@@ -346,16 +379,15 @@ uint8_t Radio::listen()
   }
   else
   {
-      timeinfo = localtime (&currenttime);
     // store time of the last packet received:
-    String thisTime="";
+    timeinfo = localtime (&currenttime);
+    String thisTime = "";
     if (timeinfo->tm_hour < 10){ thisTime=thisTime + " ";} // add leading space if required
     thisTime = String (timeinfo->tm_hour) + ":";
     if (timeinfo->tm_min < 10) { thisTime = thisTime + "0"; } // add leading zero if required
     thisTime = thisTime + String (timeinfo->tm_min) + ":";
     if (timeinfo->tm_sec < 10) { thisTime = thisTime + "0"; } // add leading zero if required
     thisTime = thisTime + String (timeinfo->tm_sec);
-    // const char* newTime = (const char*) thisTime.c_str();
     
     status.lastPacketInfo.time = thisTime;
   }
@@ -370,6 +402,7 @@ uint8_t Radio::listen()
   else
     ((SX1268*)lora)->startReceive();
 
+  noisyInterrupt = false;
   // we're ready to receive more packets,
   // enable interrupt service routine
   enableInterrupt();
@@ -381,7 +414,13 @@ uint8_t Radio::listen()
   else if (state == ERR_CRC_MISMATCH)
   {
     // packet was received, but is malformed
-    Log::console(PSTR("[SX12x8] CRC error!"));
+    Log::console(PSTR("[SX12x8] CRC error! Data cannot be retrieved"));
+    return 2;
+  }
+  else if (state == ERR_LORA_HEADER_DAMAGED)
+  {
+    // packet was received, but is malformed
+    Log::console(PSTR("[SX12x8] Damaged header! Data cannot be retrieved"));
     return 2;
   }
   else
@@ -907,16 +946,16 @@ int16_t Radio::remote_SPIsetRegValue(char* payload, size_t payload_len)
 
 double Radio::_atof(const char* buff, size_t length)
 {
-  char* str = new char[length+1];
+  char str[length+1];
   memcpy(str, buff, length);
-  str[length] = '\n';
+  str[length] = '\0';
   return atof(str);
 }
 
 int Radio::_atoi(const char* buff, size_t length)
 {
-  char* str = new char[length+1];
+  char str[length+1];
   memcpy(str, buff, length);
-  str[length] = '\n';
+  str[length] = '\0';
   return atoi(str);
 }

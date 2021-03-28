@@ -317,12 +317,14 @@ void displayShowApMode()
   display->display();
 }
 
-void displayShowStaMode()
+void displayShowStaMode(bool ap)
 {
   display->clear();
   display->drawXbm(34, 0 , WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
   display->drawString(64 , 35 , "Connecting " + String(ConfigManager::getInstance().getWiFiSSID()));
+  if (ap)
+    display->drawString(64 , 52 , "Config AP available");
   display->display();
 }
 

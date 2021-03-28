@@ -65,6 +65,8 @@
 
 **************************************************************************/
 
+#define USE_NATIVE_NTP 1
+
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
 #else
@@ -77,7 +79,9 @@
 #include "src/Radio/Radio.h"
 #include "src/ArduinoOTA/ArduinoOTA.h"
 #include "src/OTA/OTA.h"
+#if !USE_NATIVE_NTP
 #include <ESPNtpClient.h>
+#endif // USE_NATIVE_NTP
 #include <FailSafe.h>
 #include "src/Logger/Logger.h"
 
@@ -94,6 +98,9 @@
 #error "Seems you are using Arduino IDE, edit /RadioLib/src/BuildOpt.h and uncomment #define RADIOLIB_GODMODE around line 367" 
 #endif
 
+#ifndef UPDATE_DISPLAY_ON_TASK
+#define UPDATE_DISPLAY_ON_TASK 0
+#endif
 
 const int MAX_CONSECUTIVE_BOOT = 10; // Number of rapid boot cycles before enabling fail safe mode
 const time_t BOOT_FLAG_TIMEOUT = 10000; // Time in ms to reset fail safe mode activation flag
@@ -102,7 +109,9 @@ ConfigManager& configManager = ConfigManager::getInstance();
 MQTT_Client& mqtt = MQTT_Client::getInstance();
 Radio& radio = Radio::getInstance();
 
+#if UPDATE_DISPLAY_ON_TASK
 TaskHandle_t dispUpdate_handle;
+#endif
 
 const char* ntpServer = "time.cloudflare.com";
 void printLocalTime();
@@ -113,6 +122,7 @@ Status status;
 void printControls();
 void switchTestmode();
 
+#if !USE_NATIVE_NTP
 void ntp_cb (NTPEvent_t e)
 {
   switch (e.event) {
@@ -126,6 +136,7 @@ void ntp_cb (NTPEvent_t e)
       break;
   }
 }
+#endif
 
 void wifiEvent_cb (system_event_id_t event, system_event_info_t info) {
     static bool wasConnected = false;
@@ -188,16 +199,27 @@ void wifiEvent_cb (system_event_id_t event, system_event_info_t info) {
     }
 }
 
+
+#if UPDATE_DISPLAY_ON_TASK 
 void displayUpdate_task (void* arg)
 {
   for (;;){
       displayUpdate ();
   }
 }
+#endif
 
 void wifiConnected()
 {
-  NTP.setInterval (15, 120); // Sync each 2 minutes
+#if USE_NATIVE_NTP
+    configTime (0, 0, ntpServer);
+    if (strcmp (configManager.getTZ (), "")) {
+        setenv ("TZ", configManager.getTZ (), 1);
+        Log::console ("Set timezone value as %s", configManager.getTZ ());
+        tzset ();
+    }
+#else
+  NTP.setInterval (120); // Sync each 2 minutes
   NTP.setTimeZone (configManager.getTZ ()); // Get TX from config manager
   NTP.onNTPSyncEvent (ntp_cb); // Register event callback
   NTP.setMinSyncAccuracy (5000); // Sync accuracy target is 5 ms
@@ -205,14 +227,18 @@ void wifiConnected()
   NTP.setMaxNumSyncRetry (0); // no resync trials if accuracy not reached
   NTP.setNTPTimeout (5000); // Set response timeout to 5 seconds
   NTP.begin (ntpServer); // Start NTP client
-  Log::console (PSTR ("NTP started"));
+#endif
+  Serial.printf ("NTP started");
   
+
+#if !USE_NATIVE_NTP
   time_t startedSync = millis ();
   while (NTP.syncStatus() != syncd && millis() - startedSync < 5000) // Wait 5 seconds to get sync
   {
     delay (100);
   }
-
+#endif
+  
   printLocalTime();
 
   configManager.printConfig();
@@ -294,13 +320,15 @@ void setup()
   if (configManager.isApMode())
     displayShowApMode();
   else 
-    displayShowStaMode();
+    displayShowStaMode(false);
   
   delay(500);  
 }
 
-void loop() {
-  static bool startDisplayTask = true;
+void loop () {
+#if UPDATE_DISPLAY_ON_TASK
+    static bool startDisplayTask = true;
+#endif
     
   FailSafe.loop (BOOT_FLAG_TIMEOUT); // Use always this line
   if (FailSafe.isActive ()) // Skip all user loop code if Fail Safe mode is active
@@ -311,13 +339,11 @@ void loop() {
   static bool wasConnected = false;
   if (!configManager.isConnected())
   {
-    if (wasConnected)
-    {
-      if (configManager.isApMode())
-        displayShowApMode();
-      else 
-        displayShowStaMode();
-    }
+    if (configManager.isApMode() && !wasConnected)
+      displayShowApMode();
+    else 
+      displayShowStaMode(configManager.isApMode());
+
     return;
   }
   wasConnected = true;
@@ -385,6 +411,7 @@ void loop() {
     return;
   }
 
+#if UPDATE_DISPLAY_ON_TASK
   if (startDisplayTask)
   {
     startDisplayTask = false;
@@ -397,6 +424,11 @@ void loop() {
             &dispUpdate_handle,           // Task handle
             CONFIG_ARDUINO_RUNNING_CORE); // Running core, should be 1
   }
+#else
+  displayUpdate ();
+#endif 
+
+  
 
   radio.listen();
 }
@@ -410,7 +442,7 @@ void switchTestmode()
   }
   else
   {
-      configManager.setTestMode(false);
+      configManager.setTestMode(true);
       Log::console(PSTR("Changed from normal mode to test mode"));
   }
 }

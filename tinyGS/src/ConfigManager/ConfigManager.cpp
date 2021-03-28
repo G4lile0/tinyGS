@@ -200,30 +200,32 @@ void ConfigManager::handleRefreshConsole()
   String svalue = server.arg("c1");
   if (svalue.length()) {
     Log::console(PSTR("COMMAND: %s"), svalue.c_str());
-  //  Log::console(PSTR("%s"), F("The web console still doesn't support input commands. We are working on it!"));
-    // TODO: Execute command
 
     if (strcmp(svalue.c_str(), "p") == 0) {
-        if (!getAllowTx())
+      if (!getAllowTx())
+      {
+        Log::console(PSTR("Radio transmission is not allowed by config! Check your config on the web panel and make sure transmission is allowed by local regulations"));
+      }
+      else 
+      {
+        static long lastTestPacketTime = 0;
+        if (millis() - lastTestPacketTime < 20*1000)
         {
-          Log::console(PSTR("Radio transmission is not allowed by config! Check your config on the web panel and make sure transmission is allowed by local regulations"));
-           } else {
-
-                     static long lastTestPacketTime = 0;
-                     if (millis() - lastTestPacketTime < 20*1000)
-                 {
-                    Log::console(PSTR("Please wait a few seconds to send another test packet."));
-       
-                 } else {
-                        Radio::getInstance().sendTestPacket();
-                        lastTestPacketTime = millis();
-                        Log::console(PSTR("Sending test packet to nearby stations!"));
-                  }
-           }
-     }
-   else {
-          Log::console(PSTR("%s"), F("The web console still doesn't support input commands. We are working on it!"));
-         }
+          Log::console(PSTR("Please wait a few seconds to send another test packet."));
+        } 
+        else
+        {
+          Radio& radio = Radio::getInstance();
+          radio.sendTestPacket();
+          lastTestPacketTime = millis();
+          Log::console(PSTR("Sending test packet to nearby stations!"));
+        }
+      }
+    }
+    else 
+    {
+      Log::console(PSTR("%s"), F("Command still not supported in web serial console!"));
+    }
   }
 
 
@@ -356,6 +358,13 @@ void ConfigManager::resetAllConfig()
   saveConfig();
 }
 
+void ConfigManager::resetModemConfig()
+{
+  strncpy(modemStartup, MODEM_DEFAULT, MODEM_LEN);
+  saveConfig();
+  ESP.restart();
+}
+
 boolean ConfigManager::init()
 {
   boolean validConfig = IotWebConf2::init();
@@ -372,6 +381,7 @@ boolean ConfigManager::init()
   if (strlen(advancedConfig))
     parseAdvancedConf();
 
+  strcpy(savedThingName, this->getThingName());
   return validConfig;
 }
 
@@ -435,11 +445,14 @@ void ConfigManager::printConfig()
 
 void ConfigManager::configSavedCallback()
 {
-  parseAdvancedConf();
-  MQTT_Client& mqtt = MQTT_Client::getInstance();
+  // If the station name changes we have to restart as it is considered a different station
+  if (strcmp(getThingName(), savedThingName))
+  {
+    ESP.restart();
+  }
 
-  if (mqtt.connected()) // already running and connected
-    mqtt.sendWelcome();
+  parseAdvancedConf();
+  MQTT_Client::getInstance().scheduleRestart();
   
   if (Radio::getInstance().isReady())
     Radio::getInstance().begin();

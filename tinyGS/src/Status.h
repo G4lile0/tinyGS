@@ -33,7 +33,7 @@ struct PacketInfo {
 };
 
 struct ModemInfo {
-  String  satellite   = "Norbi";
+  char satellite[25]  = "Norbi";
   String  modem_mode  = "LoRa" ;     // 1-LoRa  2-FSK  3-GMSK
   float   frequency   = 436.703; // MHz  
   float   bw          = 250.0; // kHz dual sideban
@@ -61,7 +61,7 @@ struct TextFrame {
 };
 
 struct Status {
-  const uint32_t version = 2103031; // version year month day release
+  const uint32_t version = 2103210; // version year month day release
   const char* git_version = GIT_VERSION;
   bool mqtt_connected = false;
   PacketInfo lastPacketInfo;
