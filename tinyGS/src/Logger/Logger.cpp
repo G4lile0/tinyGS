@@ -30,7 +30,8 @@ void Log::console(const char* formatP, ...)
   va_start(arg, formatP);
   vsnprintf_P(buffer, sizeof(buffer), formatP, arg);
   va_end(arg);
-  AddLog(LOG_LEVEL_NONE, buffer);
+  AddLog (LOG_LEVEL_NONE, buffer);
+  log_e ("Mem: %d", ESP.getFreeHeap ());
 }
 
 void Log::error(const char* formatP, ...)
