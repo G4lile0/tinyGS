@@ -98,6 +98,9 @@
 #error "Seems you are using Arduino IDE, edit /RadioLib/src/BuildOpt.h and uncomment #define RADIOLIB_GODMODE around line 367" 
 #endif
 
+#ifndef UPDATE_DISPLAY_ON_TASK
+#define UPDATE_DISPLAY_ON_TASK 0
+#endif
 
 const int MAX_CONSECUTIVE_BOOT = 10; // Number of rapid boot cycles before enabling fail safe mode
 const time_t BOOT_FLAG_TIMEOUT = 10000; // Time in ms to reset fail safe mode activation flag
@@ -106,7 +109,9 @@ ConfigManager& configManager = ConfigManager::getInstance();
 MQTT_Client& mqtt = MQTT_Client::getInstance();
 Radio& radio = Radio::getInstance();
 
+#if UPDATE_DISPLAY_ON_TASK
 TaskHandle_t dispUpdate_handle;
+#endif
 
 const char* ntpServer = "time.cloudflare.com";
 void printLocalTime();
@@ -132,12 +137,14 @@ void ntp_cb (NTPEvent_t e)
 }
 #endif
 
+#if UPDATE_DISPLAY_ON_TASK 
 void displayUpdate_task (void* arg)
 {
   for (;;){
       displayUpdate ();
   }
 }
+#endif
 
 void wifiConnected()
 {
@@ -253,8 +260,10 @@ void setup()
   delay(500);  
 }
 
-void loop() {
-  static bool startDisplayTask = true;
+void loop () {
+#if UPDATE_DISPLAY_ON_TASK
+    static bool startDisplayTask = true;
+#endif
     
   FailSafe.loop (BOOT_FLAG_TIMEOUT); // Use always this line
   if (FailSafe.isActive ()) // Skip all user loop code if Fail Safe mode is active
@@ -337,6 +346,7 @@ void loop() {
     return;
   }
 
+#if UPDATE_DISPLAY_ON_TASK
   if (startDisplayTask)
   {
     startDisplayTask = false;
@@ -349,6 +359,11 @@ void loop() {
             &dispUpdate_handle,           // Task handle
             CONFIG_ARDUINO_RUNNING_CORE); // Running core, should be 1
   }
+#else
+  displayUpdate ();
+#endif 
+
+  
 
   radio.listen();
 }
