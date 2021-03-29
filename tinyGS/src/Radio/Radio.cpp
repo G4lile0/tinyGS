@@ -44,7 +44,7 @@ void Radio::init()
     DynamicJsonDocument doc(size);
     DeserializationError error = deserializeJson(doc, ConfigManager::getInstance().getBoardTemplate());
 
-    if (error.code() != DeserializationError::Ok || doc.containsKey("aADDR"))
+    if (error.code() != DeserializationError::Ok || !doc.containsKey("radio"))
     {
       Log::console(PSTR("Error: Your Board template is not valid. Unable to init radio."));
       return;
