@@ -18,11 +18,12 @@
 */
 
 #include "Radio.h"
-#define ARDUINOJSON_USE_LONG_LONG 1
 #include "ArduinoJson.h"
+#if ARDUINOJSON_USE_LONG_LONG == 0
+#error "Seems you are using Arduino IDE, edit /ArduinoJson/src/ArduinoJson/Configuration.hpp and amend to #define ARDUINOJSON_USE_LONG_LONG 1 around line 68"
+#endif
 #include <base64.h>
 #include "../Logger/Logger.h"
-
 bool received = false;
 bool eInterrupt = true;
 bool noisyInterrupt = false;

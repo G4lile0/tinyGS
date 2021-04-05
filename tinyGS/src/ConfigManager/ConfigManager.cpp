@@ -21,8 +21,10 @@
 #include "../Mqtt/MQTT_Client.h"
 #include "../Logger/Logger.h"
 #include "../Radio/Radio.h"
-#define ARDUINOJSON_USE_LONG_LONG 1
 #include "ArduinoJson.h"
+#if ARDUINOJSON_USE_LONG_LONG == 0
+#error "Seems you are using Arduino IDE, edit /ArduinoJson/src/ArduinoJson/Configuration.hpp and amend to #define ARDUINOJSON_USE_LONG_LONG 1 around line 68"
+#endif
 
 ConfigManager::ConfigManager()
 : IotWebConf2(thingName, &dnsServer, &server, initialApPassword, configVersion)

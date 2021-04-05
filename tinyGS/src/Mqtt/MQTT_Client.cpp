@@ -18,8 +18,10 @@
 */
 
 #include "MQTT_Client.h"
-#define ARDUINOJSON_USE_LONG_LONG 1
 #include "ArduinoJson.h"
+#if ARDUINOJSON_USE_LONG_LONG == 0
+#error "Seems you are using Arduino IDE, edit /ArduinoJson/src/ArduinoJson/Configuration.hpp and amend to #define ARDUINOJSON_USE_LONG_LONG 1 around line 68"
+#endif
 #include "../Radio/Radio.h"
 #include "../OTA/OTA.h"
 #include "../Logger/Logger.h"
