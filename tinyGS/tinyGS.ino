@@ -102,8 +102,6 @@ ConfigManager& configManager = ConfigManager::getInstance();
 MQTT_Client& mqtt = MQTT_Client::getInstance();
 Radio& radio = Radio::getInstance();
 
-TaskHandle_t dispUpdate_handle;
-
 const char* ntpServer = "time.cloudflare.com";
 void printLocalTime();
 
@@ -123,13 +121,6 @@ void ntp_cb (NTPEvent_t e)
       break;
     default:
       break;
-  }
-}
-
-void displayUpdate_task (void* arg)
-{
-  for (;;){
-      displayUpdate ();
   }
 }
 
@@ -236,8 +227,6 @@ void setup()
 }
 
 void loop() {
-  static bool startDisplayTask = true;
-    
   FailSafe.loop (BOOT_FLAG_TIMEOUT); // Use always this line
   if (FailSafe.isActive ()) // Skip all user loop code if Fail Safe mode is active
     return;
@@ -319,19 +308,7 @@ void loop() {
     return;
   }
 
-  if (startDisplayTask)
-  {
-    startDisplayTask = false;
-    xTaskCreateUniversal (
-            displayUpdate_task,           // Display loop function
-            "Display Update",             // Task name
-            4096,                         // Stack size
-            NULL,                         // Function argument, not needed
-            1,                            // Priority, running higher than 1 causes errors on MQTT comms
-            &dispUpdate_handle,           // Task handle
-            CONFIG_ARDUINO_RUNNING_CORE); // Running core, should be 1
-  }
-
+  displayUpdate();
   radio.listen();
 }
 
