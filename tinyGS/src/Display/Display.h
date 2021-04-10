@@ -31,6 +31,7 @@ void displayShowStaMode(bool ap);
 void displayUpdate();
 void displayShowLoRaError();
 void displayShowRadioError();
+void turnDisplayOff();
 
 extern Status status;
 

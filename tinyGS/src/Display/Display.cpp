@@ -343,3 +343,9 @@ void displayUpdate()
 {
   ui->update();
 }
+
+void turnDisplayOff()
+{
+  display->displayOff();
+}
+

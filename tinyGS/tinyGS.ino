@@ -224,6 +224,10 @@ void setup()
     displayShowStaMode(false);
   
   delay(500);  
+  if (configManager.getOledBright()==0) {
+    turnDisplayOff();
+    setCpuFrequencyMhz(80); //Set CPU clock to 80MHz fo example
+  }
 }
 
 void loop() {
@@ -308,7 +312,8 @@ void loop() {
     return;
   }
 
-  displayUpdate();
+  if (configManager.getOledBright()!=0)  displayUpdate();
+
   radio.listen();
 }
 
