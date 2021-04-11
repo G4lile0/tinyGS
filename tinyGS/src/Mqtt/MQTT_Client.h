@@ -89,6 +89,7 @@ private:
   void subscribeToAll();
   void manageSatPosOled(char* payload, size_t payload_len);
   void remoteSatCmnd(char* payload, size_t payload_len);
+  void remoteSatFilter(char* payload, size_t payload_len);
 
   unsigned long lastPing = 0;
   unsigned long lastConnectionAtempt = 0;
@@ -140,7 +141,8 @@ private:
   const char* commandRemotetelemetry3rd PROGMEM= "telemetry3rd";
   const char* commandLog PROGMEM= "log";
   const char* commandTx PROGMEM= "tx";
-  // GOD MODE  With great power comes great responsibility!
+  const char* commandSatFilter PROGMEM= "filter";
+    // GOD MODE  With great power comes great responsibility!
   const char* commandSPIsetRegValue PROGMEM= "SPIsetRegValue";
   const char* commandSPIwriteRegister PROGMEM= "SPIwriteRegister";
   const char* commandSPIreadRegister PROGMEM= "SPIreadRegister";

@@ -432,6 +432,13 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     result = 0;
   }
 
+  // Satellite_Filter [1,0,51]   (lenght,position,byte1,byte2,byte3,byte4)
+  if (!strcmp(command, commandSatFilter))
+  {
+    remoteSatFilter((char*)payload, length);
+    result = 0;
+  }
+
   // GOD MODE  With great power comes great responsibility!
   // SPIsetRegValue  (only sx1278) [1,2,3,4,5]
   if (!strcmp(command, commandSPIsetRegValue))
@@ -546,6 +553,29 @@ void MQTT_Client::remoteSatCmnd(char* payload, size_t payload_len)
 
   Log::debug(PSTR("Listening Satellite: %s NORAD: %u"), status.modeminfo.satellite, NORAD);
 }
+
+void MQTT_Client::remoteSatFilter(char* payload, size_t payload_len)
+{
+  DynamicJsonDocument doc(256);
+  deserializeJson(doc, payload, payload_len);
+  uint8_t filter_size = doc.size();
+  Serial.println("");
+
+  status.modeminfo.filter[0]=doc[0];
+  status.modeminfo.filter[1]=doc[1];
+
+  Serial.print(F("Set Sat Filter Size ")); Serial.println(status.modeminfo.filter[0]);
+  Serial.print(F("Set Sat Filter POS ")); Serial.println(status.modeminfo.filter[1]);
+  
+  Serial.print(F("-> "));
+    for (uint8_t filter_pos=2; filter_pos<filter_size;filter_pos++)
+  {
+    status.modeminfo.filter[filter_pos]=doc[filter_pos];
+    Serial.print(F(" 0x"));Serial.print(status.modeminfo.filter[filter_pos],HEX);Serial.print(F(", "));
+  }
+  Log::debug(PSTR("Sat packets Filter enabled"));
+}
+
 
 // Helper class to use as a callback
 void manageMQTTDataCallback(char *topic, uint8_t *payload, unsigned int length)

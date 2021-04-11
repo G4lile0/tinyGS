@@ -50,6 +50,7 @@ struct ModemInfo {
   uint8_t gain        = 0;
   uint32_t  NORAD     = 46494;  // funny this remember me WARGames
   uint8_t   fsw[8]    = {0,0,0,0,0,0,0,0};
+  uint8_t   filter[8] = {0,0,0,0,0,0,0,0};
 };
 
 struct TextFrame {   
@@ -61,7 +62,7 @@ struct TextFrame {
 };
 
 struct Status {
-  const uint32_t version = 2104101; // version year month day release
+  const uint32_t version = 2104111; // version year month day release
   const char* git_version = GIT_VERSION;
   bool mqtt_connected = false;
   PacketInfo lastPacketInfo;
