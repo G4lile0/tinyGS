@@ -354,6 +354,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
   if (!strcmp(command, commandTx))
   {
     result = radio.sendTx(payload, length);
+    Log::console(PSTR("Sending TX packet!"));
   }
 
   // ######################################################
