@@ -225,8 +225,8 @@ private:
   char modemStartup[MODEM_LEN] = MODEM_DEFAULT;
   char advancedConfig[ADVANCED_LEN] = "";
 
-  iotwebconf2::NumberParameter latitudeParam = iotwebconf2::NumberParameter("Latitude (will be public)", "lat", latitude, COORDINATE_LENGTH, NULL, NULL, "required min='-180' max='180' step='0.001'");
-  iotwebconf2::NumberParameter longitudeParam = iotwebconf2::NumberParameter("Longitude (will be public)", "lng", longitude, COORDINATE_LENGTH, NULL, NULL, "required min='-180' max='180' step='0.001'");
+  iotwebconf2::NumberParameter latitudeParam = iotwebconf2::NumberParameter("Latitude (3 decimals, will be public)", "lat", latitude, COORDINATE_LENGTH, NULL, "0.000", "required min='-180' max='180' step='0.001'");
+  iotwebconf2::NumberParameter longitudeParam = iotwebconf2::NumberParameter("Longitude (3 decimals, will be public)", "lng", longitude, COORDINATE_LENGTH, NULL, "-0.000", "required min='-180' max='180' step='0.001'");
   iotwebconf2::SelectParameter tzParam = iotwebconf2::SelectParameter("Time Zone", "tz", tz, TZ_LENGTH, (char*)TZ_VALUES, (char*)TZ_NAMES, sizeof(TZ_VALUES) / TZ_LENGTH, TZ_NAME_LENGTH);
 
   iotwebconf2::ParameterGroup groupMqtt = iotwebconf2::ParameterGroup("MQTT credentials" , "MQTT credentials (get them <a href='https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q'>here</a>)");
