@@ -19,8 +19,10 @@
 #ifndef ConfigManager_h
 #define ConfigManager_h
 
-#define IOTWEBCONF_DEBUG_DISABLED 1
 #include "IotWebConf2.h"
+#if IOTWEBCONF_DEBUG_DISABLED == 0
+#error "Using Arduino IDE is not recommended, please follow this guide https://github.com/G4lile0/tinyGS/wiki/Arduino-IDE or edit /IotWebCong2/src/IotWebConf2Settings.h and add this line at the beggining of the file #define IOTWEBCONF_DEBUG_DISABLED 1"
+#endif
 #include "logos.h"
 #include <Wire.h>
 #include "html.h"
@@ -237,7 +239,7 @@ private:
   iotwebconf2::SelectParameter boardParam = iotwebconf2::SelectParameter("Board type", "board", board, BOARD_LENGTH, (char*)BOARD_VALUES, (char*)BOARD_NAMES, sizeof(BOARD_VALUES) / BOARD_LENGTH, BOARD_NAME_LENGTH);
   iotwebconf2::NumberParameter oledBrightParam = iotwebconf2::NumberParameter("OLED Bright", "oled_bright", oledBright, NUMBER_LEN, "100", "0..100", "min='0' max='100' step='1'");
   iotwebconf2::CheckboxParameter AllowTxParam  = iotwebconf2::CheckboxParameter("Enable TX (HAM licence/ no preamp)", "tx", allowTx, CHECKBOX_LENGTH, true);
-  iotwebconf2::CheckboxParameter remoteTuneParam = iotwebconf2::CheckboxParameter("Allow Automatic Tunning","remote_tune",remoteTune, CHECKBOX_LENGTH, true);
+  iotwebconf2::CheckboxParameter remoteTuneParam = iotwebconf2::CheckboxParameter("Allow Automatic Tuning","remote_tune",remoteTune, CHECKBOX_LENGTH, true);
   iotwebconf2::CheckboxParameter telemetry3rdParam = iotwebconf2::CheckboxParameter("Allow sending telemetry to third party","telemetry3rd",telemetry3rd, CHECKBOX_LENGTH, true);
   iotwebconf2::CheckboxParameter testParam = iotwebconf2::CheckboxParameter("Test mode","test",testMode, CHECKBOX_LENGTH, false);
   iotwebconf2::CheckboxParameter autoUpdateParam = iotwebconf2::CheckboxParameter("Automatic Firmware Update","auto_update",autoUpdate, CHECKBOX_LENGTH, true);

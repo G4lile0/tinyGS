@@ -25,8 +25,10 @@
 
 #include "../ConfigManager/ConfigManager.h"
 #include "../Status.h"
-#define MQTT_MAX_PACKET_SIZE 1000
 #include <PubSubClient.h>
+#if MQTT_MAX_PACKET_SIZE != 1000
+#error "Using Arduino IDE is not recommended, please follow this guide https://github.com/G4lile0/tinyGS/wiki/Arduino-IDE or edit /PubSubClient/src/PubSubClient.h  and set #define MQTT_MAX_PACKET_SIZE 1000"
+#endif
 #ifdef SECURE_MQTT
 #include <WiFiClientSecure.h>
 

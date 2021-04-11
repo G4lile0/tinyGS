@@ -44,7 +44,6 @@
     sx126x
     sx127x
 
-    World Map with active Ground Stations and satellite stimated position 
     Web of the project: https://tinygs.com/
     Github: https://github.com/G4lile0/tinyGS
     Main community chat: https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q
@@ -60,8 +59,8 @@
 
 ====================================================
   IMPORTANT:
-    - Change libraries/PubSubClient/src/PubSubClient.h
-        #define MQTT_MAX_PACKET_SIZE 1000
+    - Follow this guide to get started: https://github.com/G4lile0/tinyGS/wiki/Quick-Start
+    - Arduino IDE is NOT recommended, please use Platformio: https://github.com/G4lile0/tinyGS/wiki/Platformio
 
 **************************************************************************/
 
@@ -81,17 +80,12 @@
 #include <FailSafe.h>
 #include "src/Logger/Logger.h"
 
-#if MQTT_MAX_PACKET_SIZE != 1000
-"Remeber to change libraries/PubSubClient/src/PubSubClient.h"
-        "#define MQTT_MAX_PACKET_SIZE 1000"
-#endif
-
 #if  RADIOLIB_VERSION_MAJOR != (0x04) || RADIOLIB_VERSION_MINOR != (0x02) || RADIOLIB_VERSION_PATCH != (0x01) || RADIOLIB_VERSION_EXTRA != (0x00)
 #error "You are not using the correct version of RadioLib please copy TinyGS/lib/RadioLib on Arduino/libraries"
 #endif
 
 #ifndef RADIOLIB_GODMODE
-#error "Seems you are using Arduino IDE, edit /RadioLib/src/BuildOpt.h and uncomment #define RADIOLIB_GODMODE around line 367" 
+#error "Using Arduino IDE is not recommended, please follow this guide https://github.com/G4lile0/tinyGS/wiki/Arduino-IDE or edit /RadioLib/src/BuildOpt.h and uncomment #define RADIOLIB_GODMODE around line 367" 
 #endif
 
 
