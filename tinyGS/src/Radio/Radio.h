@@ -43,6 +43,7 @@ public:
   int16_t begin();
   void enableInterrupt();
   void disableInterrupt();
+  void startRx();
   uint8_t listen();
   bool isReady() { return ready; }
   int16_t remote_freq(char* payload, size_t payload_len);

@@ -256,6 +256,21 @@ void Radio::disableInterrupt()
   eInterrupt = false;
 }
 
+void Radio::startRx()
+{
+    // put module back to listen mode
+  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+    ((SX1278*)lora)->startReceive();
+  else
+    ((SX1268*)lora)->startReceive();
+ 
+  // we're ready to receive more packets,
+  // enable interrupt service routine
+  enableInterrupt();
+}
+
+
+
 int16_t Radio::sendTx(uint8_t* data, size_t length)
 {
   if (!ConfigManager::getInstance().getAllowTx())
@@ -338,6 +353,7 @@ uint8_t Radio::listen()
   {
     Log::console(PSTR("Interrupt triggered but no new data available. Check wiring and electrical interferences."));
     delete[] respFrame;
+    startRx();
     return 4;
   }
 
@@ -356,6 +372,31 @@ uint8_t Radio::listen()
     }
     Log::console(PSTR("%s"), byteStr);
     delete[] byteStr;
+
+       	// if Filter enabled filter the received packet
+	  if (status.modeminfo.filter[0]!=0)
+	  {
+      bool filter_flag = false;
+      uint8_t filter_size = status.modeminfo.filter[0];
+      uint8_t filter_ini = status.modeminfo.filter[1];
+   
+  	  for (uint8_t filter_pos=0; filter_pos<filter_size;filter_pos++)
+	      {
+	        if (status.modeminfo.filter[2+filter_pos] != respFrame[filter_ini+filter_pos]) filter_flag= true;
+  	      }	
+
+        // if the msg start with tiny (test packet) remove filter 
+      if (respFrame[0]==0x54 && respFrame[1]==0x69 && respFrame[2]==0x6e && respFrame[3]==0x79) filter_flag=false;
+
+      if (filter_flag)
+        {
+          Log::console(PSTR("Filter enabled, doesn't looks like the expected satellite packet"));
+	        delete[] respFrame;
+          startRx();
+	        return 5;
+        }
+    
+	  }
 
     status.lastPacketInfo.crc_error = false;
     String encoded = base64::encode(respFrame, respLen); 
@@ -396,17 +437,10 @@ uint8_t Radio::listen()
   // print RSSI (Received Signal Strength Indicator)
   Log::console(PSTR("[SX12x8] RSSI:\t\t%f dBm\n[SX12x8] SNR:\t\t%f dB\n[SX12x8] Frequency error:\t%f Hz"), status.lastPacketInfo.rssi, status.lastPacketInfo.snr, status.lastPacketInfo.frequencyerror);
 
-
-  // put module back to listen mode
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-    ((SX1278*)lora)->startReceive();
-  else
-    ((SX1268*)lora)->startReceive();
-
   noisyInterrupt = false;
-  // we're ready to receive more packets,
-  // enable interrupt service routine
-  enableInterrupt();
+
+    // put module back to listen mode
+  startRx();
 
   if (state == ERR_NONE)
   {

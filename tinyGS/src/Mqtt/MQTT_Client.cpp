@@ -517,6 +517,9 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
       else if (!strcmp(key, commandSat))
         remoteSatCmnd(value, len);
 
+      else if (!strcmp(key, commandSatFilter))
+        remoteSatFilter(value, len);
+
       else if (!strcmp(key, commandSPIsetRegValue))
         result = radio.remote_SPIsetRegValue(value, len);
 
