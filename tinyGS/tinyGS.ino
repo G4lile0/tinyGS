@@ -220,6 +220,14 @@ void setup()
   delay(500);  
   if (configManager.getOledBright()==0) {
     turnDisplayOff();
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED) {
+        if (++attempts < 200) {
+            Serial.print(".");
+            delay(50);
+          } else break;
+          }
+    Log::debug(PSTR("OLED bright 0 then CPU=80Mhz"));
     setCpuFrequencyMhz(80); //Set CPU clock to 80MHz fo example
   }
 }
