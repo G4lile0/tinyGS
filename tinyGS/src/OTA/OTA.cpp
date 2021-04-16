@@ -23,14 +23,18 @@
 #include "../Logger/Logger.h"
 
 extern Status status;
+bool usingNewCert = true;
 
 void OTA::update()
 {
 #ifdef SECURE_OTA
-    WiFiClientSecure client;
-    client.setCACert(DSTroot_CA_update);
+  WiFiClientSecure client;
+  if (usingNewCert)
+    client.setCACert(newRoot_CA);
+  else
+    client.setCACert(DSTroot_CA);
 #else
-    WiFiClient client;
+  WiFiClient client;
 #endif
 
   uint64_t chipId = ESP.getEfuseMac();
@@ -46,6 +50,7 @@ void OTA::update()
 
   switch (ret) {
     case HTTP_UPDATE_FAILED:
+      usingNewCert = !usingNewCert;
       Log::info(PSTR("Update failed Error (%d): %s\n"), httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
       break;
 

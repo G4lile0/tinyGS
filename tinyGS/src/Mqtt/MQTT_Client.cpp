@@ -30,7 +30,7 @@ MQTT_Client::MQTT_Client()
 : PubSubClient(espClient)
 {
 #ifdef SECURE_MQTT
-    espClient.setCACert (DSTroot_CA);
+    espClient.setCACert(usingNewCert ? newRoot_CA : DSTroot_CA);
 #endif
 }
 
@@ -89,7 +89,19 @@ void MQTT_Client::reconnect()
   }
   else {
     status.mqtt_connected = false;
-    Log::console(PSTR("failed, rc=%i"), state());
+
+    if (state() == -2) // first attempt
+    {
+      if (usingNewCert)
+        espClient.setCACert(DSTroot_CA);
+      else
+        espClient.setCACert(newRoot_CA);
+      usingNewCert = !usingNewCert;
+    }
+    else
+    {
+      Log::console(PSTR("failed, rc=%i"), state());
+    }
   }
 }
 
@@ -136,7 +148,7 @@ void MQTT_Client::sendWelcome()
   doc["test"] = configManager.getTestMode();
   doc["unix_GS_time"] = now;
   doc["autoUpdate"] = configManager.getAutoUpdate();
-  doc["local_ip"]= WiFi.localIP().toString().c_str();
+  doc["local_ip"]= WiFi.localIP().toString();
   doc["modem_conf"].set(configManager.getModemStartup());
   doc["boardTemplate"].set(configManager.getBoardTemplate());
 
