@@ -132,7 +132,7 @@ void wifiConnected()
   time_t startedSync = millis ();
   while (NTP.syncStatus() != syncd && millis() - startedSync < 5000) // Wait 5 seconds to get sync
   {
-    delay (100);
+    configManager.delay(100);
   }
 
   printLocalTime();
@@ -140,6 +140,12 @@ void wifiConnected()
   configManager.printConfig();
   arduino_ota_setup();
   displayShowConnected();
+
+  if (configManager.getOledBright() == 0)
+  {
+    Log::debug(PSTR("OLED bright 0 then CPU=80Mhz"));
+    setCpuFrequencyMhz(80); //Set CPU clock to 80MHz fo example
+  }
 
   radio.init();
   if (!radio.isReady())
@@ -160,7 +166,7 @@ void wifiConnected()
 void setup()
 {
   Serial.begin(115200);
-  delay(299);
+  delay(200);
 
   FailSafe.checkBoot (MAX_CONSECUTIVE_BOOT); // Parameters are optional
   if (FailSafe.isActive ()) // Skip all user setup if fail safe mode is activated
@@ -183,6 +189,7 @@ void setup()
   bool button_pushed = false;
   while (millis () - start_waiting_for_button < WAIT_FOR_BUTTON)
   {
+    configManager.doLoop();
 	  if (!digitalRead (configManager.getBoardConfig().PROG__BUTTON))
     {
 		  button_pushed = true;
@@ -217,18 +224,11 @@ void setup()
   else 
     displayShowStaMode(false);
   
-  delay(500);  
-  if (configManager.getOledBright()==0) {
+  configManager.delay(500);
+
+  if (configManager.getOledBright() == 0)
+  {
     turnDisplayOff();
-    int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED) {
-        if (++attempts < 200) {
-            Serial.print(".");
-            delay(50);
-          } else break;
-          }
-    Log::debug(PSTR("OLED bright 0 then CPU=80Mhz"));
-    setCpuFrequencyMhz(80); //Set CPU clock to 80MHz fo example
   }
 }
 
@@ -262,7 +262,7 @@ void loop() {
     char serialCmd = Serial.read();
 
     // wait for a bit to receive any trailing characters
-    delay(50);
+    configManager.delay(50);
 
     // dump the serial buffer
     while(Serial.available())
