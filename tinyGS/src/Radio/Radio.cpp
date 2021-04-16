@@ -38,6 +38,7 @@ void Radio::init()
 {
   Log::console(PSTR("[SX12xx] Initializing ... "));
   board_type board;
+  bool useDefaultSPI = true;
   
   if (strlen(ConfigManager::getInstance().getBoardTemplate()) > 0)
   {
@@ -63,25 +64,39 @@ void Radio::init()
     board.L_DI01 = doc["lDIO1"];
     board.L_BUSSY = doc["lBUSSY"];
     board.L_RST = doc["lRST"];
-    board.L_MISO = doc["lMISO"];
-    board.L_MOSI = doc["lMOSI"];
-    board.L_SCK = doc["lSCK"];
     board.L_TCXO_V = doc["lTCXOV"];
+
+    if (doc.containsKey("lMISO") && doc.containsKey("lMOSI") && doc.containsKey("lSCK"))
+    {
+      useDefaultSPI = false;
+      board.L_MISO = doc["lMISO"];
+      board.L_MOSI = doc["lMOSI"];
+      board.L_SCK = doc["lSCK"];
+    }
   }
   else
   {
     board = ConfigManager::getInstance().getBoardConfig();
   }
-   
-  spi.begin(board.L_SCK, board.L_MISO, board.L_MOSI, board.L_NSS);
+
+  if (!useDefaultSPI)
+  {
+    spi.begin(board.L_SCK, board.L_MISO, board.L_MOSI, board.L_NSS);
+  }
 
   if (board.L_SX127X)
   {
-    lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+    if (useDefaultSPI)
+      lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01));
+    else
+      lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
   }
   else
   {
-    lora = new SX1268(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+    if (useDefaultSPI)
+      lora = new SX1268(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY));
+    else
+      lora = new SX1268(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
   }
 
   begin();
