@@ -157,7 +157,8 @@ public:
   board_type getBoardConfig(){ return boards[getBoard()]; }
   bool getFlipOled(){ return advancedConf.flipOled; }
   bool getDayNightOled(){ return advancedConf.dnOled; }
-
+  void setMqttUser(const char *);
+  void setMqttPass(const char *);
 
 private:
   

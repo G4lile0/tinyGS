@@ -83,28 +83,28 @@
 
 #if MQTT_MAX_PACKET_SIZE != 1000
 "Remeber to change libraries/PubSubClient/src/PubSubClient.h"
-        "#define MQTT_MAX_PACKET_SIZE 1000"
+    "#define MQTT_MAX_PACKET_SIZE 1000"
 #endif
 
-#if  RADIOLIB_VERSION_MAJOR != (0x04) || RADIOLIB_VERSION_MINOR != (0x02) || RADIOLIB_VERSION_PATCH != (0x01) || RADIOLIB_VERSION_EXTRA != (0x00)
+#if RADIOLIB_VERSION_MAJOR != (0x04) || RADIOLIB_VERSION_MINOR != (0x02) || RADIOLIB_VERSION_PATCH != (0x01) || RADIOLIB_VERSION_EXTRA != (0x00)
 #error "You are not using the correct version of RadioLib please copy TinyGS/lib/RadioLib on Arduino/libraries"
 #endif
 
 #ifndef RADIOLIB_GODMODE
-#error "Seems you are using Arduino IDE, edit /RadioLib/src/BuildOpt.h and uncomment #define RADIOLIB_GODMODE around line 367" 
+#error "Seems you are using Arduino IDE, edit /RadioLib/src/BuildOpt.h and uncomment #define RADIOLIB_GODMODE around line 367"
 #endif
 
+    const int MAX_CONSECUTIVE_BOOT = 10; // Number of rapid boot cycles before enabling fail safe mode
+const time_t BOOT_FLAG_TIMEOUT = 10000;  // Time in ms to reset fail safe mode activation flag
 
-const int MAX_CONSECUTIVE_BOOT = 10; // Number of rapid boot cycles before enabling fail safe mode
-const time_t BOOT_FLAG_TIMEOUT = 10000; // Time in ms to reset fail safe mode activation flag
-
-ConfigManager& configManager = ConfigManager::getInstance();
-MQTT_Client& mqtt = MQTT_Client::getInstance();
-Radio& radio = Radio::getInstance();
+ConfigManager &configManager = ConfigManager::getInstance();
+MQTT_Client &mqtt = MQTT_Client::getInstance();
+Radio &radio = Radio::getInstance();
 
 TaskHandle_t dispUpdate_handle;
 
-const char* ntpServer = "time.cloudflare.com";
+const char *ntpServer = "time.cloudflare.com";
+const int serialBaud = 115200;
 void printLocalTime();
 
 // Global status
@@ -113,41 +113,43 @@ Status status;
 void printControls();
 void switchTestmode();
 
-void ntp_cb (NTPEvent_t e)
+void ntp_cb(NTPEvent_t e)
 {
-  switch (e.event) {
-    case timeSyncd:
-    case partlySync:
-      //Serial.printf ("[NTP Event] %s\n", NTP.ntpEvent2str (e));
-      status.time_offset = e.info.offset;
-      break;
-    default:
-      break;
+  switch (e.event)
+  {
+  case timeSyncd:
+  case partlySync:
+    //Serial.printf ("[NTP Event] %s\n", NTP.ntpEvent2str (e));
+    status.time_offset = e.info.offset;
+    break;
+  default:
+    break;
   }
 }
 
-void displayUpdate_task (void* arg)
+void displayUpdate_task(void *arg)
 {
-  for (;;){
-      displayUpdate ();
+  for (;;)
+  {
+    displayUpdate();
   }
 }
 
 void wifiConnected()
 {
-  NTP.setInterval (120); // Sync each 2 minutes
-  NTP.setTimeZone (configManager.getTZ ()); // Get TX from config manager
-  NTP.onNTPSyncEvent (ntp_cb); // Register event callback
-  NTP.setMinSyncAccuracy (2000); // Sync accuracy target is 2 ms
-  NTP.settimeSyncThreshold (1000); // Sync only if calculated offset absolute value is greater than 1 ms
-  NTP.setMaxNumSyncRetry (2); // 2 resync trials if accuracy not reached
-  NTP.begin (ntpServer); // Start NTP client
-  Serial.printf ("NTP started");
-  
-  time_t startedSync = millis ();
+  NTP.setInterval(120);                   // Sync each 2 minutes
+  NTP.setTimeZone(configManager.getTZ()); // Get TX from config manager
+  NTP.onNTPSyncEvent(ntp_cb);             // Register event callback
+  NTP.setMinSyncAccuracy(2000);           // Sync accuracy target is 2 ms
+  NTP.settimeSyncThreshold(1000);         // Sync only if calculated offset absolute value is greater than 1 ms
+  NTP.setMaxNumSyncRetry(2);              // 2 resync trials if accuracy not reached
+  NTP.begin(ntpServer);                   // Start NTP client
+  Serial.printf("NTP started");
+
+  time_t startedSync = millis();
   while (NTP.syncStatus() != syncd && millis() - startedSync < 5000) // Wait 5 seconds to get sync
   {
-    delay (100);
+    delay(100);
   }
 
   printLocalTime();
@@ -174,11 +176,11 @@ void wifiConnected()
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(serialBaud);
   delay(299);
 
-  FailSafe.checkBoot (MAX_CONSECUTIVE_BOOT); // Parameters are optional
-  if (FailSafe.isActive ()) // Skip all user setup if fail safe mode is activated
+  FailSafe.checkBoot(MAX_CONSECUTIVE_BOOT); // Parameters are optional
+  if (FailSafe.isActive())                  // Skip all user setup if fail safe mode is activated
     return;
 
   Log::console(PSTR("TinyGS Version %d - %s"), status.version, status.git_version);
@@ -186,39 +188,39 @@ void setup()
   configManager.init();
   // make sure to call doLoop at least once before starting to use the configManager
   configManager.doLoop();
-  pinMode (configManager.getBoardConfig().PROG__BUTTON, INPUT_PULLUP);
+  pinMode(configManager.getBoardConfig().PROG__BUTTON, INPUT_PULLUP);
   displayInit();
   displayShowInitialCredits();
 
 #define WAIT_FOR_BUTTON 3000
 #define RESET_BUTTON_TIME 5000
-  unsigned long start_waiting_for_button = millis ();
+  unsigned long start_waiting_for_button = millis();
   unsigned long button_pushed_at;
   Log::debug(PSTR("Waiting for reset config button"));
   bool button_pushed = false;
-  while (millis () - start_waiting_for_button < WAIT_FOR_BUTTON)
+  while (millis() - start_waiting_for_button < WAIT_FOR_BUTTON)
   {
-	  if (!digitalRead (configManager.getBoardConfig().PROG__BUTTON))
+    if (!digitalRead(configManager.getBoardConfig().PROG__BUTTON))
     {
-		  button_pushed = true;
-		  button_pushed_at = millis ();
-		  Log::debug(PSTR("Reset button pushed"));
-		  while (millis () - button_pushed_at < RESET_BUTTON_TIME)
+      button_pushed = true;
+      button_pushed_at = millis();
+      Log::debug(PSTR("Reset button pushed"));
+      while (millis() - button_pushed_at < RESET_BUTTON_TIME)
       {
-			  if (digitalRead (configManager.getBoardConfig().PROG__BUTTON))
+        if (digitalRead(configManager.getBoardConfig().PROG__BUTTON))
         {
-				  Log::debug(PSTR("Reset button released"));
-				  button_pushed = false;
-				  break;
-			  }
-		  }
-		  if (button_pushed)
+          Log::debug(PSTR("Reset button released"));
+          button_pushed = false;
+          break;
+        }
+      }
+      if (button_pushed)
       {
-			  Log::debug(PSTR("Reset config triggered"));
-			  WiFi.begin ("0", "0");
-			  WiFi.disconnect ();
-		  }
-	  }
+        Log::debug(PSTR("Reset config triggered"));
+        WiFi.begin("0", "0");
+        WiFi.disconnect();
+      }
+    }
   }
 
   if (button_pushed)
@@ -226,22 +228,158 @@ void setup()
     configManager.resetAPConfig();
     ESP.restart();
   }
-  
+
   if (configManager.isApMode())
     displayShowApMode();
-  else 
+  else
     displayShowStaMode(false);
-  
-  delay(500);  
+
+  delay(500);
+  Serial.write('>');
 }
 
-void loop() {
-  static bool startDisplayTask = true;
-    
-  FailSafe.loop (BOOT_FLAG_TIMEOUT); // Use always this line
-  if (FailSafe.isActive ()) // Skip all user loop code if Fail Safe mode is active
+#define LINEBUFFER_LEN 250
+char lineBuffer[LINEBUFFER_LEN] = {0};
+char lineBufferPos = 0;
+
+void handleInput()
+{
+  if (!Serial.available())
+  {
+    delayMicroseconds((1e6 / serialBaud) * 8); // wait one byte
     return;
-    
+  }
+
+  int chr = Serial.read();
+  if (chr == -1)
+  {
+    return;
+  }
+  lineBuffer[lineBufferPos] = (char)chr;
+
+  //echo back
+  if (chr != '\r')
+    Serial.write(chr);
+
+  //if not newline wait
+  if (chr != '\n')
+  {
+    lineBufferPos++;
+    return;
+  }
+  else
+  {
+    lineBuffer[lineBufferPos] = '\0';
+    if (lineBuffer[lineBufferPos - 1] == '\r')
+    {
+      lineBuffer[lineBufferPos - 1] = '\0';
+    }
+  }
+
+  char *arg0 = NULL, *arg1 = NULL;
+  // process serial command
+  switch (lineBuffer[0])
+  {
+  case 'h':
+    printControls();
+    break;
+  case 'e':
+    configManager.resetAllConfig();
+    ESP.restart();
+    break;
+  case 't':
+    switchTestmode();
+    break;
+  case 'b':
+    ESP.restart();
+    break;
+  case 'p':
+    if (!configManager.getAllowTx())
+    {
+      Log::console(PSTR("Radio transmission is not allowed by config! Check your config on the web panel and make sure transmission is allowed by local regulations"));
+      break;
+    }
+
+    static long lastTestPacketTime = 0;
+    if (millis() - lastTestPacketTime < 20 * 1000)
+    {
+      Log::console(PSTR("Please wait a few seconds to send another test packet."));
+      break;
+    }
+
+    radio.sendTestPacket();
+    lastTestPacketTime = millis();
+    Log::console(PSTR("Sending test packet to nearby stations!"));
+    break;
+  case 'w':
+    arg0 = strstr(lineBuffer, " ") + 1;
+    arg1 = strstr(arg0, " ") + 1;
+
+    if (arg0 != NULL && arg1 != NULL)
+    {
+      lineBuffer[arg1 - lineBuffer - 1] = '\0';
+      strcpy(configManager.getWifiSsidParameter()->valueBuffer, arg0);
+      strcpy(configManager.getWifiPasswordParameter()->valueBuffer, arg1);
+      configManager.saveConfig();
+      Log::console(PSTR("WiFi SSID set to: %s - %s"), arg0, arg1);
+    }
+    else
+    {
+      Log::console(PSTR("Command error!"));
+      printControls();
+    }
+    break;
+  case 'l':
+    arg0 = strstr(lineBuffer, " ") + 1;
+    if (arg0 != NULL)
+    {
+      strcpy(configManager.getApPasswordParameter()->valueBuffer, arg0);
+      configManager.saveConfig();
+      Log::console(PSTR("Login set to: %s"), arg0);
+    }
+    else
+    {
+      Log::console(PSTR("Command error!"));
+      printControls();
+    }
+    break;
+  case 'm':
+    arg0 = strstr(lineBuffer, " ") + 1;
+    arg1 = strstr(arg0, " ") + 1;
+
+    if (arg0 != NULL && arg1 != NULL)
+    {
+      lineBuffer[arg1 - lineBuffer - 1] = '\0';
+      configManager.setMqttUser(arg0);
+      configManager.setMqttPass(arg1);
+      configManager.saveConfig();
+      Log::console(PSTR("MQTT details set to: %s - %s"), arg0, arg1);
+    }
+    else
+    {
+      Log::console(PSTR("Command error!"));
+      printControls();
+    }
+    break;
+  default:
+    Log::console(PSTR("Unknown command: %c"), lineBuffer[0]);
+    break;
+  }
+
+  //reset linebuffer
+  lineBufferPos = 0;
+  memset(lineBuffer, 0, LINEBUFFER_LEN);
+  Serial.write('>');
+}
+
+void loop()
+{
+  static bool startDisplayTask = true;
+
+  FailSafe.loop(BOOT_FLAG_TIMEOUT); // Use always this line
+  if (FailSafe.isActive())          // Skip all user loop code if Fail Safe mode is active
+    return;
+
   configManager.doLoop();
 
   static bool wasConnected = false;
@@ -249,67 +387,21 @@ void loop() {
   {
     if (configManager.isApMode() && wasConnected)
       displayShowApMode();
-    else 
+    else
       displayShowStaMode(configManager.isApMode());
 
+    handleInput();
     return;
   }
   wasConnected = true;
   mqtt.loop();
   ArduinoOTA.handle();
   OTA::loop();
-  
-  if(Serial.available())
+
+  if (Serial.available())
   {
     radio.disableInterrupt();
-
-    // get the first character
-    char serialCmd = Serial.read();
-
-    // wait for a bit to receive any trailing characters
-    delay(50);
-
-    // dump the serial buffer
-    while(Serial.available())
-    {
-      Serial.read();
-    }
-
-    // process serial command
-    switch(serialCmd) {
-      case 'e':
-        configManager.resetAllConfig();
-        ESP.restart();
-        break;
-      case 't':
-        switchTestmode();
-        break;
-      case 'b':
-        ESP.restart();
-        break;
-      case 'p':
-        if (!configManager.getAllowTx())
-        {
-          Log::console(PSTR("Radio transmission is not allowed by config! Check your config on the web panel and make sure transmission is allowed by local regulations"));
-          break;
-        }
-
-        static long lastTestPacketTime = 0;
-        if (millis() - lastTestPacketTime < 20*1000)
-        {
-          Log::console(PSTR("Please wait a few seconds to send another test packet."));
-          break;
-        }
-        
-        radio.sendTestPacket();
-        lastTestPacketTime = millis();
-        Log::console(PSTR("Sending test packet to nearby stations!"));
-        break;
-      default:
-        Log::console(PSTR("Unknown command: %c"), serialCmd);
-        break;
-    }
-
+    handleInput();
     radio.enableInterrupt();
   }
 
@@ -322,44 +414,45 @@ void loop() {
   if (startDisplayTask)
   {
     startDisplayTask = false;
-    xTaskCreateUniversal (
-            displayUpdate_task,           // Display loop function
-            "Display Update",             // Task name
-            4096,                         // Stack size
-            NULL,                         // Function argument, not needed
-            1,                            // Priority, running higher than 1 causes errors on MQTT comms
-            &dispUpdate_handle,           // Task handle
-            CONFIG_ARDUINO_RUNNING_CORE); // Running core, should be 1
+    xTaskCreateUniversal(
+        displayUpdate_task,           // Display loop function
+        "Display Update",             // Task name
+        4096,                         // Stack size
+        NULL,                         // Function argument, not needed
+        1,                            // Priority, running higher than 1 causes errors on MQTT comms
+        &dispUpdate_handle,           // Task handle
+        CONFIG_ARDUINO_RUNNING_CORE); // Running core, should be 1
   }
 
   radio.listen();
 }
 
 void switchTestmode()
-{  
+{
   if (configManager.getTestMode())
   {
-      configManager.setTestMode(false);
-      Log::console(PSTR("Changed from test mode to normal mode"));
+    configManager.setTestMode(false);
+    Log::console(PSTR("Changed from test mode to normal mode"));
   }
   else
   {
-      configManager.setTestMode(true);
-      Log::console(PSTR("Changed from normal mode to test mode"));
+    configManager.setTestMode(true);
+    Log::console(PSTR("Changed from normal mode to test mode"));
   }
 }
 
 void printLocalTime()
 {
-    time_t currenttime = time (NULL);
-    if (currenttime < 0) {
-        Log::error (PSTR ("Failed to obtain time: %d"), currenttime);
-        return;
-    }
-    struct tm* timeinfo;
-    
-    timeinfo = localtime (&currenttime);
-  
+  time_t currenttime = time(NULL);
+  if (currenttime < 0)
+  {
+    Log::error(PSTR("Failed to obtain time: %d"), currenttime);
+    return;
+  }
+  struct tm *timeinfo;
+
+  timeinfo = localtime(&currenttime);
+
   Serial.println(timeinfo, "%A, %B %d %Y %H:%M:%S");
 }
 
@@ -367,9 +460,13 @@ void printLocalTime()
 void printControls()
 {
   Log::console(PSTR("------------- Controls -------------"));
-  Log::console(PSTR("t - change the test mode and restart"));
-  Log::console(PSTR("e - erase board config and reset"));
-  Log::console(PSTR("b - reboot the board"));
-  Log::console(PSTR("p - send test packet to nearby stations (to check transmission)"));
+  Log::console(PSTR("h                      - print this msg"));
+  Log::console(PSTR("t                      - change the test mode and restart"));
+  Log::console(PSTR("e                      - erase board config and reset"));
+  Log::console(PSTR("b                      - reboot the board"));
+  Log::console(PSTR("p                      - send test packet to nearby stations (to check transmission)"));
+  Log::console(PSTR("w <SSID> <PSK>         - set WiFi details"));
+  Log::console(PSTR("l <password>           - set login password"));
+  Log::console(PSTR("m <login> <passwod>    - set mqtt login"));
   Log::console(PSTR("------------------------------------"));
 }

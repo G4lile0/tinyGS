@@ -482,3 +482,13 @@ void ConfigManager::parseAdvancedConf()
     advancedConf.dnOled = doc["dnOled"];
   }
 }
+
+void ConfigManager::setMqttUser(const char *user) {
+  assert(strlen(user) < MQTT_USER_LENGTH);
+  strcpy(mqttUser, user);
+}
+
+void ConfigManager::setMqttPass(const char *pass) {
+  assert(strlen(pass) < MQTT_PASS_LENGTH);
+  strcpy(mqttPass, pass);
+}
