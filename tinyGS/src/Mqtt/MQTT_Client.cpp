@@ -27,7 +27,9 @@
 MQTT_Client::MQTT_Client() 
 : PubSubClient(espClient)
 {
+#ifdef SECURE_MQTT
     espClient.setCACert (DSTroot_CA);
+#endif
 }
 
 void MQTT_Client::loop() {
