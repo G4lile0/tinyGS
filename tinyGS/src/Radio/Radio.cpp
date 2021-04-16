@@ -284,8 +284,6 @@ void Radio::startRx()
   enableInterrupt();
 }
 
-
-
 int16_t Radio::sendTx(uint8_t* data, size_t length)
 {
   if (!ConfigManager::getInstance().getAllowTx())
@@ -376,16 +374,19 @@ uint8_t Radio::listen()
   status.lastPacketInfo.snr = newPacketInfo.snr;
   status.lastPacketInfo.frequencyerror = newPacketInfo.frequencyerror;
 
-  if (state == ERR_NONE)
+  if (state == ERR_NONE && respLen > 0)
   {
     // read optional data
     Log::console(PSTR("Packet (%u bytes):"), respLen);
-    char* byteStr = new char[respLen*2+1];
+    uint16_t buffSize = respLen*2+1;
+    if (buffSize > 255) buffSize = 255;
+    char* byteStr = new char[buffSize];
     for(int i = 0; i < respLen; i++)
     {
-      sprintf(byteStr+i*2, "%02x", respFrame[i]);
+      sprintf(byteStr + i*2 % (buffSize-1), "%02x", respFrame[i]);
+      if (i*2 % buffSize == buffSize-3 || i == respLen-1)
+        Log::console(PSTR("%s"), byteStr); // print before the buffer is going to loop back
     }
-    Log::console(PSTR("%s"), byteStr);
     delete[] byteStr;
 
        	// if Filter enabled filter the received packet
