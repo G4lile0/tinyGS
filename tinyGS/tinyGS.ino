@@ -208,7 +208,7 @@ void loop() {
 
   mqtt.loop();
   OTA::loop();
-  if (configManager.getOledBright() != 0) displayUpdate();
+  displayUpdate();
 }
 
 void setupNTP()
