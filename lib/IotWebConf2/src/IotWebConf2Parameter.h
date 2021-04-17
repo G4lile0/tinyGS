@@ -24,7 +24,7 @@ const char IOTWEBCONF_HTML_FORM_GROUP_END[] PROGMEM =
 
 const char IOTWEBCONF_HTML_FORM_PARAM[] PROGMEM =
   "<div class='{s}'><label for='{i}'>{b}</label><input type='{t}' id='{i}' "
-  "name='{i}' maxlength={l} placeholder='{p}' value='{v}' {c}/>"
+  "name='{i}' {l} placeholder='{p}' value='{v}' {c}/>"
   "<div class='em'>{e}</div></div>\n";
 
 const char IOTWEBCONF_HTML_FORM_SELECT_PARAM[] PROGMEM =
@@ -52,13 +52,13 @@ public:
   /**
    * Calculate the size of bytes should be stored in the EEPROM.
    */
-  virtual int getStorageSize();
+  virtual int getStorageSize() = 0;
 
   /**
    * On initial startup (when no data was saved), it may be required to apply a default value
    *   to the parameter.
    */
-  virtual void applyDefaultValue();
+  virtual void applyDefaultValue() = 0;
 
   /**
    * Save data.
@@ -66,7 +66,7 @@ public:
    *   The argument 'serializationData' of this referenced method should be pre-filled with
    *   the size and the serialized data before calling the method.
    */
-  virtual void storeValue(std::function<void(SerializationData* serializationData)> doStore);
+  virtual void storeValue(std::function<void(SerializationData* serializationData)> doStore) = 0;
 
   /**
    * Load data.
@@ -75,7 +75,7 @@ public:
    *   the size of the expected data, and the data buffer should be allocated with this size.
    *   The doLoad will fill the data from the EEPROM.
    */
-  virtual void loadValue(std::function<void(SerializationData* serializationData)> doLoad);
+  virtual void loadValue(std::function<void(SerializationData* serializationData)> doLoad) = 0;
 
   /**
    * This method will create the HTML form item for the config portal.
@@ -85,7 +85,7 @@ public:
    * @webRequestWrapper - The webRequestWrapper, that will send the rendered content to the client.
    *   The webRequestWrapper->sendContent() method should be used in the implementations.
    */
-  virtual void renderHtml(bool dataArrived, WebRequestWrapper* webRequestWrapper);
+  virtual void renderHtml(bool dataArrived, WebRequestWrapper* webRequestWrapper) = 0;
 
   /**
    * New value arrived from the form post. The value should be stored in the
@@ -95,19 +95,19 @@ public:
    *   The webRequestWrapper->hasArg() and webRequestWrapper->arg() methods should be used in the
    *   implementations.
    */
-  virtual void update(WebRequestWrapper* webRequestWrapper);
+  virtual void update(WebRequestWrapper* webRequestWrapper) = 0;
 
   /**
    * Before validating the form post, it is required to clear previos error messages.
    */
-  virtual void clearErrorMessage();
+  virtual void clearErrorMessage() = 0;
 
   /**
    * This method should display information to Serial containing the parameter
    *   ID and the current value of the parameter (if it is confidential).
    *   Will only be called if debug is enabled.
    */
-  virtual void debugTo(Stream* out);
+  virtual void debugTo(Stream* out) = 0;
 
 protected:
   ConfigItem(const char* id) { this->_id = id; };
@@ -125,10 +125,10 @@ public:
   ParameterGroup(const char* id, const char* label = NULL);
   void addItem(ConfigItem* configItem);
   const char *label;
+  void applyDefaultValue() override;
 
 protected:
   int getStorageSize() override;
-  void applyDefaultValue() override;
   void storeValue(std::function<void(
     SerializationData* serializationData)> doStore) override;
   void loadValue(std::function<void(
@@ -186,15 +186,15 @@ public:
   const char* errorMessage;
 
   int getLength() { return this->_length; }
+  void applyDefaultValue() override;
 
 protected:
   // Overrides
   int getStorageSize() override;
-  void applyDefaultValue() override;
   void storeValue(std::function<void(SerializationData* serializationData)> doStore) override;
   void loadValue(std::function<void(SerializationData* serializationData)> doLoad) override;
   virtual void update(WebRequestWrapper* webRequestWrapper) override;
-  virtual void update(String newValue);
+  virtual void update(String newValue) = 0;
   void clearErrorMessage() override;
 
 private:
@@ -210,12 +210,12 @@ class TextParameter : public Parameter
 {
 public:
   /**
-   * Create a parameter for the config portal.
+   * Create a text parameter for the config portal.
    *
    * @placeholder (optional) - Text appear in an empty input box.
    * @customHtml (optional) - The text of this parameter will be added into
    *   the HTML INPUT field.
-   * (see Parameter for more arguments)
+   * (See Parameter for arguments!)
    */
   TextParameter(
     const char* label, const char* id, char* valueBuffer, int length,
@@ -270,6 +270,11 @@ private:
 class PasswordParameter : public TextParameter
 {
 public:
+  /**
+   * Create a password parameter for the config portal.
+   *
+   * (See TextParameter for arguments!)
+   */
   PasswordParameter(
     const char* label, const char* id, char* valueBuffer, int length,
     const char* defaultValue = NULL,
@@ -296,6 +301,11 @@ private:
 class NumberParameter : public TextParameter
 {
 public:
+  /**
+   * Create a numeric parameter for the config portal.
+   *
+   * (See TextParameter for arguments!)
+   */
   NumberParameter(
     const char* label, const char* id, char* valueBuffer, int length,
     const char* defaultValue = NULL,
@@ -321,6 +331,11 @@ private:
 class CheckboxParameter : public TextParameter
 {
 public:
+  /**
+   * Create a checkbox parameter for the config portal.
+   *
+   * (See TextParameter for arguments!)
+   */
   CheckboxParameter(
     const char* label, const char* id, char* valueBuffer, int length,
     bool defaultValue = false);
@@ -355,6 +370,7 @@ public:
    *   items.
    * @optionCount - Size of both 'optionValues' and 'optionNames' lists.
    * @nameLength - Size of any item in optionNames list.
+   * (See TextParameter for arguments!)
    */
   OptionsParameter(
     const char* label, const char* id, char* valueBuffer, int length,
@@ -375,10 +391,16 @@ private:
 
 /**
  * Select parameter is an option parameter, that rendered as HTML SELECT.
+ * Basically it is a dropdown combobox.
  */
 class SelectParameter : public OptionsParameter
 {
 public:
+  /**
+   * Create a select parameter for the config portal.
+   *
+   * (See OptionsParameter for arguments!)
+   */
   SelectParameter(
     const char* label, const char* id, char* valueBuffer, int length,
     const char* optionValues, const char* optionNames, size_t optionCount, size_t namesLenth,

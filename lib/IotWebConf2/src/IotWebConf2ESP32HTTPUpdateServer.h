@@ -73,15 +73,8 @@ class HTTPUpdateServer
 
 /////////////////////////////////////////////////////////////////////////////////
 
-static const char serverIndex[] PROGMEM =
-  R"(<html><body><form method='POST' action='' enctype='multipart/form-data'>
-                  <input type='file' name='update'>
-                  <input type='submit' value='Update'>
-               </form>
-         </body></html>)";
-static const char successResponse[] PROGMEM = 
-  "<META http-equiv=\"refresh\" content=\"15;URL=/\">Update Success! Rebooting...\n";
 
 #endif
 
 #endif
+

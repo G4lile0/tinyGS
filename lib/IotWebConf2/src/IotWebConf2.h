@@ -104,6 +104,7 @@ public:
 
   const String hostHeader() const override { return this->_server->hostHeader(); };
   IPAddress localIP() override { return this->_server->client().localIP(); };
+  uint16_t localPort() override { return this->_server->client().localPort(); };
   const String uri() const { return this->_server->uri(); };
   bool authenticate(const char * username, const char * password) override
     { return this->_server->authenticate(username, password); };
@@ -161,7 +162,6 @@ public:
 class IotWebConf2
 {
 public:
-  IotWebConf2() { };
   /**
    * Create a new configuration handler.
    *   @thingName - Initial value for the thing name. Used in many places like AP name, can be changed by the user.
@@ -470,8 +470,8 @@ public:
    * By default IotWebConf2 will continue startup in WiFi mode, when no configuration request arrived
    * in AP mode. With this method holding the AP mode can be forced.
    * Further more, instant AP mode can forced even when we are currently in WiFi mode.
-   *   @value - When parameter is TRUE AP mode is forced/entered.
-   *     When value is FALSE normal operation will continue.
+   *   @value - When TRUE, AP mode is forced/entered.
+   *     When FALSE, AP mode is released, normal operation will continue.
    */
   void forceApMode(bool value);
 

@@ -453,6 +453,8 @@ void ConfigManager::configSavedCallback()
     ESP.restart();
   }
 
+  forceApMode(false);
+
   parseAdvancedConf();
   MQTT_Client::getInstance().scheduleRestart();
   

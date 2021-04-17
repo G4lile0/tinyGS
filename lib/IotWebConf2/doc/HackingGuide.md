@@ -23,6 +23,7 @@ __Contents__:
   - [Accessing system properties](#accessing-system-properties)
   - [Use custom style](#use-custom-style)
   - [Create your property class](#create-your-property-class)
+  - [Typed parameters](#typed-parameters-experimental)
   - [Control on WiFi connection status change](#control-on-wifi-connection-status-change)
   - [Use alternative WebServer](#use-alternative-webserver)
 
@@ -135,6 +136,16 @@ example ```IotWebConf11AdvancedRuntime```!
     iotWebConf.saveConfig();
 ```
 
+Here is list of some of the system parameter-acccessors, please consult
+IotWebConf.h for further details.
+- getSystemParameterGroup()
+- getThingNameParameter()
+- getApPasswordParameter()
+- getWifiParameterGroup()
+- getWifiSsidParameter()
+- getWifiPasswordParameter()
+- getApTimeoutParameter()
+
 ## Use custom style
 You can provide your own custom HTML template by updating default
 HTML format provider. For this you should utilize the
@@ -152,15 +163,35 @@ Now, custom properties are mainly handy, when you would like to create
 some special HTML form item. But eventually you can change the whole
 behaviour of your parameter handling. E.g. by overriding ```storeValue()```
 and ```loadValue()``` you can basically convert your internal data format
-to whatever you like. E.g. let's say, that you would like to store
-numbers in binary format, you are free to use that by providing conversion
-implementation for it.
+to whatever you like. The [Typed parameters](#typed-parameters-experimental)
+approach is just an excelent example for this option.
 
 You can also override ParameterGroup class in case you need some special
 group appearance.
 
 There is a complete example about this topic, so please visit example
 ```IotWebConf12CustomParameterType```!
+
+## Typed parameters (experimental)
+A new parameter structure is introduced, where the parameters does not
+require a "valueBuffer" anymore. Storing the parameter is done in a
+native format, e.g. a 8-bit integers are stored in one byte of EEPROM.
+ 
+This was achieved by utilizing the ```template``` technology of C++.
+While the result is spectacular, the ```template``` makes thing very
+complicated under the hood.
+
+Builder pattern is also introduced for the typed parameters. See example
+```IotWebConf03TypedParameters``` for details. Please compare example
+IotWebConf03TypedParameters and IotWebConf03TypedParameters for the
+difference in the usage of the two different approach.
+
+**Please note, that Typed Parameters are very experimental, and the
+interface might be a subject of change in the future.**
+
+![UML diagram of the Typed Parameters approach.](TParameter.png)
+(This image was created by PlantUML, the source file is generate with command
+```hpp2plantuml -i src/IotWebConfTParameter.h -o doc/TParameter.plantuml```)
 
 ## Control on WiFi connection status change
 IotWebConf provides a feature to control WiFi connection events by defining

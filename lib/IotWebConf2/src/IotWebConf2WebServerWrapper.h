@@ -23,6 +23,7 @@ class WebRequestWrapper
 public:
   virtual const String hostHeader() const;
   virtual IPAddress localIP();
+  virtual uint16_t localPort();
   virtual const String uri() const;
   virtual bool authenticate(const char * username, const char * password);
   virtual void requestAuthentication();

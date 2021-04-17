@@ -29,9 +29,13 @@ The namespace for IotWebConf become ```iotwebconf::```. From now on
 you should use this prefix for each type defined by the library
 except for the IotWebConf class itself.
 
+There are more ways to update your code. Let's see some variations!
+
 ### Migration steps: easy way
 For easy migration IotWebConf has provided a header file prepared
-with predefined aliases to hide namespaces.
+with predefined aliases to hide namespaces, so you can still use
+the legacy types.
+
 Include helper header file as follows.
 
 Code before:
@@ -46,34 +50,40 @@ Code after:
 ```
 
 ### Migration steps: proper way
-Use namespace prefixes as follows.
+Use namespace prefixes before every type name.
 
 Code before:
 ```C++
-class CustomHtmlFormatProvider :
-  public IotWebConfHtmlFormatProvider
-{
-protected:
-...
+IotWebConfParameter mqttServerParam =
+  IotWebConfParameter("MQTT server", "mqttServer", mqttServerValue, STRING_LEN);
 ```
 
 Code after:
 ```C++
-class CustomHtmlFormatProvider :
-  public iotwebconf::HtmlFormatProvider
-{
-protected:
+iotwebconf::Parameter mqttServerParam =
+  iotwebconf::Parameter("MQTT server", "mqttServer", mqttServerValue, STRING_LEN);
+```
+
+### Migration steps: optimist way
+Define namespaces at the beginning of the code and use simple type name.
+Everywhere later on. This works only until name-collision with other
+library occur.
+
+Code after:
+```C++
+using namespace iotwebconf;
 ...
+Parameter mqttServerParam =
+  Parameter("MQTT server", "mqttServer", mqttServerValue, STRING_LEN);
 ```
 
 ## Parameter classes
 
 Previously there was just the ```IotWebConfParameter``` and the
-parameter was provided as an argument. Now it turned out, that 
-it is a better idea to use specific classes for each individual
- types. So from now on you must specify the
- type of
-the parameter by creating that very type e.g. using 
+actual type was provided as an argument of this one-and-only type.
+Now it turned out, that it is a better idea to use specific classes
+for each individual types. So from now on you must specify the type
+of the parameter by creating that very type e.g. using 
 ```IotWebConfTextParameter```.
  
 For compatibility reasons the signature is the same before, except
@@ -109,6 +119,10 @@ Note, that ```IotWebConfTextParameter``` and
 should use ```iotwebconf::TextParameter```,
 ```iotwebconf::PasswordParameter```, etc.
 
+_Note, that with version 3.0.0 a new typed parameter approach is introduced,
+you might want to immediately migrate to this parameter types, but
+typed-parameters are still in testing phase and might be a subject of
+change._ 
 
 ## Grouping parameters
 
@@ -168,9 +182,10 @@ should use ```iotwebconf::ParameterGroup```,
 
 For the Parameters you could always specify "defaultValue". In v2.x
 .x this value was intended to be appeared in the config portal, if no
-values are specified. On the other hand in v3.0.0 defaultValue is
-automatically assigned to the parameter, when this is the first
-time configuration is loading.
+values are specified. Now with v3.0.0, defaultValue has a different
+meaning. Now it is
+automatically assigned to the parameter, when this is the **first
+time** configuration is loading.
 
 This means you do not have to set these values manually.
 
@@ -200,16 +215,33 @@ iotWebConf.addHiddenParameter(&myHiddenParameter);
 
 ## UpdateServer changes
 
-In prior versions, IotWebConf switched on HTTP Update server. With
-version 3.0.0, IotWebConf dropped the dependency to UpdateServer. The
-switching will still be triggered, but implementations should be provided
-to do the actual switching.
+In prior versions, IotWebConf activated HTTP Update server automatically.
+With version 3.0.0, IotWebConf dropped the dependency to UpdateServer. The
+activation will still be triggered, but the actual switching action
+should be provided externally (at your code).
 
-A quite complicated code needs to introduced because of this, and you
-need to manually include UpdateServer to your code. See example:
+A quite complicated code needs to introduced because of this change, and
+you need to manually include UpdateServer to your code. See example:
  ```IotWebConf04UpdateServer``` for details!
 
+Changed lines:
+
 ```
+// Include Update server
+#ifdef ESP8266
+# include <ESP8266HTTPUpdateServer.h>
+#elif defined(ESP32)
+# include <IotWebConfESP32HTTPUpdateServer.h>
+#endif
+
+// Create Update Server
+#ifdef ESP8266
+ESP8266HTTPUpdateServer httpUpdater;
+#elif defined(ESP32)
+HTTPUpdateServer httpUpdater;
+#endif
+
+  // In setup register callbacks performing Update Server hooks. 
   iotWebConf.setupUpdateServer(
     [](const char* updatePath) { httpUpdater.setup(&server, updatePath); },
     [](const char* userName, char* password) { httpUpdater.updateCredentials(userName, password); });
@@ -217,11 +249,15 @@ need to manually include UpdateServer to your code. See example:
 
 Note, that ESP32 still doesn't provide Update Server solution out of the
 box. IotWebConf still provides an implementation for that, but it is now
-completely independent from the core codes.
+completely independent of the core codes.
 
 ## configSave
 Method configSave is renamed to saveConfig.
 
 ## formValidator
-The formValidator() methods from now on will have a WebRequestWrapper*
-parameter.
+The formValidator() methods from now on will have a
+```webRequestWrapper``` parameter.
+
+```
+bool formValidator(iotwebconf::WebRequestWrapper* webRequestWrapper);
+```
