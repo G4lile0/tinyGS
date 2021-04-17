@@ -92,7 +92,7 @@ int16_t Radio::begin()
   status.radio_ready = false;
   board_type board = ConfigManager::getInstance().getBoardConfig();
   const char* modemConfig = ConfigManager::getInstance().getModemStartup();
-  size_t size = JSON_ARRAY_SIZE(10) + 10*JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(15) + JSON_ARRAY_SIZE(8) + 60;
+  size_t size = JSON_ARRAY_SIZE(10) + 10*JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(16) + JSON_ARRAY_SIZE(8) + JSON_ARRAY_SIZE(8) +64;
   DynamicJsonDocument doc(size);
   DeserializationError error = deserializeJson(doc, modemConfig);
 
@@ -193,6 +193,17 @@ int16_t Radio::begin()
   }
   
   
+  // packets Filter    
+  uint8_t filterSize = doc["filter"].size();
+    for (int i=0; i<8; i++) 
+    {
+      if (i < filterSize)
+        status.modeminfo.filter[i] = doc["filter"][i];
+      else
+        status.modeminfo.filter[i] = 0;
+    }
+  
+
   if (state == ERR_NONE)
   {
     Log::console(PSTR("success!"));

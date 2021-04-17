@@ -145,7 +145,8 @@ void wifiConnected()
 }
 
 void setup()
-{
+{ 
+  setCpuFrequencyMhz(240);
   Serial.begin(115200);
   delay(100);
 
@@ -208,7 +209,7 @@ void loop() {
 
   mqtt.loop();
   OTA::loop();
-  displayUpdate();
+  if (configManager.getOledBright() != 0) displayUpdate();
 }
 
 void setupNTP()
