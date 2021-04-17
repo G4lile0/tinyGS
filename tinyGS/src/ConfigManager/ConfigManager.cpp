@@ -483,4 +483,9 @@ void ConfigManager::parseAdvancedConf()
   {
     advancedConf.dnOled = doc["dnOled"];
   }
+
+  if (doc.containsKey(F("lowPower")))
+  {
+    advancedConf.lowPower = doc["lowPower"];
+  }
 }

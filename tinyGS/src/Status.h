@@ -65,6 +65,7 @@ struct Status {
   const uint32_t version = 2104160; // version year month day release
   const char* git_version = GIT_VERSION;
   bool mqtt_connected = false;
+  bool radio_ready = false;
   PacketInfo lastPacketInfo;
   ModemInfo modeminfo;
   float satPos[2] = {0, 0};

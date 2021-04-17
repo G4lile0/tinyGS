@@ -89,6 +89,7 @@ void Radio::init()
 
 int16_t Radio::begin()
 {
+  status.radio_ready = false;
   board_type board = ConfigManager::getInstance().getBoardConfig();
   const char* modemConfig = ConfigManager::getInstance().getModemStartup();
   size_t size = JSON_ARRAY_SIZE(10) + 10*JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(15) + JSON_ARRAY_SIZE(8) + 60;
@@ -231,7 +232,7 @@ int16_t Radio::begin()
     return state;
   }
 
-  ready = true;
+  status.radio_ready = true;
   return state;
 }
 

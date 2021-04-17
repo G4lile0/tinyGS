@@ -246,6 +246,11 @@ void IotWebConf2::setWifiConnectionCallback(std::function<void()> func)
   this->_wifiConnectionCallback = func;
 }
 
+void IotWebConf2::setConfiguredCallback(std::function<void()> func)
+{
+  this->_configuredCallback = func;
+}
+
 void IotWebConf2::setConfigSavingCallback(std::function<void(int size)> func)
 {
   this->_configSavingCallback = func;
@@ -684,6 +689,14 @@ void IotWebConf2::stateChanged(byte oldState, byte newState)
 #endif
       break;
     case IOTWEBCONF_STATE_CONNECTING:
+      if (oldState == IOTWEBCONF_STATE_BOOT ||
+          oldState == IOTWEBCONF_STATE_NOT_CONFIGURED)
+      {
+        if (this->_configuredCallback != NULL)
+        {
+          this->_configuredCallback();
+        }
+      }
       if ((oldState == IOTWEBCONF_STATE_AP_MODE) ||
           (oldState == IOTWEBCONF_STATE_NOT_CONFIGURED))
       {

@@ -24,14 +24,12 @@
 
 void displayInit();
 void displayShowConnected();
-void displayShowWaitingMqttConnection();
 void displayShowInitialCredits();
 void displayShowApMode();
 void displayShowStaMode(bool ap);
 void displayUpdate();
-void displayShowLoRaError();
-void displayShowRadioError();
-void turnDisplayOff();
+void displayTurnOff();
+void displayNextFrame();
 
 extern Status status;
 

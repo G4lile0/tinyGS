@@ -21,7 +21,7 @@
 #include "graphics.h"
 
 SSD1306* display;
-OLEDDisplayUi* ui;
+OLEDDisplayUi* ui = NULL;
 
 void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state);
 void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
@@ -167,6 +167,18 @@ void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 
 void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y)
 {
+  if (!status.radio_ready)
+  {
+    display->setTextAlignment(TEXT_ALIGN_LEFT);
+    display->setFont(ArialMT_Plain_10);
+    display->drawString(0, 0, "LoRa initialization failed.");
+    display->drawString(0, 14, "Browse " + WiFi.localIP().toString());
+    display->drawString(0, 28, "Ensure board selected");
+    display->drawString(0, 42, "matches your hardware");
+
+    return;
+  }
+
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_10);
   display->drawString(x,  y,  status.modeminfo.satellite);
@@ -180,12 +192,14 @@ void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   if (String(status.modeminfo.modem_mode)=="LoRa")
   {
     display->drawString(x,  23 + y, "SF: " + String(status.modeminfo.sf));
-      if (ConfigManager::getInstance().getAllowTx()) {
-  
-          display->drawString(x,  34 + y, "Pwr:"+ String(status.modeminfo.power) + "dBm"); 
-      } else {
-          display->drawString(x,  34 + y, "TX OFF"); 
-      }
+    if (ConfigManager::getInstance().getAllowTx())
+    {
+      display->drawString(x,  34 + y, "Pwr:"+ String(status.modeminfo.power) + "dBm"); 
+    }
+    else
+    {
+      display->drawString(x,  34 + y, "TX OFF"); 
+    }
     display->setTextAlignment(TEXT_ALIGN_RIGHT);
     display->drawString(128 + x,  23 + y, "BW:"+ String(status.modeminfo.bw)+ "kHz");
     display->drawString(128 + x,  34 + y, "CR: "+ String(status.modeminfo.cr));
@@ -193,11 +207,13 @@ void drawFrame3(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   else
   {
     display->drawString(x,  23 + y, "FD/BW: " );
-      if (ConfigManager::getInstance().getAllowTx()) {
-          display->drawString(x,  34 + y, "P:"+ String(status.modeminfo.power) + "dBm"); 
-      } else {
-          display->drawString(x,  34 + y, "TX OFF"); 
-      }
+    if (ConfigManager::getInstance().getAllowTx()) {
+      display->drawString(x,  34 + y, "P:"+ String(status.modeminfo.power) + "dBm"); 
+    }
+    else
+    {
+      display->drawString(x,  34 + y, "TX OFF"); 
+    }
     display->setTextAlignment(TEXT_ALIGN_RIGHT);
     display->drawString(128 + x,  23 + y, String(status.modeminfo.freqDev)+ "/" + String(status.modeminfo.bw)+ "kHz");
     display->drawString(128 + x,  34 + y, String(status.modeminfo.bitrate)+ "kbps");
@@ -262,7 +278,7 @@ void drawFrame8(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->drawString(x+2, 16+y, "MQTT:" );
   if (status.mqtt_connected) { display->drawString( x+7,  26+y, "ON"); }  else { display->drawString( x+5,  26+y, "OFF"); }
-  display->drawString(x+90, 10+y, "Remote");
+  display->drawString(x+90, 10+y, "AUTO");
   display->drawString(x+95, 21+y, "TUNE" );
   if (ConfigManager::getInstance().getRemoteTune()) { display->drawString(x+101, 31+y, "ON"); }  else { display->drawString(x+98,  31+y, "OFF"); }
   display->drawXbm(x + 32, y + 4, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
@@ -276,19 +292,9 @@ void displayShowConnected()
   display->clear();
   display->drawXbm(34, 0 , WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
   
+  display->setTextAlignment(TEXT_ALIGN_CENTER);
   display->drawString(64 , 35 , "Connected " + String(ConfigManager::getInstance().getWiFiSSID()));
   display->drawString(64 ,53 , (WiFi.localIP().toString()));
-  display->display();
-}
-
-void displayShowWaitingMqttConnection()
-{
-  display->clear();
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->drawString(20 ,10 , "Waiting for MQTT"); 
-  display->drawString(35 ,24 , "Connection...");
-  display->drawString(3 ,38 , "Press PROG butt. or send");
-  display->drawString(3 ,52 , "e in serial to reset conf.");
   display->display();
 }
 
@@ -328,24 +334,18 @@ void displayShowStaMode(bool ap)
   display->display();
 }
 
-void displayShowLoRaError()
-{
-  display->clear();
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->drawString(0, 0, "LoRa initialization failed.");
-  display->drawString(0, 14, "Browse " + WiFi.localIP().toString());
-  display->drawString(0, 28, "Ensure board selected");
-  display->drawString(0, 42, "matches your hardware");
-  display->display();
-}
-
 void displayUpdate()
 {
-  ui->update();
+  if (ConfigManager::getInstance().getOledBright())
+    ui->update();
 }
 
-void turnDisplayOff()
+void displayTurnOff()
 {
   display->displayOff();
 }
 
+void displayNextFrame() {
+  if (ui)
+    ui->nextFrame();
+}

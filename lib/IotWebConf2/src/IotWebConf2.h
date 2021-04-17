@@ -276,6 +276,12 @@ public:
   void setWifiConnectionCallback(std::function<void()> func);
 
   /**
+   * Specify a callback method, that will be called upon first config is saved.
+   * Should be called before init()!
+   */
+  void setConfiguredCallback(std::function<void()> func);
+
+  /**
    * Specify a callback method, that will be called when settings is being changed.
    * This is very handy if you have other routines, that are modifying the "EEPROM"
    * parallel to IotWebConf2, now this is the time to disable these routines.
@@ -469,6 +475,18 @@ public:
    */
   void forceApMode(bool value);
 
+    /**
+   * By default IotWebConf2 will set the thing password as the AP password when connecting in AP mode
+   * With this method a default AP can be set to recover settings.
+   * In combination with forceApMode, instan AP mode with default password can be triggered
+   *   @value - When parameter is TRUE the AP mode does not ask for password
+   *     When value is FALSE normal operation will continue.
+   */
+  void forceDefaultPassword(bool value)
+  {
+    this->_forceDefaultPassword = value;
+  }
+
   /**
    * Get internal parameters, for manual handling.
    * Normally you don't need to access these parameters directly.
@@ -570,6 +588,7 @@ private:
   unsigned long _apStartTimeMs = 0;
   byte _apConnectionStatus = IOTWEBCONF_AP_CONNECTION_STATE_NC;
   std::function<void()> _wifiConnectionCallback = NULL;
+  std::function<void()> _configuredCallback = NULL;
   std::function<void(int)> _configSavingCallback = NULL;
   std::function<void()> _configSavedCallback = NULL;
   std::function<bool(WebRequestWrapper* webRequestWrapper)> _formValidator = NULL;

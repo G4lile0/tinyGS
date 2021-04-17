@@ -45,7 +45,7 @@ public:
   void disableInterrupt();
   void startRx();
   uint8_t listen();
-  bool isReady() { return ready; }
+  bool isReady() { return status.radio_ready; }
   int16_t remote_freq(char* payload, size_t payload_len);
   int16_t remote_bw(char* payload, size_t payload_len);
   int16_t remote_sf(char* payload, size_t payload_len);
@@ -73,7 +73,6 @@ private:
   PhysicalLayer* lora;
   void readState(int state);
   static void setFlag();
-  bool ready = false;
   SPIClass spi;
   const char* TEST_STRING = "TinyGS-test "; // make sure this always start with "TinyGS-test"!!!
 

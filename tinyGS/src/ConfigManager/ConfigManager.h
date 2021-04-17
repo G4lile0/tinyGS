@@ -112,6 +112,7 @@ typedef struct {
 typedef struct {
   bool flipOled = true;
   bool dnOled = true;
+  bool lowPower = false;
 } AdvancedConfig;
 
 
@@ -159,6 +160,7 @@ public:
   board_type getBoardConfig(){ return boards[getBoard()]; }
   bool getFlipOled(){ return advancedConf.flipOled; }
   bool getDayNightOled(){ return advancedConf.dnOled; }
+  bool getLowPower(){ return advancedConf.lowPower; }
 
 
 private:

@@ -104,6 +104,8 @@ Status status;
 
 void printControls();
 void switchTestmode();
+void checkButton();
+void setupNTP();
 
 void ntp_cb (NTPEvent_t e)
 {
@@ -118,7 +120,98 @@ void ntp_cb (NTPEvent_t e)
   }
 }
 
+void configured()
+{
+  configManager.setConfiguredCallback(NULL);
+  configManager.printConfig();
+  radio.init();
+}
+
 void wifiConnected()
+{
+  configManager.setWifiConnectionCallback(NULL);
+  setupNTP();
+  displayShowConnected();
+  configManager.delay(100); // finish animation
+
+  if (configManager.getLowPower())
+  {
+    Log::debug(PSTR("Set low power CPU=80Mhz"));
+    setCpuFrequencyMhz(80); //Set CPU clock to 80MHz
+  }
+
+  configManager.delay(400); // wait to show the connected screen and stabilize frequency
+  radio.init();
+}
+
+void setup()
+{
+  Serial.begin(115200);
+  delay(100);
+
+  FailSafe.checkBoot (MAX_CONSECUTIVE_BOOT); // Parameters are optional
+  if (FailSafe.isActive ()) // Skip all user setup if fail safe mode is activated
+    return;
+
+  Log::console(PSTR("TinyGS Version %d - %s"), status.version, status.git_version);
+  configManager.setWifiConnectionCallback(wifiConnected);
+  configManager.setConfiguredCallback(configured);
+  configManager.init();
+  // make sure to call doLoop at least once before starting to use the configManager
+  configManager.doLoop();
+  pinMode (configManager.getBoardConfig().PROG__BUTTON, INPUT_PULLUP);
+  displayInit();
+  displayShowInitialCredits();
+  configManager.delay(1000);
+  mqtt.begin();
+
+  if (configManager.getOledBright() == 0)
+  {
+    displayTurnOff();
+  }
+
+  printControls();
+}
+
+void loop() {
+  FailSafe.loop (BOOT_FLAG_TIMEOUT); // Use always this line
+  if (FailSafe.isActive ()) // Skip all user loop code if Fail Safe mode is active
+    return;
+    
+  configManager.doLoop();
+  ArduinoOTA.handle();
+  handleSerial();
+  checkButton();
+
+  if (configManager.getState() < 2) // not ready or not configured
+  {
+    displayShowApMode();
+    return;
+  }
+  // configured and no connection
+  if (radio.isReady())
+  {
+    status.radio_ready = true;
+    radio.listen();
+  }
+  else {
+    status.radio_ready = false;
+  }
+
+  if (configManager.getState() < 4) // connection or ap mode
+  {
+    displayShowStaMode(configManager.isApMode());
+    return;
+  }
+
+  // connected
+
+  mqtt.loop();
+  OTA::loop();
+  displayUpdate();
+}
+
+void setupNTP()
 {
   NTP.setInterval (120); // Sync each 2 minutes
   NTP.setTimeZone (configManager.getTZ ()); // Get TX from config manager
@@ -136,124 +229,37 @@ void wifiConnected()
   }
 
   printLocalTime();
-
-  configManager.printConfig();
-  arduino_ota_setup();
-  displayShowConnected();
-
-  if (configManager.getOledBright() == 0)
-  {
-    Log::debug(PSTR("OLED bright 0 then CPU=80Mhz"));
-    setCpuFrequencyMhz(80); //Set CPU clock to 80MHz fo example
-  }
-
-  radio.init();
-  if (!radio.isReady())
-  {
-    Serial.println("LoRa initialization failed. Please connect to " + WiFi.localIP().toString() + " and make sure the board selected matches your hardware.");
-    displayShowLoRaError();
-  }
-
-  configManager.delay(1000); // wait to show the connected screen
-
-  mqtt.begin();
-
-  // TODO: Make this beautiful
-  displayShowWaitingMqttConnection();
-  printControls();
 }
 
-void setup()
+void checkButton()
 {
-  Serial.begin(115200);
-  delay(200);
-
-  FailSafe.checkBoot (MAX_CONSECUTIVE_BOOT); // Parameters are optional
-  if (FailSafe.isActive ()) // Skip all user setup if fail safe mode is activated
-    return;
-
-  Log::console(PSTR("TinyGS Version %d - %s"), status.version, status.git_version);
-  configManager.setWifiConnectionCallback(wifiConnected);
-  configManager.init();
-  // make sure to call doLoop at least once before starting to use the configManager
-  configManager.doLoop();
-  pinMode (configManager.getBoardConfig().PROG__BUTTON, INPUT_PULLUP);
-  displayInit();
-  displayShowInitialCredits();
-
-#define WAIT_FOR_BUTTON 3000
-#define RESET_BUTTON_TIME 5000
-  unsigned long start_waiting_for_button = millis ();
-  unsigned long button_pushed_at;
-  Log::debug(PSTR("Waiting for reset config button"));
-  bool button_pushed = false;
-  while (millis () - start_waiting_for_button < WAIT_FOR_BUTTON)
+  #define RESET_BUTTON_TIME 8000
+  static unsigned long buttPressedStart = 0;
+  if (!digitalRead (configManager.getBoardConfig().PROG__BUTTON))
   {
-    configManager.doLoop();
-	  if (!digitalRead (configManager.getBoardConfig().PROG__BUTTON))
+    if (!buttPressedStart)
     {
-		  button_pushed = true;
-		  button_pushed_at = millis ();
-		  Log::debug(PSTR("Reset button pushed"));
-		  while (millis () - button_pushed_at < RESET_BUTTON_TIME)
-      {
-			  if (digitalRead (configManager.getBoardConfig().PROG__BUTTON))
-        {
-				  Log::debug(PSTR("Reset button released"));
-				  button_pushed = false;
-				  break;
-			  }
-		  }
-		  if (button_pushed)
-      {
-			  Log::debug(PSTR("Reset config triggered"));
-			  WiFi.begin ("0", "0");
-			  WiFi.disconnect ();
-		  }
-	  }
+      buttPressedStart = millis();
+    }
+    else if (millis() - buttPressedStart > RESET_BUTTON_TIME) // long press
+    {
+      Log::console(PSTR("Ap mode forced by button long press!"));
+      Log::console(PSTR("Connect to the WiFi AP: %s and open a web browser on ip 192.168.4.1 to configure your station and manually reboot when you finish."), configManager.getThingName());
+      configManager.forceDefaultPassword(true);
+      configManager.forceApMode(true);
+      buttPressedStart = 0;
+    }
   }
-
-  if (button_pushed)
-  {
-    configManager.resetAPConfig();
-    ESP.restart();
-  }
-  
-  if (configManager.isApMode())
-    displayShowApMode();
-  else 
-    displayShowStaMode(false);
-  
-  configManager.delay(500);
-
-  if (configManager.getOledBright() == 0)
-  {
-    turnDisplayOff();
+  else {
+    unsigned long elapsedTime = millis() - buttPressedStart;
+    if (elapsedTime > 30 && elapsedTime < 1000) // short press
+      displayNextFrame();
+    buttPressedStart = 0;
   }
 }
 
-void loop() {
-  FailSafe.loop (BOOT_FLAG_TIMEOUT); // Use always this line
-  if (FailSafe.isActive ()) // Skip all user loop code if Fail Safe mode is active
-    return;
-    
-  configManager.doLoop();
-
-  static bool wasConnected = false;
-  if (!configManager.isConnected())
-  {
-    if (configManager.isApMode() && !wasConnected)
-      displayShowApMode();
-    else 
-      displayShowStaMode(configManager.isApMode());
-
-    return;
-  }
-  wasConnected = true;
-  mqtt.loop();
-  ArduinoOTA.handle();
-  OTA::loop();
-  
+void handleSerial()
+{
   if(Serial.available())
   {
     radio.disableInterrupt();
@@ -307,16 +313,6 @@ void loop() {
 
     radio.enableInterrupt();
   }
-
-  if (!radio.isReady())
-  {
-    displayShowLoRaError();
-    return;
-  }
-
-  if (configManager.getOledBright()!=0)  displayUpdate();
-
-  radio.listen();
 }
 
 void switchTestmode()
