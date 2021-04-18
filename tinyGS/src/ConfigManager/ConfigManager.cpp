@@ -356,6 +356,9 @@ void ConfigManager::resetAllConfig()
   telemetry3rd[0]  = '\0';
   testMode[0]  = '\0';
   autoUpdate[0]  = '\0';
+  boardTemplate[0]  = '\0';
+  modemStartup[0]  = '\0';
+  advancedConfig[0]  = '\0';
 
   saveConfig();
 }
