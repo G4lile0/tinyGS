@@ -52,9 +52,9 @@
 #endif
 
 // -- Logs progress information to Serial if enabled.
-//#ifndef IOTWEBCONF_DEBUG_DISABLED
+#ifndef IOTWEBCONF_DEBUG_DISABLED
 # define IOTWEBCONF_DEBUG_TO_SERIAL
-//#endif
+#endif
 
 // -- Logs passwords to Serial if enabled.
 //#define IOTWEBCONF_DEBUG_PWD_TO_SERIAL
@@ -73,6 +73,24 @@
 
 #ifndef IOTWEBCONF_DNS_PORT
 # define IOTWEBCONF_DNS_PORT 53
+#endif
+
+// Failsafe
+// -- EEPROM config starts with a special prefix of length defined here.
+#ifndef IOTWEBCONF_FAILSAFE_LENGTH
+# define IOTWEBCONF_FAILSAFE_LENGTH 1
+#endif
+
+#ifndef IOTWEBCONF_FAILSAFE_BOOT_COUNT
+# define IOTWEBCONF_FAILSAFE_BOOT_COUNT 10
+#endif
+
+#ifndef IOTWEBCONF_FAILSAFE_RESET_TIME
+# define IOTWEBCONF_FAILSAFE_RESET_TIME 10000
+#endif
+
+#ifndef IOTWEBCONF_FAILSAFE_RESCUE_TIME
+# define IOTWEBCONF_FAILSAFE_RESCUE_TIME 900000
 #endif
 
 #endif

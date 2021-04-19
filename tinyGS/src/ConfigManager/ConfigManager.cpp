@@ -64,7 +64,6 @@ ConfigManager::ConfigManager()
   setFormValidator(formValidatorStd);
   setConfigSavedCallback([this]{ configSavedCallback(); });
   skipApStartup();
-  
 
   // Customize own parameters
   getThingNameParameter()->label = "GroundStation Name (will be seen on the map)";

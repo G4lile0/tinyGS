@@ -77,7 +77,6 @@
 #include "src/ArduinoOTA/ArduinoOTA.h"
 #include "src/OTA/OTA.h"
 #include <ESPNtpClient.h>
-#include <FailSafe.h>
 #include "src/Logger/Logger.h"
 
 #if  RADIOLIB_VERSION_MAJOR != (0x04) || RADIOLIB_VERSION_MINOR != (0x02) || RADIOLIB_VERSION_PATCH != (0x01) || RADIOLIB_VERSION_EXTRA != (0x00)
@@ -87,10 +86,6 @@
 #ifndef RADIOLIB_GODMODE
 #error "Using Arduino IDE is not recommended, please follow this guide https://github.com/G4lile0/tinyGS/wiki/Arduino-IDE or edit /RadioLib/src/BuildOpt.h and uncomment #define RADIOLIB_GODMODE around line 367" 
 #endif
-
-
-const int MAX_CONSECUTIVE_BOOT = 10; // Number of rapid boot cycles before enabling fail safe mode
-const time_t BOOT_FLAG_TIMEOUT = 10000; // Time in ms to reset fail safe mode activation flag
 
 ConfigManager& configManager = ConfigManager::getInstance();
 MQTT_Client& mqtt = MQTT_Client::getInstance();
@@ -150,14 +145,16 @@ void setup()
   Serial.begin(115200);
   delay(100);
 
-  FailSafe.checkBoot (MAX_CONSECUTIVE_BOOT); // Parameters are optional
-  if (FailSafe.isActive ()) // Skip all user setup if fail safe mode is activated
-    return;
-
   Log::console(PSTR("TinyGS Version %d - %s"), status.version, status.git_version);
   configManager.setWifiConnectionCallback(wifiConnected);
   configManager.setConfiguredCallback(configured);
   configManager.init();
+  if (configManager.isFailSafeActive())
+  {
+    Log::console(PSTR("FATAL ERROR: The board is in a boot loop, rescue mode launched. Connect to the WiFi AP: %s, and open a web browser on ip 192.168.4.1 to fix your configuration problem or upload a new firmware."), configManager.getThingName());
+    configManager.forceApMode(true);
+    return;
+  }
   // make sure to call doLoop at least once before starting to use the configManager
   configManager.doLoop();
   pinMode (configManager.getBoardConfig().PROG__BUTTON, INPUT_PULLUP);
@@ -174,12 +171,11 @@ void setup()
   printControls();
 }
 
-void loop() {
-  FailSafe.loop (BOOT_FLAG_TIMEOUT); // Use always this line
-  if (FailSafe.isActive ()) // Skip all user loop code if Fail Safe mode is active
-    return;
-    
+void loop() {  
   configManager.doLoop();
+  if (configManager.isFailSafeActive())
+    return;
+
   ArduinoOTA.handle();
   handleSerial();
   checkButton();
@@ -244,7 +240,7 @@ void checkButton()
     }
     else if (millis() - buttPressedStart > RESET_BUTTON_TIME) // long press
     {
-      Log::console(PSTR("Ap mode forced by button long press!"));
+      Log::console(PSTR("Rescue mode forced by button long press!"));
       Log::console(PSTR("Connect to the WiFi AP: %s and open a web browser on ip 192.168.4.1 to configure your station and manually reboot when you finish."), configManager.getThingName());
       configManager.forceDefaultPassword(true);
       configManager.forceApMode(true);

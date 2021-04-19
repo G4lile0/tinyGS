@@ -549,6 +549,8 @@ public:
     return this->htmlFormatProvider;
   }
 
+  bool isFailSafeActive() { return _failsafeTriggered; }
+
 private:
   const char* _initialApPassword = NULL;
   const char* _configVersion;
@@ -611,6 +613,12 @@ private:
   HtmlFormatProvider htmlFormatProviderInstance;
   HtmlFormatProvider* htmlFormatProvider = &htmlFormatProviderInstance;
 
+  // Failsafe
+  uint8_t _bootCount = 0;
+  bool _failsafeTriggered = false;
+  void loadFailSafeCounter();
+  void resetFailSafeCounter();
+
   int initConfig();
   bool testConfigVersion();
   void saveConfigVersion();
@@ -651,3 +659,4 @@ private:
 using iotwebconf2::IotWebConf2;
 
 #endif
+

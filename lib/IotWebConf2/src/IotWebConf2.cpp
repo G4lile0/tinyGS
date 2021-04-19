@@ -69,6 +69,7 @@ void IotWebConf2::setStatusPin(int statusPin, int statusOnLevel)
 
 bool IotWebConf2::init()
 {
+  loadFailSafeCounter();
   // -- Setup pins.
   if (this->_configPin >= 0)
   {
@@ -143,7 +144,7 @@ bool IotWebConf2::loadConfig()
 {
   int size = this->initConfig();
   EEPROM.begin(
-    IOTWEBCONF_CONFIG_START + IOTWEBCONF_CONFIG_VERSION_LENGTH + size);
+    IOTWEBCONF_CONFIG_START + IOTWEBCONF_CONFIG_VERSION_LENGTH + size + IOTWEBCONF_FAILSAFE_LENGTH);
 
   if (this->testConfigVersion())
   {
@@ -181,7 +182,7 @@ void IotWebConf2::saveConfig()
     this->_configSavingCallback(size);
   }
   EEPROM.begin(
-    IOTWEBCONF_CONFIG_START + IOTWEBCONF_CONFIG_VERSION_LENGTH + size);
+    IOTWEBCONF_CONFIG_START + IOTWEBCONF_CONFIG_VERSION_LENGTH + size + IOTWEBCONF_FAILSAFE_LENGTH);
 
   this->saveConfigVersion();
   int start = IOTWEBCONF_CONFIG_START + IOTWEBCONF_CONFIG_VERSION_LENGTH;
@@ -532,6 +533,14 @@ void IotWebConf2::delay(unsigned long m)
 
 void IotWebConf2::doLoop()
 {
+  if (millis() > IOTWEBCONF_FAILSAFE_RESET_TIME && _bootCount > 0)
+  {
+    resetFailSafeCounter();
+  }
+
+  if (isFailSafeActive() && millis() > IOTWEBCONF_FAILSAFE_RESCUE_TIME)
+    ESP.restart();
+  
   doBlink();
   yield(); // -- Yield should not be necessary, but cannot hurt either.
   if (this->_state == IOTWEBCONF_STATE_BOOT)
@@ -974,6 +983,34 @@ void IotWebConf2::connectWifi(const char* ssid, const char* password)
 WifiAuthInfo* IotWebConf2::handleConnectWifiFailure()
 {
   return NULL;
+}
+
+void IotWebConf2::loadFailSafeCounter()
+{
+  int size = this->_allParameters.getStorageSize();
+  EEPROM.begin(IOTWEBCONF_CONFIG_START + IOTWEBCONF_CONFIG_VERSION_LENGTH + size + IOTWEBCONF_FAILSAFE_LENGTH);
+  uint16_t start = IOTWEBCONF_CONFIG_START + IOTWEBCONF_CONFIG_VERSION_LENGTH + size;
+  _bootCount = EEPROM.read(start) + 1;
+  EEPROM.write(start, _bootCount);
+  EEPROM.end();
+
+#ifdef IOTWEBCONF_DEBUG_TO_SERIAL
+  Serial.print(F("Boot count: "));
+  Serial.println(_bootCount);
+#endif
+
+  if (_bootCount >= IOTWEBCONF_FAILSAFE_BOOT_COUNT)
+    _failsafeTriggered = true;
+}
+
+void IotWebConf2::resetFailSafeCounter()
+{
+  int size = this->_allParameters.getStorageSize();
+  EEPROM.begin(IOTWEBCONF_CONFIG_START + IOTWEBCONF_CONFIG_VERSION_LENGTH + size + IOTWEBCONF_FAILSAFE_LENGTH);
+  uint16_t start = IOTWEBCONF_CONFIG_START + IOTWEBCONF_CONFIG_VERSION_LENGTH + size;
+  _bootCount = 0;
+  EEPROM.write(start, _bootCount);
+  EEPROM.end();
 }
 
 } // end namespace
