@@ -371,6 +371,9 @@ uint8_t Radio::listen()
   status.lastPacketInfo.snr = newPacketInfo.snr;
   status.lastPacketInfo.frequencyerror = newPacketInfo.frequencyerror;
 
+    // print RSSI (Received Signal Strength Indicator)
+  Log::console(PSTR("[SX12x8] RSSI:\t\t%f dBm\n[SX12x8] SNR:\t\t%f dB\n[SX12x8] Frequency error:\t%f Hz"), status.lastPacketInfo.rssi, status.lastPacketInfo.snr, status.lastPacketInfo.frequencyerror);
+
   if (state == ERR_NONE && respLen > 0)
   {
     // read optional data
@@ -408,7 +411,7 @@ uint8_t Radio::listen()
           startRx();
 	        return 5;
         }
-    
+   
 	  }
 
     status.lastPacketInfo.crc_error = false;
@@ -417,10 +420,18 @@ uint8_t Radio::listen()
   }
   else if (state == ERR_CRC_MISMATCH) 
   {
-    // packet was received, but is malformed
-    status.lastPacketInfo.crc_error = true;
-    String error_encoded = base64::encode("Error_CRC");
-    MQTT_Client::getInstance().sendRx(error_encoded, noisyInterrupt);
+         // if filter is active, filter the CRC errors
+    if (status.modeminfo.filter[0]==0) {
+         // packet was received, but is malformed
+      status.lastPacketInfo.crc_error = true;
+      String error_encoded = base64::encode("Error_CRC");
+      MQTT_Client::getInstance().sendRx(error_encoded, noisyInterrupt);
+      }  else {
+        Log::console(PSTR("Filter enabled, Error CRC filtered"));
+	      delete[] respFrame;
+        startRx();
+	      return 5;
+      }
   } 
 
   delete[] respFrame;
@@ -447,8 +458,6 @@ uint8_t Radio::listen()
     status.lastPacketInfo.time = thisTime;
   }
 
-  // print RSSI (Received Signal Strength Indicator)
-  Log::console(PSTR("[SX12x8] RSSI:\t\t%f dBm\n[SX12x8] SNR:\t\t%f dB\n[SX12x8] Frequency error:\t%f Hz"), status.lastPacketInfo.rssi, status.lastPacketInfo.snr, status.lastPacketInfo.frequencyerror);
 
   noisyInterrupt = false;
 
