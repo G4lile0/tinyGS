@@ -26,7 +26,7 @@
 #include "../ConfigManager/ConfigManager.h"
 #include "../Status.h"
 #include <PubSubClient.h>
-#if MQTT_MAX_PACKET_SIZE != 1000
+#if MQTT_MAX_PACKET_SIZE != 1000  && !PLATFORMIO
 #error "Using Arduino IDE is not recommended, please follow this guide https://github.com/G4lile0/tinyGS/wiki/Arduino-IDE or edit /PubSubClient/src/PubSubClient.h  and set #define MQTT_MAX_PACKET_SIZE 1000"
 #endif
 #ifdef SECURE_MQTT
