@@ -36,7 +36,7 @@ void drawFrame8(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
 
 
 uint8_t frameCount = 8;
-FrameCallback frames[] = { drawFrame1, drawFrame2, drawFrame3, drawFrame4, drawFrame5, drawFrame6,drawFrame7, drawFrame8 };
+FrameCallback frames[] = { drawFrame1, drawFrame8, drawFrame3, drawFrame5, drawFrame2, drawFrame4, drawFrame6,drawFrame7 };
 uint8_t overlaysCount = 1;
 OverlayCallback overlays[] = { msOverlay };
 
