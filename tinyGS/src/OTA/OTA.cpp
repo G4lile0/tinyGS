@@ -43,7 +43,7 @@ void OTA::update()
 
   ConfigManager& c = ConfigManager::getInstance();
   char url[255];
-  sprintf_P(url, PSTR("%s?user=%s&mac=%s&version=%d"), OTA_URL, c.getMqttUser(), clientId, status.version);
+  sprintf_P(url, PSTR("%s?user=%s&name=%s&mac=%s&version=%d"), OTA_URL, c.getMqttUser(), c.getThingName(), clientId, status.version);
 
   Log::console(PSTR("Checking for firmware Updates...  "));
   t_httpUpdate_return ret = httpUpdate.update(client, url, status.git_version);
