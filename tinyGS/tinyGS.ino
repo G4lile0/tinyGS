@@ -127,6 +127,7 @@ void wifiConnected()
   configManager.setWifiConnectionCallback(NULL);
   setupNTP();
   displayShowConnected();
+  arduino_ota_setup();
   configManager.delay(100); // finish animation
 
   if (configManager.getLowPower())
