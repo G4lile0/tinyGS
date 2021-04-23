@@ -533,7 +533,7 @@ void IotWebConf2::delay(unsigned long m)
 
 void IotWebConf2::doLoop()
 {
-  if (millis() > IOTWEBCONF_FAILSAFE_RESET_TIME && _bootCount > 0)
+  if (_bootCount > 0 && (isFailSafeActive() || millis() > IOTWEBCONF_FAILSAFE_RESET_TIME))
   {
     resetFailSafeCounter();
   }

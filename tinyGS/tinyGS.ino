@@ -83,8 +83,10 @@
 #error "You are not using the correct version of RadioLib please copy TinyGS/lib/RadioLib on Arduino/libraries"
 #endif
 
-#if RADIOLIB_GODMODE == 0 && !PLATFORMIO
+#ifndef RADIOLIB_GODMODE
+#if !PLATFORMIO
 #error "Using Arduino IDE is not recommended, please follow this guide https://github.com/G4lile0/tinyGS/wiki/Arduino-IDE or edit /RadioLib/src/BuildOpt.h and uncomment #define RADIOLIB_GODMODE around line 367" 
+#endif
 #endif
 
 ConfigManager& configManager = ConfigManager::getInstance();
@@ -151,8 +153,9 @@ void setup()
   configManager.init();
   if (configManager.isFailSafeActive())
   {
+    configManager.setConfiguredCallback(NULL);
+    configManager.setWifiConnectionCallback(NULL);
     Log::console(PSTR("FATAL ERROR: The board is in a boot loop, rescue mode launched. Connect to the WiFi AP: %s, and open a web browser on ip 192.168.4.1 to fix your configuration problem or upload a new firmware."), configManager.getThingName());
-    configManager.forceApMode(true);
     return;
   }
   // make sure to call doLoop at least once before starting to use the configManager
@@ -174,18 +177,30 @@ void setup()
 void loop() {  
   configManager.doLoop();
   if (configManager.isFailSafeActive())
+  {
+    static bool updateAttepted = false;
+    if (!updateAttepted && configManager.isConnected()) {
+      updateAttepted = true;
+      OTA::update(); // try to update as last resource to recover from this state
+    }
+
+    if (millis() > 10000 || updateAttepted)
+      configManager.forceApMode(true);
+    
     return;
+  }
 
   ArduinoOTA.handle();
   handleSerial();
-  checkButton();
 
   if (configManager.getState() < 2) // not ready or not configured
   {
     displayShowApMode();
     return;
   }
+  
   // configured and no connection
+  checkButton();
   if (radio.isReady())
   {
     status.radio_ready = true;
