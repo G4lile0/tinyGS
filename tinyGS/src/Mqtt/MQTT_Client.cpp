@@ -75,9 +75,10 @@ void MQTT_Client::loop() {
          totalVbat += analogRead(36);
         }
       averageVbat = totalVbat / 20;
-      StaticJsonDocument<64> doc;
+      StaticJsonDocument<128> doc;
       doc["Vbat"] = averageVbat;
-      char buffer[1048];
+      doc["Mem"] = ESP.getFreeHeap();
+      char buffer[256];
       serializeJson(doc, buffer);
       Log::debug(PSTR("%s"), buffer);
       publish(buildTopic(teleTopic, topicPing).c_str(), buffer, false);
