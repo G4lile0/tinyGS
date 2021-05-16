@@ -68,7 +68,20 @@ void MQTT_Client::loop() {
     if (scheduledRestart)
       sendWelcome();
     else
-      publish(buildTopic(teleTopic, topicPing).c_str(), "1");
+    {
+      int totalVbat = 0;
+      int averageVbat = 0;
+      for(int i = 0; i < 20; i++){
+         totalVbat += analogRead(36);
+        }
+      averageVbat = totalVbat / 20;
+      StaticJsonDocument<64> doc;
+      doc["Vbat"] = averageVbat;
+      char buffer[1048];
+      serializeJson(doc, buffer);
+      Log::debug(PSTR("%s"), buffer);
+      publish(buildTopic(teleTopic, topicPing).c_str(), buffer, false);
+    }
   }
 }
 
