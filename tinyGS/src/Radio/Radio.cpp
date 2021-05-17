@@ -125,7 +125,7 @@ int16_t Radio::begin()
 
     if (board.L_SX127X)
     {
-      state = ((SX1278*)lora)->begin(m.frequency, m.bw, m.sf, m.cr, m.sw, m.power,m.preambleLength,m.gain);
+      state = ((SX1278*)lora)->begin(m.frequency+status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power,m.preambleLength,m.gain);
       if (m.fldro == 2)
         ((SX1278*)lora)->autoLDRO();
       else
@@ -135,7 +135,7 @@ int16_t Radio::begin()
     }
     else
     {
-      state = ((SX1268*)lora)->begin(m.frequency, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, board.L_TCXO_V);
+      state = ((SX1268*)lora)->begin(m.frequency+status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, board.L_TCXO_V);
       if (m.fldro == 2)
         ((SX1268*)lora)->autoLDRO();
       else
@@ -164,14 +164,14 @@ int16_t Radio::begin()
     
 
     if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
-      state = ((SX1278*)lora)->beginFSK(m.frequency, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, (m.OOK != 255));
+      state = ((SX1278*)lora)->beginFSK(m.frequency+status.modeminfo.freqOffset, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, (m.OOK != 255));
       ((SX1278*)lora)->setDataShaping(m.OOK);
       ((SX1278*)lora)->startReceive();
       ((SX1278*)lora)->setDio0Action(setFlag);
       ((SX1278*)lora)->setSyncWord(m.fsw, swSize);
 
     } else {
-      state = ((SX1268*)lora)->beginFSK(m.frequency, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
+      state = ((SX1268*)lora)->beginFSK(m.frequency+status.modeminfo.freqOffset, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
       ((SX1268*)lora)->setDataShaping(m.OOK);
       ((SX1268*)lora)->startReceive();
       ((SX1268*)lora)->setDio1Action(setFlag);
@@ -511,13 +511,13 @@ int16_t Radio::remote_freq(char* payload, size_t payload_len)
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X) 
   {
     ((SX1278*)lora)->sleep();   // sleep mandatory if FastHop isn't ON.
-    state = ((SX1278*)lora)->setFrequency(frequency);
+    state = ((SX1278*)lora)->setFrequency(frequency+status.modeminfo.freqOffset);
     ((SX1278*)lora)->startReceive();
   }      
   else 
   {
     ((SX1268*)lora)->sleep();
-    state = ((SX1268*)lora)->setFrequency(frequency);
+    state = ((SX1268*)lora)->setFrequency(frequency+status.modeminfo.freqOffset);
     ((SX1268*)lora)->startReceive();
   }
  
@@ -753,13 +753,13 @@ int16_t Radio::remote_begin_lora(char* payload, size_t payload_len)
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
     ((SX1278*)lora)->sleep();   // sleep mandatory if FastHop isn't ON.
-    state = ((SX1278*)lora)->begin(freq, bw, sf, cr, syncWord78, power, preambleLength, gain);
+    state = ((SX1278*)lora)->begin(freq+status.modeminfo.freqOffset, bw, sf, cr, syncWord78, power, preambleLength, gain);
     ((SX1278*)lora)->startReceive();
     ((SX1278*)lora)->setDio0Action(setFlag);
   }
   else
   {
-    state = ((SX1268*)lora)->begin(freq, bw, sf, cr, syncWord68, power, preambleLength, ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
+    state = ((SX1268*)lora)->begin(freq+status.modeminfo.freqOffset, bw, sf, cr, syncWord68, power, preambleLength, ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
     ((SX1268*)lora)->startReceive();
     ((SX1268*)lora)->setDio1Action(setFlag);
   }
@@ -797,13 +797,13 @@ int16_t Radio::remote_begin_fsk(char* payload, size_t payload_len)
 
   int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
-    state = ((SX1278*)lora)->beginFSK(freq, br, freqDev, rxBw, power, preambleLength, (ook != 255));
+    state = ((SX1278*)lora)->beginFSK(freq+status.modeminfo.freqOffset, br, freqDev, rxBw, power, preambleLength, (ook != 255));
     ((SX1278*)lora)->setDataShaping(ook);
     ((SX1278*)lora)->startReceive();
     ((SX1278*)lora)->setDio0Action(setFlag);
 
   } else {
-    state = ((SX1268*)lora)->beginFSK(freq, br, freqDev, rxBw, power, preambleLength, ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
+    state = ((SX1268*)lora)->beginFSK(freq+status.modeminfo.freqOffset, br, freqDev, rxBw, power, preambleLength, ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
     ((SX1268*)lora)->setDataShaping(ook);
     ((SX1268*)lora)->startReceive();
     ((SX1268*)lora)->setDio1Action(setFlag);

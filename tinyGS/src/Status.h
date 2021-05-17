@@ -28,7 +28,7 @@ struct PacketInfo {
   String time = "Waiting";
   float rssi = 0;
   float snr = 0;
-  float frequencyerror = 0;
+  float frequencyerror = 0;    // Hz 
   bool crc_error = false;
 };
 
@@ -36,7 +36,8 @@ struct ModemInfo {
   char satellite[25]  = "Norbi";
   String  modem_mode  = "LoRa" ;     // 1-LoRa  2-FSK  3-GMSK
   float   frequency   = 436.703; // MHz  
-  float   bw          = 250.0; // kHz dual sideban
+  float   freqOffset  = 0;       // Hz 
+  float   bw          = 250.0;   // kHz dual sideban
   uint8_t sf          = 10 ;
   uint8_t cr          = 5 ;
   uint8_t sw          = 18;
@@ -62,7 +63,7 @@ struct TextFrame {
 };
 
 struct Status {
-  const uint32_t version = 2105171; // version year month day release
+  const uint32_t version = 2105172; // version year month day release
   const char* git_version = GIT_VERSION;
   bool mqtt_connected = false;
   bool radio_ready = false;

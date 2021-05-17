@@ -182,13 +182,14 @@ void  MQTT_Client::sendRx(String packet, bool noisy)
   struct timeval tv;
   gettimeofday(&tv, NULL);
 
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(22) + 25;
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(23) + 25;
   DynamicJsonDocument doc(capacity);
   JsonArray station_location = doc.createNestedArray("station_location");
   station_location.add(configManager.getLatitude());
   station_location.add(configManager.getLongitude());
   doc["mode"] = status.modeminfo.modem_mode;
   doc["frequency"] = status.modeminfo.frequency;
+  doc["frequency_offset"] =  status.modeminfo.freqOffset;
   doc["satellite"] = status.modeminfo.satellite;
  
   if (String(status.modeminfo.modem_mode)=="LoRa")
@@ -229,7 +230,7 @@ void  MQTT_Client::sendStatus()
   time(&now);
   struct timeval tv;
   gettimeofday(&tv, NULL);
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(28) + 25;
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(29) + 25;
   DynamicJsonDocument doc(capacity);
   JsonArray station_location = doc.createNestedArray("station_location");
   station_location.add(configManager.getLatitude());
@@ -244,6 +245,7 @@ void  MQTT_Client::sendStatus()
 
   doc["mode"] = status.modeminfo.modem_mode;
   doc["frequency"] = status.modeminfo.frequency;
+  doc["frequency_offset"] =  status.modeminfo.freqOffset;
   doc["satellite"] = status.modeminfo.satellite;
   doc["NORAD"] = status.modeminfo.NORAD;
  
@@ -478,6 +480,15 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     result = 0;
   }
 
+  // Set frequency offset 
+  if (!strcmp(command, commandGoToSleep))
+  {
+    if (length < 1) return;
+    remoteSetFreqOffset((char*)payload, length);
+    result = 0;
+  }
+
+
   // GOD MODE  With great power comes great responsibility!
   // SPIsetRegValue  (only sx1278) [1,2,3,4,5]
   if (!strcmp(command, commandSPIsetRegValue))
@@ -651,10 +662,16 @@ void MQTT_Client::remoteGoToSleep(char* payload, size_t payload_len)
     case ESP_SLEEP_WAKEUP_ULP : Serial.println("Wakeup caused by ULP program"); break;
     default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); break;
           }
-
-
 }
 
+
+void MQTT_Client::remoteSetFreqOffset(char* payload, size_t payload_len)
+{
+  DynamicJsonDocument doc(60);
+  deserializeJson(doc, payload, payload_len);
+  status.modeminfo.freqOffset = doc[0];
+  Log::debug(PSTR("Set Frequency OffSet to %f Hz"), doc[0]);
+}
 
 // Helper class to use as a callback
 void manageMQTTDataCallback(char *topic, uint8_t *payload, unsigned int length)
