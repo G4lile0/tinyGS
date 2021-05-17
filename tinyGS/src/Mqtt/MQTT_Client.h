@@ -68,6 +68,7 @@ private:
   void manageSatPosOled(char* payload, size_t payload_len);
   void remoteSatCmnd(char* payload, size_t payload_len);
   void remoteSatFilter(char* payload, size_t payload_len);
+  void remoteGoToSleep(char* payload, size_t payload_len);
 
   bool usingNewCert = false;
   unsigned long lastPing = 0;
@@ -121,6 +122,7 @@ private:
   const char* commandLog PROGMEM= "log";
   const char* commandTx PROGMEM= "tx";
   const char* commandSatFilter PROGMEM= "filter";
+  const char* commandGoToSleep PROGMEM= "sleep";
     // GOD MODE  With great power comes great responsibility!
   const char* commandSPIsetRegValue PROGMEM= "SPIsetRegValue";
   const char* commandSPIwriteRegister PROGMEM= "SPIwriteRegister";
