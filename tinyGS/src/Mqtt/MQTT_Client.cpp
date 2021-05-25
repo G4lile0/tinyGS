@@ -638,20 +638,18 @@ void MQTT_Client::remoteSatFilter(char* payload, size_t payload_len)
   DynamicJsonDocument doc(256);
   deserializeJson(doc, payload, payload_len);
   uint8_t filter_size = doc.size();
-  Serial.println("");
-
+ 
   status.modeminfo.filter[0]=doc[0];
   status.modeminfo.filter[1]=doc[1];
 
-  Serial.print(F("Set Sat Filter Size ")); Serial.println(status.modeminfo.filter[0]);
-  Serial.print(F("Set Sat Filter POS ")); Serial.println(status.modeminfo.filter[1]);
-  
-  Serial.print(F("-> "));
+  Log::debug(PSTR("Set Sat Filter Size %d"),status.modeminfo.filter[0]);
+  Log::debug(PSTR("Set Sat Filter POS  %d"),status.modeminfo.filter[1]);
+    Log::debug(PSTR("-> "));
     for (uint8_t filter_pos=2; filter_pos<filter_size;filter_pos++)
   {
     status.modeminfo.filter[filter_pos]=doc[filter_pos];
-    Serial.print(F(" 0x"));Serial.print(status.modeminfo.filter[filter_pos],HEX);Serial.print(F(", "));
-  }
+    Log::debug(PSTR(" 0x%x  ,"),status.modeminfo.filter[filter_pos]);
+    }
   Log::debug(PSTR("Sat packets Filter enabled"));
 }
 
@@ -663,7 +661,7 @@ void MQTT_Client::remoteGoToSleep(char* payload, size_t payload_len)
   uint16_t sleep_seconds = doc[0];
   //uint8_t  int_pin = doc [1];   // 99 no int pin
   
-  Serial.println("light_sleep_enter");
+  Log::debug(PSTR("light_sleep_enter"));
   esp_sleep_enable_timer_wakeup(sleep_seconds*1000000); //30 seconds
   //esp_sleep_enable_ext0_wakeup(int_pin,0);
   delay(100);
@@ -672,7 +670,7 @@ void MQTT_Client::remoteGoToSleep(char* payload, size_t payload_len)
   delay(100);
   int ret = esp_light_sleep_start();
   WiFi.disconnect(false);
-  Serial.printf("light_sleep: %d\n", ret);
+  Log::debug(PSTR("light_sleep: %d\n"), ret);
   // for stations with sleep disable OLED
   //displayTurnOff();
   delay(500);
@@ -681,12 +679,12 @@ void MQTT_Client::remoteGoToSleep(char* payload, size_t payload_len)
   
   switch(wakeup_reason)
   {
-    case ESP_SLEEP_WAKEUP_EXT0 : Serial.println("Wakeup caused by external signal using RTC_IO"); break;
-    case ESP_SLEEP_WAKEUP_EXT1 : Serial.println("Wakeup caused by external signal using RTC_CNTL"); break;
-    case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer"); break;
-    case ESP_SLEEP_WAKEUP_TOUCHPAD : Serial.println("Wakeup caused by touchpad"); break;
-    case ESP_SLEEP_WAKEUP_ULP : Serial.println("Wakeup caused by ULP program"); break;
-    default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); break;
+    case ESP_SLEEP_WAKEUP_EXT0 : Log::debug(PSTR("Wakeup caused by external signal using RTC_IO")); break;
+    case ESP_SLEEP_WAKEUP_EXT1 : Log::debug(PSTR("Wakeup caused by external signal using RTC_CNTL")); break;
+    case ESP_SLEEP_WAKEUP_TIMER : Log::debug(PSTR("Wakeup caused by timer")); break;
+    case ESP_SLEEP_WAKEUP_TOUCHPAD : Log::debug(PSTR("Wakeup caused by touchpad")); break;
+    case ESP_SLEEP_WAKEUP_ULP : Log::debug(PSTR("Wakeup caused by ULP program")); break;
+    default : Log::debug(PSTR("Wakeup was not caused by deep sleep: %d\n"),wakeup_reason); break;
           }
 }
 

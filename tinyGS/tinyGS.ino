@@ -302,36 +302,6 @@ void handleSerial()
       case 'b':
         ESP.restart();
         break;
-      case 's':
-        {
-          Serial.println("light_sleep_enter");
-          esp_sleep_enable_timer_wakeup(30000000); //30 seconds
-          esp_sleep_enable_ext0_wakeup(GPIO_NUM_0,0);
-          delay(100);
-          Serial.flush(); 
-          WiFi.disconnect( true );
-          delay(100);
-          int ret = esp_light_sleep_start();
-          WiFi.disconnect(false);
-          Serial.printf("light_sleep: %d\n", ret);
-            // for stations with sleep disable OLED
-          displayTurnOff();
-          delay(500);
-          esp_sleep_wakeup_cause_t wakeup_reason;
-          wakeup_reason = esp_sleep_get_wakeup_cause();
-          
-          switch(wakeup_reason)
-          {
-            case ESP_SLEEP_WAKEUP_EXT0 : Serial.println("Wakeup caused by external signal using RTC_IO"); break;
-            case ESP_SLEEP_WAKEUP_EXT1 : Serial.println("Wakeup caused by external signal using RTC_CNTL"); break;
-            case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer"); break;
-            case ESP_SLEEP_WAKEUP_TOUCHPAD : Serial.println("Wakeup caused by touchpad"); break;
-            case ESP_SLEEP_WAKEUP_ULP : Serial.println("Wakeup caused by ULP program"); break;
-            default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); break;
-          }
-
-          break;
-        }
       case 'p':
         if (!configManager.getAllowTx())
         {
