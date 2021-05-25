@@ -125,6 +125,7 @@ private:
   const char* commandSatFilter PROGMEM= "filter";
   const char* commandGoToSleep PROGMEM= "sleep";
   const char* commandSetFreqOffset PROGMEM= "foff";
+  const char* commandAdvParameters PROGMEM= "adv_prm";
   
     // GOD MODE  With great power comes great responsibility!
   const char* commandSPIsetRegValue PROGMEM= "SPIsetRegValue";

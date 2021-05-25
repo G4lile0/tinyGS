@@ -488,6 +488,14 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     result = 0;
   }
 
+  if (!strcmp(command, commandAdvParameters))
+  {
+    char buff[length+1];
+    memcpy(buff, payload, length);
+    buff[length] = '\0';
+    Log::debug(PSTR("%s"), buff);
+    ConfigManager::getInstance().setAvancedConfig(buff);
+  }
 
   // GOD MODE  With great power comes great responsibility!
   // SPIsetRegValue  (only sx1278) [1,2,3,4,5]

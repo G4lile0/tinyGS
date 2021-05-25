@@ -151,6 +151,7 @@ public:
   void setAutoUpdate(bool status) { if (status) strcpy(autoUpdate, CB_SELECTED_STR); else autoUpdate[0] = '\0'; this->saveConfig(); }
   const char* getModemStartup() { return modemStartup; }
   void setModemStartup(const char* modemStr) { strcpy(modemStartup, modemStr); this->saveConfig(); }
+  void setAvancedConfig(const char* adv_prmStr) { strcpy(advancedConfig, adv_prmStr); this->saveConfig(); }
   const char* getBoardTemplate() { return boardTemplate; }
   void setBoardTemplate(const char* boardTemplateStr) { strcpy(boardTemplate, boardTemplateStr); this->saveConfig(); }
 
