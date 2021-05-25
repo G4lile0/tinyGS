@@ -280,6 +280,18 @@ void  MQTT_Client::sendStatus()
   publish(buildTopic(statTopic, topicStatus).c_str(), buffer, false);
 }
 
+void MQTT_Client::sendAdvParameters()
+{
+  ConfigManager& configManager = ConfigManager::getInstance();
+  StaticJsonDocument<512> doc;
+  doc["adv_prm"].set(configManager.getAvancedConfig());
+  char buffer[512];
+  serializeJson(doc, buffer);
+  Log::debug(PSTR("%s"), buffer);
+  publish(buildTopic(teleTopic, topicGet_adv_prm).c_str(), buffer, false);
+
+}
+
 void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int length)
 {
   Radio& radio = Radio::getInstance();
@@ -488,13 +500,19 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     result = 0;
   }
 
-  if (!strcmp(command, commandAdvParameters))
+  if (!strcmp(command, commandSetAdvParameters))
   {
     char buff[length+1];
     memcpy(buff, payload, length);
     buff[length] = '\0';
     Log::debug(PSTR("%s"), buff);
     ConfigManager::getInstance().setAvancedConfig(buff);
+  }
+
+  if (!strcmp(command, commandGetAdvParameters))
+  {
+    sendAdvParameters();
+    return;
   }
 
   // GOD MODE  With great power comes great responsibility!
