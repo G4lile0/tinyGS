@@ -108,7 +108,8 @@ private:
   const char* commandFldro PROGMEM= "fldro";
   const char* commandAldro PROGMEM= "aldro";
   const char* commandPl PROGMEM= "pl";
-  const char* commandBegin PROGMEM= "begin";
+  const char* commandBegine PROGMEM= "begine";
+  const char* commandBeginp PROGMEM= "beginp";
   const char* commandBeginLora PROGMEM= "begin_lora";
   const char* commandBeginFSK PROGMEM= "begin_fsk";
   const char* commandBr PROGMEM= "br";

@@ -170,9 +170,7 @@ void setup()
   {
     displayTurnOff();
   }
-
-
-
+  
   printControls();
 }
 
