@@ -567,7 +567,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
   }
 
   // Set frequency offset
-  if (!strcmp(command, commandGoToSleep))
+  if (!strcmp(command, commandSetFreqOffset))
   {
     if (length < 1)
       return;
