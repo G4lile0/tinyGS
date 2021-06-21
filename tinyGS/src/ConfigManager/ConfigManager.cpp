@@ -21,6 +21,7 @@
 #include "../Mqtt/MQTT_Client.h"
 #include "../Logger/Logger.h"
 #include "../Radio/Radio.h"
+#include "../Display/graphics.h"
 #include "ArduinoJson.h"
 #if ARDUINOJSON_USE_LONG_LONG == 0 && !PLATFORMIO
 #error "Using Arduino IDE is not recommended, please follow this guide https://github.com/G4lile0/tinyGS/wiki/Arduino-IDE or edit /ArduinoJson/src/ArduinoJson/Configuration.hpp and amend to #define ARDUINOJSON_USE_LONG_LONG 1 around line 68"
@@ -138,6 +139,50 @@ void ConfigManager::handleDashboard()
   s += FPSTR(IOTWEBCONF_HTML_HEAD_END);
   s += FPSTR(IOTWEBCONF_DASHBOARD_BODY_INNER);
   s += String(FPSTR(LOGO)) + "<br />";
+  
+  // build svg of world map with animated satellite position
+  uint ix = 0;  
+  uint sx;     
+  String svg = "<div style=""margin-left:30px""><svg width""100%"" height=""auto"" viewBox=""0 0 262 134"" xmlns=""http://www.w3.org/2000/svg"">";
+  svg += "<rect x=""0"" y=""0"" width=""262"" height=""134"" stroke=""gray"" fill=""none"" stroke-width=""2"" />";
+  for (uint y = 0; y < earth_height; y++)
+  {
+    uint n = 0;
+    for (uint x = 0; x < earth_width / 8; x++)
+    {
+      for (uint i = 0; i < 8; i++)
+      {
+        if (((earth_bits[ix] >> i) & 1) == 1)
+        {
+          if (n == 0)
+          {
+            sx = (x * 8) + i;
+          }
+          n++;
+        } 
+        else 
+        {
+          if (n > 0) 
+          {
+            // append current land pixel string
+            svg += "<rect x="""+ String(sx * 2 + 3) + """ y=""" + String(y * 2 + 3) + """ width=""" + String(n * 2) + """ height=""2"" />";
+            n = 0;
+          }
+        }
+      }
+      ix++;
+    }
+  }
+  // add animated satellite position
+  if (status.satPos[0] != 0 || status.satPos[1] != 0)
+  {
+    svg += "<circle cx=""" + String(status.satPos[0] * 2 + 3) + """ cy=""" + String(status.satPos[1] * 2 + 3) + """ stroke=""red"" fill=""none"" stroke-width=""2"">";
+    svg += "  <animate attributeName=""r"" values=""2;4;6"" dur=""0.75s"" repeatCount=""indefinite"" />";
+    svg += "</circle>";
+  }
+  svg += "</svg></div>";  
+  s += svg;
+
   s += F("</table></div><div class=\"card\"><h3>Groundstation Status</h3><table>");
   s += "<tr><td>Name </td><td>" + String(getThingName()) + "</td></tr>";
   s += "<tr><td>Version </td><td>" + String(status.version) + "</td></tr>";
