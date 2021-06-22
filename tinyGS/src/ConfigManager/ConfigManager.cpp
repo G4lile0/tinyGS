@@ -54,6 +54,7 @@ ConfigManager::ConfigManager()
   server.on(DASHBOARD_URL, [this] { handleDashboard(); });
   server.on(RESTART_URL, [this] { handleRestart(); });
   server.on(REFRESH_CONSOLE_URL, [this] { handleRefreshConsole(); });
+  server.on(REFRESH_WORLDMAP_URL, [this] { handleRefreshWorldmap(); });
   setupUpdateServer(
       [this](const char *updatePath) { httpUpdater.setup(&server, updatePath); },
       [this](const char *userName, char *password) { httpUpdater.updateCredentials(userName, password); });
@@ -136,6 +137,7 @@ void ConfigManager::handleDashboard()
   s += "<style>" + String(FPSTR(IOTWEBCONF_HTML_STYLE_INNER)) + "</style>";
   s += "<style>" + String(FPSTR(IOTWEBCONF_DASHBOARD_STYLE_INNER)) + "</style>";
   s += "<script>" + String(FPSTR(IOTWEBCONF_CONSOLE_SCRIPT)) + "</script>";
+  s += "<script>" + String(FPSTR(IOTWEBCONF_WORLDMAP_SCRIPT)) + "</script>";
   s += FPSTR(IOTWEBCONF_HTML_HEAD_END);
   s += FPSTR(IOTWEBCONF_DASHBOARD_BODY_INNER);
   s += String(FPSTR(LOGO)) + "<br />";
@@ -143,8 +145,8 @@ void ConfigManager::handleDashboard()
   // build svg of world map with animated satellite position
   uint ix = 0;  
   uint sx;     
-  String svg = "<div style=""margin-left:30px""><svg width""100%"" height=""auto"" viewBox=""0 0 262 134"" xmlns=""http://www.w3.org/2000/svg"">";
-  svg += "<rect x=""0"" y=""0"" width=""262"" height=""134"" stroke=""gray"" fill=""none"" stroke-width=""2"" />";
+  String svg = "<div style=""margin-left:35px""><svg width""100%"" height=""auto"" viewBox=""0 0 262 134"" xmlns=""http://www.w3.org/2000/svg"">";
+  svg += "<rect x=""1"" y=""1"" width=""262"" height=""134"" stroke=""gray"" fill=""none"" stroke-width=""2"" />";
   for (uint y = 0; y < earth_height; y++)
   {
     uint n = 0;
@@ -174,12 +176,9 @@ void ConfigManager::handleDashboard()
     }
   }
   // add animated satellite position
-  if (status.satPos[0] != 0 || status.satPos[1] != 0)
-  {
-    svg += "<circle cx=""" + String(status.satPos[0] * 2 + 3) + """ cy=""" + String(status.satPos[1] * 2 + 3) + """ stroke=""red"" fill=""none"" stroke-width=""2"">";
-    svg += "  <animate attributeName=""r"" values=""2;4;6"" dur=""0.75s"" repeatCount=""indefinite"" />";
-    svg += "</circle>";
-  }
+  svg += "<circle id=""wmsatpos"" cx=""" + String(status.satPos[0] * 2 + 3) + """ cy=""" + String(status.satPos[1] * 2 + 3) + """ stroke=""red"" fill=""none"" stroke-width=""2"">";
+  svg += "  <animate attributeName=""r"" values=""2;4;6"" dur=""0.75s"" repeatCount=""indefinite"" />";
+  svg += "</circle>";
   svg += "</svg></div>";  
   s += svg;
 
@@ -314,6 +313,35 @@ void ConfigManager::handleRefreshConsole()
       } // Skip log index 0 as it is not allowed
     } while (counter != Log::getLogIdx());
   }
+
+  server.sendContent("");
+  server.client().stop();
+}
+
+void ConfigManager::handleRefreshWorldmap()
+{
+  if (getState() == IOTWEBCONF_STATE_ONLINE)
+  {
+    // -- Authenticate
+    if (!server.authenticate(IOTWEBCONF_ADMIN_USER_NAME, getApPasswordParameter()->valueBuffer))
+    {
+      IOTWEBCONF_DEBUG_LINE(F("Requesting authentication."));
+      server.requestAuthentication();
+      return;
+    }
+  }
+
+  // new satellite position for wmsatpos id attributes 
+  String cx= String(status.satPos[0] * 2 + 3); 
+  String cy= String(status.satPos[1] * 2 + 3);
+
+  server.client().flush();
+  server.sendHeader(F("Cache-Control"), F("no-cache, no-store, must-revalidate"));
+  server.sendHeader(F("Pragma"), F("no-cache"));
+  server.sendHeader(F("Expires"), F("-1"));
+  server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  server.send(200, F("text/plain"), "");
+  server.sendContent(cx + "," + cy + "\n");
 
   server.sendContent("");
   server.client().stop();

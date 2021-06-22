@@ -52,6 +52,7 @@ constexpr auto DASHBOARD_URL = "/dashboard";
 constexpr auto UPDATE_URL = "/firmware";
 constexpr auto RESTART_URL = "/restart";
 constexpr auto REFRESH_CONSOLE_URL = "/cs";
+constexpr auto REFRESH_WORLDMAP_URL = "/wm";
 
 const char TITLE_TEXT[] PROGMEM = "TinyGS Configuration";
 
@@ -242,6 +243,7 @@ private:
   void handleRoot();
   void handleDashboard();
   void handleRefreshConsole();
+  void handleRefreshWorldmap();
   void handleRestart();
   bool formValidator(iotwebconf2::WebRequestWrapper *webRequestWrapper);
   void boardDetection();
