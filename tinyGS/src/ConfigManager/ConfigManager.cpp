@@ -191,7 +191,7 @@ void ConfigManager::handleDashboard()
   s += "<tr><td>Test Mode </td><td>" + String(getTestMode() ? "ENABLED" : "DISABLED") + "</td></tr>";
   //s += "<tr><td>Uptime </td><td>" + // process and update in js + "</td></tr>";
   s += F("</table></div>");
-  s += F("<div class=\"card\"><h3>Modem Configuration</h3><table>");
+  s += F("<div class=\"card\"><h3>Modem Configuration</h3><table id=""modemconfig"">");
   s += "<tr><td>Listening to </td><td>" + String(status.modeminfo.satellite) + "</td></tr>";
   s += "<tr><td>Modulation </td><td>" + String(status.modeminfo.modem_mode) + "</td></tr>";
   s += "<tr><td>Frequency </td><td>" + String(status.modeminfo.frequency) + "</td></tr>";
@@ -341,7 +341,22 @@ void ConfigManager::handleRefreshWorldmap()
   server.sendHeader(F("Expires"), F("-1"));
   server.setContentLength(CONTENT_LENGTH_UNKNOWN);
   server.send(200, F("text/plain"), "");
-  server.sendContent(cx + "," + cy + "\n");
+  String data_string = cx + "," + cy + "," +
+                    String(status.modeminfo.satellite) + "," +
+                    String(status.modeminfo.modem_mode) + "," +
+                    String(status.modeminfo.frequency) + ",";
+  if (status.modeminfo.modem_mode == "LoRa")
+  {
+    data_string += String(status.modeminfo.sf) + ",";
+    data_string += String(status.modeminfo.cr) + ",";
+  }
+  else
+  {
+    data_string += String(status.modeminfo.bitrate) + ",";
+    data_string += String(status.modeminfo.freqDev) + ",";
+  }
+  data_string += String(status.modeminfo.bw);
+  server.sendContent(data_string + "\n");
 
   server.sendContent("");
   server.client().stop();
