@@ -182,7 +182,7 @@ void ConfigManager::handleDashboard()
   svg += "</svg></div>";  
   s += svg;
 
-  s += F("</table></div><div class=\"card\"><h3>Groundstation Status</h3><table>");
+  s += F("</table></div><div class=\"card\"><h3>Groundstation Status</h3><table id=""gsstatus"">");
   s += "<tr><td>Name </td><td>" + String(getThingName()) + "</td></tr>";
   s += "<tr><td>Version </td><td>" + String(status.version) + "</td></tr>";
   s += "<tr><td>MQTT Server </td><td>" + String(status.mqtt_connected ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + "</td></tr>";
@@ -207,7 +207,7 @@ void ConfigManager::handleDashboard()
     s += "<tr><td>Frequency dev </td><td>" + String(status.modeminfo.freqDev) + "</td></tr>";
     s += "<tr><td>Bandwidth </td><td>" + String(status.modeminfo.bw) + "</td></tr>";
   }
-  s += F("</table></div><div class=\"card\"><h3>Last Packet Received</h3><table>");
+  s += F("</table></div><div class=\"card\"><h3>Last Packet Received</h3><table id=""lastpacket"">");
   s += "<tr><td>Received at </td><td>" + String(status.lastPacketInfo.time) + "</td></tr>";
   s += "<tr><td>Signal RSSI </td><td>" + String(status.lastPacketInfo.rssi) + "</td></tr>";
   s += "<tr><td>Signal SNR </td><td>" + String(status.lastPacketInfo.snr) + "</td></tr>";
@@ -331,20 +331,22 @@ void ConfigManager::handleRefreshWorldmap()
     }
   }
 
-  // new satellite position for wmsatpos id attributes 
-  String cx= String(status.satPos[0] * 2 + 3); 
-  String cy= String(status.satPos[1] * 2 + 3);
-
   server.client().flush();
   server.sendHeader(F("Cache-Control"), F("no-cache, no-store, must-revalidate"));
   server.sendHeader(F("Pragma"), F("no-cache"));
   server.sendHeader(F("Expires"), F("-1"));
   server.setContentLength(CONTENT_LENGTH_UNKNOWN);
   server.send(200, F("text/plain"), "");
-  String data_string = cx + "," + cy + "," +
-                    String(status.modeminfo.satellite) + "," +
-                    String(status.modeminfo.modem_mode) + "," +
-                    String(status.modeminfo.frequency) + ",";
+
+  // world map satellite position (for wmsatpos id attributes)
+  String cx= String(status.satPos[0] * 2 + 3); 
+  String cy= String(status.satPos[1] * 2 + 3);
+  String data_string = cx + "," + cy + ",";
+
+  // modem configuration (for modemconfig id table data)
+  data_string += String(status.modeminfo.satellite) + "," +
+                 String(status.modeminfo.modem_mode) + "," +
+                 String(status.modeminfo.frequency) + ",";
   if (status.modeminfo.modem_mode == "LoRa")
   {
     data_string += String(status.modeminfo.sf) + ",";
@@ -355,7 +357,23 @@ void ConfigManager::handleRefreshWorldmap()
     data_string += String(status.modeminfo.bitrate) + ",";
     data_string += String(status.modeminfo.freqDev) + ",";
   }
-  data_string += String(status.modeminfo.bw);
+  data_string += String(status.modeminfo.bw) + ",";
+
+  // ground station status (for gsstatus id table data)
+  data_string += String(getThingName()) + ",";
+  data_string += String(status.version) + ",";
+  data_string += String(status.mqtt_connected ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + ",";
+  data_string += String(WiFi.isConnected() ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + ",";
+  data_string += String(Radio::getInstance().isReady() ? "<span class='G'>READY</span>" : "<span class='R'>NOT READY</span>") + ",";
+  data_string += String(getTestMode() ? "ENABLED" : "DISABLED") + ",";
+  
+  // last packet received data (for lastpacket id table data)
+  data_string += String(status.lastPacketInfo.time) + ",";
+  data_string += String(status.lastPacketInfo.rssi) + ",";
+  data_string += String(status.lastPacketInfo.snr) + ",";
+  data_string += String(status.lastPacketInfo.frequencyerror) + ",";
+  data_string += String(status.lastPacketInfo.crc_error ? "CRC ERROR!" : "");
+
   server.sendContent(data_string + "\n");
 
   server.sendContent("");
