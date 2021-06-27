@@ -70,16 +70,10 @@ void MQTT_Client::loop()
       sendWelcome();
     else
     {
-      int totalVbat = 0;
-      int averageVbat = 0;
-      for (int i = 0; i < 20; i++)
-      {
-        totalVbat += analogRead(36);
-      }
-      averageVbat = totalVbat / 20;
       StaticJsonDocument<128> doc;
-      doc["Vbat"] = averageVbat;
+      doc["Vbat"] = voltage();
       doc["Mem"] = ESP.getFreeHeap();
+
       char buffer[256];
       serializeJson(doc, buffer);
       Log::debug(PSTR("%s"), buffer);
@@ -152,7 +146,7 @@ void MQTT_Client::sendWelcome()
   char clientId[13];
   sprintf(clientId, "%04X%08X", (uint16_t)(chipId >> 32), (uint32_t)chipId);
 
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(17) + 22 + 20 + 20;
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(17) + 22 + 20 + 20 + 20 + 40;
   DynamicJsonDocument doc(capacity);
   JsonArray station_location = doc.createNestedArray("station_location");
   station_location.add(configManager.getLatitude());
@@ -172,8 +166,12 @@ void MQTT_Client::sendWelcome()
   doc["modem_conf"].set(configManager.getModemStartup());
   doc["boardTemplate"].set(configManager.getBoardTemplate());
   doc["Mem"] = ESP.getFreeHeap();
+  doc["Size"] = ESP.getSketchSize();
+  doc["MD5"] = ESP.getSketchMD5();
   doc["board"] = configManager.getBoard();
   doc["mac"] = clientId;
+  doc["seconds"] = millis()/1000;
+  doc["Vbat"] = voltage();
 
   char buffer[1048];
   serializeJson(doc, buffer);
@@ -795,4 +793,19 @@ void MQTT_Client::begin()
   ConfigManager &configManager = ConfigManager::getInstance();
   setServer(configManager.getMqttServer(), configManager.getMqttPort());
   setCallback(manageMQTTDataCallback);
+}
+
+
+int MQTT_Client::voltage() {
+   int totalVbat = 0;
+  int averageVbat = 0;
+  for (int i = 0; i < 20; i++)
+  {
+    totalVbat += analogRead(36);
+  }
+  averageVbat = totalVbat / 20;
+  return averageVbat;
+
+
+
 }

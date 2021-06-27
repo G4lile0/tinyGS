@@ -71,6 +71,7 @@ private:
   void remoteSatFilter(char* payload, size_t payload_len);
   void remoteGoToSleep(char* payload, size_t payload_len);
   void remoteSetFreqOffset(char* payload, size_t payload_len);
+  int  voltage();
 
   bool usingNewCert = false;
   unsigned long lastPing = 0;
