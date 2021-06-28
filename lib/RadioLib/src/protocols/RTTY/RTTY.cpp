@@ -3,12 +3,14 @@
 
 ITA2String::ITA2String(char c) {
   _len = 1;
+  _str = new char[1];
   _str[0] = c;
   _ita2Len = 0;
 }
 
 ITA2String::ITA2String(const char* str) {
   _len = strlen(str);
+  _str = new char[_len + 1];
   strcpy(_str, str);
   _ita2Len = 0;
 }
@@ -161,15 +163,8 @@ int16_t RTTYClient::begin(float base, uint32_t shift, uint16_t rate, uint8_t enc
   // calculate 24-bit frequency
   _base = (base * 1000000.0) / _phy->getFreqStep();
 
-  // set module frequency deviation to 0 if using FSK
-  int16_t state = ERR_NONE;
-  #if !defined(RADIOLIB_EXCLUDE_AFSK)
-  if(_audio == nullptr) {
-    state = _phy->setFrequencyDeviation(0);
-  }
-  #endif
-
-  return(state);
+  // configure for direct mode
+  return(_phy->startDirect());
 }
 
 void RTTYClient::idle() {

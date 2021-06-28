@@ -38,8 +38,11 @@ int16_t SX1280::startRanging(bool master, uint32_t addr) {
     return(ERR_WRONG_MODEM);
   }
 
+  // set mode to standby
+  int16_t state = standby();
+  RADIOLIB_ASSERT(state);
+
   // ensure modem is set to ranging
-  int16_t state = ERR_NONE;
   if(modem == SX128X_PACKET_TYPE_LORA) {
     state = setPacketType(SX128X_PACKET_TYPE_RANGING);
     RADIOLIB_ASSERT(state);
@@ -81,6 +84,31 @@ int16_t SX1280::startRanging(bool master, uint32_t addr) {
   state = setDioIrqParams(irqMask, irqDio1);
   RADIOLIB_ASSERT(state);
 
+  // set calibration values
+  uint8_t index = (_sf >> 4) - 5;
+  static const uint16_t calTable[3][6] = {
+    { 10299, 10271, 10244, 10242, 10230, 10246 },
+    { 11486, 11474, 11453, 11426, 11417, 11401 },
+    { 13308, 13493, 13528, 13515, 13430, 13376 }
+  };
+  uint16_t val = 0;
+  switch(_bw) {
+    case(SX128X_LORA_BW_406_25):
+      val = calTable[0][index];
+      break;
+    case(SX128X_LORA_BW_812_50):
+      val = calTable[1][index];
+      break;
+    case(SX128X_LORA_BW_1625_00):
+      val = calTable[2][index];
+      break;
+    default:
+      return(ERR_INVALID_BANDWIDTH);
+  }
+  uint8_t calBuff[] = { (uint8_t)((val >> 8) & 0xFF), (uint8_t)(val & 0xFF) };
+  state = writeRegister(SX128X_REG_RANGING_CALIBRATION_MSB, calBuff, 2);
+  RADIOLIB_ASSERT(state);
+
   // set role and start ranging
   if(master) {
     state = setRangingRole(SX128X_RANGING_ROLE_MASTER);
@@ -102,15 +130,43 @@ int16_t SX1280::startRanging(bool master, uint32_t addr) {
 }
 
 float SX1280::getRangingResult() {
-  // read the register values
+  // set mode to standby XOSC
+  int16_t state = standby(SX128X_STANDBY_XOSC);
+  RADIOLIB_ASSERT(state);
+
+  // enable clock
   uint8_t data[4];
-  int16_t state = readRegister(SX128X_REG_RANGING_RESULT_MSB, data + 1, 3);
+  state = readRegister(SX128X_REG_RANGING_LORA_CLOCK_ENABLE, data, 1);
+  RADIOLIB_ASSERT(state);
+
+  data[0] |= (1 << 1);
+  state = writeRegister(SX128X_REG_RANGING_LORA_CLOCK_ENABLE, data, 1);
+  RADIOLIB_ASSERT(state);
+
+  // set result type to filtered
+  state = readRegister(SX128X_REG_RANGING_TYPE, data, 1);
+  RADIOLIB_ASSERT(state);
+
+  data[0] &= 0xCF;
+  data[0] |= (1 << 4);
+  state = writeRegister(SX128X_REG_RANGING_TYPE, data, 1);
+  RADIOLIB_ASSERT(state);
+
+  // read the register values
+  state = readRegister(SX128X_REG_RANGING_RESULT_MSB, &data[0], 1);
+  RADIOLIB_ASSERT(state);
+  state = readRegister(SX128X_REG_RANGING_RESULT_MID, &data[1], 1);
+  RADIOLIB_ASSERT(state);
+  state = readRegister(SX128X_REG_RANGING_RESULT_LSB, &data[2], 1);
+  RADIOLIB_ASSERT(state);
+
+  // set mode to standby RC
+  state = standby();
   RADIOLIB_ASSERT(state);
 
   // calculate the real result
-  uint32_t raw = 0;
-  memcpy(&raw, data, sizeof(uint32_t));
-  return((float)raw * (150.0/(4.096 * _bwKhz)));
+  uint32_t raw = ((uint32_t)data[0] << 16) | ((uint32_t)data[1] << 8) | data[2];
+  return((float)raw * 150.0 / (4.096 * _bwKhz));
 }
 
 #endif

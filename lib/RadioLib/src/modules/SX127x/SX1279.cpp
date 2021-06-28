@@ -11,10 +11,10 @@ int16_t SX1279::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t sync
   RADIOLIB_ASSERT(state);
 
   // configure publicly accessible settings
-  state = setFrequency(freq);
+  state = setBandwidth(bw);
   RADIOLIB_ASSERT(state);
 
-  state = setBandwidth(bw);
+  state = setFrequency(freq);
   RADIOLIB_ASSERT(state);
 
   state = setSpreadingFactor(sf);
@@ -53,8 +53,12 @@ int16_t SX1279::beginFSK(float freq, float br, float freqDev, float rxBw, int8_t
 int16_t SX1279::setFrequency(float freq) {
   RADIOLIB_CHECK_RANGE(freq, 137.0, 960.0, ERR_INVALID_FREQUENCY);
 
-  // set frequency
-  return(SX127x::setFrequencyRaw(freq));
+  // set frequency and if successful, save the new setting
+  int16_t state = SX127x::setFrequencyRaw(freq);
+  if(state == ERR_NONE) {
+    SX127x::_freq = freq;
+  }
+  return(state);
 }
 
 #endif

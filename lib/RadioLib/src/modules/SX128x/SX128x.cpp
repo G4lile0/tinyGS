@@ -5,7 +5,7 @@ SX128x::SX128x(Module* mod) : PhysicalLayer(SX128X_FREQUENCY_STEP_SIZE, SX128X_M
   _mod = mod;
 }
 
-int16_t SX128x::begin(float freq, float bw, uint8_t sf, uint8_t cr, int8_t power, uint16_t preambleLength) {
+int16_t SX128x::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t syncWord, int8_t power, uint16_t preambleLength) {
   // set module properties
   _mod->init(RADIOLIB_USE_SPI);
   Module::pinMode(_mod->getIrq(), INPUT);
@@ -46,6 +46,9 @@ int16_t SX128x::begin(float freq, float bw, uint8_t sf, uint8_t cr, int8_t power
   RADIOLIB_ASSERT(state);
 
   state = setCodingRate(cr);
+  RADIOLIB_ASSERT(state);
+
+  state = setSyncWord(syncWord);
   RADIOLIB_ASSERT(state);
 
   state = setPreambleLength(preambleLength);
@@ -605,13 +608,13 @@ int16_t SX128x::setBandwidth(float bw) {
     return(ERR_WRONG_MODEM);
   }
 
-  if(abs(bw - 203.125) <= 0.001) {
+  if(fabs(bw - 203.125) <= 0.001) {
     _bw = SX128X_LORA_BW_203_125;
-  } else if(abs(bw - 406.25) <= 0.001) {
+  } else if(fabs(bw - 406.25) <= 0.001) {
     _bw = SX128X_LORA_BW_406_25;
-  } else if(abs(bw - 812.5) <= 0.001) {
+  } else if(fabs(bw - 812.5) <= 0.001) {
     _bw = SX128X_LORA_BW_812_50;
-  } else if(abs(bw - 1625.0) <= 0.001) {
+  } else if(fabs(bw - 1625.0) <= 0.001) {
     _bw = SX128X_LORA_BW_1625_00;
   } else {
     return(ERR_INVALID_BANDWIDTH);
@@ -802,17 +805,23 @@ int16_t SX128x::setFrequencyDeviation(float freqDev) {
     return(ERR_WRONG_MODEM);
   }
 
-  RADIOLIB_CHECK_RANGE(freqDev, 0.0, 3200.0, ERR_INVALID_FREQUENCY_DEVIATION);
+  // set frequency deviation to lowest available setting (required for digimodes)
+  float newFreqDev = freqDev;
+  if(freqDev < 0.0) {
+    newFreqDev = 62.5;
+  }
+
+  RADIOLIB_CHECK_RANGE(newFreqDev, 62.5, 1000.0, ERR_INVALID_FREQUENCY_DEVIATION);
 
   // override for the lowest possible frequency deviation - required for some PhysicalLayer protocols
-  if(freqDev == 0.0) {
+  if(newFreqDev == 0.0) {
     _modIndex = SX128X_BLE_GFSK_MOD_IND_0_35;
     _br = SX128X_BLE_GFSK_BR_0_125_BW_0_3;
     return(setModulationParams(_br, _modIndex, _shaping));
   }
 
   // update modulation parameters
-  uint8_t modIndex = (uint8_t)((8.0 * (freqDev / (float)_brKbps)) - 1.0);
+  uint8_t modIndex = (uint8_t)((8.0 * (newFreqDev / (float)_brKbps)) - 1.0);
   if(modIndex > SX128X_BLE_GFSK_MOD_IND_4_00) {
     return(ERR_INVALID_MODULATION_PARAMETERS);
   }
@@ -898,6 +907,17 @@ int16_t SX128x::setSyncWord(uint8_t* syncWord, uint8_t len) {
     _syncWordMatch = SX128X_GFSK_FLRC_SYNC_WORD_1;
   }
   return(setPacketParamsGFSK(_preambleLengthGFSK, _syncWordLen, _syncWordMatch, _crcGFSK, _whitening));
+}
+
+int16_t SX128x::setSyncWord(uint8_t syncWord, uint8_t controlBits) {
+  // check active modem
+  if(getPacketType() != SX128X_PACKET_TYPE_LORA) {
+    return(ERR_WRONG_MODEM);
+  }
+
+  // update register
+  uint8_t data[2] = {(uint8_t)((syncWord & 0xF0) | ((controlBits & 0xF0) >> 4)), (uint8_t)(((syncWord & 0x0F) << 4) | (controlBits & 0x0F))};
+  return(writeRegister(SX128X_REG_LORA_SYNC_WORD_MSB, data, 2));
 }
 
 int16_t SX128x::setCRC(uint8_t len, uint32_t initial, uint16_t polynomial) {
@@ -1130,6 +1150,18 @@ uint8_t SX128x::random() {
   // it's unclear whether SX128x can measure RSSI while not receiving a packet
   // this method is implemented only for PhysicalLayer compatibility
   return(0);
+}
+
+void SX128x::setDirectAction(void (*func)(void)) {
+  // SX128x is unable to perform direct mode reception
+  // this method is implemented only for PhysicalLayer compatibility
+  (void)func;
+}
+
+void SX128x::readBit(RADIOLIB_PIN_TYPE pin) {
+  // SX128x is unable to perform direct mode reception
+  // this method is implemented only for PhysicalLayer compatibility
+  (void)pin;
 }
 
 uint8_t SX128x::getStatus() {

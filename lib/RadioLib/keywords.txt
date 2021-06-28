@@ -15,6 +15,7 @@ CC1101	KEYWORD1
 ESP8266	KEYWORD1
 HC05	KEYWORD1
 JDY08	KEYWORD1
+LLCC68	KEYWORD1
 nRF24	KEYWORD1
 RF69	KEYWORD1
 RFM22	KEYWORD1
@@ -104,10 +105,14 @@ setPreambleLength	KEYWORD2
 setGain	KEYWORD2
 getFrequencyError	KEYWORD2
 getRSSI	KEYWORD2
+getAFCError	KEYWORD2
 getSNR	KEYWORD2
 getDataRate	KEYWORD2
 setBitRate	KEYWORD2
 setRxBandwidth	KEYWORD2
+setAFCBandwidth	KEYWORD2
+setAFC		KEYWORD2
+setAFCAGCTrigger	KEYWORD2
 setFrequencyDeviation	KEYWORD2
 setNodeAddress	KEYWORD2
 setBroadcastAddress	KEYWORD2
@@ -131,6 +136,13 @@ setRfSwitchPins	KEYWORD2
 forceLDRO	KEYWORD2
 autoLDRO	KEYWORD2
 getChipVersion	KEYWORD2
+invertIQ    KEYWORD2
+setOokThresholdType	KEYWORD2
+setOokPeakThresholdDecrement	KEYWORD2
+setOokFixedOrFloorThreshold	KEYWORD2
+setDirectSyncWord	KEYWORD2
+setDirectAction	KEYWORD2
+readBit	KEYWORD2
 
 # RF69-specific
 setAESKey	KEYWORD2
@@ -138,6 +150,7 @@ enableAES	KEYWORD2
 disableAES	KEYWORD2
 getTemperature	KEYWORD2
 setAmbientTemperature	KEYWORD2
+setLnaTestBoost KEYWORD2
 
 # CC1101-specific
 getLQI	KEYWORD2

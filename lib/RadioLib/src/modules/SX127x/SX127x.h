@@ -59,6 +59,7 @@
 #define SX127X_REG_INVERT_IQ                          0x33
 #define SX127X_REG_DETECTION_THRESHOLD                0x37
 #define SX127X_REG_SYNC_WORD                          0x39
+#define SX127X_REG_INVERT_IQ2                         0x3B
 #define SX127X_REG_DIO_MAPPING_1                      0x40
 #define SX127X_REG_DIO_MAPPING_2                      0x41
 #define SX127X_REG_VERSION                            0x42
@@ -122,6 +123,12 @@
 #define SX127X_DETECT_OPTIMIZE_SF_6                   0b00000101  //  2     0     SF6 detection optimization
 #define SX127X_DETECT_OPTIMIZE_SF_7_12                0b00000011  //  2     0     SF7 to SF12 detection optimization
 
+// SX127X_REG_INVERT_IQ
+#define SX127X_INVERT_IQ_RXPATH_ON                    0b01000000  //  6     6     I and Q signals are inverted
+#define SX127X_INVERT_IQ_RXPATH_OFF                   0b00000000  //  6     6     normal mode
+#define SX127X_INVERT_IQ_TXPATH_ON                    0b00000001  //  0     0     I and Q signals are inverted
+#define SX127X_INVERT_IQ_TXPATH_OFF                   0b00000000  //  0     0     normal mode
+
 // SX127X_REG_DETECTION_THRESHOLD
 #define SX127X_DETECTION_THRESHOLD_SF_6               0b00001100  //  7     0     SF6 detection threshold
 #define SX127X_DETECTION_THRESHOLD_SF_7_12            0b00001010  //  7     0     SF7 to SF12 detection threshold
@@ -171,6 +178,10 @@
 // SX127X_REG_SYNC_WORD
 #define SX127X_SYNC_WORD                              0x12        //  7     0     default LoRa sync word
 #define SX127X_SYNC_WORD_LORAWAN                      0x34        //  7     0     sync word reserved for LoRaWAN networks
+
+// SX127X_REG_INVERT_IQ2
+#define SX127X_IQ2_ENABLE                             0x19        //  7     0     enable optimize for inverted IQ
+#define SX127X_IQ2_DISABLE                            0x1D        //  7     0     reset optimize for inverted IQ
 
 // SX127x series common FSK registers
 // NOTE: FSK register names that are conflicting with LoRa registers are marked with "_FSK" suffix
@@ -763,6 +774,13 @@ class SX127x: public PhysicalLayer {
     float getFrequencyError(bool autoCorrect = false);
 
     /*!
+      \brief Gets current AFC error.
+
+      \returns Frequency offset from RF in Hz if AFC is enabled and triggered, zero otherwise.
+    */
+    float getAFCError();
+
+    /*!
       \brief Gets signal-to-noise ratio of the latest received packet.
 
       \returns Last packet signal-to-noise ratio (SNR).
@@ -802,6 +820,33 @@ class SX127x: public PhysicalLayer {
       \returns \ref status_codes
     */
     int16_t setRxBandwidth(float rxBw);
+
+    /*!
+      \brief Sets FSK automatic frequency correction bandwidth. Allowed values range from 2.6 to 250 kHz. Only available in FSK mode.
+
+      \param rxBw Receiver AFC bandwidth to be set (in kHz).
+
+      \returns \ref status_codes
+    */
+    int16_t setAFCBandwidth(float afcBw);
+
+    /*!
+      \brief Enables or disables FSK automatic frequency correction(AFC)
+
+      \param isEnabled AFC enabled or disabled
+
+      \return \ref status_codes
+    */
+    int16_t setAFC(bool isEnabled);
+
+    /*!
+      \brief Controls trigger of AFC and AGC
+
+      \param trigger one from SX127X_RX_TRIGGER_NONE, SX127X_RX_TRIGGER_RSSI_INTERRUPT, SX127X_RX_TRIGGER_PREAMBLE_DETECT, SX127X_RX_TRIGGER_BOTH
+
+      \return \ref status_codes
+    */
+    int16_t setAFCAGCTrigger(uint8_t trigger);
 
     /*!
       \brief Sets FSK sync word. Allowed sync words are up to 8 bytes long and can not contain null bytes. Only available in FSK mode.
@@ -847,6 +892,33 @@ class SX127x: public PhysicalLayer {
       \returns \ref status_codes
     */
     int16_t setOOK(bool enableOOK);
+
+    /*!
+      \brief Selects the type of threshold in the OOK data slicer.
+
+      \param type Threshold type: SX127X_OOK_THRESH_PEAK(default), SX127X_OOK_THRESH_FIXED, SX127X_OOK_THRESH_AVERAGE
+
+      \returns \ref status_codes
+    */
+    int16_t setOokThresholdType(uint8_t type);
+
+    /*!
+      \brief Period of decrement of the RSSI threshold in the OOK demodulator.
+
+      \param value Use defines SX127X_OOK_PEAK_THRESH_DEC_X_X_CHIP
+
+      \returns \ref status_codes
+    */
+    int16_t setOokPeakThresholdDecrement(uint8_t value);
+
+    /*!
+      \brief Fixed threshold for the Data Slicer in OOK mode or floor threshold for the Data Slicer in OOK when Peak mode is used.
+
+      \param value The actual value used by teh data slicer is (128 - value/2).
+
+      \returns \ref status_codes
+    */
+    int16_t setOokFixedOrFloorThreshold(uint8_t value);
 
      /*!
       \brief Query modem for the packet length of received payload.
@@ -945,19 +1017,46 @@ class SX127x: public PhysicalLayer {
    */
     int16_t getChipVersion();
 
-#ifndef RADIOLIB_GODMODE
+    /*!
+      \brief Enables/disables Invert the LoRa I and Q signals.
+
+      \param invertIQ Enable (true) or disable (false) LoRa I and Q signals.
+
+      \returns \ref status_codes
+    */
+    int16_t invertIQ(bool invertIQ);
+
+    /*!
+      \brief Set interrupt service routine function to call when data bit is receveid in direct mode.
+
+      \param func Pointer to interrupt service routine.
+    */
+    void setDirectAction(void (*func)(void));
+
+    /*!
+      \brief Function to read and process data bit in direct reception mode.
+
+      \param pin Pin on which to read.
+    */
+    void readBit(RADIOLIB_PIN_TYPE pin);
+
+#if !defined(RADIOLIB_GODMODE) && !defined(RADIOLIB_LOW_LEVEL)
   protected:
 #endif
     Module* _mod;
+
+#if !defined(RADIOLIB_GODMODE)
+  protected:
+#endif
 
     float _freq = 0;
     float _bw = 0;
     uint8_t _sf = 0;
     uint8_t _cr = 0;
     float _br = 0;
-    float _rxBw = 0;
     bool _ook = false;
     bool _crcEnabled = false;
+    size_t _packetLength = 0;
 
     int16_t setFrequencyRaw(float newFreq);
     int16_t config();
@@ -966,11 +1065,10 @@ class SX127x: public PhysicalLayer {
     int16_t directMode();
     int16_t setPacketMode(uint8_t mode, uint8_t len);
 
-#ifndef RADIOLIB_GODMODE
+#if !defined(RADIOLIB_GODMODE)
   private:
 #endif
     float _dataRate = 0;
-    size_t _packetLength = 0;
     bool _packetLengthQueried = false; // FSK packet length is the first byte in FIFO, length can only be queried once
     uint8_t _packetLengthConfig = SX127X_PACKET_VARIABLE;
 
@@ -979,6 +1077,14 @@ class SX127x: public PhysicalLayer {
     int16_t setActiveModem(uint8_t modem);
     void clearIRQFlags();
     void clearFIFO(size_t count); // used mostly to clear remaining bytes in FIFO after a packet read
+    /**
+     * @brief Calculate exponent and mantissa values for receiver bandwidth and AFC
+     *
+     * \param bandwidth bandwidth to be set (in kHz).
+     *
+     * \returns bandwidth in manitsa and exponent format
+     */
+    static uint8_t calculateBWManExp(float bandwidth);
 };
 
 #endif

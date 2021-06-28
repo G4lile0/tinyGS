@@ -10,6 +10,7 @@ int16_t nRF24::begin(int16_t freq, int16_t dataRate, int8_t power, uint8_t addrW
   _mod->SPIreadCommand = NRF24_CMD_READ;
   _mod->SPIwriteCommand = NRF24_CMD_WRITE;
   _mod->init(RADIOLIB_USE_SPI);
+  Module::pinMode(_mod->getIrq(), INPUT);
 
   // set pin mode on RST (connected to nRF24 CE pin)
   Module::pinMode(_mod->getRst(), OUTPUT);
@@ -508,6 +509,18 @@ uint8_t nRF24::random() {
   // nRF24 is unable to measure RSSI, hence no TRNG
   // this method is implemented only for PhysicalLayer compatibility
   return(0);
+}
+
+void nRF24::setDirectAction(void (*func)(void)) {
+  // nRF24 is unable to perform direct mode actions
+  // this method is implemented only for PhysicalLayer compatibility
+  (void)func;
+}
+
+void nRF24::readBit(RADIOLIB_PIN_TYPE pin) {
+  // nRF24 is unable to perform direct mode actions
+  // this method is implemented only for PhysicalLayer compatibility
+  (void)pin;
 }
 
 void nRF24::clearIRQ() {

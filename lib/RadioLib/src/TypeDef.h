@@ -1,4 +1,4 @@
-#ifndef _RADIOLIB_TYPES_H
+#if !defined(_RADIOLIB_TYPES_H)
 #define _RADIOLIB_TYPES_H
 
 #include "BuildOpt.h"
@@ -324,6 +324,11 @@
   \brief The current modulation is invalid for the requested operation.
 */
 #define ERR_INVALID_MODULATION                        -107
+
+/*!
+  \brief Supplied Peak type is invalid.
+*/
+#define ERR_INVALID_OOK_RSSI_PEAK_TYPE                -108
 
 // ESP8266 status codes
 

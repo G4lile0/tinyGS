@@ -16,10 +16,10 @@ int16_t SX1272::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t sync
   RADIOLIB_ASSERT(state);
 
   // configure publicly accessible settings
-  state = setFrequency(freq);
+  state = setBandwidth(bw);
   RADIOLIB_ASSERT(state);
 
-  state = setBandwidth(bw);
+  state = setFrequency(freq);
   RADIOLIB_ASSERT(state);
 
   state = setSpreadingFactor(sf);
@@ -42,15 +42,24 @@ int16_t SX1272::beginFSK(float freq, float br, float rxBw, float freqDev, int8_t
   int16_t state = SX127x::beginFSK(SX1272_CHIP_VERSION, br, rxBw, freqDev, preambleLength, enableOOK);
   RADIOLIB_ASSERT(state);
 
+  // configure settings not accessible by API
+  state = configFSK();
+  RADIOLIB_ASSERT(state);
+
   // configure publicly accessible settings
   state = setFrequency(freq);
   RADIOLIB_ASSERT(state);
 
-  state = setDataShaping(RADIOLIB_SHAPING_NONE);
-  RADIOLIB_ASSERT(state);
-
   state = setOutputPower(power);
   RADIOLIB_ASSERT(state);
+
+  if(enableOOK) {
+    state = setDataShapingOOK(RADIOLIB_SHAPING_NONE);
+    RADIOLIB_ASSERT(state);
+  } else {
+    state = setDataShaping(RADIOLIB_SHAPING_NONE);
+    RADIOLIB_ASSERT(state);
+  }
 
   return(state);
 }
@@ -83,11 +92,11 @@ int16_t SX1272::setBandwidth(float bw) {
   uint8_t newBandwidth;
 
   // check allowed bandwidth values
-  if(abs(bw - 125.0) <= 0.001) {
+  if(fabs(bw - 125.0) <= 0.001) {
     newBandwidth = SX1272_BW_125_00_KHZ;
-  } else if(abs(bw - 250.0) <= 0.001) {
+  } else if(fabs(bw - 250.0) <= 0.001) {
     newBandwidth = SX1272_BW_250_00_KHZ;
-  } else if(abs(bw - 500.0) <= 0.001) {
+  } else if(fabs(bw - 500.0) <= 0.001) {
     newBandwidth = SX1272_BW_500_00_KHZ;
   } else {
     return(ERR_INVALID_BANDWIDTH);
@@ -234,11 +243,6 @@ int16_t SX1272::setOutputPower(int8_t power) {
 }
 
 int16_t SX1272::setGain(uint8_t gain) {
-  // check active modem
-  if(getActiveModem() != SX127X_LORA) {
-    return(ERR_WRONG_MODEM);
-  }
-
   // check allowed range
   if(gain > 6) {
     return(ERR_INVALID_GAIN);
@@ -247,14 +251,30 @@ int16_t SX1272::setGain(uint8_t gain) {
   // set mode to standby
   int16_t state = SX127x::standby();
 
-  // set gain
-  if(gain == 0) {
-    // gain set to 0, enable AGC loop
-    state |= _mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_2, SX1272_AGC_AUTO_ON, 2, 2);
-  } else {
-    state |= _mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_2, SX1272_AGC_AUTO_OFF, 2, 2);
-    state |= _mod->SPIsetRegValue(SX127X_REG_LNA, (gain << 5) | SX127X_LNA_BOOST_ON);
+  // get modem
+  int16_t modem = getActiveModem();
+  if(modem == SX127X_LORA){
+    // set gain
+    if(gain == 0) {
+      // gain set to 0, enable AGC loop
+      state |= _mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_2, SX1272_AGC_AUTO_ON, 2, 2);
+    } else {
+      state |= _mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_2, SX1272_AGC_AUTO_OFF, 2, 2);
+      state |= _mod->SPIsetRegValue(SX127X_REG_LNA, (gain << 5) | SX127X_LNA_BOOST_ON);
+    }
+
+  } else if(modem == SX127X_FSK_OOK) {
+    // set gain
+    if(gain == 0) {
+      // gain set to 0, enable AGC loop
+      state |= _mod->SPIsetRegValue(SX127X_REG_RX_CONFIG, SX127X_AGC_AUTO_ON, 3, 3);
+    } else {
+      state |= _mod->SPIsetRegValue(SX127X_REG_RX_CONFIG, SX127X_AGC_AUTO_ON, 3, 3);
+      state |= _mod->SPIsetRegValue(SX127X_REG_LNA, (gain << 5) | SX127X_LNA_BOOST_ON);
+    }
+
   }
+
   return(state);
 }
 
@@ -321,7 +341,7 @@ int16_t SX1272::setDataShapingOOK(uint8_t sh) {
   return(state);
 }
 
-float SX1272::getRSSI() {
+float SX1272::getRSSI(bool skipReceive) {
   if(getActiveModem() == SX127X_LORA) {
     // RSSI calculation uses different constant for low-frequency and high-frequency ports
     float lastPacketRSSI = -139 + _mod->SPIgetRegValue(SX127X_REG_PKT_RSSI_VALUE);
@@ -337,34 +357,47 @@ float SX1272::getRSSI() {
 
   } else {
     // enable listen mode
-    startReceive();
+    if(!skipReceive) {
+      startReceive();
+    }
 
     // read the value for FSK
     float rssi = (float)_mod->SPIgetRegValue(SX127X_REG_RSSI_VALUE_FSK) / -2.0;
 
     // set mode back to standby
-    standby();
+    if(!skipReceive) {
+      standby();
+    }
 
     // return the value
     return(rssi);
   }
 }
 
-int16_t SX1272::setCRC(bool enableCRC) {
+int16_t SX1272::setCRC(bool enable, bool mode) {
   if(getActiveModem() == SX127X_LORA) {
     // set LoRa CRC
-    SX127x::_crcEnabled = enableCRC;
-    if(enableCRC) {
+    SX127x::_crcEnabled = enable;
+    if(enable) {
       return(_mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_2, SX1272_RX_CRC_MODE_ON, 2, 2));
     } else {
       return(_mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_2, SX1272_RX_CRC_MODE_OFF, 2, 2));
     }
   } else {
     // set FSK CRC
-    if(enableCRC) {
-      return(_mod->SPIsetRegValue(SX127X_REG_PACKET_CONFIG_1, SX127X_CRC_ON, 4, 4));
+    int16_t state = ERR_NONE;
+    if(enable) {
+      state = _mod->SPIsetRegValue(SX127X_REG_PACKET_CONFIG_1, SX127X_CRC_ON, 4, 4);
     } else {
-      return(_mod->SPIsetRegValue(SX127X_REG_PACKET_CONFIG_1, SX127X_CRC_OFF, 4, 4));
+      state = _mod->SPIsetRegValue(SX127X_REG_PACKET_CONFIG_1, SX127X_CRC_OFF, 4, 4);
+    }
+    RADIOLIB_ASSERT(state);
+
+    // set FSK CRC mode
+    if(mode) {
+      return(_mod->SPIsetRegValue(SX127X_REG_PACKET_CONFIG_1, SX127X_CRC_WHITENING_TYPE_IBM, 0, 0));
+    } else {
+      return(_mod->SPIsetRegValue(SX127X_REG_PACKET_CONFIG_1, SX127X_CRC_WHITENING_TYPE_CCITT, 0, 0));
     }
   }
 }
@@ -391,6 +424,13 @@ int16_t SX1272::autoLDRO() {
   return(ERR_NONE);
 }
 
+int16_t SX1272::implicitHeader(size_t len) {
+  return(setHeaderType(SX1272_HEADER_IMPL_MODE, len));
+}
+
+int16_t SX1272::explicitHeader() {
+  return(setHeaderType(SX1272_HEADER_EXPL_MODE));
+}
 
 int16_t SX1272::setBandwidthRaw(uint8_t newBandwidth) {
   // set mode to standby
@@ -429,6 +469,26 @@ int16_t SX1272::setCodingRateRaw(uint8_t newCodingRate) {
   return(state);
 }
 
+int16_t SX1272::setHeaderType(uint8_t headerType, size_t len) {
+  // check active modem
+  if(getActiveModem() != SX127X_LORA) {
+    return(ERR_WRONG_MODEM);
+  }
+
+  // set requested packet mode
+  int16_t state = _mod->SPIsetRegValue(SX127X_REG_MODEM_CONFIG_1, headerType, 2, 2);
+  RADIOLIB_ASSERT(state);
+
+  // set length to register
+  state = _mod->SPIsetRegValue(SX127X_REG_PAYLOAD_LENGTH, len);
+  RADIOLIB_ASSERT(state);
+
+  // update cached value
+  _packetLength = len;
+
+  return(state);
+}
+
 int16_t SX1272::configFSK() {
   // configure common registers
   int16_t state = SX127x::configFSK();
@@ -436,11 +496,6 @@ int16_t SX1272::configFSK() {
 
   // set fast PLL hop
   state = _mod->SPIsetRegValue(SX1272_REG_PLL_HOP, SX127X_FAST_HOP_ON, 7, 7);
-  RADIOLIB_ASSERT(state);
-
-  // set Gauss filter BT product to 0.5
-  state = _mod->SPIsetRegValue(SX127X_REG_OP_MODE, SX1272_FSK_GAUSSIAN_0_5, 4, 3);
-
   return(state);
 }
 

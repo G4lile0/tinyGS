@@ -69,10 +69,6 @@ int16_t SX127x::beginFSK(uint8_t chipVersion, float br, float freqDev, float rxB
   int16_t state = standby();
   RADIOLIB_ASSERT(state);
 
-  // configure settings not accessible by API
-  state = configFSK();
-  RADIOLIB_ASSERT(state);
-
   // check currently active modem
   if(getActiveModem() != SX127X_FSK_OOK) {
     // set FSK mode
@@ -90,6 +86,17 @@ int16_t SX127x::beginFSK(uint8_t chipVersion, float br, float freqDev, float rxB
 
   // set frequency deviation
   state = SX127x::setFrequencyDeviation(freqDev);
+  RADIOLIB_ASSERT(state);
+
+  //set AFC bandwidth
+  state = SX127x::setAFCBandwidth(rxBw);
+  RADIOLIB_ASSERT(state);
+
+  //sets AFC&AGC trigger to RSSI and preamble detect
+  state = SX127x::setAFCAGCTrigger(SX127X_RX_TRIGGER_BOTH);
+  RADIOLIB_ASSERT(state);
+
+  state = SX127x::setAFC(true);
   RADIOLIB_ASSERT(state);
 
   // set receiver bandwidth
@@ -662,6 +669,22 @@ float SX127x::getFrequencyError(bool autoCorrect) {
   return(ERR_UNKNOWN);
 }
 
+float SX127x::getAFCError()
+{
+  // check active modem
+  int16_t modem = getActiveModem();
+  if(modem != SX127X_FSK_OOK) {
+    return 0;
+  }
+
+  // get raw frequency error
+  int16_t raw = (uint16_t)_mod->SPIreadRegister(SX127X_REG_AFC_MSB) << 8;
+  raw |= _mod->SPIreadRegister(SX127X_REG_AFC_LSB);
+
+  uint32_t base = 1;
+  return raw * (32000000.0 / (float)(base << 19));
+}
+
 float SX127x::getSNR() {
   // check active modem
   if(getActiveModem() != SX127X_LORA) {
@@ -712,8 +735,14 @@ int16_t SX127x::setFrequencyDeviation(float freqDev) {
     return(ERR_WRONG_MODEM);
   }
 
+  // set frequency deviation to lowest available setting (required for digimodes)
+  float newFreqDev = freqDev;
+  if(freqDev < 0.0) {
+    newFreqDev = 0.6;
+  }
+
   // check frequency deviation range
-  if(!((freqDev + _br/2.0 <= 250.0) && (freqDev <= 200.0))) {
+  if(!((newFreqDev + _br/2.0 <= 250.0) && (freqDev <= 200.0))) {
     return(ERR_INVALID_FREQUENCY_DEVIATION);
   }
 
@@ -723,10 +752,23 @@ int16_t SX127x::setFrequencyDeviation(float freqDev) {
 
   // set allowed frequency deviation
   uint32_t base = 1;
-  uint32_t FDEV = (freqDev * (base << 19)) / 32000;
+  uint32_t FDEV = (newFreqDev * (base << 19)) / 32000;
   state = _mod->SPIsetRegValue(SX127X_REG_FDEV_MSB, (FDEV & 0xFF00) >> 8, 5, 0);
   state |= _mod->SPIsetRegValue(SX127X_REG_FDEV_LSB, FDEV & 0x00FF, 7, 0);
   return(state);
+}
+
+uint8_t SX127x::calculateBWManExp(float bandwidth)
+{
+  for(uint8_t e = 7; e >= 1; e--) {
+    for(int8_t m = 2; m >= 0; m--) {
+      float point = (SX127X_CRYSTAL_FREQ * 1000000.0)/(((4 * m) + 16) * ((uint32_t)1 << (e + 2)));
+      if(fabs(bandwidth - ((point / 1000.0) + 0.05)) <= 0.5) {
+        return((m << 3) | e);
+      }
+    }
+  }
+  return 0;
 }
 
 int16_t SX127x::setRxBandwidth(float rxBw) {
@@ -741,26 +783,43 @@ int16_t SX127x::setRxBandwidth(float rxBw) {
   int16_t state = setMode(SX127X_STANDBY);
   RADIOLIB_ASSERT(state);
 
-  // calculate exponent and mantissa values
-  for(uint8_t e = 7; e >= 1; e--) {
-    for(int8_t m = 2; m >= 0; m--) {
-      float point = (SX127X_CRYSTAL_FREQ * 1000000.0)/(((4 * m) + 16) * ((uint32_t)1 << (e + 2)));
-      if(abs(rxBw - ((point / 1000.0) + 0.05)) <= 0.5) {
-        // set Rx bandwidth during AFC
-        state = _mod->SPIsetRegValue(SX127X_REG_AFC_BW, (m << 3) | e, 4, 0);
-        RADIOLIB_ASSERT(state);
+  // set Rx bandwidth
+  return(_mod->SPIsetRegValue(SX127X_REG_RX_BW, calculateBWManExp(rxBw), 4, 0));
+}
 
-        // set Rx bandwidth
-        state = _mod->SPIsetRegValue(SX127X_REG_RX_BW, (m << 3) | e, 4, 0);
-        if(state == ERR_NONE) {
-          SX127x::_rxBw = rxBw;
-        }
-
-        return(state);
-      }
-    }
+int16_t SX127x::setAFCBandwidth(float rxBw){
+  // check active modem
+  if(getActiveModem() != SX127X_FSK_OOK){
+      return(ERR_WRONG_MODEM);
   }
-  return(ERR_UNKNOWN);
+
+  RADIOLIB_CHECK_RANGE(rxBw, 2.6, 250.0, ERR_INVALID_RX_BANDWIDTH);
+
+  // set mode to STANDBY
+  int16_t state = setMode(SX127X_STANDBY);
+  RADIOLIB_ASSERT(state);
+
+  // set AFC bandwidth
+  return(_mod->SPIsetRegValue(SX127X_REG_AFC_BW, calculateBWManExp(rxBw), 4, 0));
+}
+
+int16_t SX127x::setAFC(bool isEnabled){
+  // check active modem
+  if(getActiveModem() != SX127X_FSK_OOK) {
+    return(ERR_WRONG_MODEM);
+  }
+
+  //set AFC auto on/off
+  return(_mod->SPIsetRegValue(SX127X_REG_RX_CONFIG, isEnabled ? SX127X_AFC_AUTO_ON : SX127X_AFC_AUTO_OFF, 4, 4));
+}
+
+int16_t SX127x::setAFCAGCTrigger(uint8_t trigger){
+  if(getActiveModem() != SX127X_FSK_OOK) {
+    return(ERR_WRONG_MODEM);
+  }
+
+  //set AFC&AGC trigger
+  return(_mod->SPIsetRegValue(SX127X_REG_RX_CONFIG, trigger, 2, 0));
 }
 
 int16_t SX127x::setSyncWord(uint8_t* syncWord, size_t len) {
@@ -834,6 +893,30 @@ int16_t SX127x::disableAddressFiltering() {
   return(_mod->SPIsetRegValue(SX127X_REG_BROADCAST_ADRS, 0x00));
 }
 
+int16_t SX127x::setOokThresholdType(uint8_t type) {
+  // check active modem
+  if(getActiveModem() != SX127X_FSK_OOK) {
+    return(ERR_WRONG_MODEM);
+  }
+  return(_mod->SPIsetRegValue(SX127X_REG_OOK_PEAK, type, 4, 3, 5));
+}
+
+int16_t SX127x::setOokFixedOrFloorThreshold(uint8_t value) {
+  // check active modem
+  if(getActiveModem() != SX127X_FSK_OOK) {
+    return(ERR_WRONG_MODEM);
+  }
+  return(_mod->SPIsetRegValue(SX127X_REG_OOK_FIX, value, 7, 0, 5));
+}
+
+int16_t SX127x::setOokPeakThresholdDecrement(uint8_t value) {
+  // check active modem
+  if(getActiveModem() != SX127X_FSK_OOK) {
+    return(ERR_WRONG_MODEM);
+  }
+  return(_mod->SPIsetRegValue(SX127X_REG_OOK_AVG, value, 7, 5, 5));
+}
+
 int16_t SX127x::setOOK(bool enableOOK) {
   // check active modem
   if(getActiveModem() != SX127X_FSK_OOK) {
@@ -877,8 +960,8 @@ size_t SX127x::getPacketLength(bool update) {
       return(_mod->SPIreadRegister(SX127X_REG_RX_NB_BYTES));
 
     } else {
-      // return the maximum value for SF6
-      return(SX127X_MAX_PACKET_LENGTH);
+      // return the cached value for SF6
+      return(_packetLength);
     }
 
   } else if(modem == SX127X_FSK_OOK) {
@@ -1152,7 +1235,12 @@ bool SX127x::findChip(uint8_t ver) {
 }
 
 int16_t SX127x::setMode(uint8_t mode) {
-  return(_mod->SPIsetRegValue(SX127X_REG_OP_MODE, mode, 2, 0, 5));
+  uint8_t checkMask = 0xFF;
+  if((getActiveModem() == SX127X_FSK_OOK) && (mode == SX127X_RX)) {
+    // disable checking of RX bit in FSK RX mode, as it sometimes seem to fail (#276)
+    checkMask = 0xFE;
+  }
+  return(_mod->SPIsetRegValue(SX127X_REG_OP_MODE, mode, 2, 0, 5, checkMask));
 }
 
 int16_t SX127x::getActiveModem() {
@@ -1186,6 +1274,34 @@ void SX127x::clearFIFO(size_t count) {
     _mod->SPIreadRegister(SX127X_REG_FIFO);
     count--;
   }
+}
+
+int16_t SX127x::invertIQ(bool invertIQ) {
+  // check active modem
+  if(getActiveModem() != SX127X_LORA) {
+    return(ERR_WRONG_MODEM);
+  }
+
+  int16_t state;
+  if(invertIQ) {
+    state = _mod->SPIsetRegValue(SX127X_REG_INVERT_IQ, SX127X_INVERT_IQ_RXPATH_ON, 6, 6);
+    state |= _mod->SPIsetRegValue(SX127X_REG_INVERT_IQ, SX127X_INVERT_IQ_TXPATH_ON, 0, 0);
+    state |= _mod->SPIsetRegValue(SX127X_REG_INVERT_IQ2, SX127X_IQ2_ENABLE);
+  } else {
+    state = _mod->SPIsetRegValue(SX127X_REG_INVERT_IQ, SX127X_INVERT_IQ_RXPATH_OFF, 6, 6);
+    state |= _mod->SPIsetRegValue(SX127X_REG_INVERT_IQ, SX127X_INVERT_IQ_TXPATH_OFF, 0, 0);
+    state |= _mod->SPIsetRegValue(SX127X_REG_INVERT_IQ2, SX127X_IQ2_DISABLE);
+  }
+
+  return(state);
+}
+
+void SX127x::setDirectAction(void (*func)(void)) {
+  setDio1Action(func);
+}
+
+void SX127x::readBit(RADIOLIB_PIN_TYPE pin) {
+  updateDirectBuffer((uint8_t)digitalRead(pin));
 }
 
 #endif

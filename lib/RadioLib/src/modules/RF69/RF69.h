@@ -91,6 +91,7 @@
 #define RF69_REG_AES_KEY_16                           0x4D
 #define RF69_REG_TEMP_1                               0x4E
 #define RF69_REG_TEMP_2                               0x4F
+#define RF69_REG_TEST_LNA                             0x58
 #define RF69_REG_TEST_PA1                             0x5A
 #define RF69_REG_TEST_PA2                             0x5C
 #define RF69_REG_TEST_DAGC                            0x6F
@@ -408,6 +409,10 @@
 #define RF69_AUTO_RX_RESTART_ON                       0b00000010  //  1     1     auto Rx restart enabled (default)
 #define RF69_AES_OFF                                  0b00000000  //  0     0     AES encryption disabled (default)
 #define RF69_AES_ON                                   0b00000001  //  0     0     AES encryption enabled, payload size limited to 66 bytes
+
+// RF69_REG_TEST_LNA
+#define RF69_TEST_LNA_BOOST_NORMAL                    0x1B        //  7     0
+#define RF69_TEST_LNA_BOOST_HIGH                      0x2D        //  7     0
 
 // RF69_REG_TEMP_1
 #define RF69_TEMP_MEAS_START                          0b00001000  //  3     3     trigger temperature measurement
@@ -735,6 +740,24 @@ class RF69: public PhysicalLayer {
     size_t getPacketLength(bool update = true) override;
 
     /*!
+      \brief Enables/disables OOK modulation instead of FSK.
+
+      \param enableOOK Enable (true) or disable (false) OOK.
+
+      \returns \ref status_codes
+    */
+    int16_t setOOK(bool enableOOK);
+
+    /*!
+      \brief Selects the type of threshold in the OOK data slicer
+
+      \param type Threshold type: RF69_OOK_THRESH_PEAK(default), RF69_OOK_THRESH_FIXED or RF69_OOK_THRESH_AVERAGE
+
+      \returns \ref status_codes
+    */
+    int16_t setOokThresholdType(uint8_t type);
+
+    /*!
       \brief Set modem in fixed packet length mode.
 
       \param len Packet length.
@@ -771,7 +794,7 @@ class RF69: public PhysicalLayer {
      /*!
       \brief Enable CRC filtering and generation.
 
-      \param crcOn Set or unset promiscuous mode.
+      \param crcOn Set or unset CRC filtering.
 
       \returns \ref status_codes
     */
@@ -807,6 +830,15 @@ class RF69: public PhysicalLayer {
     int16_t setEncoding(uint8_t encoding) override;
 
     /*!
+    \brief Enable/disable LNA Boost mode (disabled by default).
+
+    \param value True to enable, false to disable.
+
+    \returns \ref status_codes
+    */
+    int16_t setLnaTestBoost(bool value);
+
+    /*!
       \brief Gets RSSI (Recorded Signal Strength Indicator) of the last received packet.
 
       \returns Last packet RSSI in dBm.
@@ -837,13 +869,33 @@ class RF69: public PhysicalLayer {
    */
     int16_t getChipVersion();
 
-#ifndef RADIOLIB_GODMODE
+    /*!
+      \brief Set interrupt service routine function to call when data bit is receveid in direct mode.
+
+      \param func Pointer to interrupt service routine.
+    */
+    void setDirectAction(void (*func)(void));
+
+    /*!
+      \brief Function to read and process data bit in direct reception mode.
+
+      \param pin Pin on which to read.
+    */
+    void readBit(RADIOLIB_PIN_TYPE pin);
+
+#if !defined(RADIOLIB_GODMODE) && !defined(RADIOLIB_LOW_LEVEL)
   protected:
 #endif
     Module* _mod;
 
+#if !defined(RADIOLIB_GODMODE)
+  protected:
+#endif
+
+    float _freq = 0;
     float _br = 0;
     float _rxBw = 0;
+    bool _ook = false;
     int16_t _tempOffset = 0;
     int8_t _power = 0;
 
@@ -859,7 +911,7 @@ class RF69: public PhysicalLayer {
     int16_t directMode();
     int16_t setPacketMode(uint8_t mode, uint8_t len);
 
-#ifndef RADIOLIB_GODMODE
+#if !defined(RADIOLIB_GODMODE)
   private:
 #endif
     int16_t setMode(uint8_t mode);

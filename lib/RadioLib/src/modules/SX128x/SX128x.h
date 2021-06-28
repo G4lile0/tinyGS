@@ -56,6 +56,54 @@
 #define SX128X_CMD_SET_ADVANCED_RANGING               0x9A
 
 // SX128X register map
+#define SX128X_REG_GAIN_MODE                          0x0891
+#define SX128X_REG_MANUAL_GAIN_CONTROL_ENABLE_2       0x0895
+#define SX128X_REG_MANUAL_GAIN_SETTING                0x089E
+#define SX128X_REG_MANUAL_GAIN_CONTROL_ENABLE_1       0x089F
+#define SX128X_REG_SYNCH_PEAK_ATTENUATION             0x08C2
+#define SX128X_REG_LORA_FIXED_PAYLOAD_LENGTH          0x0901
+#define SX128X_REG_LORA_HEADER_MODE                   0x0903
+#define SX128X_REG_MASTER_RANGING_ADDRESS_BYTE_3      0x0912
+#define SX128X_REG_MASTER_RANGING_ADDRESS_BYTE_2      0x0913
+#define SX128X_REG_MASTER_RANGING_ADDRESS_BYTE_1      0x0914
+#define SX128X_REG_MASTER_RANGING_ADDRESS_BYTE_0      0x0915
+#define SX128X_REG_SLAVE_RANGING_ADDRESS_BYTE_3       0x0916
+#define SX128X_REG_SLAVE_RANGING_ADDRESS_BYTE_2       0x0917
+#define SX128X_REG_SLAVE_RANGING_ADDRESS_BYTE_1       0x0918
+#define SX128X_REG_SLAVE_RANGING_ADDRESS_BYTE_0       0x0919
+#define SX128X_REG_RANGING_FILTER_WINDOW_SIZE         0x091E
+#define SX128X_REG_RANGING_FILTER_RESET               0x0923
+#define SX128X_REG_RANGING_TYPE                       0x0924
+#define SX128X_REG_LORA_SF_CONFIG                     0x0925
+#define SX128X_REG_RANGING_ADDRESS_SWITCH             0x0927
+#define SX128X_REG_RANGING_CALIBRATION_BYTE_2         0x092B
+#define SX128X_REG_RANGING_CALIBRATION_MSB            0x092C
+#define SX128X_REG_RANGING_CALIBRATION_LSB            0x092D
+#define SX128X_REG_SLAVE_RANGING_ADDRESS_WIDTH        0x0931
+#define SX128X_REG_FREQ_ERROR_CORRECTION              0x093C
+#define SX128X_REG_LORA_SYNC_WORD_MSB                 0x0944
+#define SX128X_REG_LORA_SYNC_WORD_LSB                 0x0945
+#define SX128X_REG_RANGING_FILTER_RSSI_OFFSET         0x0953
+#define SX128X_REG_FEI_MSB                            0x0954
+#define SX128X_REG_FEI_MID                            0x0955
+#define SX128X_REG_FEI_LSB                            0x0956
+#define SX128X_REG_RANGING_ADDRESS_MSB                0x095F
+#define SX128X_REG_RANGING_ADDRESS_LSB                0x0960
+#define SX128X_REG_RANGING_RESULT_MSB                 0x0961
+#define SX128X_REG_RANGING_RESULT_MID                 0x0962
+#define SX128X_REG_RANGING_RESULT_LSB                 0x0963
+#define SX128X_REG_RANGING_RSSI                       0x0964
+#define SX128X_REG_RANGING_LORA_CLOCK_ENABLE          0x097F
+#define SX128X_REG_PACKET_PREAMBLE_SETTINGS           0x09C1
+#define SX128X_REG_WHITENING_INITIAL_VALUE            0x09C5
+#define SX128X_REG_CRC_POLYNOMIAL_MSB                 0x09C6
+#define SX128X_REG_CRC_POLYNOMIAL_LSB                 0x09C7
+#define SX128X_REG_CRC_INITIAL_MSB                    0x09C8
+#define SX128X_REG_CRC_INITIAL_LSB                    0x09C9
+#define SX128X_REG_BLE_CRC_INITIAL_MSB                0x09C7
+#define SX128X_REG_BLE_CRC_INITIAL_MID                (SX128X_REG_CRC_INITIAL_MSB)
+#define SX128X_REG_BLE_CRC_INITIAL_LSB                (SX128X_REG_CRC_INITIAL_LSB)
+#define SX128X_REG_SYNCH_ADDRESS_CONTROL              0x09CD
 #define SX128X_REG_SYNC_WORD_1_BYTE_4                 0x09CE
 #define SX128X_REG_SYNC_WORD_1_BYTE_3                 0x09CF
 #define SX128X_REG_SYNC_WORD_1_BYTE_2                 0x09D0
@@ -71,49 +119,10 @@
 #define SX128X_REG_SYNC_WORD_3_BYTE_2                 0x09DA
 #define SX128X_REG_SYNC_WORD_3_BYTE_1                 0x09DB
 #define SX128X_REG_SYNC_WORD_3_BYTE_0                 0x09DC
-#define SX128X_REG_CRC_INITIAL_MSB                    0x09C8
-#define SX128X_REG_CRC_INITIAL_LSB                    0x09C9
-#define SX128X_REG_CRC_POLYNOMIAL_MSB                 0x09C6
-#define SX128X_REG_CRC_POLYNOMIAL_LSB                 0x09C7
 #define SX128X_REG_ACCESS_ADDRESS_BYTE_3              (SX128X_REG_SYNC_WORD_1_BYTE_3)
 #define SX128X_REG_ACCESS_ADDRESS_BYTE_2              (SX128X_REG_SYNC_WORD_1_BYTE_2)
 #define SX128X_REG_ACCESS_ADDRESS_BYTE_1              (SX128X_REG_SYNC_WORD_1_BYTE_1)
 #define SX128X_REG_ACCESS_ADDRESS_BYTE_0              (SX128X_REG_SYNC_WORD_1_BYTE_0)
-#define SX128X_REG_BLE_CRC_INITIAL_MSB                0x09C7
-#define SX128X_REG_BLE_CRC_INITIAL_MID                (SX128X_REG_CRC_INITIAL_MSB)
-#define SX128X_REG_BLE_CRC_INITIAL_LSB                (SX128X_REG_CRC_INITIAL_LSB)
-#define SX128X_REG_SLAVE_RANGING_ADDRESS_BYTE_3       0x0916
-#define SX128X_REG_SLAVE_RANGING_ADDRESS_BYTE_2       0x0917
-#define SX128X_REG_SLAVE_RANGING_ADDRESS_BYTE_1       0x0918
-#define SX128X_REG_SLAVE_RANGING_ADDRESS_BYTE_0       0x0919
-#define SX128X_REG_SLAVE_RANGING_ADDRESS_WIDTH        0x0931
-#define SX128X_REG_MASTER_RANGING_ADDRESS_BYTE_3      0x0912
-#define SX128X_REG_MASTER_RANGING_ADDRESS_BYTE_2      0x0913
-#define SX128X_REG_MASTER_RANGING_ADDRESS_BYTE_1      0x0914
-#define SX128X_REG_MASTER_RANGING_ADDRESS_BYTE_0      0x0915
-#define SX128X_REG_RANGING_CALIBRATION_MSB            0x092C
-#define SX128X_REG_RANGING_CALIBRATION_LSB            0x092D
-#define SX128X_REG_RANGING_RESULT_MSB                 0x0961
-#define SX128X_REG_RANGING_RESULT_MID                 0x0962
-#define SX128X_REG_RANGING_RESULT_LSB                 0x0963
-#define SX128X_REG_MANUAL_GAIN_CONTROL_ENABLE_1       0x089F
-#define SX128X_REG_MANUAL_GAIN_CONTROL_ENABLE_2       0x0895
-#define SX128X_REG_MANUAL_GAIN_SETTING                0x089E
-#define SX128X_REG_GAIN_MODE                          0x0891
-#define SX128X_REG_LORA_FIXED_PAYLOAD_LENGTH          0x0901
-#define SX128X_REG_LORA_SF_CONFIG                     0x0925
-#define SX128X_REG_FEI_MSB                            0x0954
-#define SX128X_REG_FEI_MID                            0x0955
-#define SX128X_REG_FEI_LSB                            0x0956
-#define SX128X_REG_RANGING_FILTER_WINDOW_SIZE         0x091E
-#define SX128X_REG_RANGING_FILTER_RSSI_OFFSET         0x0953
-#define SX128X_REG_RANGING_FILTER_RESET               0x0923
-#define SX128X_REG_RANGING_LORA_CLOCK_ENABLE          0x097F
-#define SX128X_REG_RANGING_TYPE                       0x0924
-#define SX128X_REG_RANGING_ADDRESS_SWITCH             0x0927
-#define SX128X_REG_RANGING_ADDRESS_MSB                0x095F
-#define SX128X_REG_RANGING_ADDRESS_LSB                0x0960
-
 
 // SX128X SPI command variables
 //SX128X_CMD_GET_STATUS                                               MSB   LSB   DESCRIPTION
@@ -329,6 +338,8 @@
 #define SX128X_RANGING_ROLE_MASTER                    0x01        //  7     0     ranging role: master
 #define SX128X_RANGING_ROLE_SLAVE                     0x00        //  7     0                   slave
 
+//SX128X_REG_LORA_SYNC_WORD_1 - SX128X_REG_LORA_SYNC_WORD_2
+#define SX128X_SYNC_WORD_PRIVATE                      0x12
 
 /*!
   \class SX128x
@@ -364,13 +375,15 @@ class SX128x: public PhysicalLayer {
 
       \param cr LoRa coding rate denominator. Defaults to 7 (coding rate 4/7).
 
+      \param syncWord 2-byte LoRa sync word. Defaults to SX128X_SYNC_WORD_PRIVATE (0x12).
+
       \param power Output power in dBm. Defaults to 10 dBm.
 
       \param preambleLength LoRa preamble length in symbols. Defaults to 12 symbols.
 
       \returns \ref status_codes
     */
-    int16_t begin(float freq = 2400.0, float bw = 812.5, uint8_t sf = 9, uint8_t cr = 7, int8_t power = 10, uint16_t preambleLength = 12);
+    int16_t begin(float freq = 2400.0, float bw = 812.5, uint8_t sf = 9, uint8_t cr = 7, uint8_t syncWord = SX128X_SYNC_WORD_PRIVATE, int8_t power = 10, uint16_t preambleLength = 12);
 
     /*!
       \brief Initialization method for GFSK modem.
@@ -656,6 +669,17 @@ class SX128x: public PhysicalLayer {
     int16_t setSyncWord(uint8_t* syncWord, uint8_t len);
 
     /*!
+      \brief Sets LoRa sync word.
+
+      \param syncWord LoRa sync word to be set.
+
+      \param controlBits Undocumented control bits, required for compatibility purposes.
+
+      \returns \ref status_codes
+    */
+    int16_t setSyncWord(uint8_t syncWord, uint8_t controlBits = 0x44);
+
+    /*!
       \brief Sets CRC configuration.
 
       \param len CRC length in bytes, Allowed values are 1, 2 or 3, set to 0 to disable CRC.
@@ -760,10 +784,28 @@ class SX128x: public PhysicalLayer {
    */
     uint8_t random();
 
-#ifndef RADIOLIB_GODMODE
+    /*!
+      \brief Dummy method, to ensure PhysicalLayer compatibility.
+
+      \param func Ignored.
+    */
+    void setDirectAction(void (*func)(void));
+
+    /*!
+      \brief Dummy method, to ensure PhysicalLayer compatibility.
+
+      \param pin Ignored.
+    */
+    void readBit(RADIOLIB_PIN_TYPE pin);
+
+#if !defined(RADIOLIB_GODMODE) && !defined(RADIOLIB_LOW_LEVEL)
   protected:
 #endif
     Module* _mod;
+
+#if !defined(RADIOLIB_GODMODE)
+  protected:
+#endif
 
     // cached LoRa parameters
     float _bwKhz = 0;
@@ -795,7 +837,18 @@ class SX128x: public PhysicalLayer {
 
     int16_t setHeaderType(uint8_t headerType, size_t len = 0xFF);
 
-#ifndef RADIOLIB_GODMODE
+#if !defined(RADIOLIB_GODMODE) && !defined(RADIOLIB_LOW_LEVEL)
+  private:
+#endif
+
+    // common low-level SPI interface
+    int16_t SPIwriteCommand(uint8_t cmd, uint8_t* data, uint8_t numBytes, bool waitForBusy = true);
+    int16_t SPIwriteCommand(uint8_t* cmd, uint8_t cmdLen, uint8_t* data, uint8_t numBytes, bool waitForBusy = true);
+    int16_t SPIreadCommand(uint8_t cmd, uint8_t* data, uint8_t numBytes, bool waitForBusy = true);
+    int16_t SPIreadCommand(uint8_t* cmd, uint8_t cmdLen, uint8_t* data, uint8_t numBytes, bool waitForBusy = true);
+    int16_t SPItransfer(uint8_t* cmd, uint8_t cmdLen, bool write, uint8_t* dataOut, uint8_t* dataIn, uint8_t numBytes, bool waitForBusy, uint32_t timeout = 5000);
+
+#if !defined(RADIOLIB_GODMODE)
   private:
 #endif
     // common parameters
@@ -814,13 +867,6 @@ class SX128x: public PhysicalLayer {
     uint8_t _connectionState = 0, _crcBLE = 0, _bleTestPayload = 0;
 
     int16_t config(uint8_t modem);
-
-    // common low-level SPI interface
-    int16_t SPIwriteCommand(uint8_t cmd, uint8_t* data, uint8_t numBytes, bool waitForBusy = true);
-    int16_t SPIwriteCommand(uint8_t* cmd, uint8_t cmdLen, uint8_t* data, uint8_t numBytes, bool waitForBusy = true);
-    int16_t SPIreadCommand(uint8_t cmd, uint8_t* data, uint8_t numBytes, bool waitForBusy = true);
-    int16_t SPIreadCommand(uint8_t* cmd, uint8_t cmdLen, uint8_t* data, uint8_t numBytes, bool waitForBusy = true);
-    int16_t SPItransfer(uint8_t* cmd, uint8_t cmdLen, bool write, uint8_t* dataOut, uint8_t* dataIn, uint8_t numBytes, bool waitForBusy, uint32_t timeout = 5000);
 };
 
 #endif

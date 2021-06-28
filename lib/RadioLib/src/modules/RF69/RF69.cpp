@@ -306,9 +306,6 @@ int16_t RF69::startTransmit(uint8_t* data, size_t len, uint8_t addr) {
   // clear interrupt flags
   clearIRQFlags();
 
-  // set packet length
-  _mod->SPIwriteRegister(RF69_REG_FIFO, len);
-
   // optionally write packet length
   if (_packetLengthConfig == RF69_PACKET_FORMAT_VARIABLE) {
     _mod->SPIwriteRegister(RF69_REG_FIFO, len);
@@ -369,6 +366,28 @@ int16_t RF69::readData(uint8_t* data, size_t len) {
   return(ERR_NONE);
 }
 
+int16_t RF69::setOOK(bool enableOOK) {
+  // set OOK and if successful, save the new setting
+  int16_t state = ERR_NONE;
+  if(enableOOK) {
+    state = _mod->SPIsetRegValue(RF69_REG_DATA_MODUL, RF69_OOK, 4, 3, 5);
+  } else {
+    state = _mod->SPIsetRegValue(RF69_REG_DATA_MODUL, RF69_FSK, 4, 3, 5);
+  }
+  if(state == ERR_NONE) {
+    _ook = enableOOK;
+  }
+
+  return(state);
+}
+
+int16_t RF69::setOokThresholdType(uint8_t type) {
+  if((type != RF69_OOK_THRESH_FIXED) && (type != RF69_OOK_THRESH_PEAK) && (type != RF69_OOK_THRESH_AVERAGE)) {
+    return(ERR_INVALID_OOK_RSSI_PEAK_TYPE);
+  }
+  return(_mod->SPIsetRegValue(RF69_REG_OOK_PEAK, type, 7, 3, 5));
+}
+
 int16_t RF69::setFrequency(float freq) {
   // check allowed frequency range
   if(!(((freq > 290.0) && (freq < 340.0)) ||
@@ -385,6 +404,9 @@ int16_t RF69::setFrequency(float freq) {
   _mod->SPIwriteRegister(RF69_REG_FRF_MSB, (FRF & 0xFF0000) >> 16);
   _mod->SPIwriteRegister(RF69_REG_FRF_MID, (FRF & 0x00FF00) >> 8);
   _mod->SPIwriteRegister(RF69_REG_FRF_LSB, FRF & 0x0000FF);
+
+  _freq = freq;
+
   return(ERR_NONE);
 }
 
@@ -505,8 +527,14 @@ int16_t RF69::setRxBandwidth(float rxBw) {
 }
 
 int16_t RF69::setFrequencyDeviation(float freqDev) {
+  // set frequency deviation to lowest available setting (required for digimodes)
+  float newFreqDev = freqDev;
+  if(freqDev < 0.0) {
+    newFreqDev = 0.6;
+  }
+
   // check frequency deviation range
-  if(!((freqDev + _br/2 <= 500))) {
+  if(!((newFreqDev + _br/2 <= 500))) {
     return(ERR_INVALID_FREQUENCY_DEVIATION);
   }
 
@@ -515,7 +543,7 @@ int16_t RF69::setFrequencyDeviation(float freqDev) {
 
   // set frequency deviation from carrier frequency
   uint32_t base = 1;
-  uint32_t fdev = (freqDev * (base << 19)) / 32000;
+  uint32_t fdev = (newFreqDev * (base << 19)) / 32000;
   int16_t state = _mod->SPIsetRegValue(RF69_REG_FDEV_MSB, (fdev & 0xFF00) >> 8, 5, 0);
   state |= _mod->SPIsetRegValue(RF69_REG_FDEV_LSB, fdev & 0x00FF, 7, 0);
 
@@ -756,6 +784,14 @@ int16_t RF69::setEncoding(uint8_t encoding) {
   }
 }
 
+int16_t RF69::setLnaTestBoost(bool value) {
+  if(value) {
+    return (_mod->SPIsetRegValue(RF69_REG_TEST_LNA, RF69_TEST_LNA_BOOST_HIGH, 7, 0));
+  }
+
+  return(_mod->SPIsetRegValue(RF69_TEST_LNA_BOOST_NORMAL, RF69_TEST_LNA_BOOST_HIGH, 7, 0));
+}
+
 float RF69::getRSSI() {
   return(-1.0 * (_mod->SPIgetRegValue(RF69_REG_RSSI_VALUE)/2.0));
 }
@@ -781,6 +817,14 @@ uint8_t RF69::random() {
   setMode(RF69_STANDBY);
 
   return(randByte);
+}
+
+void RF69::setDirectAction(void (*func)(void)) {
+  setDio1Action(func);
+}
+
+void RF69::readBit(RADIOLIB_PIN_TYPE pin) {
+  updateDirectBuffer((uint8_t)digitalRead(pin));
 }
 
 int16_t RF69::getChipVersion() {
