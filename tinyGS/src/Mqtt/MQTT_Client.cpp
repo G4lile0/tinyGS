@@ -731,11 +731,11 @@ void MQTT_Client::remoteGoToSleep(char *payload, size_t payload_len)
   DynamicJsonDocument doc(60);
   deserializeJson(doc, payload, payload_len);
 
-  uint16_t sleep_seconds = doc[0];
+  uint32_t sleep_seconds = doc[0];                        // max 
   //uint8_t  int_pin = doc [1];   // 99 no int pin
 
   Log::debug(PSTR("light_sleep_enter"));
-  esp_sleep_enable_timer_wakeup(sleep_seconds * 1000000); //30 seconds
+  esp_sleep_enable_timer_wakeup( 1000000ULL * sleep_seconds); // using ULL  Unsigned Long long
   //esp_sleep_enable_ext0_wakeup(int_pin,0);
   delay(100);
   Serial.flush();
