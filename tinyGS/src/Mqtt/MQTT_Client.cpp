@@ -555,7 +555,16 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     result = 0;
   }
 
-  // Send station to lightsleep x seconds
+  // Send station to lightsleep (siesta) x seconds
+  if (!strcmp(command, commandGoToSiesta))
+  {
+    if (length < 1)
+      return;
+    remoteGoToSiesta((char *)payload, length);
+    result = 0;
+  }
+
+ // Send station to deepsleep x seconds
   if (!strcmp(command, commandGoToSleep))
   {
     if (length < 1)
@@ -728,6 +737,30 @@ void MQTT_Client::remoteSatFilter(char *payload, size_t payload_len)
 
 void MQTT_Client::remoteGoToSleep(char *payload, size_t payload_len)
 {
+  Radio &radio = Radio::getInstance();
+  DynamicJsonDocument doc(60);
+  deserializeJson(doc, payload, payload_len);
+
+  uint32_t sleep_seconds = doc[0];                        // max 
+  //uint8_t  int_pin = doc [1];   // 99 no int pin
+
+  Log::debug(PSTR("deep_sleep_enter"));
+  esp_sleep_enable_timer_wakeup( 1000000ULL * sleep_seconds); // using ULL  Unsigned Long long
+  //esp_sleep_enable_ext0_wakeup(int_pin,0);
+  delay(100);
+  Serial.flush();
+  WiFi.disconnect(true);
+  delay(100);
+  //  TODO: apagar OLED
+  radio.moduleSleep();
+  esp_deep_sleep_start();
+  delay(1000);   // shouldn't arrive here
+
+}
+
+
+void MQTT_Client::remoteGoToSiesta(char *payload, size_t payload_len)
+{
   DynamicJsonDocument doc(60);
   deserializeJson(doc, payload, payload_len);
 
@@ -772,6 +805,8 @@ void MQTT_Client::remoteGoToSleep(char *payload, size_t payload_len)
     break;
   }
 }
+
+
 
 void MQTT_Client::remoteSetFreqOffset(char *payload, size_t payload_len)
 {

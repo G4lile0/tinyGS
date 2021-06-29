@@ -261,6 +261,21 @@ int16_t Radio::sendTestPacket()
   return sendTx((uint8_t *)TEST_STRING, strlen(TEST_STRING));
 }
 
+void Radio::moduleSleep()
+{
+if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  {
+    ((SX1278 *)lora)->sleep(); // sleep mandatory if FastHop isn't ON.
+
+  }
+  else
+  {
+    ((SX1268 *)lora)->sleep();
+
+  }
+
+}
+
 uint8_t Radio::listen()
 {
   // check if the flag is set (received interruption)

@@ -70,6 +70,7 @@ private:
   void remoteSatCmnd(char* payload, size_t payload_len);
   void remoteSatFilter(char* payload, size_t payload_len);
   void remoteGoToSleep(char* payload, size_t payload_len);
+  void remoteGoToSiesta(char* payload, size_t payload_len);
   void remoteSetFreqOffset(char* payload, size_t payload_len);
   int  voltage();
 
@@ -128,6 +129,7 @@ private:
   const char* commandTx PROGMEM= "tx";
   const char* commandSatFilter PROGMEM= "filter";
   const char* commandGoToSleep PROGMEM= "sleep";
+  const char* commandGoToSiesta PROGMEM= "siesta";
   const char* commandSetFreqOffset PROGMEM= "foff";
   const char* commandSetAdvParameters PROGMEM= "set_adv_prm";
   const char* commandGetAdvParameters PROGMEM= "get_adv_prm";

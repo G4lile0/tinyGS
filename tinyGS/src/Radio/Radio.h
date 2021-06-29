@@ -44,6 +44,7 @@ public:
   void enableInterrupt();
   void disableInterrupt();
   void startRx();
+  void moduleSleep();
   uint8_t listen();
   bool isReady() { return status.radio_ready; }
   int16_t remote_freq(char* payload, size_t payload_len);
