@@ -512,7 +512,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     result = radio.remote_crc((char *)payload, length);
 
   // Remote_LoRa_syncword [8,1,2,3,4,5,6,7,8,9]
-  if (!strcmp(command, commandCrc))
+  if (!strcmp(command, commandLsw))
     result = radio.remote_lsw((char *)payload, length);
 
   if (!strcmp(command, commandFldro))

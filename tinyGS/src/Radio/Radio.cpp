@@ -762,12 +762,11 @@ int16_t Radio::remote_begin_fsk(char *payload, size_t payload_len)
   float freqDev = doc[2];
   float rxBw = doc[3];
   int8_t power = doc[4];
-  uint8_t currentlimit = doc[5];
-  uint16_t preambleLength = doc[6];
-  uint8_t ook = doc[7]; //
+  uint16_t preambleLength = doc[5];
+  uint8_t ook = doc[6]; // ook and datashape
 
   Log::console(PSTR("Set Frequency: %.3f MHz\nSet bit rate: %.3f\nSet Frequency deviation: %.3f kHz\nSet receiver bandwidth: %.3f kHz\nSet Power: %d"), freq, br, freqDev, rxBw, power);
-  Log::console(PSTR("Set Current limit: %u\nSet Preamble Length: %u\nOOK Modulation %s\nSet datashaping %u"), currentlimit, preambleLength, (ook != 255) ? F("ON") : F("OFF"), ook);
+  Log::console(PSTR("Set Preamble Length: %u\nOOK Modulation %s\nSet datashaping %u"), preambleLength, (ook != 255) ? F("ON") : F("OFF"), ook);
 
   int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
@@ -776,6 +775,7 @@ int16_t Radio::remote_begin_fsk(char *payload, size_t payload_len)
     ((SX1278 *)lora)->setDataShaping(ook);
     ((SX1278 *)lora)->startReceive();
     ((SX1278 *)lora)->setDio0Action(setFlag);
+
   }
   else
   {
@@ -869,7 +869,7 @@ int16_t Radio::remote_fsw(char *payload, size_t payload_len)
 
   for (uint8_t words = 0; words < synnwordsize; words++)
   {
-    syncWord[words] = doc[words + 1];
+    syncWord[words] = doc[words];
     Serial.print(F(" 0x"));
     Serial.print(syncWord[words], HEX);
     Serial.print(F(", "));
