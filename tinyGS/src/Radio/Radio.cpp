@@ -764,17 +764,22 @@ int16_t Radio::remote_begin_fsk(char *payload, size_t payload_len)
   int8_t power = doc[4];
   uint16_t preambleLength = doc[5];
   uint8_t ook = doc[6]; // ook and datashape
+  uint8_t len = doc[7]; // ook and datashape
+  
 
   Log::console(PSTR("Set Frequency: %.3f MHz\nSet bit rate: %.3f\nSet Frequency deviation: %.3f kHz\nSet receiver bandwidth: %.3f kHz\nSet Power: %d"), freq, br, freqDev, rxBw, power);
-  Log::console(PSTR("Set Preamble Length: %u\nOOK Modulation %s\nSet datashaping %u"), preambleLength, (ook != 255) ? F("ON") : F("OFF"), ook);
+  Log::console(PSTR("Set Preamble Length: %u\nOOK Modulation %s\nSet datashaping %u"), preambleLength, (ook == 255) ? F("ON") : F("OFF"), ook);
 
   int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
   {
-    state = ((SX1278 *)lora)->beginFSK(freq + status.modeminfo.freqOffset, br, freqDev, rxBw, power, preambleLength, (ook != 255));
+    state = ((SX1278 *)lora)->beginFSK(freq + status.modeminfo.freqOffset, br, freqDev, rxBw, power, preambleLength, (ook == 255));
     ((SX1278 *)lora)->setDataShaping(ook);
     ((SX1278 *)lora)->startReceive();
     ((SX1278 *)lora)->setDio0Action(setFlag);
+    ((SX1278 *)lora)->setCRC(false);
+   // ((SX1278 *)lora)->_mod->SPIsetRegValue(SX127X_REG_SYNC_CONFIG, SX127X_PREAMBLE_POLARITY_AA, 5, 5);  
+    ((SX1278 *)lora)->fixedPacketLengthMode(len);
 
   }
   else

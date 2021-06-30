@@ -130,7 +130,7 @@ int16_t SX127x::beginFSK(uint8_t chipVersion, float br, float freqDev, float rxB
 
   // set default packet length mode
   state = variablePacketLengthMode();
-
+ 
   return(state);
 }
 
@@ -1158,8 +1158,8 @@ int16_t SX127x::configFSK() {
   state |= _mod->SPIsetRegValue(SX127X_REG_PACKET_CONFIG_2, SX127X_DATA_MODE_PACKET | SX127X_IO_HOME_OFF, 6, 5);
   RADIOLIB_ASSERT(state);
 
-  // set preamble polarity
-  state =_mod->SPIsetRegValue(SX127X_REG_SYNC_CONFIG, SX127X_PREAMBLE_POLARITY_55, 5, 5);
+  // set preamble polarity g4lile0 cambiado de 55 a AA
+  state =_mod->SPIsetRegValue(SX127X_REG_SYNC_CONFIG, SX127X_PREAMBLE_POLARITY_AA, 5, 5);
   RADIOLIB_ASSERT(state);
 
   // set FIFO threshold
