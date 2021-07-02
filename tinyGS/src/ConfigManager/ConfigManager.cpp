@@ -21,6 +21,7 @@
 #include "../Mqtt/MQTT_Client.h"
 #include "../Logger/Logger.h"
 #include "../Radio/Radio.h"
+#include "../Display/graphics.h"
 #include "ArduinoJson.h"
 #if ARDUINOJSON_USE_LONG_LONG == 0 && !PLATFORMIO
 #error "Using Arduino IDE is not recommended, please follow this guide https://github.com/G4lile0/tinyGS/wiki/Arduino-IDE or edit /ArduinoJson/src/ArduinoJson/Configuration.hpp and amend to #define ARDUINOJSON_USE_LONG_LONG 1 around line 68"
@@ -53,6 +54,7 @@ ConfigManager::ConfigManager()
   server.on(DASHBOARD_URL, [this] { handleDashboard(); });
   server.on(RESTART_URL, [this] { handleRestart(); });
   server.on(REFRESH_CONSOLE_URL, [this] { handleRefreshConsole(); });
+  server.on(REFRESH_WORLDMAP_URL, [this] { handleRefreshWorldmap(); });
   setupUpdateServer(
       [this](const char *updatePath) { httpUpdater.setup(&server, updatePath); },
       [this](const char *userName, char *password) { httpUpdater.updateCredentials(userName, password); });
@@ -135,10 +137,52 @@ void ConfigManager::handleDashboard()
   s += "<style>" + String(FPSTR(IOTWEBCONF_HTML_STYLE_INNER)) + "</style>";
   s += "<style>" + String(FPSTR(IOTWEBCONF_DASHBOARD_STYLE_INNER)) + "</style>";
   s += "<script>" + String(FPSTR(IOTWEBCONF_CONSOLE_SCRIPT)) + "</script>";
+  s += "<script>" + String(FPSTR(IOTWEBCONF_WORLDMAP_SCRIPT)) + "</script>";
   s += FPSTR(IOTWEBCONF_HTML_HEAD_END);
   s += FPSTR(IOTWEBCONF_DASHBOARD_BODY_INNER);
   s += String(FPSTR(LOGO)) + "<br />";
-  s += F("</table></div><div class=\"card\"><h3>Groundstation Status</h3><table>");
+  
+  // build svg of world map with animated satellite position
+  uint ix = 0;  
+  uint sx;     
+  String svg = "<div style=""margin-left:35px""><svg width""100%"" height=""auto"" viewBox=""0 0 262 134"" xmlns=""http://www.w3.org/2000/svg"">";
+  svg += "<rect x=""1"" y=""1"" width=""262"" height=""134"" stroke=""gray"" fill=""none"" stroke-width=""2"" />";
+  for (uint y = 0; y < earth_height; y++)
+  {
+    uint n = 0;
+    for (uint x = 0; x < earth_width / 8; x++)
+    {
+      for (uint i = 0; i < 8; i++)
+      {
+        if (((earth_bits[ix] >> i) & 1) == 1)
+        {
+          if (n == 0)
+          {
+            sx = (x * 8) + i;
+          }
+          n++;
+        } 
+        else 
+        {
+          if (n > 0) 
+          {
+            // append current land pixel string
+            svg += "<rect x="""+ String(sx * 2 + 3) + """ y=""" + String(y * 2 + 3) + """ width=""" + String(n * 2) + """ height=""2"" />";
+            n = 0;
+          }
+        }
+      }
+      ix++;
+    }
+  }
+  // add animated satellite position
+  svg += "<circle id=""wmsatpos"" cx=""" + String(status.satPos[0] * 2 + 3) + """ cy=""" + String(status.satPos[1] * 2 + 3) + """ stroke=""red"" fill=""none"" stroke-width=""2"">";
+  svg += "  <animate attributeName=""r"" values=""2;4;6"" dur=""0.75s"" repeatCount=""indefinite"" />";
+  svg += "</circle>";
+  svg += "</svg></div>";  
+  s += svg;
+
+  s += F("</table></div><div class=\"card\"><h3>Groundstation Status</h3><table id=""gsstatus"">");
   s += "<tr><td>Name </td><td>" + String(getThingName()) + "</td></tr>";
   s += "<tr><td>Version </td><td>" + String(status.version) + "</td></tr>";
   s += "<tr><td>MQTT Server </td><td>" + String(status.mqtt_connected ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + "</td></tr>";
@@ -147,7 +191,7 @@ void ConfigManager::handleDashboard()
   s += "<tr><td>Test Mode </td><td>" + String(getTestMode() ? "ENABLED" : "DISABLED") + "</td></tr>";
   //s += "<tr><td>Uptime </td><td>" + // process and update in js + "</td></tr>";
   s += F("</table></div>");
-  s += F("<div class=\"card\"><h3>Modem Configuration</h3><table>");
+  s += F("<div class=\"card\"><h3>Modem Configuration</h3><table id=""modemconfig"">");
   s += "<tr><td>Listening to </td><td>" + String(status.modeminfo.satellite) + "</td></tr>";
   s += "<tr><td>Modulation </td><td>" + String(status.modeminfo.modem_mode) + "</td></tr>";
   s += "<tr><td>Frequency </td><td>" + String(status.modeminfo.frequency) + "</td></tr>";
@@ -163,7 +207,7 @@ void ConfigManager::handleDashboard()
     s += "<tr><td>Frequency dev </td><td>" + String(status.modeminfo.freqDev) + "</td></tr>";
     s += "<tr><td>Bandwidth </td><td>" + String(status.modeminfo.bw) + "</td></tr>";
   }
-  s += F("</table></div><div class=\"card\"><h3>Last Packet Received</h3><table>");
+  s += F("</table></div><div class=\"card\"><h3>Last Packet Received</h3><table id=""lastpacket"">");
   s += "<tr><td>Received at </td><td>" + String(status.lastPacketInfo.time) + "</td></tr>";
   s += "<tr><td>Signal RSSI </td><td>" + String(status.lastPacketInfo.rssi) + "</td></tr>";
   s += "<tr><td>Signal SNR </td><td>" + String(status.lastPacketInfo.snr) + "</td></tr>";
@@ -269,6 +313,68 @@ void ConfigManager::handleRefreshConsole()
       } // Skip log index 0 as it is not allowed
     } while (counter != Log::getLogIdx());
   }
+
+  server.sendContent("");
+  server.client().stop();
+}
+
+void ConfigManager::handleRefreshWorldmap()
+{
+  if (getState() == IOTWEBCONF_STATE_ONLINE)
+  {
+    // -- Authenticate
+    if (!server.authenticate(IOTWEBCONF_ADMIN_USER_NAME, getApPasswordParameter()->valueBuffer))
+    {
+      IOTWEBCONF_DEBUG_LINE(F("Requesting authentication."));
+      server.requestAuthentication();
+      return;
+    }
+  }
+
+  server.client().flush();
+  server.sendHeader(F("Cache-Control"), F("no-cache, no-store, must-revalidate"));
+  server.sendHeader(F("Pragma"), F("no-cache"));
+  server.sendHeader(F("Expires"), F("-1"));
+  server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  server.send(200, F("text/plain"), "");
+
+  // world map satellite position (for wmsatpos id attributes)
+  String cx= String(status.satPos[0] * 2 + 3); 
+  String cy= String(status.satPos[1] * 2 + 3);
+  String data_string = cx + "," + cy + ",";
+
+  // modem configuration (for modemconfig id table data)
+  data_string += String(status.modeminfo.satellite) + "," +
+                 String(status.modeminfo.modem_mode) + "," +
+                 String(status.modeminfo.frequency) + ",";
+  if (status.modeminfo.modem_mode == "LoRa")
+  {
+    data_string += String(status.modeminfo.sf) + ",";
+    data_string += String(status.modeminfo.cr) + ",";
+  }
+  else
+  {
+    data_string += String(status.modeminfo.bitrate) + ",";
+    data_string += String(status.modeminfo.freqDev) + ",";
+  }
+  data_string += String(status.modeminfo.bw) + ",";
+
+  // ground station status (for gsstatus id table data)
+  data_string += String(getThingName()) + ",";
+  data_string += String(status.version) + ",";
+  data_string += String(status.mqtt_connected ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + ",";
+  data_string += String(WiFi.isConnected() ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + ",";
+  data_string += String(Radio::getInstance().isReady() ? "<span class='G'>READY</span>" : "<span class='R'>NOT READY</span>") + ",";
+  data_string += String(getTestMode() ? "ENABLED" : "DISABLED") + ",";
+  
+  // last packet received data (for lastpacket id table data)
+  data_string += String(status.lastPacketInfo.time) + ",";
+  data_string += String(status.lastPacketInfo.rssi) + ",";
+  data_string += String(status.lastPacketInfo.snr) + ",";
+  data_string += String(status.lastPacketInfo.frequencyerror) + ",";
+  data_string += String(status.lastPacketInfo.crc_error ? "CRC ERROR!" : "");
+
+  server.sendContent(data_string + "\n");
 
   server.sendContent("");
   server.client().stop();
