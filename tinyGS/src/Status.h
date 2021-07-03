@@ -51,8 +51,9 @@ struct ModemInfo {
   uint8_t gain        = 0;
   uint32_t  NORAD     = 46494;  // funny this remember me WARGames
   uint8_t   fsw[8]    = {0,0,0,0,0,0,0,0};
-  uint8_t   swSize     = 0;
+  uint8_t   swSize    = 0;
   uint8_t   filter[8] = {0,0,0,0,0,0,0,0};
+  uint8_t   len       = 64;     // FSK expected lenght in packet mode
 };
 
 struct TextFrame {   

@@ -464,6 +464,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
       m.power = doc["pwr"];
       m.preambleLength = doc["pl"];
       m.OOK = doc["ook"];
+      m.len = doc["len"];
       m.swSize = doc["fsw"].size();
       for (int i = 0; i < 8; i++)
       {

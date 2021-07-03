@@ -120,10 +120,12 @@ int16_t Radio::begin()
   {
     if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
     {
-      state = ((SX1278 *)lora)->beginFSK(m.frequency + status.modeminfo.freqOffset, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, (m.OOK != 255));
+      state = ((SX1278 *)lora)->beginFSK(m.frequency + status.modeminfo.freqOffset, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, (m.OOK == 255));
       ((SX1278 *)lora)->setDataShaping(m.OOK);
       ((SX1278 *)lora)->startReceive();
       ((SX1278 *)lora)->setDio0Action(setFlag);
+      ((SX1278 *)lora)->setCRC(false);
+      ((SX1278 *)lora)->fixedPacketLengthMode(m.len);
       ((SX1278 *)lora)->setSyncWord(m.fsw, m.swSize);
     }
     else
@@ -801,6 +803,7 @@ int16_t Radio::remote_begin_fsk(char *payload, size_t payload_len)
     status.modeminfo.bitrate = br;
     status.modeminfo.freqDev = freqDev;
     status.modeminfo.OOK = ook;
+    status.modeminfo.len = len;
   }
 
   return state;
@@ -875,10 +878,13 @@ int16_t Radio::remote_fsw(char *payload, size_t payload_len)
   for (uint8_t words = 0; words < synnwordsize; words++)
   {
     syncWord[words] = doc[words];
+    status.modeminfo.fsw[words] = syncWord[words];
     Serial.print(F(" 0x"));
     Serial.print(syncWord[words], HEX);
     Serial.print(F(", "));
   }
+
+   status.modeminfo.swSize = synnwordsize;
 
   int16_t state = 0;
   if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
