@@ -134,6 +134,8 @@ int16_t Radio::begin()
       ((SX1268 *)lora)->setDataShaping(m.OOK);
       ((SX1268 *)lora)->startReceive();
       ((SX1268 *)lora)->setDio1Action(setFlag);
+      ((SX1268 *)lora)->setCRC(false);
+      ((SX1268 *)lora)->fixedPacketLengthMode(m.len);
       state = ((SX1268 *)lora)->setSyncWord(m.fsw, m.swSize);
     }
   }
@@ -790,6 +792,10 @@ int16_t Radio::remote_begin_fsk(char *payload, size_t payload_len)
     ((SX1268 *)lora)->setDataShaping(ook);
     ((SX1268 *)lora)->startReceive();
     ((SX1268 *)lora)->setDio1Action(setFlag);
+    ((SX1268 *)lora)->setCRC(false);
+    ((SX1268 *)lora)->fixedPacketLengthMode(len);
+    
+
   }
   readState(state);
 
