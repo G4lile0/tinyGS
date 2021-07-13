@@ -24,6 +24,7 @@
 #endif
 #include <base64.h>
 #include "../Logger/Logger.h"
+
 bool received = false;
 bool eInterrupt = true;
 bool noisyInterrupt = false;
@@ -74,13 +75,13 @@ void Radio::init()
 
   spi.begin(board.L_SCK, board.L_MISO, board.L_MOSI, board.L_NSS);
 
-  if (board.L_SX127X)
+  if (board.L_SX127X == 1)
   {
-    lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+    radioHal = new RadioHal<SX1278>(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
   }
-  else
+  else if (board.L_SX127X == 0)
   {
-    lora = new SX1268(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+    radioHal = new RadioHal<SX1268>(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
   }
 
   begin();
@@ -95,26 +96,13 @@ int16_t Radio::begin()
 
   if (m.modem_mode == "LoRa")
   {
-    if (board.L_SX127X)
-    {
-      state = ((SX1278 *)lora)->begin(m.frequency + status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, m.gain);
+    state = radioHal->begin(m.frequency + status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, m.gain, board.L_TCXO_V);
       if (m.fldro == 2)
-        ((SX1278 *)lora)->autoLDRO();
+      radioHal->autoLDRO();
       else
-        ((SX1278 *)lora)->forceLDRO(m.fldro);
+      radioHal->forceLDRO(m.fldro);
 
-      ((SX1278 *)lora)->setCRC(m.crc);
-    }
-    else
-    {
-      state = ((SX1268 *)lora)->begin(m.frequency + status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, board.L_TCXO_V);
-      if (m.fldro == 2)
-        ((SX1268 *)lora)->autoLDRO();
-      else
-        ((SX1268 *)lora)->forceLDRO(m.fldro);
-
-      ((SX1268 *)lora)->setCRC(m.crc);
-    }
+    radioHal->setCRC(m.crc);
   }
   else
   {

@@ -28,6 +28,7 @@
 #include "../ConfigManager/ConfigManager.h"
 #include "../Status.h"
 #include "../Mqtt/MQTT_Client.h"
+#include "RadioHal.hpp"
 
 extern Status status;
 
@@ -71,7 +72,8 @@ public:
    
 private:
   Radio();
-  PhysicalLayer* lora;
+  PhysicalLayer* lora; // TODO: Remove this
+  IRadioHal* radioHal;
   void readState(int state);
   static void setFlag();
   SPIClass spi;
