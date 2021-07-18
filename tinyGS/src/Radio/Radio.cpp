@@ -25,6 +25,8 @@
 #include <base64.h>
 #include "../Logger/Logger.h"
 
+#define CHECK_ERROR(errCode) if (errCode != ERR_NONE) { Log::console(PSTR("Radio failed, code %d\n Check that the configuration is valid for your board"), errCode); return errCode; }
+
 bool received = false;
 bool eInterrupt = true;
 bool noisyInterrupt = false;
@@ -92,96 +94,37 @@ int16_t Radio::begin()
   status.radio_ready = false;
   board_type board = ConfigManager::getInstance().getBoardConfig();
   ModemInfo &m = status.modeminfo;
-  int16_t state = 0;
 
   if (m.modem_mode == "LoRa")
   {
-    state = radioHal->begin(m.frequency + status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, m.gain, board.L_TCXO_V);
-      if (m.fldro == 2)
+    CHECK_ERROR(radioHal->begin(m.frequency + status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, m.gain, board.L_TCXO_V));
+    if (m.fldro == 2)
       radioHal->autoLDRO();
-      else
+    else
       radioHal->forceLDRO(m.fldro);
 
     radioHal->setCRC(m.crc);
   }
   else
   {
-    if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-    {
-      state = ((SX1278 *)lora)->beginFSK(m.frequency + status.modeminfo.freqOffset, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, (m.OOK == 255));
-      ((SX1278 *)lora)->setDataShaping(m.OOK);
-      ((SX1278 *)lora)->startReceive();
-      ((SX1278 *)lora)->setDio0Action(setFlag);
-      ((SX1278 *)lora)->setCRC(false);
-      ((SX1278 *)lora)->fixedPacketLengthMode(m.len);
-      ((SX1278 *)lora)->setSyncWord(m.fsw, m.swSize);
-    }
-    else
-    {
-      state = ((SX1268 *)lora)->beginFSK(m.frequency + status.modeminfo.freqOffset, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
-      ((SX1268 *)lora)->setDataShaping(m.OOK);
-      ((SX1268 *)lora)->startReceive();
-      ((SX1268 *)lora)->setDio1Action(setFlag);
-      ((SX1268 *)lora)->setCRC(false);
-      ((SX1268 *)lora)->fixedPacketLengthMode(m.len);
-      state = ((SX1268 *)lora)->setSyncWord(m.fsw, m.swSize);
-    }
-  }
-
-  // registers
-  /*JsonArray regs = doc.as<JsonArray>();
-  for (int i=0; i<regs.size(); i++) {
-    JsonObject reg = regs[i];
-    uint16_t regValue = reg["ref"];
-    uint32_t regMask = reg["mask"];
-
-    if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-      state = ((SX1278*)lora)->_mod->SPIsetRegValue((regValue>>8)&0x0F, regValue&0x0F, (regMask>>16)&0x0F, (regMask>>8)&0x0F, regMask&0x0F);
-   // else
-   //   state = ((SX1268*)lora)->_mod->SPIsetRegValue((regValue>>8)&0x0F, regValue&0x0F, (regMask>>16)&0x0F, (regMask>>8)&0x0F, regMask&0x0F);
-  }*/
-
-  if (state == ERR_NONE)
-  {
-    //Log::console(PSTR("success!"));
-  }
-  else
-  {
-    Log::console(PSTR("failed, code %d"), state);
-    return state;
+    CHECK_ERROR(radioHal->beginFSK(m.frequency + status.modeminfo.freqOffset, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, (m.OOK == 255), ConfigManager::getInstance().getBoardConfig().L_TCXO_V));
+    CHECK_ERROR(radioHal->setDataShaping(m.OOK));
+    CHECK_ERROR(radioHal->setCRC(false));
+    CHECK_ERROR(radioHal->fixedPacketLengthMode(m.len));
+    CHECK_ERROR(radioHal->setSyncWord(m.fsw, m.swSize));
   }
 
   // set the function that will be called
   // when new packet is received
   // attach the ISR to radio interrupt
-  if (board.L_SX127X)
-  {
-    ((SX1278 *)lora)->setDio0Action(setFlag);
-  }
-  else
-  {
-    ((SX1268 *)lora)->setDio1Action(setFlag);
-  }
+  radioHal->setDio0Action(setFlag);
 
   // start listening for LoRa packets
   Log::console(PSTR("[SX12x8] Starting to listen to %s"), m.satellite);
-  if (board.L_SX127X)
-    state = ((SX1278 *)lora)->startReceive();
-  else
-    state = ((SX1268 *)lora)->startReceive();
-
-  if (state == ERR_NONE)
-  {
-    //Log::console(PSTR("success!"));
-  }
-  else
-  {
-    Log::console(PSTR("failed, code %d\nGo to the config panel (%s) and check if the board selected matches your hardware."), state, WiFi.localIP().toString());
-    return state;
-  }
+  CHECK_ERROR(radioHal->startReceive());
 
   status.radio_ready = true;
-  return state;
+  return ERR_NONE;
 }
 
 void Radio::setFlag()
@@ -208,10 +151,7 @@ void Radio::disableInterrupt()
 void Radio::startRx()
 {
   // put module back to listen mode
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-    ((SX1278 *)lora)->startReceive();
-  else
-    ((SX1268 *)lora)->startReceive();
+  radioHal->startReceive();
 
   // we're ready to receive more packets,
   // enable interrupt service routine
@@ -229,22 +169,11 @@ int16_t Radio::sendTx(uint8_t *data, size_t length)
 
   // send data
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-  {
-    SX1278 *l = (SX1278 *)lora;
-    state = l->transmit(data, length);
-    l->setDio0Action(setFlag);
-    l->startReceive();
-  }
-  else
-  {
-    SX1268 *l = (SX1268 *)lora;
-    state = l->transmit(data, length);
-    l->setDio1Action(setFlag);
-    l->startReceive();
-  }
 
-  enableInterrupt();
+  state = radioHal->transmit(data, length);
+  radioHal->setDio0Action(setFlag); // TODO: Check, is this needed?? include it inside startRX ??
+  startRx();
+
   return state;
 }
 
@@ -253,19 +182,9 @@ int16_t Radio::sendTestPacket()
   return sendTx((uint8_t *)TEST_STRING, strlen(TEST_STRING));
 }
 
-void Radio::moduleSleep()
+int16_t Radio::moduleSleep()
 {
-if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-  {
-    ((SX1278 *)lora)->sleep(); // sleep mandatory if FastHop isn't ON.
-
-  }
-  else
-  {
-    ((SX1268 *)lora)->sleep();
-
-  }
-
+  return radioHal->sleep();
 }
 
 uint8_t Radio::listen()
@@ -288,25 +207,13 @@ uint8_t Radio::listen()
   PacketInfo newPacketInfo;
   status.lastPacketInfo.crc_error = 0;
   // read received data
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-  {
-    SX1278 *l = (SX1278 *)lora;
-    respLen = l->getPacketLength();
-    respFrame = new uint8_t[respLen];
-    state = l->readData(respFrame, respLen);
-    newPacketInfo.rssi = l->getRSSI();
-    newPacketInfo.snr = l->getSNR();
-    newPacketInfo.frequencyerror = l->getFrequencyError();
-  }
-  else
-  {
-    SX1268 *l = (SX1268 *)lora;
-    respLen = l->getPacketLength();
-    respFrame = new uint8_t[respLen];
-    state = l->readData(respFrame, respLen);
-    newPacketInfo.rssi = l->getRSSI();
-    newPacketInfo.snr = l->getSNR();
-  }
+  respLen = radioHal->getPacketLength();
+  respFrame = new uint8_t[respLen];
+  state = radioHal->readData(respFrame, respLen);
+  newPacketInfo.rssi = radioHal->getRSSI();
+  newPacketInfo.snr = radioHal->getSNR();
+  newPacketInfo.frequencyerror = radioHal->getFrequencyError();
+
 
   // check if the packet info is exactly the same as the last one
   if (newPacketInfo.rssi == status.lastPacketInfo.rssi &&
