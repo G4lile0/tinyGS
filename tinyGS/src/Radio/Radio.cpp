@@ -59,7 +59,7 @@ void Radio::init()
     board.OLED__RST = doc["oRST"];
     board.PROG__BUTTON = doc["pBut"];
     board.BOARD_LED = doc["led"];
-    board.L_SX127X = doc["radio"];
+    board.L_radio = doc["radio"];
     board.L_NSS = doc["lNSS"];
     board.L_DI00 = doc["lDIO0"];
     board.L_DI01 = doc["lDIO1"];
@@ -77,13 +77,17 @@ void Radio::init()
 
   spi.begin(board.L_SCK, board.L_MISO, board.L_MOSI, board.L_NSS);
 
-  if (board.L_SX127X == 1)
+  if (board.L_radio == 1)
   {
     radioHal = new RadioHal<SX1278>(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
   }
-  else if (board.L_SX127X == 0)
+  else if (board.L_radio == 0)
   {
     radioHal = new RadioHal<SX1268>(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+  }
+  else if (board.L_radio == 2)
+  {
+    radioHal = new RadioHal<SX1280>(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
   }
 
   begin();
@@ -380,7 +384,7 @@ int16_t Radio::remote_freq(char *payload, size_t payload_len)
   Log::console(PSTR("Set Frequency: %.3f MHz"), frequency);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
   {
     ((SX1278 *)lora)->sleep(); // sleep mandatory if FastHop isn't ON.
     state = ((SX1278 *)lora)->setFrequency(frequency + status.modeminfo.freqOffset);
@@ -406,7 +410,7 @@ int16_t Radio::remote_bw(char *payload, size_t payload_len)
   Log::console(PSTR("Set bandwidth: %.3f MHz"), bw);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
   {
     state = ((SX1278 *)lora)->setBandwidth(bw);
     ((SX1278 *)lora)->startReceive();
@@ -432,7 +436,7 @@ int16_t Radio::remote_sf(char *payload, size_t payload_len)
   Log::console(PSTR("Set spreading factor: %u"), sf);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
   {
     state = ((SX1278 *)lora)->setSpreadingFactor(sf);
     ((SX1278 *)lora)->startReceive();
@@ -459,7 +463,7 @@ int16_t Radio::remote_cr(char *payload, size_t payload_len)
   Log::console(PSTR("Set coding rate: %u"), cr);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
   {
     state = ((SX1278 *)lora)->setCodingRate(cr);
     ((SX1278 *)lora)->startReceive();
@@ -486,7 +490,7 @@ int16_t Radio::remote_crc(char *payload, size_t payload_len)
   Log::console(PSTR("Set CRC: %s"), crc ? F("ON") : F("OFF"));
   int16_t state = 0;
 
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
   {
     state = ((SX1278 *)lora)->setCRC(crc);
     ((SX1278 *)lora)->startReceive();
@@ -511,7 +515,7 @@ int16_t Radio::remote_lsw(char *payload, size_t payload_len)
   Log::console(PSTR("Set lsw: %s"), strHex);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
     state = ((SX1278 *)lora)->setSyncWord(sw);
   else
     state = ((SX1268 *)lora)->setSyncWord(sw, 0x44);
@@ -526,7 +530,7 @@ int16_t Radio::remote_fldro(char *payload, size_t payload_len)
   Log::console(PSTR("Set ForceLDRO: %s"), ldro ? F("ON") : F("OFF"));
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
   {
     state = ((SX1278 *)lora)->forceLDRO(ldro);
     ((SX1278 *)lora)->startReceive();
@@ -557,7 +561,7 @@ int16_t Radio::remote_aldro(char *payload, size_t payload_len)
   Log::console(PSTR("Set AutoLDRO "));
   int16_t state = 0;
 
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
   {
     state = ((SX1278 *)lora)->autoLDRO();
     ((SX1278 *)lora)->startReceive();
@@ -580,7 +584,7 @@ int16_t Radio::remote_pl(char *payload, size_t payload_len)
   Log::console(PSTR("Set Preamble %u"), pl);
   int16_t state = 0;
 
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
   {
     state = ((SX1278 *)lora)->setPreambleLength(pl);
     ((SX1278 *)lora)->startReceive();
@@ -623,7 +627,7 @@ int16_t Radio::remote_begin_lora(char *payload, size_t payload_len)
   Log::console(PSTR("Set Power: %d\nSet C limit: %u\nSet Preamble: %u\nSet Gain: %u"), power, current_limit, preambleLength, gain);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
   {
     ((SX1278 *)lora)->sleep(); // sleep mandatory if FastHop isn't ON.
     state = ((SX1278 *)lora)->begin(freq + status.modeminfo.freqOffset, bw, sf, cr, syncWord78, power, preambleLength, gain);
@@ -670,7 +674,7 @@ int16_t Radio::remote_begin_fsk(char *payload, size_t payload_len)
   Log::console(PSTR("Set Preamble Length: %u\nOOK Modulation %s\nSet datashaping %u"), preambleLength, (ook == 255) ? F("ON") : F("OFF"), ook);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
   {
     state = ((SX1278 *)lora)->beginFSK(freq + status.modeminfo.freqOffset, br, freqDev, rxBw, power, preambleLength, (ook == 255));
     ((SX1278 *)lora)->setDataShaping(ook);
@@ -716,7 +720,7 @@ int16_t Radio::remote_br(char *payload, size_t payload_len)
   Log::console(PSTR("Set FSK Bit rate: %u"), br);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
     state = ((SX1278 *)lora)->setBitRate(br);
   else
     state = ((SX1268 *)lora)->setBitRate(br);
@@ -734,7 +738,7 @@ int16_t Radio::remote_fd(char *payload, size_t payload_len)
   Log::console(PSTR("Set FSK Frequency Dev.: %u"), fd);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
     state = ((SX1278 *)lora)->setFrequencyDeviation(fd);
   else
     state = ((SX1268 *)lora)->setFrequencyDeviation(fd);
@@ -752,7 +756,7 @@ int16_t Radio::remote_fbw(char *payload, size_t payload_len)
   Log::console(PSTR("Set FSK bandwidth: %.3f kHz"), frequency);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
     state = ((SX1278 *)lora)->setRxBandwidth(frequency);
   else
     state = ((SX1268 *)lora)->setRxBandwidth(frequency);
@@ -788,7 +792,7 @@ int16_t Radio::remote_fsw(char *payload, size_t payload_len)
    status.modeminfo.swSize = synnwordsize;
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
     state = ((SX1278 *)lora)->setSyncWord(syncWord, synnwordsize);
   else
     state = ((SX1268 *)lora)->setSyncWord(syncWord, synnwordsize);
@@ -808,7 +812,7 @@ int16_t Radio::remote_fook(char *payload, size_t payload_len)
   Log::console(PSTR("Set OOK datashaping: %u"), ook_shape);
 
   int state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
   {
     state = ((SX1278 *)lora)->setOOK(enableOOK);
   }
@@ -820,7 +824,7 @@ int16_t Radio::remote_fook(char *payload, size_t payload_len)
 
   readState(state);
 
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
     state = ((SX1278 *)lora)->setDataShapingOOK(ook_shape);
 
   readState(state);
@@ -835,7 +839,7 @@ void Radio::remote_SPIwriteRegister(char *payload, size_t payload_len)
   uint8_t data = doc[1];
   Log::console(PSTR("REG ID: 0x%x to 0x%x"), reg, data);
 
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
     ((SX1278 *)lora)->_mod->SPIwriteRegister(reg, data);
   //  else
   //   ((SX1268*)lora)->_mod->SPIwriteRegister(reg,data);
@@ -847,7 +851,7 @@ int16_t Radio::remote_SPIreadRegister(char *payload, size_t payload_len)
   uint8_t data = 0;
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
     data = ((SX1278 *)lora)->_mod->SPIreadRegister(reg);
   // else
   //   data = ((SX1268*)lora)->_mod->SPIreadRegister(reg);
@@ -884,7 +888,7 @@ int16_t Radio::remote_SPIsetRegValue(char *payload, size_t payload_len)
 
   int16_t state = 0;
 
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+  if (ConfigManager::getInstance().getBoardConfig().L_radio)
     state = ((SX1278 *)lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
   else
     //   state = ((SX1268*)lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
