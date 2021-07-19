@@ -579,8 +579,8 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
   {
     if (length < 1)
       return;
-    remoteSetFreqOffset((char *)payload, length);
-    result = 0;
+    result = radio.remoteSetFreqOffset((char *)payload, length);
+  
   }
 
   if (!strcmp(command, commandSetAdvParameters))
@@ -809,13 +809,7 @@ void MQTT_Client::remoteGoToSiesta(char *payload, size_t payload_len)
 
 
 
-void MQTT_Client::remoteSetFreqOffset(char *payload, size_t payload_len)
-{
-  DynamicJsonDocument doc(60);
-  deserializeJson(doc, payload, payload_len);
-  status.modeminfo.freqOffset = doc[0];
-  Log::debug(PSTR("Set Frequency OffSet to %f Hz"), doc[0]);
-}
+
 
 // Helper class to use as a callback
 void manageMQTTDataCallback(char *topic, uint8_t *payload, unsigned int length)
