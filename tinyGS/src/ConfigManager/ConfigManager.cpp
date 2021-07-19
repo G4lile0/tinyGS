@@ -55,6 +55,7 @@ ConfigManager::ConfigManager()
   server.on(RESTART_URL, [this] { handleRestart(); });
   server.on(REFRESH_CONSOLE_URL, [this] { handleRefreshConsole(); });
   server.on(REFRESH_WORLDMAP_URL, [this] { handleRefreshWorldmap(); });
+  server.on(BOARD_TEMPLATE_REQUEST_URL, [this] { handleBoardTemplateRequest(); });
   setupUpdateServer(
       [this](const char *updatePath) { httpUpdater.setup(&server, updatePath); },
       [this](const char *userName, char *password) { httpUpdater.updateCredentials(userName, password); });
@@ -375,6 +376,51 @@ void ConfigManager::handleRefreshWorldmap()
   data_string += String(status.lastPacketInfo.crc_error ? "CRC ERROR!" : "");
 
   server.sendContent(data_string + "\n");
+
+  server.sendContent("");
+  server.client().stop();
+}
+
+void ConfigManager::handleBoardTemplateRequest()
+{
+  String template_string = "";
+  String svalue = server.arg("boardindex");
+  if (svalue.length()) 
+  {
+    uint board_index = svalue.toInt();
+    board_type board = boards[board_index];
+    // build the board json string
+    char hex_s[20];
+    template_string += "{";
+    sprintf(hex_s, "0x%X", board.OLED__address);
+    template_string += "\"OLED__address\":\"" + String(hex_s) + "\",";
+    template_string += "\"OLED__SDA\":\"" + String(board.OLED__SDA) + "\",";
+    template_string += "\"OLED__SCL\":\"" + String(board.OLED__SCL) + "\",";
+    template_string += "\"OLED__RST\":\"" + String(board.OLED__RST) + "\",";
+    template_string += "\"PROG__BUTTON\":\"" + String(board.PROG__BUTTON) + "\",";
+    template_string += "\"BOARD_LED\":\"" + String(board.BOARD_LED) + "\",";
+    template_string += "\"L_SX127X\":\"" + String(board.L_SX127X) + "\",";
+    template_string += "\"L_NSS\":\"" + String(board.L_NSS) + "\",";
+    template_string += "\"L_DI00\":\"" + String(board.L_DI00) + "\",";
+    template_string += "\"L_DI01\":\"" + String(board.L_DI01) + "\",";
+    template_string += "\"L_BUSSY\":\"" + String(board.L_BUSSY) + "\",";
+    template_string += "\"L_RST\":\"" + String(board.L_RST) + "\",";
+    template_string += "\"L_MISO\":\"" + String(board.L_MISO) + "\",";
+    template_string += "\"L_MOSI\":\"" + String(board.L_MOSI) + "\",";
+    template_string += "\"L_SCK\":\"" + String(board.L_SCK) + "\",";
+    template_string += "\"L_TCXO_V\":\"" + String(board.L_TCXO_V) + "\"";
+    //template_string += "\"BOARD\":\"" + board.BOARD + "\"";
+    template_string += "}";
+  };
+ 
+  server.client().flush();
+  server.sendHeader(F("Cache-Control"), F("no-cache, no-store, must-revalidate"));
+  server.sendHeader(F("Pragma"), F("no-cache"));
+  server.sendHeader(F("Expires"), F("-1"));
+  server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  server.send(200, F("text/plain"), "");
+
+  server.sendContent(template_string + "\n");
 
   server.sendContent("");
   server.client().stop();

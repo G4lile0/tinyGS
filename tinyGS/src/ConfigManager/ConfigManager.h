@@ -53,6 +53,7 @@ constexpr auto UPDATE_URL = "/firmware";
 constexpr auto RESTART_URL = "/restart";
 constexpr auto REFRESH_CONSOLE_URL = "/cs";
 constexpr auto REFRESH_WORLDMAP_URL = "/wm";
+constexpr auto BOARD_TEMPLATE_REQUEST_URL = "/bt";
 
 const char TITLE_TEXT[] PROGMEM = "TinyGS Configuration";
 
@@ -227,8 +228,8 @@ private:
   protected:
     String getScriptInner() override
     {
-      return iotwebconf2::HtmlFormatProvider::getScriptInner();
-      //String(FPSTR(CUSTOMHTML_SCRIPT_INNER));
+      return String(FPSTR(ADVANCED_CONFIG_SCRIPT)) +
+             iotwebconf2::HtmlFormatProvider::getScriptInner();
     }
     String getBodyInner() override
     {
@@ -244,6 +245,7 @@ private:
   void handleDashboard();
   void handleRefreshConsole();
   void handleRefreshWorldmap();
+  void handleBoardTemplateRequest();
   void handleRestart();
   bool formValidator(iotwebconf2::WebRequestWrapper *webRequestWrapper);
   void boardDetection();
