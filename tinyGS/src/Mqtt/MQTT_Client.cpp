@@ -152,14 +152,10 @@ void MQTT_Client::sendWelcome()
   station_location.add(configManager.getLatitude());
   station_location.add(configManager.getLongitude());
   doc["tx"] = configManager.getAllowTx();
-  doc["test"] = configManager.getTestMode();
-  doc["tele3d"] = configManager.getTelemetry3rd();
   doc["time"] = now;
   doc["version"] = status.version;
   doc["git_version"] = status.git_version;
   doc["sat"] = status.modeminfo.satellite;
-  doc["autoUpdate"] = configManager.getAutoUpdate();
-  doc["remoteTune"] = configManager.getRemoteTune();
   doc["ip"] = WiFi.localIP().toString();
   if (configManager.getLowPower())
     doc["lp"].set(configManager.getLowPower());
@@ -218,7 +214,6 @@ void MQTT_Client::sendRx(String packet, bool noisy)
   doc["crc_error"] = status.lastPacketInfo.crc_error;
   doc["data"] = packet.c_str();
   doc["NORAD"] = status.modeminfo.NORAD;
-  doc["test"] = configManager.getTestMode();
   doc["noisy"] = noisy;
 
   char buffer[1536];
@@ -243,9 +238,6 @@ void MQTT_Client::sendStatus()
   doc["version"] = status.version;
   doc["board"] = configManager.getBoard();
   doc["tx"] = configManager.getAllowTx();
-  doc["remoteTune"] = configManager.getRemoteTune();
-  doc["telemetry3d"] = configManager.getTelemetry3rd();
-  doc["test"] = configManager.getTestMode();
 
   doc["mode"] = status.modeminfo.modem_mode;
   doc["frequency"] = status.modeminfo.frequency;
@@ -326,39 +318,6 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     return; // no ack
   }
 
-  if (!strcmp(command, commandTest))
-  {
-    if (length < 1)
-      return;
-    ConfigManager &configManager = ConfigManager::getInstance();
-    bool test = payload[0] - '0';
-    Log::console(PSTR("Set Test Mode to %s"), test ? F("ON") : F("OFF"));
-    configManager.setTestMode(test);
-    result = 0;
-  }
-
-  if (!strcmp(command, commandRemoteTune))
-  {
-    if (length < 1)
-      return;
-    ConfigManager &configManager = ConfigManager::getInstance();
-    bool tune = payload[0] - '0';
-    Log::console(PSTR("Set Remote Tune to %s"), tune ? F("ON") : F("OFF"));
-    configManager.setRemoteTune(tune);
-    result = 0;
-  }
-
-  if (!strcmp(command, commandRemotetelemetry3rd))
-  {
-    if (length < 1)
-      return;
-    ConfigManager &configManager = ConfigManager::getInstance();
-    bool telemetry3rd = payload[0] - '0';
-    Log::console(PSTR("Send rx to third parties %s"), telemetry3rd ? F("ON") : F("OFF"));
-    configManager.setTelemetry3rd(telemetry3rd);
-    result = 0;
-  }
-
   if (!strcmp(command, commandFrame))
   {
     uint8_t frameNumber = atoi(strtok(NULL, "/"));
@@ -413,7 +372,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
   // ######################################################
   // ############## Remote tune commands ##################
   // ######################################################
-  if (ConfigManager::getInstance().getRemoteTune() && global)
+  if (global)
     return;
 
   if (!strcmp(command, commandBeginp))

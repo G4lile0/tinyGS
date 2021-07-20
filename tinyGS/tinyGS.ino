@@ -294,9 +294,6 @@ void handleSerial()
         configManager.resetAllConfig();
         ESP.restart();
         break;
-      case 't':
-        switchTestmode();
-        break;
       case 'b':
         ESP.restart();
         break;
@@ -327,20 +324,6 @@ void handleSerial()
   }
 }
 
-void switchTestmode()
-{  
-  if (configManager.getTestMode())
-  {
-      configManager.setTestMode(false);
-      Log::console(PSTR("Changed from test mode to normal mode"));
-  }
-  else
-  {
-      configManager.setTestMode(true);
-      Log::console(PSTR("Changed from normal mode to test mode"));
-  }
-}
-
 void printLocalTime()
 {
     time_t currenttime = time (NULL);
@@ -359,7 +342,6 @@ void printLocalTime()
 void printControls()
 {
   Log::console(PSTR("------------- Controls -------------"));
-  Log::console(PSTR("t - change the test mode and restart"));
   Log::console(PSTR("e - erase board config and reset"));
   Log::console(PSTR("b - reboot the board"));
   Log::console(PSTR("p - send test packet to nearby stations (to check transmission)"));

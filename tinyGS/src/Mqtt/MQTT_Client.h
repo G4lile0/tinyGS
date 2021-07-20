@@ -122,9 +122,6 @@ private:
   const char* commandFrame PROGMEM= "frame";
   const char* commandSat PROGMEM= "sat";
   const char* commandStatus PROGMEM= "status";
-  const char* commandTest PROGMEM= "test";
-  const char* commandRemoteTune PROGMEM= "remoteTune";
-  const char* commandRemotetelemetry3rd PROGMEM= "telemetry3rd";
   const char* commandLog PROGMEM= "log";
   const char* commandTx PROGMEM= "tx";
   const char* commandSatFilter PROGMEM= "filter";

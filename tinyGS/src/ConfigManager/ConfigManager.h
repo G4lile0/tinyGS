@@ -142,48 +142,12 @@ public:
   uint8_t getBoard() { return atoi(board); }
   uint8_t getOledBright() { return atoi(oledBright); }
   bool getAllowTx() { return !strcmp(allowTx, CB_SELECTED_STR); }
-  bool getRemoteTune() { return !strcmp(remoteTune, CB_SELECTED_STR); }
-  bool getTelemetry3rd() { return !strcmp(telemetry3rd, CB_SELECTED_STR); }
-  bool getTestMode() { return !strcmp(testMode, CB_SELECTED_STR); }
-  bool getAutoUpdate() { return !strcmp(autoUpdate, CB_SELECTED_STR); }
   void setAllowTx(bool status)
   {
     if (status)
       strcpy(allowTx, CB_SELECTED_STR);
     else
       allowTx[0] = '\0';
-    this->saveConfig();
-  }
-  void setRemoteTune(bool status)
-  {
-    if (status)
-      strcpy(remoteTune, CB_SELECTED_STR);
-    else
-      remoteTune[0] = '\0';
-    this->saveConfig();
-  }
-  void setTelemetry3rd(bool status)
-  {
-    if (status)
-      strcpy(telemetry3rd, CB_SELECTED_STR);
-    else
-      telemetry3rd[0] = '\0';
-    this->saveConfig();
-  }
-  void setTestMode(bool status)
-  {
-    if (status)
-      strcpy(testMode, CB_SELECTED_STR);
-    else
-      testMode[0] = '\0';
-    this->saveConfig();
-  }
-  void setAutoUpdate(bool status)
-  {
-    if (status)
-      strcpy(autoUpdate, CB_SELECTED_STR);
-    else
-      autoUpdate[0] = '\0';
     this->saveConfig();
   }
   const char *getModemStartup() { return modemStartup; }
@@ -235,6 +199,12 @@ private:
     {
       return String(FPSTR(LOGO)) +
              iotwebconf2::HtmlFormatProvider::getBodyInner();
+    }
+
+    String getStyleInner() override
+    {
+      return iotwebconf2::HtmlFormatProvider::getStyleInner() +
+             String(IOTWEBCONF_CONFIG_STYLE_INNER);
     }
 
     ConfigManager &configManager;

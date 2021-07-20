@@ -24,6 +24,7 @@
 
 extern Status status;
 bool usingNewCert = true;
+const long MIN_TIME_BEFORE_UPDATE = random(60000, 20*60*1000);
 
 void OTA::update()
 {
@@ -67,7 +68,7 @@ void OTA::update()
 unsigned static long lastUpdateTime = 0;
 void OTA::loop()
 {
-  if (millis() < MIN_TIME_BEFORE_UPDATE || !ConfigManager::getInstance().getAutoUpdate())
+  if (millis() < MIN_TIME_BEFORE_UPDATE)
     return;
 
   if (millis() - lastUpdateTime > TIME_BETTWEN_UPDATE_CHECK)

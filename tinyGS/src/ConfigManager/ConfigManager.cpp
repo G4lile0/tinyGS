@@ -190,7 +190,6 @@ void ConfigManager::handleDashboard()
   s += "<tr><td>MQTT Server </td><td>" + String(status.mqtt_connected ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + "</td></tr>";
   s += "<tr><td>WiFi </td><td>" + String(WiFi.isConnected() ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + "</td></tr>";
   s += "<tr><td>Radio </td><td>" + String(Radio::getInstance().isReady() ? "<span class='G'>READY</span>" : "<span class='R'>NOT READY</span>") + "</td></tr>";
-  s += "<tr><td>Test Mode </td><td>" + String(getTestMode() ? "ENABLED" : "DISABLED") + "</td></tr>";
   //s += "<tr><td>Uptime </td><td>" + // process and update in js + "</td></tr>";
   s += F("</table></div>");
   s += F("<div class=\"card\"><h3>Modem Configuration</h3><table id=""modemconfig"">");
@@ -367,7 +366,6 @@ void ConfigManager::handleRefreshWorldmap()
   data_string += String(status.mqtt_connected ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + ",";
   data_string += String(WiFi.isConnected() ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + ",";
   data_string += String(Radio::getInstance().isReady() ? "<span class='G'>READY</span>" : "<span class='R'>NOT READY</span>") + ",";
-  data_string += String(getTestMode() ? "ENABLED" : "DISABLED") + ",";
   
   // last packet received data (for lastpacket id table data)
   data_string += String(status.lastPacketInfo.time) + ",";
@@ -561,8 +559,6 @@ void ConfigManager::printConfig()
 {
   Log::debug(PSTR("MQTT Port: %u\nMQTT Server: %s\nMQTT Pass: %s\nLatitude: %f\nLongitude: %f"), getMqttPort(), getMqttServer(), getMqttPass(), getLatitude(), getLongitude());
   Log::debug(PSTR("tz: %s\nboard: %u --> %s\nOLED Bright: %u\nTX %s"), getTZ(), getBoard(), boards[getBoard()].BOARD.c_str(), getOledBright(), getAllowTx() ? "Enable" : "Disable");
-  Log::debug(PSTR("Remote Tune %\nSend telemetry to third party %s"), getRemoteTune() ? "Allowed" : "Blocked", getTelemetry3rd() ? "Allowed" : "Blocked");
-  Log::debug(PSTR("Test mode %s\nAuto Update %s"), getTestMode() ? "Enable" : "Disable", getAutoUpdate() ? "Enable" : "Disable");
 }
 
 void ConfigManager::configSavedCallback()
