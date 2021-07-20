@@ -143,3 +143,21 @@ int16_t RadioHal<SX1280>::forceLDRO(bool enable)
 {
     return 0;
 }
+
+template<>
+int16_t RadioHal<SX1278>::fixedPacketLengthMode(uint8_t len)
+{
+    return radio->fixedPacketLengthMode(len);
+}
+
+template<>
+int16_t RadioHal<SX1268>::fixedPacketLengthMode(uint8_t len)
+{
+    return radio->fixedPacketLengthMode(len);
+}
+
+template<>
+int16_t RadioHal<SX1280>::fixedPacketLengthMode(uint8_t len)
+{
+    return 0;
+}

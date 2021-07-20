@@ -84,14 +84,11 @@ public:
 
     float getFrequencyError(bool autoCorrect = false);
 
-    int16_t fixedPacketLengthMode(uint8_t len)
-    {
-        return fixedPacketLengthMode(len);
-    }
+    int16_t fixedPacketLengthMode(uint8_t len);
 
     int16_t setSyncWord(uint8_t* syncWord, uint8_t len)
     {
-        return setSyncWord(syncWord, len);
+        return radio->setSyncWord(syncWord, len);
     }
     
 
