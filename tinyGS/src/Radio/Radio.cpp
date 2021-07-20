@@ -101,7 +101,7 @@ int16_t Radio::begin()
 
   if (m.modem_mode == "LoRa")
   {
-    CHECK_ERROR(radioHal->begin(m.frequency + status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, m.gain, board.L_TCXO_V));
+    CHECK_ERROR(radioHal->begin(m.frequency + m.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, m.gain, board.L_TCXO_V));
     if (m.fldro == 2)
       radioHal->autoLDRO();
     else
@@ -111,7 +111,7 @@ int16_t Radio::begin()
   }
   else
   {
-    CHECK_ERROR(radioHal->beginFSK(m.frequency + status.modeminfo.freqOffset, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, (m.OOK == 255), ConfigManager::getInstance().getBoardConfig().L_TCXO_V));
+    CHECK_ERROR(radioHal->beginFSK(m.frequency + m.freqOffset, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, (m.OOK == 255), board.L_TCXO_V));
     CHECK_ERROR(radioHal->setDataShaping(m.OOK));
     CHECK_ERROR(radioHal->setCRC(false));
     CHECK_ERROR(radioHal->fixedPacketLengthMode(m.len));
@@ -402,6 +402,19 @@ int16_t Radio::remote_freq(char *payload, size_t payload_len)
     status.modeminfo.frequency = frequency;
 
   return state;
+}
+
+int16_t Radio::remoteSetFreqOffset(char *payload, size_t payload_len)
+{
+  float frequency_offset = _atof(payload, payload_len);
+  Log::console(PSTR("Set Frequency OffSet to %.3f Hz"), frequency_offset);
+  status.modeminfo.freqOffset = frequency_offset / 1000000;
+  status.radio_ready = false;
+  CHECK_ERROR(radioHal->sleep());  // sleep mandatory if FastHop isn't ON.
+  CHECK_ERROR(radioHal->setFrequency(status.modeminfo.frequency+status.modeminfo.freqOffset)); 
+  CHECK_ERROR(radioHal->startReceive()); 
+  status.radio_ready = true;
+  return ERR_NONE;
 }
 
 int16_t Radio::remote_bw(char *payload, size_t payload_len)

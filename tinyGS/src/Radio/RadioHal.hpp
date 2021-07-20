@@ -23,6 +23,7 @@ public:
     virtual float getFrequencyError(bool autoCorrect = false) = 0;
     virtual int16_t fixedPacketLengthMode(uint8_t len) = 0;
     virtual int16_t setSyncWord(uint8_t* syncWord, uint8_t len) = 0;
+    virtual int16_t setFrequency(float freq) = 0;
 };
 
 
@@ -91,6 +92,10 @@ public:
         return radio->setSyncWord(syncWord, len);
     }
     
+    int16_t setFrequency(float freq) 
+    {
+        return radio->setFrequency(freq);
+    }
 
 private:
     T* radio;
