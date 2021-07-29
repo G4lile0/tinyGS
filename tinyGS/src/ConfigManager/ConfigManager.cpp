@@ -384,13 +384,15 @@ void ConfigManager::handleRefreshWorldmap()
 void ConfigManager::handleBoardTemplateRequest()
 {
   String template_string = "";
+  String modem_startup_string = "";
+  String response_string = "";
   String svalue = server.arg("boardindex");
   if (svalue.length()) 
   {
     uint board_index = svalue.toInt();
     board_type board = boards[board_index];
     // build the board json string
-    char hex_s[20];
+    // char hex_s[20];
     template_string += "{";
     template_string += "\"name\":\"" + board.BOARD + "\",";
     //sprintf(hex_s, "0x%X", board.OLED__address);
@@ -412,6 +414,17 @@ void ConfigManager::handleBoardTemplateRequest()
     template_string += "\"lSCK\":" + String(board.L_SCK) + ",";
     template_string += "\"lTCXO_V\":" + String(board.L_TCXO_V);
     template_string += "}";
+
+    if (String(BOARD_863_INDEXES).indexOf("("+svalue+")") > -1) 
+    {
+        modem_startup_string = MODEM_DEFAULT_863;
+    } 
+    else 
+    {
+        modem_startup_string = MODEM_DEFAULT;
+    }
+    response_string = template_string + "|||" + modem_startup_string;
+
   };
  
   server.client().flush();
@@ -421,7 +434,7 @@ void ConfigManager::handleBoardTemplateRequest()
   server.setContentLength(CONTENT_LENGTH_UNKNOWN);
   server.send(200, F("text/plain"), "");
 
-  server.sendContent(template_string + "\n");
+  server.sendContent(response_string + "\n");
 
   server.sendContent("");
   server.client().stop();

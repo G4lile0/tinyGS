@@ -64,6 +64,8 @@ constexpr auto configVersion = "0.05"; //max 4 chars
 #define MQTT_DEFAULT_SERVER "mqtt.tinygs.com"
 #define MQTT_DEFAULT_PORT "8883"
 #define MODEM_DEFAULT "{\"mode\":\"LoRa\",\"freq\":436.703,\"bw\":250.0,\"sf\":10,\"cr\":5,\"sw\":18,\"pwr\":5,\"cl\":120,\"pl\":8,\"gain\":0,\"crc\":true,\"fldro\":1,\"sat\":\"Norbi\",\"NORAD\":46494}"
+#define MODEM_DEFAULT_863 "{\"mode\":\"LoRa\",\"freq\":915.6,\"bw\":250.0,\"sf\":10,\"cr\":5,\"sw\":18,\"pwr\":5,\"cl\":120,\"pl\":8,\"gain\":0,\"crc\":true,\"fldro\":1,\"sat\":\"VR3X-A Littlefoot\",\"NORAD\":99750}"
+#define BOARD_863_INDEXES "(1)(3)(5)(7)(9)(16)"
 
 constexpr auto AP_TIMEOUT_MS = "300000";
 
