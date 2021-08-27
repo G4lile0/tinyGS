@@ -29,7 +29,7 @@
 
 ConfigManager::ConfigManager()
     : IotWebConf2(thingName, &dnsServer, &server, initialApPassword, configVersion), server(80), gsConfigHtmlFormatProvider(*this), boards({
-                                                                                                                                        //OLED_add, OLED_SDA,  OLED_SCL, OLED_RST, PROG_BUTTON, BOARD_LED, L_SX127X?, L_NSS, L_DI00, L_DI01, L_BUSSY, L_RST,  L_MISO, L_MOSI, L_SCK, L_TCXO_V, BOARD
+                                                                                                                                        //OLED_add, OLED_SDA,  OLED_SCL, OLED_RST, PROG_BUTTON, BOARD_LED, L_RADIO, L_NSS, L_DI00, L_DI01, L_BUSSY, L_RST,  L_MISO, L_MOSI, L_SCK, L_TCXO_V, BOARD
                                                                                                                                         {0x3c, 4, 15, 16, 0, 25, 1, 18, 26, 12, 0, 14, 19, 27, 5, 0.0f, "433Mhz HELTEC WiFi LoRA 32 V1"}, // @4m1g0
                                                                                                                                         {0x3c, 4, 15, 16, 0, 25, 1, 18, 26, 12, 0, 14, 19, 27, 5, 0.0f, "863-928Mhz HELTEC WiFi LoRA 32 V1"},
                                                                                                                                         {0x3c, 4, 15, 16, 0, 25, 1, 18, 26, 35, 0, 14, 19, 27, 5, 0.0f, "433Mhz HELTEC WiFi LoRA 32 V2"}, // @4m1g0
@@ -47,6 +47,7 @@ ConfigManager::ConfigManager()
                                                                                                                                         {0x3c, 21, 22, 16, 38, 22, 1, 18, 26, 33, 0, 14, 19, 27, 5, 0.0f, "T-BEAM V1.0 + OLED"},                                         // @fafu
                                                                                                                                         {0x3c, 21, 22, 16, 0, 2, 0, 5, 0, 34, 32, 14, 19, 27, 18, 1.6f, "433Mhz FOSSA 1W Ground Station"},                               // @jgromes
                                                                                                                                         {0x3c, 21, 22, 16, 0, 2, 0, 5, 0, 34, 32, 14, 19, 27, 18, 1.6f, "868-915Mhz FOSSA 1W Ground Station"},                           // @jgromes
+                                                                                                                                        {0x3c, 0,   0,  0, 4, 0, 2, 18, 26, 33, 25, 23, 19, 27, 5, 0.0f, "Custom ESP32 Wroom + NiceRF SX1262 (Crystal)"},                // @iw2lsi
                                                                                                                                     })
 {
   server.on(ROOT_URL, [this] { handleRoot(); });
@@ -519,7 +520,23 @@ void ConfigManager::boardDetection()
     Serial.print(F(" RST:"));      Serial.print(boards[ite].OLED__RST);
     Serial.print(F(" BUTTON:"));   Serial.println(boards[ite].PROG__BUTTON);
     Serial.print(F(" Lora Module "));
-    if (boards[ite].L_SX127X) {Serial.print(F("SX1278 ")); } else {Serial.print(F("SX1268:"));} ;
+
+    switch(boards[ite].L_RADIO)
+    {
+       case 0: // SX1268
+          Serial.print(F("SX1268:"));
+          break;
+
+       case 2: // SX1262
+          Serial.print(F("SX1262:"));
+          break;
+
+       case 1: // SX1278
+       default:
+          Serial.print(F("SX1278 "));
+          break;
+     }
+
     Serial.print(F(" NSS:"));      Serial.print(boards[ite].L_NSS);
     Serial.print(F(" MOSI:"));     Serial.print(boards[ite].L_MOSI);
     Serial.print(F(" MISO:"));     Serial.print(boards[ite].L_MISO);
