@@ -47,6 +47,7 @@ ConfigManager::ConfigManager()
                                                                                                                                         {0x3c, 21, 22, 16, 38, 22, 1, 18, 26, 33, 0, 14, 19, 27, 5, 0.0f, "T-BEAM V1.0 + OLED"},                                         // @fafu
                                                                                                                                         {0x3c, 21, 22, 16, 0, 2, 0, 5, 0, 34, 32, 14, 19, 27, 18, 1.6f, "433Mhz FOSSA 1W Ground Station"},                               // @jgromes
                                                                                                                                         {0x3c, 21, 22, 16, 0, 2, 0, 5, 0, 34, 32, 14, 19, 27, 18, 1.6f, "868-915Mhz FOSSA 1W Ground Station"},                           // @jgromes
+                                                                                                                                        {0x3c, 0,   0,  0, 0, 0, 2, 18, 26, 33, 25, 23, 19, 27, 5, 0.0f, "Custom ESP32 Wroom + NiceRF SX1262 (Crystal)"},                // @iw2lsi
                                                                                                                                     })
 {
   server.on(ROOT_URL, [this] { handleRoot(); });

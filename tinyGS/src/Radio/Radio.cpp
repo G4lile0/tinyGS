@@ -77,15 +77,18 @@ void Radio::init()
    switch(board.L_RADIO){
 
       case 0: // SX1268
+         Log::console(PSTR("Initializing SX1268 radio..."));
          lora = new SX1268(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
          break;
 
       case 2: // SX1262
+         Log::console(PSTR("Initializing SX1262 radio..."));
          lora = new SX1262(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
          break;
 
       case 1: // SX1278
       default:
+         Log::console(PSTR("Initializing SX1278 radio..."));
          lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
          break;
       }
@@ -105,8 +108,9 @@ int16_t Radio::begin()
     switch(board.L_RADIO)
     {
       case 0: // SX1268
-         state = ((SX1268 *)lora)->begin(m.frequency + status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, board.L_TCXO_V);
 
+         state = ((SX1268 *)lora)->begin(m.frequency + status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, board.L_TCXO_V);
+ 
          if (m.fldro == 2)
            ((SX1268 *)lora)->autoLDRO();
          else
@@ -129,6 +133,7 @@ int16_t Radio::begin()
 
       case 1: // SX1278
       default:
+
          state = ((SX1278 *)lora)->begin(m.frequency + status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, m.gain);
 
          if (m.fldro == 2)
