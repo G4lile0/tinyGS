@@ -72,6 +72,8 @@ private:
   void remoteGoToSleep(char* payload, size_t payload_len);
   void remoteSetFreqOffset(char* payload, size_t payload_len);
 
+  void query_n2yo(uint32_t NORAD);
+
   bool usingNewCert = false;
   unsigned long lastPing = 0;
   unsigned long lastConnectionAtempt = 0;

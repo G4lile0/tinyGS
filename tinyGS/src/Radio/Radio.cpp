@@ -103,6 +103,8 @@ int16_t Radio::begin()
   ModemInfo &m = status.modeminfo;
   int16_t state = 0;
 
+  Log::console(PSTR("Radio::begin()..."));
+
   if (m.modem_mode == "LoRa")
   {
     switch(board.L_RADIO)
@@ -201,6 +203,9 @@ int16_t Radio::begin()
     }
   }*/
 
+// WARNING forzo di avere la radio!
+  state = ERR_NONE;
+
   if (state == ERR_NONE)
   {
     //Log::console(PSTR("success!"));
@@ -249,9 +254,12 @@ int16_t Radio::begin()
          break;
    }
 
+// WARNING forzo di avere la radio!
+  state = ERR_NONE;
+
   if (state == ERR_NONE)
   {
-    //Log::console(PSTR("success!"));
+    Log::console(PSTR("success!"));
   }
   else
   {
@@ -352,6 +360,10 @@ int16_t Radio::sendTx(uint8_t *data, size_t length)
   }
 
   enableInterrupt();
+  
+  // WARNING forzo di avere la radio!
+  state = ERR_NONE;
+
   return state;
 }
 
@@ -436,6 +448,9 @@ uint8_t Radio::listen()
 
   // print RSSI (Received Signal Strength Indicator)
   Log::console(PSTR("[SX12x8] RSSI:\t\t%f dBm\n[SX12x8] SNR:\t\t%f dB\n[SX12x8] Frequency error:\t%f Hz"), status.lastPacketInfo.rssi, status.lastPacketInfo.snr, status.lastPacketInfo.frequencyerror);
+
+// WARNING forzo di avere la radio!
+  state = ERR_NONE;
 
   if (state == ERR_NONE && respLen > 0)
   {
@@ -540,6 +555,9 @@ uint8_t Radio::listen()
   // put module back to listen mode
   startRx();
 
+// WARNING forzo di avere la radio!
+  state = ERR_NONE;
+
   if (state == ERR_NONE)
   {
     return 0;
@@ -566,6 +584,10 @@ uint8_t Radio::listen()
 
 void Radio::readState(int state)
 {
+
+// WARNING forzo di avere la radio!
+  state = ERR_NONE;
+
   if (state == ERR_NONE)
   {
     Log::error(PSTR("success!"));
