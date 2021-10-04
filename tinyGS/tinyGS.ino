@@ -92,9 +92,11 @@
 ConfigManager& configManager = ConfigManager::getInstance();
 MQTT_Client& mqtt = MQTT_Client::getInstance();
 Radio& radio = Radio::getInstance();
+TaskHandle_t taskRotor;
 
 const char* ntpServer = "time.cloudflare.com";
 void printLocalTime();
+void taskRotorHandle(void *parameter);
 
 // Global status
 Status status;
@@ -165,6 +167,8 @@ void setup()
   displayShowInitialCredits();
   configManager.delay(1000);
   mqtt.begin();
+
+  xTaskCreatePinnedToCore(taskRotorHandle, "taskRotor", 10000, NULL, 1, &taskRotor, 0);                         
 
   if (configManager.getOledBright() == 0)
   {
@@ -364,4 +368,19 @@ void printControls()
   Log::console(PSTR("b - reboot the board"));
   Log::console(PSTR("p - send test packet to nearby stations (to check transmission)"));
   Log::console(PSTR("------------------------------------"));
+}
+
+void taskRotorHandle(void *parameter)
+{
+   int count=0;
+
+   Serial.print("taskRotor is running on core ");
+   Serial.println(xPortGetCoreID());
+
+  for(;;){
+//  Serial.print("taskRotor iteration ");
+//  Serial.println(count);
+    delay(1000);
+    count++;
+  } 
 }
