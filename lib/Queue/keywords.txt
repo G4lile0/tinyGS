@@ -1,0 +1,39 @@
+#######################################
+# Syntax Coloring Map For Queue
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+cppQueue	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+init	KEYWORD2
+clean	KEYWORD2
+flush	KEYWORD2
+isInitialized	KEYWORD2
+isEmpty	KEYWORD2
+isFull	KEYWORD2
+sizeOf	KEYWORD2
+getCount	KEYWORD2
+nbRecs	KEYWORD2
+getRemainingCount	KEYWORD2
+push	KEYWORD2
+pop	KEYWORD2
+pull	KEYWORD2
+peek	KEYWORD2
+drop	KEYWORD2
+peekIdx	KEYWORD2
+peekPrevious	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+FIFO	LITERAL1
+LIFO	LITERAL1

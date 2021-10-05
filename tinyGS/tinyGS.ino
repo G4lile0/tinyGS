@@ -76,6 +76,10 @@
 #include "src/Radio/Radio.h"
 #include "src/ArduinoOTA/ArduinoOTA.h"
 #include "src/OTA/OTA.h"
+
+#include "src/Rotator/Rotator.h"
+#include "src/Rotator/N2YO.h"
+
 #include <ESPNtpClient.h>
 #include "src/Logger/Logger.h"
 
@@ -92,6 +96,9 @@
 ConfigManager& configManager = ConfigManager::getInstance();
 MQTT_Client& mqtt = MQTT_Client::getInstance();
 Radio& radio = Radio::getInstance();
+
+Rotator_Client& rotator = Rotator_Client::getInstance();
+N2YO_Client n2yo = N2YO_Client::getInstance();
 TaskHandle_t taskRotor;
 
 const char* ntpServer = "time.cloudflare.com";

@@ -26,6 +26,9 @@
 #include "../OTA/OTA.h"
 #include "../Logger/Logger.h"
 
+#include "../Rotator/Rotator.h"
+#include "../Rotator/N2YO.h"
+
 MQTT_Client::MQTT_Client()
     : PubSubClient(espClient)
 {
@@ -429,7 +432,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
 
     ModemInfo &m = status.modeminfo;
     Log::console(PSTR("query_n2yo() invoked by commandBeginp"));
-    query_n2yo(m.NORAD);
+    N2YO_Client::getInstance().query_n2yo(m.NORAD);
   }
 
   if (!strcmp(command, commandBegine))
@@ -450,7 +453,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     m.NORAD = doc["NORAD"];
 
     Log::console(PSTR("query_n2yo() invoked by commandBegine"));
-    query_n2yo(m.NORAD);
+    N2YO_Client::getInstance().query_n2yo(m.NORAD);
 
     if (m.modem_mode == "LoRa")
     {
@@ -716,309 +719,7 @@ void MQTT_Client::remoteSatCmnd(char *payload, size_t payload_len)
   Log::debug(PSTR("Listening Satellite: %s NORAD: %u"), status.modeminfo.satellite, NORAD);
 
   Log::console(PSTR("query_n2yo() invoked by remoteSatCmnd()"));
-  query_n2yo(NORAD);
-}
-
-bool MQTT_Client::query_n2yo(uint32_t NORAD)
-{
-  DynamicJsonDocument doc(4096);
-  char buffer[512];
-  double lat = 45.6989;                               // WARNING take it from GS configuration
-  double lon = 9.67;                                  // WARNING take it from GS configuration
-  int alt = 350.0;                                    // WARNING take it from GS configuration
-  int seconds = 5;                                    // WARNING 300s max... use multiple requests ?
-
-  int days = 1;                                       // 
-  int min_elev = 0;                                   // minimum elevation
-
-  const char api_key[] = "3NXG3F-XCPJAT-2XQ6KZ-4RPQ"; // WARNING make it configurable
-
-  Log::debug(PSTR("[NY2O] querying NORAD %u..."), NORAD);
-
-  if (NORAD == 99999)
-  {
-    Log::debug(PSTR("[NY2O] WARNING! balloons are not yet supported...")); // set to a fixed pos ???
-    return false;
-  }
-
-  WiFiClientSecure *client = new WiFiClientSecure;
-
-  if (!client)
-  {
-    Log::debug(PSTR("[NY2O] Unable to create client"));
-    return false;
-  }
-
-  client->setCACert(n2yo_CA);
-
-
-
-
-
-
-
-
-  // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *client is
-  {
-    HTTPClient https;
-
-    Log::debug(PSTR("[NY2O] begin..."));
-
-    // eg: https://api.n2yo.com/rest/v1/satellite/radiopasses/47947/45.6989/9.67/150/1/0/&apiKey=XXXXXX-XXXXXX-XXXXXX-XXXX
-    sprintf(buffer, "https://api.n2yo.com/rest/v1/satellite/radiopasses/%u/%f/%f/%d/%d/%d/&apiKey=%s", NORAD, lat, lon, alt, days, min_elev, api_key);
-
-    Log::debug(PSTR("[NY2O] current query is '%s'"), buffer);
-
-    if (https.begin(*client, buffer))
-    {
-
-      Log::debug(PSTR("[NY2O] GET..."));
-
-      // start connection and send HTTP header
-      int httpCode = https.GET();
-
-      // httpCode will be negative on error
-      if (httpCode > 0)
-      {
-
-        // HTTP header has been send and Server response header has been handled
-        Log::debug(PSTR("[NY2O] GET... return code: %d"), httpCode);
-
-        // file found at server
-        if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
-        {
-
-          // reads multiple characters and waits until there is no more data for 1 second
-          delay(3); // WARNING!
-          String payload = https.getString();
-
-          Log::debug(PSTR("[NY2O] GET... return payload: '%s'"), payload.c_str());
-
-          // {"info":{"satid":47947,"satname":"FEES","transactionscount":0,"passescount":2},"passes":[{"startAz":17.31,"startAzCompass":"NNE","startUTC":1630448555,"maxAz":98.2,"maxAzCompass":"E","maxEl":50.18,"maxUTC":1630448910,"endAz":181.59,"endAzCompass":"S","endUTC":1630449265},{"startAz":18.64,"startAzCompass":"NNE","startUTC":1630534640,"maxAz":99.66,"maxAzCompass":"E","maxEl":43.5,"maxUTC":1630534995,"endAz":178.42,"endAzCompass":"S","endUTC":1630535345}]}
-
-          DeserializationError error = deserializeJson(doc, payload);
-
-          if (error)
-          {
-            Log::debug(PSTR("[NY2O] deserializeJson() failed with code: %s"), error.c_str());
-          }
-          else
-          {
-            Log::debug(PSTR("[NY2O] deserializeJson() succeeded..."));
-
-            if (doc.containsKey("info"))
-            {
-              JsonVariant info = doc["info"];
-
-              if (info.containsKey("transactionscount"))
-                Log::debug(PSTR("[NY2O] transactionscount: %d"), info["transactionscount"].as<long>());
-
-              if (info.containsKey("satid"))
-                Log::debug(PSTR("[NY2O] SAT id: %d"), info["satid"].as<long>());
-
-              JsonVariant satname = info["satname"];
-              if (!satname.isNull())
-                Log::debug(PSTR("[NY2O] SAT name: '%s'"), satname.as<char *>());
-
-              if (info.containsKey("passescount"))
-                Log::debug(PSTR("[NY2O] passescount: %d"), info["passescount"].as<int>());
-            }
-
-            if (doc.containsKey("passes"))
-            {
-              JsonArray array = doc["passes"].as<JsonArray>();
-
-              if (array.isNull())
-              {
-                Log::debug(PSTR("[NY2O] passes array is null"));
-              }
-              else
-              {
-                size_t passitems;
-
-                passitems = array.size();
-
-                Log::debug(PSTR("[NY2O] passes array has %d items..."), passitems);
-
-                time_t utc;
-                struct tm *currenttime;
-
-                time(&utc);
-                currenttime = gmtime(&utc);
-                Log::debug(PSTR("current UTC: %04d/%02d/%02d %02d:%02d:%02d (UTC)"), 1900+currenttime->tm_year, currenttime->tm_mon, currenttime->tm_mday, currenttime->tm_hour, currenttime->tm_min, currenttime->tm_sec);
-
-                // timestamp is in UNIX format and is seconds; see https://www.epochconverter.com
-                for (int i = 0; i < passitems; i++)
-                {
-                  JsonVariant pass = array[i];
-                  if (!pass.containsKey("startUTC") || !pass.containsKey("endUTC") || !pass.containsKey("startAz") || !pass.containsKey("maxAz") || !pass.containsKey("maxEl") || !pass.containsKey("endAz"))
-                    break;
-
-                  time_t startutc = pass["startUTC"].as<long>();
-                  struct tm *passstarttime = gmtime(&startutc);
-
-                  time_t endutc = pass["endUTC"].as<long>();
-                  struct tm *passendtime = gmtime(&endutc);
-                  
-                  Log::debug(PSTR("[NY2O] pass #%03d: startUTC=%ld (%04d/%02d/%02d %02d:%02d:%02d) endUTC=%ld (%04d/%02d/%02d %02d:%02d:%02d) startAz=%f maxAz=%f maxEl=%f endAz=%f"), i,  \
-                                                 startutc, 1900+passstarttime->tm_year, passstarttime->tm_mon, passstarttime->tm_mday, passstarttime->tm_hour, passstarttime->tm_min, passstarttime->tm_sec, \
-                                                 endutc,   1900+passendtime->tm_year,   passendtime->tm_mon,   passendtime->tm_mday,   passendtime->tm_hour,   passendtime->tm_min,   passendtime->tm_sec, \
-                                                 pass["startAz"].as<double>(), pass["maxAz"].as<double>(), pass["maxEl"].as<double>(), pass["endAz"].as<double>());
-                }
-              }
-            }
-          }
-        }
-      }
-      else
-      {
-        Log::debug(PSTR("[NY2O] GET... failed with error: %s"), https.errorToString(httpCode).c_str());
-      }
-
-      https.end();
-    }
-    else
-    {
-      Log::debug(PSTR("[NY2O] Unable to connect"));
-    }
-   
-  } // End extra scoping block (END)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *client is
-  {
-    HTTPClient https;
-
-    Log::debug(PSTR("[NY2O] begin..."));
-
-    // eg: https://api.n2yo.com/rest/v1/satellite/positions/47947/45.6989/9.67/150/5/&apiKey=XXXXXX-XXXXXX-XXXXXX-XXXX
-    sprintf(buffer, "https://api.n2yo.com/rest/v1/satellite/positions/%u/%f/%f/%d/%d/&apiKey=%s", NORAD, lat, lon, alt, seconds, api_key);
-
-    Log::debug(PSTR("[NY2O] current query is '%s'"), buffer);
-
-    if (https.begin(*client, buffer))
-    {
-
-      Log::debug(PSTR("[NY2O] GET..."));
-
-      // start connection and send HTTP header
-      int httpCode = https.GET();
-
-      // httpCode will be negative on error
-      if (httpCode > 0)
-      {
-
-        // HTTP header has been send and Server response header has been handled
-        Log::debug(PSTR("[NY2O] GET... return code: %d"), httpCode);
-
-        // file found at server
-        if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
-        {
-
-          // reads multiple characters and waits until there is no more data for 1 second
-          delay(3); // WARNING!
-          String payload = https.getString();
-
-          Log::debug(PSTR("[NY2O] GET... return payload: '%s'"), payload.c_str());
-
-          // {"info":{"satname":"FEES","satid":47947,"transactionscount":0},"positions":[{"satlatitude":30.42417071,"satlongitude":144.83651694,"sataltitude":562.5,"azimuth":37.5,"elevation":-44.56,"ra":15.90889596,"dec":-6.24846802,"timestamp":1632922519,"eclipsed":true},{"satlatitude":30.36211626,"satlongitude":144.82133363,"sataltitude":562.48,"azimuth":37.54,"elevation":-44.59,"ra":15.8969196,"dec":-6.28436274,"timestamp":1632922520,"eclipsed":true},
-
-          DeserializationError error = deserializeJson(doc, payload);
-
-          if (error)
-          {
-            Log::debug(PSTR("[NY2O] deserializeJson() failed with code: %s"), error.c_str());
-          }
-          else
-          {
-            Log::debug(PSTR("[NY2O] deserializeJson() succeeded..."));
-
-            if (doc.containsKey("info"))
-            {
-              JsonVariant info = doc["info"];
-
-              if (info.containsKey("transactionscount"))
-                Log::debug(PSTR("[NY2O] transactionscount: %d"), info["transactionscount"].as<long>());
-
-              if (info.containsKey("satid"))
-                Log::debug(PSTR("[NY2O] SAT id: %d"), info["satid"].as<long>());
-
-              JsonVariant satname = info["satname"];
-              if (!satname.isNull())
-                Log::debug(PSTR("[NY2O] SAT name: '%s'"), satname.as<char *>());
-            }
-
-            if (doc.containsKey("positions"))
-            {
-              JsonArray array = doc["positions"].as<JsonArray>();
-
-              if (array.isNull())
-              {
-                Log::debug(PSTR("[NY2O] position array is null"));
-              }
-              else
-              {
-                size_t positems;
-
-                positems = array.size();
-
-                Log::debug(PSTR("[NY2O] position array has %d items..."), positems);
-
-                time_t utc;
-                struct tm *currenttime;
-
-                time(&utc);
-                currenttime = gmtime(&utc);
-                Log::debug(PSTR("current UTC: %04d/%02d/%02d %02d:%02d:%02d (UTC)"), 1900+currenttime->tm_year, currenttime->tm_mon, currenttime->tm_mday, currenttime->tm_hour, currenttime->tm_min, currenttime->tm_sec);
-
-                // timestamp is in UNIX format and is seconds; see https://www.epochconverter.com
-                for (int i = 0; i < positems; i++)
-                {
-                  JsonVariant pos = array[i];
-                  if (!pos.containsKey("timestamp") || !pos.containsKey("azimuth") || !pos.containsKey("elevation"))
-                    break;
-                  time_t posutc = pos["timestamp"].as<long>();
-                  struct tm *postime = gmtime(&posutc);
-                  Log::debug(PSTR("[NY2O] pos #%03d: timestamp=%ld UTC:%04d/%02d/%02d %02d:%02d:%02d azimuth=%f elevation=%f"), i, posutc, 1900+postime->tm_year, postime->tm_mon, postime->tm_mday, postime->tm_hour, postime->tm_min, postime->tm_sec, pos["azimuth"].as<double>(), pos["elevation"].as<double>());
-                  
-                }
-              }
-            }
-          }
-        }
-      }
-      else
-      {
-        Log::debug(PSTR("[NY2O] GET... failed with error: %s"), https.errorToString(httpCode).c_str());
-      }
-
-      https.end();
-    }
-    else
-    {
-      Log::debug(PSTR("[NY2O] Unable to connect"));
-    }
-   
-  } // End extra scoping block (END)
-
-  delete client;
-
-  return true;
+  N2YO_Client::getInstance().query_n2yo(NORAD);
 }
 
 void MQTT_Client::remoteSatFilter(char *payload, size_t payload_len)
