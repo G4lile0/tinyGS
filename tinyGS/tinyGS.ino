@@ -77,6 +77,7 @@
 #include "src/ArduinoOTA/ArduinoOTA.h"
 #include "src/OTA/OTA.h"
 
+#include <cppQueue.h>
 #include "src/Rotator/Rotator.h"
 #include "src/Rotator/N2YO.h"
 
@@ -100,6 +101,9 @@ Radio& radio = Radio::getInstance();
 Rotator_Client& rotator = Rotator_Client::getInstance();
 N2YO_Client n2yo = N2YO_Client::getInstance();
 TaskHandle_t taskRotor;
+
+cppQueue passes_queue(sizeof(radiopass_t), 10, FIFO, true); // instantiate the passes queue
+cppQueue positions_queue(sizeof(position_t), 1024, FIFO, false); // instantiate the positions queue
 
 const char* ntpServer = "time.cloudflare.com";
 void printLocalTime();
@@ -379,15 +383,66 @@ void printControls()
 
 void taskRotorHandle(void *parameter)
 {
-   int count=0;
+  position_t position;
+  radiopass_t radiopass;
 
-   Serial.print("taskRotor is running on core ");
-   Serial.println(xPortGetCoreID());
+//Serial.print("taskRotor is running on core ");
+//Serial.println(xPortGetCoreID());
+  Log::debug(PSTR("taskRotor is running on core %d"), xPortGetCoreID());
 
-  for(;;){
-//  Serial.print("taskRotor iteration ");
-//  Serial.println(count);
-    delay(1000);
-    count++;
-  } 
+// WARNING! not thread-safe!
+
+  for (;;)
+  {
+    time_t utc;
+    struct tm *currenttime;
+
+// il positions queue is not empty, process it...
+    while (!positions_queue.isEmpty())
+    {
+      time(&utc);
+      currenttime = gmtime(&utc);
+      Log::debug(PSTR("current UTC: timestamp=%ld %04d/%02d/%02d %02d:%02d:%02d (UTC)"), utc, 1900 + currenttime->tm_year, currenttime->tm_mon, currenttime->tm_mday, currenttime->tm_hour, currenttime->tm_min, currenttime->tm_sec);
+
+      positions_queue.peek(&position);
+
+      if (position.timestamp < utc)
+      {
+        Log::debug(PSTR("position timestamp %ld is in the past..."), position.timestamp);
+        positions_queue.drop();
+        delay(500);
+        continue;
+      }
+
+      if (position.timestamp > utc){
+        Log::debug(PSTR("position timestamp %ld is in the future..."), position.timestamp);
+        delay(500);
+        continue;
+      }
+
+      Log::debug(PSTR("position timestamp %ld is valid!"), position.timestamp);
+      positions_queue.drop();
+    }
+
+// if we have passes, extract the first one and query positions
+    if (!passes_queue.isEmpty())
+    {
+
+      passes_queue.pop(&radiopass);
+
+      positions_query_t positions_query;
+
+      positions_query.norad_id = radiopass.norad_id;
+
+      N2YO_Client::getInstance().query_positions(positions_query);
+
+      delay(500);
+
+      continue;
+    }
+
+  // Log::debug(PSTR("taskRotor: nothing to do..."));
+
+    delay(500);
+  }
 }

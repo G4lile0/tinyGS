@@ -431,8 +431,8 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     ConfigManager::getInstance().setModemStartup(buff);
 
     ModemInfo &m = status.modeminfo;
-    Log::console(PSTR("query_n2yo() invoked by commandBeginp"));
-    N2YO_Client::getInstance().query_n2yo(m.NORAD);
+    Log::console(PSTR("query_radiopasses() invoked by commandBeginp"));
+    N2YO_Client::getInstance().query_radiopasses(m.NORAD);
   }
 
   if (!strcmp(command, commandBegine))
@@ -452,8 +452,8 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     strcpy(m.satellite, doc["sat"].as<char *>());
     m.NORAD = doc["NORAD"];
 
-    Log::console(PSTR("query_n2yo() invoked by commandBegine"));
-    N2YO_Client::getInstance().query_n2yo(m.NORAD);
+    Log::console(PSTR("query_radiopasses() invoked by commandBegine"));
+    N2YO_Client::getInstance().query_radiopasses(m.NORAD);
 
     if (m.modem_mode == "LoRa")
     {
@@ -718,8 +718,8 @@ void MQTT_Client::remoteSatCmnd(char *payload, size_t payload_len)
 
   Log::debug(PSTR("Listening Satellite: %s NORAD: %u"), status.modeminfo.satellite, NORAD);
 
-  Log::console(PSTR("query_n2yo() invoked by remoteSatCmnd()"));
-  N2YO_Client::getInstance().query_n2yo(NORAD);
+  Log::console(PSTR("query_radiopasses() invoked by remoteSatCmnd()"));
+  N2YO_Client::getInstance().query_radiopasses(NORAD);
 }
 
 void MQTT_Client::remoteSatFilter(char *payload, size_t payload_len)

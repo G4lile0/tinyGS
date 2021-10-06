@@ -23,7 +23,7 @@
 #include "../ConfigManager/ConfigManager.h"
 #include "../Status.h"
 
-#if MQTT_MAX_PACKET_SIZE != 1000  && !PLATFORMIO
+#if MQTT_MAX_PACKET_SIZE != 1000 && !PLATFORMIO
 #error "Using Arduino IDE is not recommended, please follow this guide https://github.com/G4lile0/tinyGS/wiki/Arduino-IDE or edit /PubSubClient/src/PubSubClient.h  and set #define MQTT_MAX_PACKET_SIZE 1000"
 #endif
 
@@ -33,52 +33,93 @@
 extern Status status;
 
 #define MAXSATNAMELEN 32
+#define MAXAPIKEYLEN 32
+#define N2YO_API_KEY "3NXG3F-XCPJAT-2XQ6KZ-4RPQ"  // WARNING make it configurable
 
-typedef struct radiopass_t{
+typedef struct radiopasses_query_t
+{
 
-	uint32_t	norad_id;
-	char satname[MAXSATNAMELEN+1];
+  uint32_t norad_id;
+  float latitude;
+  float longitude;
+  int altitude;
+  int days;
+  int min_elevation;
+  char api_key[MAXAPIKEYLEN];
+
+} radiopasses_query_t;
+
+typedef struct radiopass_t
+{
+
+  uint32_t norad_id;
+  char satname[MAXSATNAMELEN + 1];
   uint32_t transaction_count;
   uint32_t passes_count;
   float startAz;
-  char startAzCompass[3];
-  uint32_t startUTC;
+  time_t startUTC;
   float maxAz;
-  char maxAzCompass[3];
   float maxEl;
-  uint32_t maxUTC;
+  time_t maxUTC;
   float endAz;
-  char endAzCompass[3];
-  uint32_t endUTC;
+  time_t endUTC;
 
 } radiopass_t;
 
+typedef struct positions_query_t
+{
+
+  uint32_t norad_id;
+  float latitude;
+  float longitude;
+  int altitude;
+  int seconds; // WARNING 300s max... use multiple requests ?
+  char api_key[MAXAPIKEYLEN];
+
+} positions_query_t;
+
+typedef struct position_t
+{
+
+  uint32_t norad_id;
+  char satname[MAXSATNAMELEN + 1];
+  uint32_t transaction_count;
+  float sat_latitude;
+  float sat_longitude;
+  float azimuth;
+  float elevation;
+  time_t timestamp;
+
+} position_t;
 
 class N2YO_Client
 {
 public:
-
-  static N2YO_Client& getInstance()
+  static N2YO_Client &getInstance()
   {
-    static N2YO_Client instance; 
+    static N2YO_Client instance;
     return instance;
   }
 
-//void begin();
-//void loop();
+  //void begin();
+  //void loop();
 
-  bool query_n2yo(uint32_t NORAD);
+  bool query_radiopasses(uint32_t norad_id);
+  bool query_radiopasses(radiopasses_query_t radiopasses_query);
+
+  bool query_positions(uint32_t norad_id);
+  bool query_positions(positions_query_t positions_query);
 
 protected:
-
   WiFiClientSecure n2yoClient;
 
-//void reconnect();
+  //void reconnect();
 
 private:
-
   N2YO_Client();
 
+  bool decodeRadiopasses(String payload);
+  bool decodePositions(String payload);
 };
 
 #endif
