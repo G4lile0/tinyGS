@@ -389,35 +389,39 @@ void taskRotorHandle(void *parameter)
 
   Log::debug(PSTR("taskRotor is running on core %d"), xPortGetCoreID());
 
-// WARNING! not thread-safe!
+  // WARNING! not thread-safe!
 
   for (;;)
   {
     time_t utc;
     struct tm *currenttime;
 
-// il positions queue is not empty, process it...
+    // il positions queue is not empty, process it...
     while (!positions_queue.isEmpty())
     {
       time(&utc);
       currenttime = gmtime(&utc);
-   // Log::debug(PSTR("current UTC: timestamp=%ld %04d/%02d/%02d %02d:%02d:%02d (UTC)"), utc, 1900 + currenttime->tm_year, currenttime->tm_mon, currenttime->tm_mday, currenttime->tm_hour, currenttime->tm_min, currenttime->tm_sec);
+      // Log::debug(PSTR("current UTC: timestamp=%ld %04d/%02d/%02d %02d:%02d:%02d (UTC)"), utc, 1900 + currenttime->tm_year, currenttime->tm_mon, currenttime->tm_mday, currenttime->tm_hour, currenttime->tm_min, currenttime->tm_sec);
 
       positions_queue.peek(&position);
 
       if (position.timestamp < utc)
       {
-        Log::debug(PSTR("position timestamp %ld is %ld seconds in the past... and has been ignored..."), position.timestamp, utc-position.timestamp);
+        Log::debug(PSTR("position timestamp %ld is %ld seconds in the past... and has been ignored..."), position.timestamp, utc - position.timestamp);
         positions_queue.drop();
         continue;
       }
 
-   // WARNING! rischio di dormire troppo a lungo ?
-   // WARNING! la coda delle posizioni dovrebbe essere resettata se arriva una nuova richiesta!
-      if (position.timestamp > utc){
-        int delta = position.timestamp-utc;
+      // WARNING! rischio di dormire troppo a lungo ?
+      // WARNING! la coda delle posizioni dovrebbe essere resettata se arriva una nuova richiesta!
+      if (position.timestamp > utc)
+      {
+        int delta = position.timestamp - utc;
         Log::debug(PSTR("position timestamp %ld is %ld seconds in the future... waiting..."), position.timestamp, delta);
-        if (delta > 1) delay((1000*delta) - 100); // just wakeup a little bit earlier...
+        if (delta > 60)
+          delta = 60; // wake up every minute...
+        if (delta >= 1)
+          delay((1000 * delta) - 100); // just wakeup a little bit earlier...
         continue;
       }
 
@@ -427,23 +431,45 @@ void taskRotorHandle(void *parameter)
       positions_queue.drop();
     }
 
-// if we are here, positions_queue is empty... 
-// if we have radiopasses in the radiopasses-queue, extract the first one and query N2YO for SAT positions...
-    if (!passes_queue.isEmpty())
+    // if we are here, positions_queue is empty...
+    // if we have radiopasses in the radiopasses-queue, extract the first one and query N2YO for SAT positions...
+    if (passes_queue.isEmpty())
     {
-      Log::debug(PSTR("extracting first item in radio-passes queue..."));
-
-      passes_queue.pop(&radiopass);
-
-   // query N2YO for the GPS positions for the given NORAD id; results will be pushed in the positions_queue
-      N2YO_Client::getInstance().query_positions(radiopass.norad_id);
-
-      delay(500);
-
+      // Log::debug(PSTR("radio-passes queue is empty..."));
+      delay(1000);
       continue;
     }
 
-  // Log::debug(PSTR("taskRotor: nothing to do..."));
+    Log::debug(PSTR("checking first item in radio-passes queue..."));
+
+    passes_queue.peek(&radiopass);
+
+    time(&utc);
+    currenttime = gmtime(&utc);
+
+    // if the radiopass has elapsed... just ignore it...
+    if (utc >= radiopass.endUTC)
+    {
+      Log::debug(PSTR("radio-pass with endUTC %ld has expired..."), radiopass.endUTC);
+      passes_queue.drop();
+      continue;
+    }
+
+    // WARNING! rischio di dormire troppo a lungo ?
+    // WARNING! la coda dei passaggi radio dovrebbe essere resettata se arriva una nuova richiesta!
+    if (utc < radiopass.startUTC)
+    {
+      int delta = radiopass.startUTC - utc;
+      Log::debug(PSTR("radio-pass with startUTC %ld is %ld seconds in the future... waiting..."), radiopass.startUTC, delta);
+      if (delta > 60)
+        delta = 60; // wake up every minute...
+      if (delta >= 1)
+        delay((1000 * delta) - 100); // just wakeup a little bit earlier...
+      continue;
+    }
+
+    // query N2YO for the GPS positions for the given NORAD id; results will be pushed in the positions_queue
+    N2YO_Client::getInstance().query_positions(radiopass.norad_id);
 
     delay(500);
   }
