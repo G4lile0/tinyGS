@@ -98,8 +98,8 @@ ConfigManager& configManager = ConfigManager::getInstance();
 MQTT_Client& mqtt = MQTT_Client::getInstance();
 Radio& radio = Radio::getInstance();
 
-cppQueue passes_queue(sizeof(radiopass_t), 8, FIFO, true); // instantiate the passes queue
-cppQueue positions_queue(sizeof(position_t), 512, FIFO, false); // instantiate the positions queue
+cppQueue passes_queue(sizeof(radiopass_t), PASSESQUEUE_SIZE, FIFO, true); // instantiate the passes queue
+cppQueue positions_queue(sizeof(position_t), POSITIONSQUEUE_SIZE, FIFO, false); // instantiate the positions queue
 
 Rotator_Client& rotator = Rotator_Client::getInstance();
 N2YO_Client n2yo = N2YO_Client::getInstance();
@@ -435,14 +435,8 @@ void taskRotorHandle(void *parameter)
 
       passes_queue.pop(&radiopass);
 
-      positions_query_t positions_query;
-      memset(&positions_query, 0x00, sizeof(positions_query_t));
-
-      positions_query.norad_id = radiopass.norad_id;
-      strcpy(positions_query.api_key, N2YO_API_KEY);
-
    // query N2YO for the GPS positions for the given NORAD id; results will be pushed in the positions_queue
-      N2YO_Client::getInstance().query_positions(positions_query);
+      N2YO_Client::getInstance().query_positions(radiopass.norad_id);
 
       delay(500);
 

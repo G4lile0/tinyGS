@@ -29,9 +29,12 @@
 
 extern Status status;
 
-#define MAXSATNAMELEN 32
-#define MAXAPIKEYLEN 32
-#define N2YO_API_KEY "3NXG3F-XCPJAT-2XQ6KZ-4RPQ"  // WARNING make it configurable
+#define PASSESQUEUE_SIZE    8
+#define POSITIONSQUEUE_SIZE 512
+
+#define MAXSATNAMELEN       32
+#define MAXAPIKEYLEN        32
+#define N2YO_API_KEY        "3NXG3F-XCPJAT-2XQ6KZ-4RPQ"  // WARNING make it configurable
 
 typedef struct radiopasses_query_t
 {
@@ -70,8 +73,8 @@ typedef struct positions_query_t
   float latitude;
   float longitude;
   int altitude;
-  int seconds; // WARNING 300s max... use multiple requests ?
-  char api_key[MAXAPIKEYLEN];
+  int seconds; // WARNING 300s max... do multiple requests if necessary...
+  char api_key[MAXAPIKEYLEN + 1];
 
 } positions_query_t;
 

@@ -50,6 +50,7 @@ void N2YO_Client::printStats(void)
 bool N2YO_Client::query_radiopasses(uint32_t norad_id, bool clearqueue)
 {
     radiopasses_query_t radiopasses_query;
+    memset(&radiopasses_query, 0x00, sizeof(radiopasses_query_t));
 
     radiopasses_query.norad_id = norad_id,
     radiopasses_query.latitude = 45.6989,
@@ -231,6 +232,8 @@ bool N2YO_Client::decodeRadiopasses(String payload)
         Log::debug(PSTR("current UTC: %04d/%02d/%02d %02d:%02d:%02d (UTC)"), 1900 + currenttime->tm_year, currenttime->tm_mon, currenttime->tm_mday, currenttime->tm_hour, currenttime->tm_min, currenttime->tm_sec);
 
         // timestamp is in UNIX format and is seconds; see https://www.epochconverter.com
+        // WARNING! better to exit after the first or maybe the second item... no reasons for keeping too many items in the future as tinyGS will probably
+        // push a new request to listen at the right time...
         for (int i = 0; i < passitems; i++)
         {
             JsonVariant pass = array[i];
@@ -266,12 +269,13 @@ bool N2YO_Client::decodeRadiopasses(String payload)
 bool N2YO_Client::query_positions(uint32_t norad_id)
 {
     positions_query_t positions_query;
+    memset(&positions_query, 0x00, sizeof(positions_query_t));
 
     positions_query.norad_id = norad_id,
     positions_query.latitude = 45.6989,
     positions_query.longitude = 9.67,
     positions_query.altitude = 350,
-    positions_query.seconds = 1,
+    positions_query.seconds = 256, // WARNING with POSITIONSQUEUE_SIZE=512 we are using half of the space; WARNING 300s max... do multiple requests if necessary...
 
     strcpy(positions_query.api_key, N2YO_API_KEY);
 
@@ -374,7 +378,7 @@ bool N2YO_Client::query_positions(positions_query_t positions_query)
 bool N2YO_Client::decodePositions(String payload)
 {
     position_t position;
-    DynamicJsonDocument doc(4096);
+    DynamicJsonDocument doc(65536); // WARNING! json doc for 256 item is around 50k
 
     memset(&position, 0x00, sizeof(position_t));
 
