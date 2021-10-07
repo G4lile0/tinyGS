@@ -447,7 +447,7 @@ void taskRotorHandle(void *parameter)
     time(&utc);
     currenttime = gmtime(&utc);
 
-    // if the radiopass has elapsed... just ignore it...
+    // if the radiopass has elapsed... just remove it from the radio-pass queue...
     if (utc >= radiopass.endUTC)
     {
       Log::debug(PSTR("radio-pass with endUTC %ld has expired..."), radiopass.endUTC);
@@ -468,7 +468,7 @@ void taskRotorHandle(void *parameter)
       continue;
     }
 
-    // query N2YO for the GPS positions for the given NORAD id; results will be pushed in the positions_queue
+    // query N2YO for the GPS positions for the given NORAD id; results will be automatically pushed in the positions_queue
     N2YO_Client::getInstance().query_positions(radiopass.norad_id);
 
     delay(500);
