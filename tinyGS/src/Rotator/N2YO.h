@@ -27,9 +27,6 @@
 #error "Using Arduino IDE is not recommended, please follow this guide https://github.com/G4lile0/tinyGS/wiki/Arduino-IDE or edit /PubSubClient/src/PubSubClient.h  and set #define MQTT_MAX_PACKET_SIZE 1000"
 #endif
 
-#include <WiFiClientSecure.h>
-#include "../certs.h"
-
 extern Status status;
 
 #define MAXSATNAMELEN 32
@@ -86,6 +83,7 @@ typedef struct position_t
   uint32_t transaction_count;
   float sat_latitude;
   float sat_longitude;
+  float sat_altitude;
   float azimuth;
   float elevation;
   time_t timestamp;
@@ -95,27 +93,27 @@ typedef struct position_t
 class N2YO_Client
 {
 public:
+
   static N2YO_Client &getInstance()
   {
     static N2YO_Client instance;
     return instance;
   }
 
-  //void begin();
-  //void loop();
+  void printStats(void);
 
-  bool query_radiopasses(uint32_t norad_id);
-  bool query_radiopasses(radiopasses_query_t radiopasses_query);
+  bool query_radiopasses(uint32_t norad_id, bool clearqueue);
+  bool query_radiopasses(radiopasses_query_t radiopasses_query, bool clearqueue);
 
   bool query_positions(uint32_t norad_id);
   bool query_positions(positions_query_t positions_query);
 
 protected:
+
   WiFiClientSecure n2yoClient;
 
-  //void reconnect();
-
 private:
+
   N2YO_Client();
 
   bool decodeRadiopasses(String payload);

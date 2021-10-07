@@ -17,11 +17,14 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "N2YO.h"
-#include <cppQueue.h>
+#include <WiFiClientSecure.h>
+#include "../certs.h"
 
 #include "ArduinoJson.h"
 #include <HttpClient.h>
+#include <cppQueue.h>
+
+#include "N2YO.h"
 
 #define LOG_TAG "N2YO"
 
@@ -34,14 +37,17 @@
 extern cppQueue passes_queue;
 extern cppQueue positions_queue;
 
-
 N2YO_Client::N2YO_Client()
+{
+}
+
+void N2YO_Client::printStats(void)
 {
     Log::console(PSTR("[N2YO] passes_queue allocated with %lu bytes"), passes_queue.sizeOf());
     Log::console(PSTR("[N2YO] positions_queue allocated with %lu bytes"), positions_queue.sizeOf());
 }
 
-bool N2YO_Client::query_radiopasses(uint32_t norad_id)
+bool N2YO_Client::query_radiopasses(uint32_t norad_id, bool clearqueue)
 {
     radiopasses_query_t radiopasses_query;
 
@@ -54,7 +60,7 @@ bool N2YO_Client::query_radiopasses(uint32_t norad_id)
 
     strcpy(radiopasses_query.api_key, N2YO_API_KEY);
 
-    return query_radiopasses(radiopasses_query);
+    return query_radiopasses(radiopasses_query, clearqueue);
 }
 
 /*
@@ -65,7 +71,7 @@ bool N2YO_Client::query_radiopasses(uint32_t norad_id)
    Request: /radiopasses/{id}/{observer_lat}/{observer_lng}/{observer_alt}/{days}/{min_elevation}
 */
 
-bool N2YO_Client::query_radiopasses(radiopasses_query_t radiopasses_query)
+bool N2YO_Client::query_radiopasses(radiopasses_query_t radiopasses_query, bool clearqueue)
 {
     char querybuff[512];
 
@@ -77,6 +83,7 @@ bool N2YO_Client::query_radiopasses(radiopasses_query_t radiopasses_query)
         return false;
     }
 
+#if 0
     WiFiClientSecure *client = new WiFiClientSecure;
 
     if (!client)
@@ -86,6 +93,9 @@ bool N2YO_Client::query_radiopasses(radiopasses_query_t radiopasses_query)
     }
 
     client->setCACert(n2yo_CA);
+#endif
+
+    n2yoClient.setCACert(n2yo_CA);
 
     // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *client is
     {
@@ -98,7 +108,7 @@ bool N2YO_Client::query_radiopasses(radiopasses_query_t radiopasses_query)
 
         Log::debug(PSTR("[N2YO] current query is '%s'"), querybuff);
 
-        if (https.begin(*client, querybuff))
+        if (https.begin(n2yoClient, querybuff))
         {
             Log::debug(PSTR("[N2YO] GET..."));
 
@@ -133,7 +143,9 @@ bool N2YO_Client::query_radiopasses(radiopasses_query_t radiopasses_query)
 
     } // End extra scoping block (END)
 
+#if 0
     delete client;
+#endif
 
     Log::debug(PSTR("[N2YO] passes-queue has %d items..."), passes_queue.getCount());
 
@@ -209,7 +221,7 @@ bool N2YO_Client::decodeRadiopasses(String payload)
 
         passitems = array.size();
 
-        Log::debug(PSTR("[N2YO] passes array has %d items..."), passitems);
+     // Log::debug(PSTR("[N2YO] passes array has %d items..."), passitems);
 
         time_t utc;
         struct tm *currenttime;
@@ -286,6 +298,7 @@ bool N2YO_Client::query_positions(positions_query_t positions_query)
         return false;
     }
 
+#if 0
     WiFiClientSecure *client = new WiFiClientSecure;
 
     if (!client)
@@ -295,6 +308,9 @@ bool N2YO_Client::query_positions(positions_query_t positions_query)
     }
 
     client->setCACert(n2yo_CA);
+#endif
+
+    n2yoClient.setCACert(n2yo_CA);
 
     // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *client is
     {
@@ -307,7 +323,7 @@ bool N2YO_Client::query_positions(positions_query_t positions_query)
 
         Log::debug(PSTR("[N2YO] current query is '%s'"), querybuff);
 
-        if (https.begin(*client, querybuff))
+        if (https.begin(n2yoClient, querybuff))
         {
             Log::debug(PSTR("[N2YO] GET..."));
 
@@ -342,7 +358,9 @@ bool N2YO_Client::query_positions(positions_query_t positions_query)
 
     } // End extra scoping block (END)
 
+#if 0
     delete client;
+#endif
 
     Log::debug(PSTR("[N2YO] positions-queue has %d items..."), positions_queue.getCount());
 
@@ -413,7 +431,7 @@ bool N2YO_Client::decodePositions(String payload)
 
         positems = array.size();
 
-        Log::debug(PSTR("[N2YO] position array has %d items..."), positems);
+     // Log::debug(PSTR("[N2YO] position array has %d items..."), positems);
 
         time_t utc;
         struct tm *currenttime;
@@ -426,16 +444,20 @@ bool N2YO_Client::decodePositions(String payload)
         for (int i = 0; i < positems; i++)
         {
             JsonVariant pos = array[i];
-            if (!pos.containsKey("timestamp") || !pos.containsKey("azimuth") || !pos.containsKey("elevation"))
+            if (!pos.containsKey("timestamp") || !pos.containsKey("satlatitude") || !pos.containsKey("satlongitude") || !pos.containsKey("sataltitude") || !pos.containsKey("azimuth") || !pos.containsKey("elevation"))
                 break;
 
             position.timestamp = pos["timestamp"].as<long>();
             struct tm *postime = gmtime(&position.timestamp);
 
+            position.sat_latitude = pos["satlatitude"].as<float>();
+            position.sat_longitude = pos["satlongitude"].as<float>();
+            position.sat_altitude = pos["sataltitude"].as<float>();
+
             position.azimuth = pos["azimuth"].as<float>();
             position.elevation = pos["elevation"].as<float>();
 
-            Log::debug(PSTR("[N2YO] pos #%03d: timestamp=%ld UTC:%04d/%02d/%02d %02d:%02d:%02d azimuth=%f elevation=%f"), i, position.timestamp, 1900 + postime->tm_year, postime->tm_mon, postime->tm_mday, postime->tm_hour, postime->tm_min, postime->tm_sec, position.azimuth, position.elevation);
+            Log::debug(PSTR("[N2YO] SAT position #%03d: timestamp=%ld UTC:%04d/%02d/%02d %02d:%02d:%02d latitude=%f longitude=%f altitude=%f azimuth=%f elevation=%f"), i, position.timestamp, 1900 + postime->tm_year, postime->tm_mon, postime->tm_mday, postime->tm_hour, postime->tm_min, postime->tm_sec, position.sat_latitude, position.sat_longitude, position.sat_altitude, position.azimuth, position.elevation);
 
             positions_queue.push(&position);
         }

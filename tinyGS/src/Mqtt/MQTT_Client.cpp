@@ -432,7 +432,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
 
     ModemInfo &m = status.modeminfo;
     Log::console(PSTR("query_radiopasses() invoked by commandBeginp"));
-    N2YO_Client::getInstance().query_radiopasses(m.NORAD);
+    N2YO_Client::getInstance().query_radiopasses(m.NORAD, true);
   }
 
   if (!strcmp(command, commandBegine))
@@ -453,7 +453,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     m.NORAD = doc["NORAD"];
 
     Log::console(PSTR("query_radiopasses() invoked by commandBegine"));
-    N2YO_Client::getInstance().query_radiopasses(m.NORAD);
+    N2YO_Client::getInstance().query_radiopasses(m.NORAD, true);
 
     if (m.modem_mode == "LoRa")
     {
@@ -719,7 +719,7 @@ void MQTT_Client::remoteSatCmnd(char *payload, size_t payload_len)
   Log::debug(PSTR("Listening Satellite: %s NORAD: %u"), status.modeminfo.satellite, NORAD);
 
   Log::console(PSTR("query_radiopasses() invoked by remoteSatCmnd()"));
-  N2YO_Client::getInstance().query_radiopasses(NORAD);
+  N2YO_Client::getInstance().query_radiopasses(NORAD, true);
 }
 
 void MQTT_Client::remoteSatFilter(char *payload, size_t payload_len)

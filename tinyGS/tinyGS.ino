@@ -98,12 +98,12 @@ ConfigManager& configManager = ConfigManager::getInstance();
 MQTT_Client& mqtt = MQTT_Client::getInstance();
 Radio& radio = Radio::getInstance();
 
+cppQueue passes_queue(sizeof(radiopass_t), 8, FIFO, true); // instantiate the passes queue
+cppQueue positions_queue(sizeof(position_t), 512, FIFO, false); // instantiate the positions queue
+
 Rotator_Client& rotator = Rotator_Client::getInstance();
 N2YO_Client n2yo = N2YO_Client::getInstance();
 TaskHandle_t taskRotor;
-
-cppQueue passes_queue(sizeof(radiopass_t), 10, FIFO, true); // instantiate the passes queue
-cppQueue positions_queue(sizeof(position_t), 1024, FIFO, false); // instantiate the positions queue
 
 const char* ntpServer = "time.cloudflare.com";
 void printLocalTime();
@@ -179,6 +179,7 @@ void setup()
   configManager.delay(1000);
   mqtt.begin();
 
+  N2YO_Client::getInstance().printStats();
   xTaskCreatePinnedToCore(taskRotorHandle, "taskRotor", 10000, NULL, 1, &taskRotor, 0);                         
 
   if (configManager.getOledBright() == 0)
@@ -408,32 +409,39 @@ void taskRotorHandle(void *parameter)
 
       if (position.timestamp < utc)
       {
-        Log::debug(PSTR("position timestamp %ld is in the past..."), position.timestamp);
+        Log::debug(PSTR("position timestamp %ld is %ld seconds in the past..."), position.timestamp, utc-position.timestamp);
         positions_queue.drop();
         delay(500);
         continue;
       }
 
       if (position.timestamp > utc){
-        Log::debug(PSTR("position timestamp %ld is in the future..."), position.timestamp);
+        Log::debug(PSTR("position timestamp %ld is %ld seconds in the future..."), position.timestamp, position.timestamp-utc);
         delay(500);
         continue;
       }
 
-      Log::debug(PSTR("position timestamp %ld is valid!"), position.timestamp);
+      struct tm *postime = gmtime(&position.timestamp);
+      Log::debug(PSTR("tracking SAT timestamp=%ld UTC:%04d/%02d/%02d %02d:%02d:%02d latitude=%f longitude=%f altitude=%f azimuth=%f elevation=%f"), position.timestamp, 1900 + postime->tm_year, postime->tm_mon, postime->tm_mday, postime->tm_hour, postime->tm_min, postime->tm_sec, position.sat_latitude, position.sat_longitude, position.sat_altitude, position.azimuth, position.elevation);
+
       positions_queue.drop();
     }
 
-// if we have passes, extract the first one and query positions
+// if we are here, positions_queue is empty... 
+// if we have radiopasses in the radiopasses-queue, extract the first one and query N2YO for SAT positions...
     if (!passes_queue.isEmpty())
     {
+      Log::debug(PSTR("extracting first item in radio-passes queue..."));
 
       passes_queue.pop(&radiopass);
 
       positions_query_t positions_query;
+      memset(&positions_query, 0x00, sizeof(positions_query_t));
 
       positions_query.norad_id = radiopass.norad_id;
+      strcpy(positions_query.api_key, N2YO_API_KEY);
 
+   // query N2YO for the GPS positions for the given NORAD id; results will be pushed in the positions_queue
       N2YO_Client::getInstance().query_positions(positions_query);
 
       delay(500);
