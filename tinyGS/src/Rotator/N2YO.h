@@ -29,8 +29,9 @@
 
 extern Status status;
 
-#define PASSESQUEUE_SIZE    8
-#define POSITIONSQUEUE_SIZE 512
+#define PASSESQUEUE_SIZE        8
+#define POSITIONSQUEUE_SIZE     512 // total size
+#define POSITIONSQUEUE_SQ_SIZE  64  // single query size
 
 #define MAXSATNAMELEN       32
 #define MAXAPIKEYLEN        32
@@ -49,13 +50,15 @@ typedef struct radiopasses_query_t
 
 } radiopasses_query_t;
 
+// WARNING! update capacity evaluation in decodePositions() in case of changes in radiopass_t struct!
+
 typedef struct radiopass_t
 {
 
   uint32_t norad_id;
-  char satname[MAXSATNAMELEN + 1];
-  uint32_t transaction_count;
-  uint32_t passes_count;
+//char satname[MAXSATNAMELEN + 1];
+  uint16_t transaction_count;
+  uint16_t passes_count;
   float startAz;
   time_t startUTC;
   float maxAz;
@@ -78,12 +81,14 @@ typedef struct positions_query_t
 
 } positions_query_t;
 
+// WARNING! update capacity evaluation in decodeRadiopasses() in case of changes in position_t struct!
+
 typedef struct position_t
 {
 
   uint32_t norad_id;
-  char satname[MAXSATNAMELEN + 1];
-  uint32_t transaction_count;
+//char satname[MAXSATNAMELEN + 1];
+  uint16_t transaction_count;
   float sat_latitude;
   float sat_longitude;
   float sat_altitude;

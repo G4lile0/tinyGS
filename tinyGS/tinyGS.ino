@@ -387,8 +387,6 @@ void taskRotorHandle(void *parameter)
   position_t position;
   radiopass_t radiopass;
 
-//Serial.print("taskRotor is running on core ");
-//Serial.println(xPortGetCoreID());
   Log::debug(PSTR("taskRotor is running on core %d"), xPortGetCoreID());
 
 // WARNING! not thread-safe!
@@ -403,21 +401,23 @@ void taskRotorHandle(void *parameter)
     {
       time(&utc);
       currenttime = gmtime(&utc);
-      Log::debug(PSTR("current UTC: timestamp=%ld %04d/%02d/%02d %02d:%02d:%02d (UTC)"), utc, 1900 + currenttime->tm_year, currenttime->tm_mon, currenttime->tm_mday, currenttime->tm_hour, currenttime->tm_min, currenttime->tm_sec);
+   // Log::debug(PSTR("current UTC: timestamp=%ld %04d/%02d/%02d %02d:%02d:%02d (UTC)"), utc, 1900 + currenttime->tm_year, currenttime->tm_mon, currenttime->tm_mday, currenttime->tm_hour, currenttime->tm_min, currenttime->tm_sec);
 
       positions_queue.peek(&position);
 
       if (position.timestamp < utc)
       {
-        Log::debug(PSTR("position timestamp %ld is %ld seconds in the past..."), position.timestamp, utc-position.timestamp);
+        Log::debug(PSTR("position timestamp %ld is %ld seconds in the past... and has been ignored..."), position.timestamp, utc-position.timestamp);
         positions_queue.drop();
-        delay(500);
         continue;
       }
 
+   // WARNING! rischio di dormire troppo a lungo ?
+   // WARNING! la coda delle posizioni dovrebbe essere resettata se arriva una nuova richiesta!
       if (position.timestamp > utc){
-        Log::debug(PSTR("position timestamp %ld is %ld seconds in the future..."), position.timestamp, position.timestamp-utc);
-        delay(500);
+        int delta = position.timestamp-utc;
+        Log::debug(PSTR("position timestamp %ld is %ld seconds in the future... waiting..."), position.timestamp, delta);
+        if (delta > 1) delay((1000*delta) - 100); // just wakeup a little bit earlier...
         continue;
       }
 

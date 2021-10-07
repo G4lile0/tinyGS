@@ -160,12 +160,19 @@ bool N2YO_Client::query_radiopasses(radiopasses_query_t radiopasses_query, bool 
 bool N2YO_Client::decodeRadiopasses(String payload)
 {
     radiopass_t radiopass;
-    DynamicJsonDocument doc(4096);
+
+// WARNING! update in case of changes in radiopass_t struct definition...
+// see https://arduinojson.org/v5/assistant/
+   const size_t capacity = JSON_ARRAY_SIZE(PASSESQUEUE_SIZE) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) + PASSESQUEUE_SIZE*JSON_OBJECT_SIZE(10);
+
+   Log::debug(PSTR("[N2YO] GET... estimated JSON doc size: %d"), capacity);
+
+    DynamicJsonDocument doc(capacity);
 
     memset(&radiopass, 0x00, sizeof(radiopass_t));
 
     // N2YO reply eg: {"info":{"satid":47947,"satname":"FEES","transactionscount":0,"passescount":2},"passes":[{"startAz":17.31,"startAzCompass":"NNE","startUTC":1630448555,"maxAz":98.2,"maxAzCompass":"E","maxEl":50.18,"maxUTC":1630448910,"endAz":181.59,"endAzCompass":"S","endUTC":1630449265},{"startAz":18.64,"startAzCompass":"NNE","startUTC":1630534640,"maxAz":99.66,"maxAzCompass":"E","maxEl":43.5,"maxUTC":1630534995,"endAz":178.42,"endAzCompass":"S","endUTC":1630535345}]}
-    Log::debug(PSTR("[N2YO] decoding payload: '%s'"), payload.c_str());
+    // Log::debug(PSTR("[N2YO] decoding payload: '%s'"), payload.c_str());
 
     DeserializationError error = deserializeJson(doc, payload);
 
@@ -187,7 +194,7 @@ bool N2YO_Client::decodeRadiopasses(String payload)
 
     if (info.containsKey("transactionscount"))
     {
-        radiopass.transaction_count = info["transactionscount"].as<long>();
+        radiopass.transaction_count = info["transactionscount"].as<int>();
         Log::debug(PSTR("[N2YO] transactionscount: %d"), radiopass.transaction_count);
     }
 
@@ -197,12 +204,14 @@ bool N2YO_Client::decodeRadiopasses(String payload)
         Log::debug(PSTR("[N2YO] SAT id: %d"), radiopass.norad_id);
     }
 
+#if 0
     JsonVariant satname = info["satname"];
     if (!satname.isNull())
     {
         strncpy(radiopass.satname, satname.as<char *>(), MAXSATNAMELEN);
         Log::debug(PSTR("[N2YO] SAT name: '%s'"), radiopass.satname);
     }
+#endif
 
     if (info.containsKey("passescount"))
     {
@@ -275,7 +284,7 @@ bool N2YO_Client::query_positions(uint32_t norad_id)
     positions_query.latitude = 45.6989,
     positions_query.longitude = 9.67,
     positions_query.altitude = 350,
-    positions_query.seconds = 256, // WARNING with POSITIONSQUEUE_SIZE=512 we are using half of the space; WARNING 300s max... do multiple requests if necessary...
+    positions_query.seconds = POSITIONSQUEUE_SQ_SIZE, // WARNING with POSITIONSQUEUE_SIZE=512 we are using half of the space; WARNING 300s max... do multiple requests if necessary...
 
     strcpy(positions_query.api_key, N2YO_API_KEY);
 
@@ -344,7 +353,7 @@ bool N2YO_Client::query_positions(positions_query_t positions_query)
                 if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
                 {
                     // reads multiple characters and waits until there is no more data for 1 second
-                    delay(3); // WARNING!
+                    delay(15); // WARNING!
                     decodePositions(https.getString());
                 }
             }
@@ -378,13 +387,19 @@ bool N2YO_Client::query_positions(positions_query_t positions_query)
 bool N2YO_Client::decodePositions(String payload)
 {
     position_t position;
-    DynamicJsonDocument doc(65536); // WARNING! json doc for 256 item is around 50k
+
+// WARNING! update in case of changes in position_t struct definition...
+// see https://arduinojson.org/v5/assistant/
+    const size_t capacity = JSON_ARRAY_SIZE(1+POSITIONSQUEUE_SQ_SIZE) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + (1+POSITIONSQUEUE_SQ_SIZE)*JSON_OBJECT_SIZE(9);
+
+    Log::debug(PSTR("[N2YO] GET... estimated JSON doc size: %d"), capacity);
+
+    DynamicJsonDocument doc(capacity); // WARNING! json text for 256 item is around 50k
 
     memset(&position, 0x00, sizeof(position_t));
 
-    Log::debug(PSTR("[N2YO] GET... return payload: '%s'"), payload.c_str());
-
-    // {"info":{"satname":"FEES","satid":47947,"transactionscount":0},"positions":[{"satlatitude":30.42417071,"satlongitude":144.83651694,"sataltitude":562.5,"azimuth":37.5,"elevation":-44.56,"ra":15.90889596,"dec":-6.24846802,"timestamp":1632922519,"eclipsed":true},{"satlatitude":30.36211626,"satlongitude":144.82133363,"sataltitude":562.48,"azimuth":37.54,"elevation":-44.59,"ra":15.8969196,"dec":-6.28436274,"timestamp":1632922520,"eclipsed":true},
+    // N2YO reply eg: {"info":{"satname":"FEES","satid":47947,"transactionscount":0},"positions":[{"satlatitude":30.42417071,"satlongitude":144.83651694,"sataltitude":562.5,"azimuth":37.5,"elevation":-44.56,"ra":15.90889596,"dec":-6.24846802,"timestamp":1632922519,"eclipsed":true},{"satlatitude":30.36211626,"satlongitude":144.82133363,"sataltitude":562.48,"azimuth":37.54,"elevation":-44.59,"ra":15.8969196,"dec":-6.28436274,"timestamp":1632922520,"eclipsed":true},
+    // Log::debug(PSTR("[N2YO] decoding payload: '%s'"), payload.c_str());
 
     DeserializationError error = deserializeJson(doc, payload);
 
@@ -406,7 +421,7 @@ bool N2YO_Client::decodePositions(String payload)
 
     if (info.containsKey("transactionscount"))
     {
-        position.transaction_count = info["transactionscount"].as<long>();
+        position.transaction_count = info["transactionscount"].as<int>();
         Log::debug(PSTR("[N2YO] transactionscount: %d"), position.transaction_count);
     }
 
@@ -416,12 +431,14 @@ bool N2YO_Client::decodePositions(String payload)
         Log::debug(PSTR("[N2YO] SAT id: %d"), position.norad_id);
     }
 
+#if 0
     JsonVariant satname = info["satname"];
     if (!satname.isNull())
     {
         strncpy(position.satname, satname.as<char *>(), MAXSATNAMELEN);
         Log::debug(PSTR("[N2YO] SAT name: '%s'"), position.satname);
     }
+#endif
 
     JsonArray array = doc["positions"].as<JsonArray>();
 
