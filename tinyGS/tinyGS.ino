@@ -407,17 +407,19 @@ void taskRotorHandle(void *parameter)
 
       if (position.timestamp < utc)
       {
-        Log::debug(PSTR("position timestamp %ld is %ld seconds in the past... and has been ignored..."), position.timestamp, utc - position.timestamp);
+        Log::debug(PSTR("NORAD SAT#%lu: position timestamp %ld is %ld seconds in the past... and has been ignored..."), position.norad_id, position.timestamp, utc - position.timestamp);
         positions_queue.drop();
         continue;
       }
 
       // WARNING! rischio di dormire troppo a lungo ?
       // WARNING! la coda delle posizioni dovrebbe essere resettata se arriva una nuova richiesta!
+      // WARNING! mentre aspetto potrei puntare genericamente verso lo zenith oppure sul punto di massima elevazione fornito da N2YO
+      // WARNING! prevedere di poter uscire dallo sleep di 30s... servirebbe una terminate oppure rivedere il codice affinche' continui a girare ogni secondo e stampi ogni 60s...
       if (position.timestamp > utc)
       {
         int delta = position.timestamp - utc;
-        Log::debug(PSTR("position timestamp %ld is %ld seconds in the future... waiting..."), position.timestamp, delta);
+        Log::debug(PSTR("NORAD SAT#%lu: position timestamp %ld is %ld seconds in the future... waiting..."), position.norad_id, position.timestamp, delta);
         if (delta > 60)
           delta = 60; // wake up every minute...
         if (delta >= 1)
@@ -426,7 +428,7 @@ void taskRotorHandle(void *parameter)
       }
 
       struct tm *postime = gmtime(&position.timestamp);
-      Log::debug(PSTR("tracking SAT timestamp=%ld UTC:%04d/%02d/%02d %02d:%02d:%02d latitude=%f longitude=%f altitude=%f azimuth=%f elevation=%f"), position.timestamp, 1900 + postime->tm_year, postime->tm_mon, postime->tm_mday, postime->tm_hour, postime->tm_min, postime->tm_sec, position.sat_latitude, position.sat_longitude, position.sat_altitude, position.azimuth, position.elevation);
+      Log::debug(PSTR("tracking NORAD SAT#%lu timestamp=%ld UTC:%04d/%02d/%02d %02d:%02d:%02d latitude=%f longitude=%f altitude=%f azimuth=%f elevation=%f"), position.norad_id, position.timestamp, 1900 + postime->tm_year, postime->tm_mon, postime->tm_mday, postime->tm_hour, postime->tm_min, postime->tm_sec, position.sat_latitude, position.sat_longitude, position.sat_altitude, position.azimuth, position.elevation);
 
       positions_queue.drop();
     }

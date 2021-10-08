@@ -76,6 +76,12 @@ bool N2YO_Client::query_radiopasses(radiopasses_query_t radiopasses_query, bool 
 {
     char querybuff[512];
 
+    if (clearqueue)
+    {
+        passes_queue.clean();
+        Log::debug(PSTR("[N2YO] radiopasses queue cleaned..."));
+    }
+
     Log::debug(PSTR("[N2YO] querying radiopasses for NORAD id %u..."), radiopasses_query.norad_id);
 
     if (radiopasses_query.norad_id == 99999)
@@ -83,18 +89,6 @@ bool N2YO_Client::query_radiopasses(radiopasses_query_t radiopasses_query, bool 
         Log::debug(PSTR("[N2YO] WARNING! balloons are not yet supported...")); // set to a fixed pos ???
         return false;
     }
-
-#if 0
-    WiFiClientSecure *client = new WiFiClientSecure;
-
-    if (!client)
-    {
-        Log::debug(PSTR("[N2YO] Unable to create client"));
-        return false;
-    }
-
-    client->setCACert(n2yo_CA);
-#endif
 
     n2yoClient.setCACert(n2yo_CA);
 
@@ -144,10 +138,6 @@ bool N2YO_Client::query_radiopasses(radiopasses_query_t radiopasses_query, bool 
 
     } // End extra scoping block (END)
 
-#if 0
-    delete client;
-#endif
-
     Log::debug(PSTR("[N2YO] passes-queue has %d items..."), passes_queue.getCount());
 
     return true;
@@ -159,13 +149,19 @@ bool N2YO_Client::query_radiopasses(radiopasses_query_t radiopasses_query, bool 
 
 bool N2YO_Client::decodeRadiopasses(String payload)
 {
+    time_t utc;
+    struct tm currenttime;
+    struct tm passstarttime;
+    struct tm passendtime;
+ // struct tm passmaxtime;
+
     radiopass_t radiopass;
 
-// WARNING! update in case of changes in radiopass_t struct definition...
-// see https://arduinojson.org/v5/assistant/
-   const size_t capacity = JSON_ARRAY_SIZE(PASSESQUEUE_SIZE) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) + PASSESQUEUE_SIZE*JSON_OBJECT_SIZE(10);
+    // WARNING! update in case of changes in radiopass_t struct definition...
+    // see https://arduinojson.org/v5/assistant/
+    const size_t capacity = JSON_ARRAY_SIZE(PASSESQUEUE_SIZE) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) + PASSESQUEUE_SIZE * JSON_OBJECT_SIZE(10);
 
-   Log::debug(PSTR("[N2YO] GET... estimated JSON doc size: %d"), capacity);
+    Log::debug(PSTR("[N2YO] GET... estimated JSON doc size: %d"), capacity);
 
     DynamicJsonDocument doc(capacity);
 
@@ -231,14 +227,11 @@ bool N2YO_Client::decodeRadiopasses(String payload)
 
         passitems = array.size();
 
-     // Log::debug(PSTR("[N2YO] passes array has %d items..."), passitems);
-
-        time_t utc;
-        struct tm *currenttime;
+        // Log::debug(PSTR("[N2YO] passes array has %d items..."), passitems);
 
         time(&utc);
-        currenttime = gmtime(&utc);
-        Log::debug(PSTR("current UTC: %04d/%02d/%02d %02d:%02d:%02d (UTC)"), 1900 + currenttime->tm_year, currenttime->tm_mon, currenttime->tm_mday, currenttime->tm_hour, currenttime->tm_min, currenttime->tm_sec);
+        currenttime = *gmtime(&utc);
+        Log::debug(PSTR("current UTC: %04d/%02d/%02d %02d:%02d:%02d (UTC)"), 1900 + currenttime.tm_year, currenttime.tm_mon, currenttime.tm_mday, currenttime.tm_hour, currenttime.tm_min, currenttime.tm_sec);
 
         // timestamp is in UNIX format and is seconds; see https://www.epochconverter.com
         // WARNING! better to exit after the first or maybe the second item... no reasons for keeping too many items in the future as tinyGS will probably
@@ -250,22 +243,20 @@ bool N2YO_Client::decodeRadiopasses(String payload)
                 break;
 
             radiopass.startUTC = pass["startUTC"].as<long>();
-            struct tm *passstarttime = gmtime(&radiopass.startUTC);
-
             radiopass.endUTC = pass["endUTC"].as<long>();
-            struct tm *passendtime = gmtime(&radiopass.endUTC);
-
             radiopass.maxUTC = pass["maxUTC"].as<long>();
-        //  struct tm *passmaxtime = gmtime(&radiopass.maxUTC);
-
             radiopass.startAz = pass["startAz"].as<float>();
             radiopass.maxAz = pass["maxAz"].as<float>();
             radiopass.maxEl = pass["maxEl"].as<float>();
             radiopass.endAz = pass["endAz"].as<float>();
 
+            passstarttime = *gmtime(&radiopass.startUTC);
+            passendtime = *gmtime(&radiopass.endUTC);
+            // passmaxtime = *gmtime(&radiopass.maxUTC);
+
             Log::debug(PSTR("[N2YO] pass #%03d: startUTC=%ld (%04d/%02d/%02d %02d:%02d:%02d) maxUTC=%ld endUTC=%ld (%04d/%02d/%02d %02d:%02d:%02d) startAz=%f maxAz=%f maxEl=%f endAz=%f"), i,
-                       radiopass.startUTC, 1900 + passstarttime->tm_year, passstarttime->tm_mon, passstarttime->tm_mday, passstarttime->tm_hour, passstarttime->tm_min, passstarttime->tm_sec, radiopass.maxUTC,
-                       radiopass.endUTC, 1900 + passendtime->tm_year, passendtime->tm_mon, passendtime->tm_mday, passendtime->tm_hour, passendtime->tm_min, passendtime->tm_sec,
+                       radiopass.startUTC, 1900 + passstarttime.tm_year, passstarttime.tm_mon, passstarttime.tm_mday, passstarttime.tm_hour, passstarttime.tm_min, passstarttime.tm_sec, radiopass.maxUTC,
+                       radiopass.endUTC, 1900 + passendtime.tm_year, passendtime.tm_mon, passendtime.tm_mday, passendtime.tm_hour, passendtime.tm_min, passendtime.tm_sec,
                        radiopass.startAz, radiopass.maxAz, radiopass.maxEl, radiopass.endAz);
 
             passes_queue.push(&radiopass);
@@ -286,7 +277,7 @@ bool N2YO_Client::query_positions(uint32_t norad_id)
     positions_query.altitude = 350,
     positions_query.seconds = POSITIONSQUEUE_SQ_SIZE, // WARNING with POSITIONSQUEUE_SIZE=512 we are using half of the space; WARNING 300s max... do multiple requests if necessary...
 
-    strcpy(positions_query.api_key, N2YO_API_KEY);
+        strcpy(positions_query.api_key, N2YO_API_KEY);
 
     return query_positions(positions_query);
 }
@@ -310,18 +301,6 @@ bool N2YO_Client::query_positions(positions_query_t positions_query)
         Log::debug(PSTR("[N2YO] WARNING! balloons are not yet supported...")); // set to a fixed pos ???
         return false;
     }
-
-#if 0
-    WiFiClientSecure *client = new WiFiClientSecure;
-
-    if (!client)
-    {
-        Log::debug(PSTR("[N2YO] Unable to create client"));
-        return false;
-    }
-
-    client->setCACert(n2yo_CA);
-#endif
 
     n2yoClient.setCACert(n2yo_CA);
 
@@ -371,10 +350,6 @@ bool N2YO_Client::query_positions(positions_query_t positions_query)
 
     } // End extra scoping block (END)
 
-#if 0
-    delete client;
-#endif
-
     Log::debug(PSTR("[N2YO] positions-queue has %d items..."), positions_queue.getCount());
 
     return true;
@@ -386,11 +361,14 @@ bool N2YO_Client::query_positions(positions_query_t positions_query)
 
 bool N2YO_Client::decodePositions(String payload)
 {
+    time_t utc;
+    struct tm postime;
+    struct tm currenttime;
     position_t position;
 
-// WARNING! update in case of changes in position_t struct definition...
-// see https://arduinojson.org/v5/assistant/
-    const size_t capacity = JSON_ARRAY_SIZE(1+POSITIONSQUEUE_SQ_SIZE) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + (1+POSITIONSQUEUE_SQ_SIZE)*JSON_OBJECT_SIZE(9);
+    // WARNING! update in case of changes in position_t struct definition...
+    // see https://arduinojson.org/v5/assistant/
+    const size_t capacity = JSON_ARRAY_SIZE(1 + POSITIONSQUEUE_SQ_SIZE) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + (1 + POSITIONSQUEUE_SQ_SIZE) * JSON_OBJECT_SIZE(9);
 
     Log::debug(PSTR("[N2YO] GET... estimated JSON doc size: %d"), capacity);
 
@@ -452,14 +430,11 @@ bool N2YO_Client::decodePositions(String payload)
 
         positems = array.size();
 
-     // Log::debug(PSTR("[N2YO] position array has %d items..."), positems);
-
-        time_t utc;
-        struct tm *currenttime;
+        // Log::debug(PSTR("[N2YO] position array has %d items..."), positems);
 
         time(&utc);
-        currenttime = gmtime(&utc);
-        Log::debug(PSTR("current UTC: %04d/%02d/%02d %02d:%02d:%02d (UTC)"), 1900 + currenttime->tm_year, currenttime->tm_mon, currenttime->tm_mday, currenttime->tm_hour, currenttime->tm_min, currenttime->tm_sec);
+        currenttime = *gmtime(&utc);
+        Log::debug(PSTR("current UTC: %04d/%02d/%02d %02d:%02d:%02d (UTC)"), 1900 + currenttime.tm_year, currenttime.tm_mon, currenttime.tm_mday, currenttime.tm_hour, currenttime.tm_min, currenttime.tm_sec);
 
         // timestamp is in UNIX format and is seconds; see https://www.epochconverter.com
         for (int i = 0; i < positems; i++)
@@ -469,16 +444,15 @@ bool N2YO_Client::decodePositions(String payload)
                 break;
 
             position.timestamp = pos["timestamp"].as<long>();
-            struct tm *postime = gmtime(&position.timestamp);
-
             position.sat_latitude = pos["satlatitude"].as<float>();
             position.sat_longitude = pos["satlongitude"].as<float>();
             position.sat_altitude = pos["sataltitude"].as<float>();
-
             position.azimuth = pos["azimuth"].as<float>();
             position.elevation = pos["elevation"].as<float>();
 
-            Log::debug(PSTR("[N2YO] SAT position #%03d: timestamp=%ld UTC:%04d/%02d/%02d %02d:%02d:%02d latitude=%f longitude=%f altitude=%f azimuth=%f elevation=%f"), i, position.timestamp, 1900 + postime->tm_year, postime->tm_mon, postime->tm_mday, postime->tm_hour, postime->tm_min, postime->tm_sec, position.sat_latitude, position.sat_longitude, position.sat_altitude, position.azimuth, position.elevation);
+            postime = *gmtime(&position.timestamp);
+
+            Log::debug(PSTR("[N2YO] SAT position #%03d: timestamp=%ld UTC:%04d/%02d/%02d %02d:%02d:%02d latitude=%f longitude=%f altitude=%f azimuth=%f elevation=%f"), i, position.timestamp, 1900 + postime.tm_year, postime.tm_mon, postime.tm_mday, postime.tm_hour, postime.tm_min, postime.tm_sec, position.sat_latitude, position.sat_longitude, position.sat_altitude, position.azimuth, position.elevation);
 
             positions_queue.push(&position);
         }
