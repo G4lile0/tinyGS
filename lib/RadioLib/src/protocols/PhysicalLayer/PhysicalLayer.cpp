@@ -12,7 +12,7 @@ int16_t PhysicalLayer::transmit(__FlashStringHelper* fstr, uint8_t addr) {
   size_t len = 0;
   PGM_P p = reinterpret_cast<PGM_P>(fstr);
   while(true) {
-    char c = RADIOLIB_PROGMEM_READ_BYTE(p++);
+    char c = RADIOLIB_NONVOLATILE_READ_BYTE(p++);
     len++;
     if(c == '\0') {
       break;
@@ -20,7 +20,7 @@ int16_t PhysicalLayer::transmit(__FlashStringHelper* fstr, uint8_t addr) {
   }
 
   // dynamically allocate memory
-  #ifdef RADIOLIB_STATIC_ONLY
+  #if defined(RADIOLIB_STATIC_ONLY)
     char str[RADIOLIB_STATIC_ARRAY_SIZE];
   #else
     char* str = new char[len];
@@ -29,12 +29,12 @@ int16_t PhysicalLayer::transmit(__FlashStringHelper* fstr, uint8_t addr) {
   // copy string from flash
   p = reinterpret_cast<PGM_P>(fstr);
   for(size_t i = 0; i < len; i++) {
-    str[i] = RADIOLIB_PROGMEM_READ_BYTE(p + i);
+    str[i] = RADIOLIB_NONVOLATILE_READ_BYTE(p + i);
   }
 
   // transmit string
   int16_t state = transmit(str, addr);
-  #ifndef RADIOLIB_STATIC_ONLY
+  #if !defined(RADIOLIB_STATIC_ONLY)
     delete[] str;
   #endif
   return(state);
@@ -57,7 +57,7 @@ int16_t PhysicalLayer::startTransmit(const char* str, uint8_t addr) {
 }
 
 int16_t PhysicalLayer::readData(String& str, size_t len) {
-  int16_t state = ERR_NONE;
+  int16_t state = RADIOLIB_ERR_NONE;
 
   // read the number of actually received bytes
   size_t length = getPacketLength();
@@ -69,19 +69,19 @@ int16_t PhysicalLayer::readData(String& str, size_t len) {
   }
 
   // build a temporary buffer
-  #ifdef RADIOLIB_STATIC_ONLY
+  #if defined(RADIOLIB_STATIC_ONLY)
     uint8_t data[RADIOLIB_STATIC_ARRAY_SIZE + 1];
   #else
     uint8_t* data = new uint8_t[length + 1];
     if(!data) {
-      return(ERR_MEMORY_ALLOCATION_FAILED);
+      return(RADIOLIB_ERR_MEMORY_ALLOCATION_FAILED);
     }
   #endif
 
   // read the received data
   state = readData(data, length);
 
-  if(state == ERR_NONE) {
+  if(state == RADIOLIB_ERR_NONE) {
     // add null terminator
     data[length] = 0;
 
@@ -90,7 +90,7 @@ int16_t PhysicalLayer::readData(String& str, size_t len) {
   }
 
   // deallocate temporary buffer
-  #ifndef RADIOLIB_STATIC_ONLY
+  #if !defined(RADIOLIB_STATIC_ONLY)
     delete[] data;
   #endif
 
@@ -98,30 +98,30 @@ int16_t PhysicalLayer::readData(String& str, size_t len) {
 }
 
 int16_t PhysicalLayer::receive(String& str, size_t len) {
-  int16_t state = ERR_NONE;
+  int16_t state = RADIOLIB_ERR_NONE;
 
   // user can override the length of data to read
   size_t length = len;
 
-  if(len == 0) {
-    // unknown packet length, set to maximum
-    length = _maxPacketLength;
-  }
-
   // build a temporary buffer
-  #ifdef RADIOLIB_STATIC_ONLY
+  #if defined(RADIOLIB_STATIC_ONLY)
     uint8_t data[RADIOLIB_STATIC_ARRAY_SIZE + 1];
   #else
-    uint8_t* data = new uint8_t[length + 1];
+    uint8_t* data = NULL;
+    if(length == 0) {
+      data = new uint8_t[_maxPacketLength + 1];
+    } else {
+      data = new uint8_t[length + 1];
+    }
     if(!data) {
-      return(ERR_MEMORY_ALLOCATION_FAILED);
+      return(RADIOLIB_ERR_MEMORY_ALLOCATION_FAILED);
     }
   #endif
 
   // attempt packet reception
   state = receive(data, length);
 
-  if(state == ERR_NONE) {
+  if(state == RADIOLIB_ERR_NONE) {
     // read the number of actually received bytes (for unknown packets)
     if(len == 0) {
       length = getPacketLength(false);
@@ -135,7 +135,7 @@ int16_t PhysicalLayer::receive(String& str, size_t len) {
   }
 
   // deallocate temporary buffer
-  #ifndef RADIOLIB_STATIC_ONLY
+  #if !defined(RADIOLIB_STATIC_ONLY)
     delete[] data;
   #endif
 
@@ -154,11 +154,15 @@ int32_t PhysicalLayer::random(int32_t max) {
   // get random bytes from the radio
   uint8_t randBuff[4];
   for(uint8_t i = 0; i < 4; i++) {
-    randBuff[i] = random();
+    randBuff[i] = randomByte();
   }
 
   // create 32-bit TRNG number
   int32_t randNum = ((int32_t)randBuff[0] << 24) | ((int32_t)randBuff[1] << 16) | ((int32_t)randBuff[2] << 8) | ((int32_t)randBuff[3]);
+  if(randNum < 0) {
+    randNum *= -1;
+  }
+  RADIOLIB_DEBUG_PRINTLN(randNum);
   return(randNum % max);
 }
 
@@ -189,19 +193,28 @@ int16_t PhysicalLayer::available() {
 }
 
 uint8_t PhysicalLayer::read() {
-  _gotSync = false;
-  _syncBuffer = 0;
+  if(_directSyncWordLen > 0) {
+    _gotSync = false;
+    _syncBuffer = 0;
+  }
   _bufferWritePos--;
   return(_buffer[_bufferReadPos++]);
 }
 
 int16_t PhysicalLayer::setDirectSyncWord(uint32_t syncWord, uint8_t len) {
-  if((len > 32) || (len == 0)) {
-    return(ERR_INVALID_SYNC_WORD);
+  if(len > 32) {
+    return(RADIOLIB_ERR_INVALID_SYNC_WORD);
   }
   _directSyncWordMask = 0xFFFFFFFF >> (32 - len);
+  _directSyncWordLen = len;
   _directSyncWord = syncWord;
-  return(ERR_NONE);
+
+  // override sync word matching when length is set to 0
+  if(_directSyncWordLen == 0) {
+    _gotSync = true;
+  }
+
+  return(RADIOLIB_ERR_NONE);
 }
 
 void PhysicalLayer::updateDirectBuffer(uint8_t bit) {

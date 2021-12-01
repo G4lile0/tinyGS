@@ -8,8 +8,8 @@
 #include "../../Module.h"
 #include "SX126x.h"
 
-//SX126X_CMD_SET_PA_CONFIG
-#define SX126X_PA_CONFIG_SX1262                       0x00
+//RADIOLIB_SX126X_CMD_SET_PA_CONFIG
+#define RADIOLIB_SX126X_PA_CONFIG_SX1262                       0x00
 
 /*!
   \class SX1262
@@ -38,7 +38,7 @@ class SX1262: public SX126x {
 
       \param cr LoRa coding rate denominator. Defaults to 7 (coding rate 4/7).
 
-      \param syncWord 2-byte LoRa sync word. Defaults to SX126X_SYNC_WORD_PRIVATE (0x12).
+      \param syncWord 2-byte LoRa sync word. Defaults to RADIOLIB_SX126X_SYNC_WORD_PRIVATE (0x12).
 
       \param power Output power in dBm. Defaults to 10 dBm.
 
@@ -48,16 +48,16 @@ class SX1262: public SX126x {
 
       \returns \ref status_codes
     */
-    int16_t begin(float freq = 434.0, float bw = 125.0, uint8_t sf = 9, uint8_t cr = 7, uint8_t syncWord = SX126X_SYNC_WORD_PRIVATE, int8_t power = 10, uint16_t preambleLength = 8, float tcxoVoltage = 1.6, bool useRegulatorLDO = false);
+    int16_t begin(float freq = 434.0, float bw = 125.0, uint8_t sf = 9, uint8_t cr = 7, uint8_t syncWord = RADIOLIB_SX126X_SYNC_WORD_PRIVATE, int8_t power = 10, uint16_t preambleLength = 8, float tcxoVoltage = 1.6, bool useRegulatorLDO = false);
 
     /*!
       \brief Initialization method for FSK modem.
 
       \param freq Carrier frequency in MHz. Defaults to 434.0 MHz.
 
-      \param br FSK bit rate in kbps. Defaults to 48.0 kbps.
+      \param br FSK bit rate in kbps. Defaults to 4.8 kbps.
 
-      \param freqDev Frequency deviation from carrier frequency in kHz.  Defaults to 50.0 kHz.
+      \param freqDev Frequency deviation from carrier frequency in kHz. Defaults to 5.0 kHz.
 
       \param rxBw Receiver bandwidth in kHz. Defaults to 156.2 kHz.
 
@@ -71,7 +71,7 @@ class SX1262: public SX126x {
 
       \returns \ref status_codes
     */
-    int16_t beginFSK(float freq = 434.0, float br = 48.0, float freqDev = 50.0, float rxBw = 156.2, int8_t power = 10, uint16_t preambleLength = 16, float tcxoVoltage = 1.6, bool useRegulatorLDO = false);
+    int16_t beginFSK(float freq = 434.0, float br = 4.8, float freqDev = 0.0, float rxBw = 156.2, int8_t power = 10, uint16_t preambleLength = 16, float tcxoVoltage = 1.6, bool useRegulatorLDO = false);
 
     // configuration methods
 

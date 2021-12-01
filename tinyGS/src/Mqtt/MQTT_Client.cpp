@@ -789,7 +789,7 @@ void MQTT_Client::begin()
 int MQTT_Client::voltage() {
   int medianVoltage;
   int length = 21;
-  int voltages[21];
+  int voltages[22];
   
   for (int i = 0; i < 22; i++)
   {

@@ -13,7 +13,7 @@ public:
     virtual int16_t setCRC(bool enable) = 0;
     virtual int16_t setDataShaping(uint8_t sh) = 0;
     virtual void setDio0Action(void (*func)(void)) = 0;
-    virtual int16_t startReceive(uint8_t len = 0, uint8_t mode = SX127X_RXCONTINUOUS) = 0;
+    virtual int16_t startReceive(uint8_t len = 0, uint8_t mode = RADIOLIB_SX127X_RXCONTINUOUS) = 0;
     virtual int16_t transmit(uint8_t* data, size_t len, uint8_t addr = 0) = 0;
     virtual int16_t sleep() = 0;
     virtual size_t getPacketLength(bool update = true) = 0;
@@ -54,7 +54,7 @@ public:
 
     void setDio0Action(void (*func)(void));
 
-    int16_t startReceive(uint8_t len = 0, uint8_t mode = SX127X_RXCONTINUOUS);
+    int16_t startReceive(uint8_t len = 0, uint8_t mode = RADIOLIB_SX127X_RXCONTINUOUS);
 
     int16_t transmit(uint8_t* data, size_t len, uint8_t addr = 0)
     {

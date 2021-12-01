@@ -50,7 +50,7 @@ void setup() {
   // (RF69, CC1101, Si4432 etc.), use the basic begin() method
   // int state = radio.begin();
 
-  if(state == ERR_NONE) {
+  if(state == RADIOLIB_ERR_NONE) {
     Serial.println(F("success!"));
   } else {
     Serial.print(F("failed, code "));
@@ -68,7 +68,7 @@ void setup() {
   // encoding:                    ASCII (7-bit)
   // stop bits:                   1
   state = rtty.begin(400, 170, 45);
-  if(state == ERR_NONE) {
+  if(state == RADIOLIB_ERR_NONE) {
     Serial.println(F("success!"));
   } else {
     Serial.print(F("failed, code "));
@@ -122,6 +122,9 @@ void loop() {
   // floating point number
   float f = -3.1415;
   rtty.println(f, 3);
+
+  // turn the transmitter off
+  rtty.standby();
 
   Serial.println(F("done!"));
 

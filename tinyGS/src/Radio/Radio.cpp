@@ -25,7 +25,7 @@
 #include <base64.h>
 #include "../Logger/Logger.h"
 
-#define CHECK_ERROR(errCode) if (errCode != ERR_NONE) { Log::console(PSTR("Radio failed, code %d\n Check that the configuration is valid for your board"), errCode); return errCode; }
+#define CHECK_ERROR(errCode) if (errCode != RADIOLIB_ERR_NONE) { Log::console(PSTR("Radio failed, code %d\n Check that the configuration is valid for your board"), errCode); return errCode; }
 
 bool received = false;
 bool eInterrupt = true;
@@ -79,7 +79,7 @@ void Radio::init()
 
   if (board.L_radio == 1)
   {
-    radioHal = new RadioHal<SX1278>(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+    radioHal = new RadioHal<SX1278>(new Module(board.L_NSS, board.L_DI00, board.L_RST, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
   }
   else if (board.L_radio == 0)
   {
@@ -128,7 +128,7 @@ int16_t Radio::begin()
   CHECK_ERROR(radioHal->startReceive());
 
   status.radio_ready = true;
-  return ERR_NONE;
+  return RADIOLIB_ERR_NONE;
 }
 
 void Radio::setFlag()
@@ -237,7 +237,7 @@ uint8_t Radio::listen()
   // print RSSI (Received Signal Strength Indicator)
   Log::console(PSTR("[SX12x8] RSSI:\t\t%f dBm\n[SX12x8] SNR:\t\t%f dB\n[SX12x8] Frequency error:\t%f Hz"), status.lastPacketInfo.rssi, status.lastPacketInfo.snr, status.lastPacketInfo.frequencyerror);
 
-  if (state == ERR_NONE && respLen > 0)
+  if (state == RADIOLIB_ERR_NONE && respLen > 0)
   {
     // read optional data
     Log::console(PSTR("Packet (%u bytes):"), respLen);
@@ -283,7 +283,7 @@ uint8_t Radio::listen()
     String encoded = base64::encode(respFrame, respLen);
     MQTT_Client::getInstance().sendRx(encoded, noisyInterrupt);
   }
-  else if (state == ERR_CRC_MISMATCH)
+  else if (state == RADIOLIB_ERR_CRC_MISMATCH)
   {
     // if filter is active, filter the CRC errors
     if (status.modeminfo.filter[0] == 0)
@@ -340,17 +340,17 @@ uint8_t Radio::listen()
   // put module back to listen mode
   startRx();
 
-  if (state == ERR_NONE)
+  if (state == RADIOLIB_ERR_NONE)
   {
     return 0;
   }
-  else if (state == ERR_CRC_MISMATCH)
+  else if (state == RADIOLIB_ERR_CRC_MISMATCH)
   {
     // packet was received, but is malformed
     Log::console(PSTR("[SX12x8] CRC error! Data cannot be retrieved"));
     return 2;
   }
-  else if (state == ERR_LORA_HEADER_DAMAGED)
+  else if (state == RADIOLIB_ERR_LORA_HEADER_DAMAGED)
   {
     // packet was received, but is malformed
     Log::console(PSTR("[SX12x8] Damaged header! Data cannot be retrieved"));
@@ -366,7 +366,7 @@ uint8_t Radio::listen()
 
 void Radio::readState(int state)
 {
-  if (state == ERR_NONE)
+  if (state == RADIOLIB_ERR_NONE)
   {
     Log::error(PSTR("success!"));
   }
@@ -398,7 +398,7 @@ int16_t Radio::remote_freq(char *payload, size_t payload_len)
   }
 
   readState(state);
-  if (state == ERR_NONE)
+  if (state == RADIOLIB_ERR_NONE)
     status.modeminfo.frequency = frequency;
 
   return state;
@@ -414,7 +414,7 @@ int16_t Radio::remoteSetFreqOffset(char *payload, size_t payload_len)
   CHECK_ERROR(radioHal->setFrequency(status.modeminfo.frequency+status.modeminfo.freqOffset)); 
   CHECK_ERROR(radioHal->startReceive()); 
   status.radio_ready = true;
-  return ERR_NONE;
+  return RADIOLIB_ERR_NONE;
 }
 
 int16_t Radio::remote_bw(char *payload, size_t payload_len)
@@ -437,7 +437,7 @@ int16_t Radio::remote_bw(char *payload, size_t payload_len)
   }
 
   readState(state);
-  if (state == ERR_NONE)
+  if (state == RADIOLIB_ERR_NONE)
     status.modeminfo.bw = bw;
 
   return state;
@@ -464,7 +464,7 @@ int16_t Radio::remote_sf(char *payload, size_t payload_len)
 
   readState(state);
 
-  if (state == ERR_NONE)
+  if (state == RADIOLIB_ERR_NONE)
     status.modeminfo.sf = sf;
 
   return state;
@@ -491,7 +491,7 @@ int16_t Radio::remote_cr(char *payload, size_t payload_len)
 
   readState(state);
 
-  if (state == ERR_NONE)
+  if (state == RADIOLIB_ERR_NONE)
     status.modeminfo.cr = cr;
 
   return state;
@@ -558,7 +558,7 @@ int16_t Radio::remote_fldro(char *payload, size_t payload_len)
 
   readState(state);
 
-  if (state == ERR_NONE)
+  if (state == RADIOLIB_ERR_NONE)
   {
     if (ldro)
       status.modeminfo.fldro = true;
@@ -611,7 +611,7 @@ int16_t Radio::remote_pl(char *payload, size_t payload_len)
   }
 
   readState(state);
-  if (state == ERR_NONE)
+  if (state == RADIOLIB_ERR_NONE)
     status.modeminfo.preambleLength = pl;
 
   return state;
@@ -655,7 +655,7 @@ int16_t Radio::remote_begin_lora(char *payload, size_t payload_len)
   }
 
   readState(state);
-  if (state == ERR_NONE)
+  if (state == RADIOLIB_ERR_NONE)
   {
     status.modeminfo.modem_mode = "LoRa";
     status.modeminfo.frequency = freq;
@@ -711,7 +711,7 @@ int16_t Radio::remote_begin_fsk(char *payload, size_t payload_len)
   }
   readState(state);
 
-  if (state == ERR_NONE)
+  if (state == RADIOLIB_ERR_NONE)
   {
     status.modeminfo.modem_mode = "FSK";
     status.modeminfo.frequency = freq;
@@ -739,7 +739,7 @@ int16_t Radio::remote_br(char *payload, size_t payload_len)
     state = ((SX1268 *)lora)->setBitRate(br);
 
   readState(state);
-  if (state == ERR_NONE)
+  if (state == RADIOLIB_ERR_NONE)
     status.modeminfo.bitrate = br;
 
   return state;
@@ -757,7 +757,7 @@ int16_t Radio::remote_fd(char *payload, size_t payload_len)
     state = ((SX1268 *)lora)->setFrequencyDeviation(fd);
 
   readState(state);
-  if (state == ERR_NONE)
+  if (state == RADIOLIB_ERR_NONE)
     status.modeminfo.freqDev = fd;
 
   return state;
@@ -775,7 +775,7 @@ int16_t Radio::remote_fbw(char *payload, size_t payload_len)
     state = ((SX1268 *)lora)->setRxBandwidth(frequency);
 
   readState(state);
-  if (state == ERR_NONE)
+  if (state == RADIOLIB_ERR_NONE)
     status.modeminfo.bw = frequency;
 
   return state;
