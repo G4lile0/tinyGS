@@ -346,7 +346,7 @@
 #define TZ_Europe_Guernsey	PSTR("GMT0BST,M3.5.0/1,M10.5.0")
 #define TZ_Europe_Helsinki	PSTR("EET-2EEST,M3.5.0/3,M10.5.0/4")
 #define TZ_Europe_Isle_of_Man	PSTR("GMT0BST,M3.5.0/1,M10.5.0")
-#define TZ_Europe_Istanbul	PSTR("<+03>-3")
+#define TZ_Europe_Istanbul	PSTR("<-03>3")
 #define TZ_Europe_Jersey	PSTR("GMT0BST,M3.5.0/1,M10.5.0")
 #define TZ_Europe_Kaliningrad	PSTR("EET-2")
 #define TZ_Europe_Kiev	PSTR("EET-2EEST,M3.5.0/3,M10.5.0/4")
