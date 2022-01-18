@@ -111,6 +111,8 @@ typedef struct
   String BOARD;
 } board_type;
 
+const uint8_t UNNUSED = -1;
+
 typedef struct
 {
   bool flipOled = true;
