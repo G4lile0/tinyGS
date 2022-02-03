@@ -26,28 +26,48 @@
 #if ARDUINOJSON_USE_LONG_LONG == 0 && !PLATFORMIO
 #error "Using Arduino IDE is not recommended, please follow this guide https://github.com/G4lile0/tinyGS/wiki/Arduino-IDE or edit /ArduinoJson/src/ArduinoJson/Configuration.hpp and amend to #define ARDUINOJSON_USE_LONG_LONG 1 around line 68"
 #endif
+/*
+
+id_   Part   Freq. Range L.Bud(dB) RXCurrent(mA) FSK Max DR(kbps) LoRa DR (kbps) Max Sensitivity(dBm) TX Power(dBm)
+1    SX1278    137–525     168       11              300          0.018–40           -148              +20
+2    SX1276    137–1020    168       11              300         0.018–40            -148              +20
+
+5    SX1268    410–810     170       4.6             300         0.018–62.5          -148              +22
+6    SX1262    150–960     170       4.6             300         0.018–62.5          -148              +22
+
+8    SX1280    2.4–2.5Ghz  130       5.5            2000         0.476-202           -132              +12.5
+
+na   SX1272    862–1020    158       10              300           0.3–40            -138              +20
+na   SX1273    862–1020    150       10              300           1.7–40            -130              +20
+na   SX1277    137–1020    158       11              300           1.7–40            -138              +20
+na   SX1279    137–960     168       11              300          0.018–40           -148              +20
+na   SX1261    150–960     163       4.6             300         0.018–62.5          -148              +15
+na   SX1281    2.4–2.5Ghz  130       5.5            2000         0.476-202           -132              +12.5
+
+
+*/
 
 ConfigManager::ConfigManager()
     : IotWebConf2(thingName, &dnsServer, &server, initialApPassword, configVersion), server(80), gsConfigHtmlFormatProvider(*this), boards({
   //OLED_add, OLED_SDA,  OLED_SCL, OLED_RST, PROG_BUTTON, BOARD_LED, L_SX127X?, L_NSS, L_DI00, L_DI01, L_BUSSY, L_RST,  L_MISO, L_MOSI, L_SCK, L_TCXO_V, BOARD
-  {      0x3c,        4,        15,       16,           0,        25,      1,    18,     26,     12,   UNNUSED, 14,      19,     27,     5,     0.0f, "433MHz HELTEC WiFi LoRA 32 V1" }, // @4m1g0
-  {      0x3c,        4,        15,       16,           0,        25,      1,    18,     26,     12,   UNNUSED, 14,      19,     27,     5,     0.0f, "863-928MHz HELTEC WiFi LoRA 32 V1" }, 
-  {      0x3c,        4,        15,       16,           0,        25,      1,    18,     26,     35,   UNNUSED, 14,      19,     27,     5,     0.0f, "433MHz HELTEC WiFi LoRA 32 V2" }, // @4m1g0
-  {      0x3c,        4,        15,       16,           0,        25,      1,    18,     26,     35,   UNNUSED, 14,      19,     27,     5,     0.0f, "863-928MHz HELTEC WiFi LoRA 32 V2" }, 
-  {      0x3c,        4,        15,       16,           0,         2,      1,    18,     26,   UNNUSED,UNNUSED, 14,      19,     27,     5,     0.0f, "433Mhz  TTGO LoRa 32 v1"        }, // @g4lile0
-  {      0x3c,        4,        15,       16,           0,         2,      1,    18,     26,   UNNUSED,UNNUSED, 14,      19,     27,     5,     0.0f, "868-915MHz TTGO LoRa 32 v1"        }, // 
-  {      0x3c,       21,        22,       16,           0,        22,      1,    18,     26,     33,   UNNUSED, 14,      19,     27,     5,     0.0f, "433MHz TTGO LoRA 32 v2"        }, // @TCRobotics
-  {      0x3c,       21,        22,       16,           0,        22,      1,    18,     26,     33,   UNNUSED, 14,      19,     27,     5,     0.0f, "868-915MHz TTGO LoRA 32 v2"        }, // 
-  {      0x3c,       21,        22,       16,          39,        22,      1,    18,     26,     33,     32,    14,      19,     27,     5,     0.0f, "433MHz T-BEAM + OLED"        },
-  {      0x3c,       21,        22,       16,          39,        22,      1,    18,     26,     33,     32,    14,      19,     27,     5,     0.0f, "868-915MHz T-BEAM + OLED"        }, 
-  {      0x3c,       21,        22,       16,           0,        25,      0,     5,   UNNUSED,  27,     26,    14,      19,     23,    18,     0.0f, "Custom ESP32 Wroom + SX126x (Crystal)"  }, // @4m1g0, @lillefyr
-  {      0x3c,       21,        22,       16,           0,        25,      0,    18,   UNNUSED,  33,     32,    14,      19,     27,     5,     0.0f, "TTGO LoRa 32 V2 Modified with module SX126x (crystal)"  },// @TCRobotics
-  {      0x3c,       21,        22,       16,           0,        25,      0,     5,   UNNUSED,   2,     13,    26,      19,     23,    18,     1.6f, "Custom ESP32 Wroom + SX126x DRF1268T (TCX0) (5, 2, 26, 13)"  }, // @sdey76
-  {      0x3c,       21,        22,       16,           0,        25,      0,     5,   UNNUSED,  26,     12,    14,      19,     23,    18,     1.6f, "Custom ESP32 Wroom + SX126x DRF1268T (TCX0) (5, 26, 14, 12)"  }, // @imants
-  {      0x3c,       21,        22,       16,          38,        22,      1,    18,     26,     33,   UNNUSED, 14,      19,     27,     5,     0.0f, "T-BEAM V1.0 + OLED"     }, // @fafu
-  {      0x3c,       21,        22,       16,           0,         2,      0,     5,   UNNUSED,  34,     32,    14,      19,     27,    18,     1.6f, "433MHz FOSSA 1W Ground Station"  }, // @jgromes
-  {      0x3c,       21,        22,       16,           0,         2,      0,     5,   UNNUSED,  34,     32,    14,      19,     27,    18,     1.6f, "868-915MHz FOSSA 1W Ground Station"  }, // @jgromes
-  {      0x3c,       21,        22,       16,           0,        22,      2,     5,     26,     34,     32,    14,      19,     27,    18,     0.0f, "2.4GHz ESP32 + SX1280"  },    // @g4lile0
+  {      0x3c,        4,        15,       16,           0,        25,      1,    18,     26,     12,   UNNUSED, 14,      19,     27,     5,     0.0f, "433MHz HELTEC WiFi LoRA 32 V1" },      // SX1278 @4m1g0
+  {      0x3c,        4,        15,       16,           0,        25,      2,    18,     26,     12,   UNNUSED, 14,      19,     27,     5,     0.0f, "863-928MHz HELTEC WiFi LoRA 32 V1" },  // SX1276
+  {      0x3c,        4,        15,       16,           0,        25,      1,    18,     26,     35,   UNNUSED, 14,      19,     27,     5,     0.0f, "433MHz HELTEC WiFi LoRA 32 V2" },      // SX1278 @4m1g0  
+  {      0x3c,        4,        15,       16,           0,        25,      2,    18,     26,     35,   UNNUSED, 14,      19,     27,     5,     0.0f, "863-928MHz HELTEC WiFi LoRA 32 V2" },  // SX1276
+  {      0x3c,        4,        15,       16,           0,         2,      1,    18,     26,   UNNUSED,UNNUSED, 14,      19,     27,     5,     0.0f, "433Mhz  TTGO LoRa 32 v1"        },     // SX1278 @g4lile0 
+  {      0x3c,        4,        15,       16,           0,         2,      2,    18,     26,   UNNUSED,UNNUSED, 14,      19,     27,     5,     0.0f, "868-915MHz TTGO LoRa 32 v1"        },  // SX1276
+  {      0x3c,       21,        22,       16,           0,        22,      1,    18,     26,     33,   UNNUSED, 14,      19,     27,     5,     0.0f, "433MHz TTGO LoRA 32 v2"        },      // SX1278  @TCRobotics
+  {      0x3c,       21,        22,       16,           0,        22,      2,    18,     26,     33,   UNNUSED, 14,      19,     27,     5,     0.0f, "868-915MHz TTGO LoRA 32 v2"        },  // SX1276
+  {      0x3c,       21,        22,       16,          39,        22,      1,    18,     26,     33,     32,    14,      19,     27,     5,     0.0f, "433MHz T-BEAM + OLED"        },        // SX1278
+  {      0x3c,       21,        22,       16,          39,        22,      2,    18,     26,     33,     32,    14,      19,     27,     5,     0.0f, "868-915MHz T-BEAM + OLED"        },    // SX1276
+  {      0x3c,       21,        22,       16,           0,        25,      5,     5,   UNNUSED,  27,     26,    14,      19,     23,    18,     0.0f, "Custom ESP32 Wroom + SX126x (Crystal)"  }, // SX1268 @4m1g0, @lillefyr
+  {      0x3c,       21,        22,       16,           0,        25,      5,    18,   UNNUSED,  33,     32,    14,      19,     27,     5,     0.0f, "TTGO LoRa 32 V2 Modified with module SX126x (crystal)"  }, // SX1268 @TCRobotics
+  {      0x3c,       21,        22,       16,           0,        25,      5,     5,   UNNUSED,   2,     13,    26,      19,     23,    18,     1.6f, "Custom ESP32 Wroom + SX126x DRF1268T (TCX0) (5, 2, 26, 13)"  }, // SX1268 @sdey76
+  {      0x3c,       21,        22,       16,           0,        25,      5,     5,   UNNUSED,  26,     12,    14,      19,     23,    18,     1.6f, "Custom ESP32 Wroom + SX126x DRF1268T (TCX0) (5, 26, 14, 12)"  }, // SX1268 @imants
+  {      0x3c,       21,        22,       16,          38,        22,      1,    18,     26,     33,   UNNUSED, 14,      19,     27,     5,     0.0f, "T-BEAM V1.0 + OLED"     },              // SX1278 @fafu
+  {      0x3c,       21,        22,       16,           0,         2,      5,     5,   UNNUSED,  34,     32,    14,      19,     27,    18,     1.6f, "433MHz FOSSA 1W Ground Station"  },     // SX1268 @jgromes
+  {      0x3c,       21,        22,       16,           0,         2,      2,     5,   UNNUSED,  34,     32,    14,      19,     27,    18,     1.6f, "868-915MHz FOSSA 1W Ground Station"  }, //SX1276 @jgromes
+  {      0x3c,       21,        22,       16,           0,        22,      8,     5,     26,     34,     32,    14,      19,     27,    18,     0.0f, "2.4GHz ESP32 + SX1280"  },              //SX1280 @g4lile0
 
   })
 {
