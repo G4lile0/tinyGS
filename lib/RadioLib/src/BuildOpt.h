@@ -512,6 +512,10 @@
     #define RADIOLIB_NONVOLATILE_READ_BYTE(addr)        pgm_read_byte(addr)
     #define RADIOLIB_TYPE_ALIAS(type, alias)            using alias = type;
 
+    // Arduino mbed OS boards have a really bad tone implementation which will crash after a couple seconds
+    #define RADIOLIB_TONE_UNSUPPORTED
+    #define RADIOLIB_MBED_TONE_OVERRIDE
+
     // Arduino API callbacks
     #define RADIOLIB_CB_ARGS_PIN_MODE                   (void, pinMode, pin_size_t pin, PinMode mode)
     #define RADIOLIB_CB_ARGS_DIGITAL_WRITE              (void, digitalWrite, pin_size_t pin, PinStatus val)
@@ -545,6 +549,10 @@
     #define RADIOLIB_NONVOLATILE                        PROGMEM
     #define RADIOLIB_NONVOLATILE_READ_BYTE(addr)        pgm_read_byte(addr)
     #define RADIOLIB_TYPE_ALIAS(type, alias)            using alias = type;
+
+    // Arduino mbed OS boards have a really bad tone implementation which will crash after a couple seconds
+    #define RADIOLIB_TONE_UNSUPPORTED
+    #define RADIOLIB_MBED_TONE_OVERRIDE
 
     // Arduino API callbacks
     #define RADIOLIB_CB_ARGS_PIN_MODE                   (void, pinMode, pin_size_t pin, PinMode mode)
@@ -648,6 +656,10 @@
     #define RADIOLIB_NONVOLATILE_READ_BYTE(addr)        pgm_read_byte(addr)
     #define RADIOLIB_TYPE_ALIAS(type, alias)            using alias = type;
 
+    // Arduino mbed OS boards have a really bad tone implementation which will crash after a couple seconds
+    #define RADIOLIB_TONE_UNSUPPORTED
+    #define RADIOLIB_MBED_TONE_OVERRIDE
+
     // Arduino API callbacks
     #define RADIOLIB_CB_ARGS_PIN_MODE                   (void, pinMode, pin_size_t pin, PinMode mode)
     #define RADIOLIB_CB_ARGS_DIGITAL_WRITE              (void, digitalWrite, pin_size_t pin, PinStatus val)
@@ -720,6 +732,60 @@
     #define RADIOLIB_YIELD_UNSUPPORTED
     #if defined(yield)
     #undef yield
+    #endif
+
+#elif defined(RASPI)
+    // RaspiDuino framework (https://github.com/me-no-dev/RasPiArduino)
+    #define RADIOLIB_PLATFORM                           "RasPiArduino"
+    #define RADIOLIB_PIN_TYPE                           uint8_t
+    #define RADIOLIB_PIN_MODE                           uint8_t
+    #define RADIOLIB_PIN_STATUS                         uint8_t
+    #define RADIOLIB_INTERRUPT_STATUS                   RADIOLIB_PIN_STATUS
+    #define RADIOLIB_DIGITAL_PIN_TO_INTERRUPT(p)        digitalPinToInterrupt(p)
+    #define RADIOLIB_NC                                 (0xFF)
+    #define RADIOLIB_DEFAULT_SPI                        SPI
+    #define RADIOLIB_DEFAULT_SPI_SETTINGS               SPISettings(2000000, MSBFIRST, SPI_MODE0)
+    #define RADIOLIB_NONVOLATILE                        PROGMEM
+    #define RADIOLIB_NONVOLATILE_READ_BYTE(addr)        pgm_read_byte(addr)
+    #define RADIOLIB_TYPE_ALIAS(type, alias)            using alias = type;
+
+    // Arduino API callbacks
+    #define RADIOLIB_CB_ARGS_PIN_MODE                   (void, pinMode, uint8_t pin, uint8_t mode)
+    #define RADIOLIB_CB_ARGS_DIGITAL_WRITE              (void, digitalWrite, uint8_t pin, uint8_t value)
+    #define RADIOLIB_CB_ARGS_DIGITAL_READ               (int, digitalRead, uint8_t pin)
+    #define RADIOLIB_CB_ARGS_TONE                       (void, tone, uint8_t _pin, unsigned int frequency, unsigned long duration)
+    #define RADIOLIB_CB_ARGS_NO_TONE                    (void, noTone, uint8_t _pin)
+    #define RADIOLIB_CB_ARGS_ATTACH_INTERRUPT           (void, attachInterrupt, uint8_t interruptNum, void (*userFunc)(void), int mode)
+    #define RADIOLIB_CB_ARGS_DETACH_INTERRUPT           (void, detachInterrupt, uint8_t interruptNum)
+    #define RADIOLIB_CB_ARGS_YIELD                      (void, yield, void)
+    #define RADIOLIB_CB_ARGS_DELAY                      (void, delay, uint32_t ms)
+    #define RADIOLIB_CB_ARGS_DELAY_MICROSECONDS         (void, delayMicroseconds, unsigned int us)
+    #define RADIOLIB_CB_ARGS_MILLIS                     (unsigned long, millis, void)
+    #define RADIOLIB_CB_ARGS_MICROS                     (unsigned long, micros, void)
+    #define RADIOLIB_CB_ARGS_SPI_BEGIN                  (void, SPIbegin, void)
+    #define RADIOLIB_CB_ARGS_SPI_BEGIN_TRANSACTION      (void, SPIbeginTransaction, void)
+    #define RADIOLIB_CB_ARGS_SPI_TRANSFER               (uint8_t, SPItransfer, uint8_t b)
+    #define RADIOLIB_CB_ARGS_SPI_END_TRANSACTION        (void, SPIendTransaction, void)
+    #define RADIOLIB_CB_ARGS_SPI_END                    (void, SPIend, void)
+
+    // let's start off easy - no tone on this platform, that can happen
+    #define RADIOLIB_TONE_UNSUPPORTED
+
+    // hmm, no yield either - weird on something like Raspberry PI, but sure, we can handle it
+    #define RADIOLIB_YIELD_UNSUPPORTED
+
+    // aight, getting to the juicy stuff - PGM_P seems missing, that's the first time
+    #define PGM_P                                       const char *
+
+    // ... and for the grand finale, we have millis() and micros() DEFINED AS MACROS!
+    #if defined(millis)
+    #undef millis
+    inline unsigned long millis() { return((unsigned long)(STCV / 1000)); };
+    #endif
+
+    #if defined(micros)
+    #undef micros
+    inline unsigned long micros() { return((unsigned long)(STCV)); };
     #endif
 
   #else
@@ -825,7 +891,7 @@
  *          Failure to heed the above warning may result in bricked module.
  */
 #if !defined(RADIOLIB_GODMODE)
-  #define RADIOLIB_GODMODE
+  //#define RADIOLIB_GODMODE
 #endif
 
 /*
@@ -923,8 +989,8 @@
 
 // version definitions
 #define RADIOLIB_VERSION_MAJOR  (0x05)
-#define RADIOLIB_VERSION_MINOR  (0x00)
-#define RADIOLIB_VERSION_PATCH  (0x01)
+#define RADIOLIB_VERSION_MINOR  (0x01)
+#define RADIOLIB_VERSION_PATCH  (0x02)
 #define RADIOLIB_VERSION_EXTRA  (0x00)
 
 #define RADIOLIB_VERSION ((RADIOLIB_VERSION_MAJOR << 24) | (RADIOLIB_VERSION_MINOR << 16) | (RADIOLIB_VERSION_PATCH << 8) | (RADIOLIB_VERSION_EXTRA))

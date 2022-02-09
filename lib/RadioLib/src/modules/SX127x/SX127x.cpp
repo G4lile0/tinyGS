@@ -96,8 +96,13 @@ int16_t SX127x::beginFSK(uint8_t chipVersion, float br, float freqDev, float rxB
   state = SX127x::setAFCBandwidth(rxBw);
   RADIOLIB_ASSERT(state);
 
-  // set AFC&AGC trigger to RSSI
-  state = SX127x::setAFCAGCTrigger(RADIOLIB_SX127X_RX_TRIGGER_RSSI_INTERRUPT);
+  // set AFC&AGC trigger to RSSI (in OOK) or both (in FSK)
+  if(enableOOK) {
+    state = SX127x::setAFCAGCTrigger(RADIOLIB_SX127X_RX_TRIGGER_RSSI_INTERRUPT);
+  } else {
+    state = SX127x::setAFCAGCTrigger(RADIOLIB_SX127X_RX_TRIGGER_BOTH);
+  }
+
   RADIOLIB_ASSERT(state);
 
   // enable AFC
@@ -370,7 +375,12 @@ int16_t SX127x::startReceive(uint8_t len, uint8_t mode) {
   int16_t modem = getActiveModem();
   if(modem == RADIOLIB_SX127X_LORA) {
     // set DIO pin mapping
-    state = _mod->SPIsetRegValue(RADIOLIB_SX127X_REG_DIO_MAPPING_1, RADIOLIB_SX127X_DIO0_RX_DONE | RADIOLIB_SX127X_DIO1_RX_TIMEOUT, 7, 4);
+    if(_mod->SPIgetRegValue(RADIOLIB_SX127X_REG_HOP_PERIOD) > RADIOLIB_SX127X_HOP_PERIOD_OFF) {
+      state = _mod->SPIsetRegValue(RADIOLIB_SX127X_REG_DIO_MAPPING_1, RADIOLIB_SX127X_DIO0_RX_DONE | RADIOLIB_SX127X_DIO1_FHSS_CHANGE_CHANNEL, 7, 4);
+    }
+    else {
+      state = _mod->SPIsetRegValue(RADIOLIB_SX127X_REG_DIO_MAPPING_1, RADIOLIB_SX127X_DIO0_RX_DONE | RADIOLIB_SX127X_DIO1_RX_TIMEOUT, 7, 4);
+    }
 
     // set expected packet length for SF6
     if(_sf == 6) {
@@ -438,12 +448,17 @@ int16_t SX127x::startTransmit(uint8_t* data, size_t len, uint8_t addr) {
   int16_t modem = getActiveModem();
   if(modem == RADIOLIB_SX127X_LORA) {
     // check packet length
-    if(len >= RADIOLIB_SX127X_MAX_PACKET_LENGTH) {
+    if(len > RADIOLIB_SX127X_MAX_PACKET_LENGTH) {
       return(RADIOLIB_ERR_PACKET_TOO_LONG);
     }
 
     // set DIO mapping
-    _mod->SPIsetRegValue(RADIOLIB_SX127X_REG_DIO_MAPPING_1, RADIOLIB_SX127X_DIO0_TX_DONE, 7, 6);
+    if(_mod->SPIgetRegValue(RADIOLIB_SX127X_REG_HOP_PERIOD) > RADIOLIB_SX127X_HOP_PERIOD_OFF) {
+      _mod->SPIsetRegValue(RADIOLIB_SX127X_REG_DIO_MAPPING_1, RADIOLIB_SX127X_DIO0_TX_DONE | RADIOLIB_SX127X_DIO1_FHSS_CHANGE_CHANNEL, 7, 4);
+    }
+    else {
+      _mod->SPIsetRegValue(RADIOLIB_SX127X_REG_DIO_MAPPING_1, RADIOLIB_SX127X_DIO0_TX_DONE, 7, 6);
+    }
 
     // apply fixes to errata
     RADIOLIB_ERRATA_SX127X(false);
@@ -943,6 +958,14 @@ int16_t SX127x::setOokPeakThresholdDecrement(uint8_t value) {
   return(_mod->SPIsetRegValue(RADIOLIB_SX127X_REG_OOK_AVG, value, 7, 5, 5));
 }
 
+int16_t SX127x::setOokPeakThresholdStep(uint8_t value) {
+  // check active modem
+  if(getActiveModem() != RADIOLIB_SX127X_FSK_OOK) {
+    return(RADIOLIB_ERR_WRONG_MODEM);
+  }
+  return(_mod->SPIsetRegValue(RADIOLIB_SX127X_REG_OOK_PEAK, value, 2, 0, 5));
+}
+
 int16_t SX127x::enableBitSync() {
   return(_mod->SPIsetRegValue(RADIOLIB_SX127X_REG_OOK_PEAK, RADIOLIB_SX127X_BIT_SYNC_ON, 5, 5, 5));
 }
@@ -961,8 +984,10 @@ int16_t SX127x::setOOK(bool enableOOK) {
   int16_t state = RADIOLIB_ERR_NONE;
   if(enableOOK) {
     state = _mod->SPIsetRegValue(RADIOLIB_SX127X_REG_OP_MODE, RADIOLIB_SX127X_MODULATION_OOK, 6, 5, 5);
+    state |= SX127x::setAFCAGCTrigger(RADIOLIB_SX127X_RX_TRIGGER_RSSI_INTERRUPT);
   } else {
     state = _mod->SPIsetRegValue(RADIOLIB_SX127X_REG_OP_MODE, RADIOLIB_SX127X_MODULATION_FSK, 6, 5, 5);
+    state |= SX127x::setAFCAGCTrigger(RADIOLIB_SX127X_RX_TRIGGER_BOTH);
   }
   if(state == RADIOLIB_ERR_NONE) {
     _ook = enableOOK;
@@ -972,8 +997,12 @@ int16_t SX127x::setOOK(bool enableOOK) {
 }
 
 int16_t SX127x::setFrequencyRaw(float newFreq) {
-  // set mode to standby
-  int16_t state = setMode(RADIOLIB_SX127X_STANDBY);
+  int16_t state = RADIOLIB_ERR_NONE;
+  
+  // set mode to standby if not FHSS
+  if(_mod->SPIgetRegValue(RADIOLIB_SX127X_REG_HOP_PERIOD) == RADIOLIB_SX127X_HOP_PERIOD_OFF) {
+    state = setMode(RADIOLIB_SX127X_STANDBY);
+  }
 
   // calculate register values
   uint32_t FRF = (newFreq * (uint32_t(1) << RADIOLIB_SX127X_DIV_EXPONENT)) / RADIOLIB_SX127X_CRYSTAL_FREQ;
@@ -1336,6 +1365,27 @@ void SX127x::setDirectAction(void (*func)(void)) {
 
 void SX127x::readBit(RADIOLIB_PIN_TYPE pin) {
   updateDirectBuffer((uint8_t)digitalRead(pin));
+}
+
+int16_t SX127x::setFHSSHoppingPeriod(uint8_t freqHoppingPeriod) {
+  return(_mod->SPIsetRegValue(RADIOLIB_SX127X_REG_HOP_PERIOD, freqHoppingPeriod));
+}
+
+uint8_t SX127x::getFHSSHoppingPeriod(void) {
+  return(_mod->SPIgetRegValue(RADIOLIB_SX127X_REG_HOP_PERIOD)); 
+}
+
+uint8_t SX127x::getFHSSChannel(void) {
+  return(_mod->SPIgetRegValue(RADIOLIB_SX127X_REG_HOP_CHANNEL, 5, 0)); 
+}
+
+void SX127x::clearFHSSInt(void) {
+  int16_t modem = getActiveModem();
+  if(modem == RADIOLIB_SX127X_LORA) {
+    _mod->SPIwriteRegister(RADIOLIB_SX127X_REG_IRQ_FLAGS, getIRQFlags() | RADIOLIB_SX127X_CLEAR_IRQ_FLAG_FHSS_CHANGE_CHANNEL);
+  } else if(modem == RADIOLIB_SX127X_FSK_OOK) {
+    return; //These are not the interrupts you are looking for
+  }  
 }
 
 #endif

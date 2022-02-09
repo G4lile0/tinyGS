@@ -791,7 +791,7 @@ class SX127x: public PhysicalLayer {
     float getAFCError();
 
     /*!
-      \brief Gets signal-to-noise ratio of the latest received packet.
+      \brief Gets signal-to-noise ratio of the latest received packet. Only available in LoRa mode.
 
       \returns Last packet signal-to-noise ratio (SNR).
     */
@@ -930,6 +930,15 @@ class SX127x: public PhysicalLayer {
     */
     int16_t setOokFixedOrFloorThreshold(uint8_t value);
 
+      /*!
+      \brief Size of each decrement of the RSSI threshold in the OOK demodulator.
+
+      \param value Step size: RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_0_5_DB (default), RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_1_0_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_1_5_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_2_0_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_3_0_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_4_0_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_5_0_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_6_0_DB  
+
+      \returns \ref status_codes
+    */
+    int16_t setOokPeakThresholdStep(uint8_t value);  
+  
     /*!
     \brief Enable Bit synchronizer.
 
@@ -1063,6 +1072,34 @@ class SX127x: public PhysicalLayer {
       \param pin Pin on which to read.
     */
     void readBit(RADIOLIB_PIN_TYPE pin);
+
+    /*!
+      \brief Sets the hopping period and enables FHSS
+
+      \param freqHoppingPeriod Integer multiple of symbol periods between hops
+
+      \returns \ref status_codes
+    */
+    int16_t setFHSSHoppingPeriod(uint8_t freqHoppingPeriod);
+
+        /*!
+      \brief Gets FHSS hopping period
+
+      \returns 8 bit period
+    */
+    uint8_t getFHSSHoppingPeriod(void);
+
+    /*!
+      \brief Gets the FHSS channel in use
+
+      \returns 6 bit channel number
+    */
+    uint8_t getFHSSChannel(void);
+
+    /*!
+      \brief Clear the FHSS interrupt
+    */
+    void clearFHSSInt(void);
 
 #if !defined(RADIOLIB_GODMODE) && !defined(RADIOLIB_LOW_LEVEL)
   protected:

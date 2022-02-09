@@ -68,7 +68,7 @@ void SX1278::reset() {
 }
 
 int16_t SX1278::setFrequency(float freq) {
-  RADIOLIB_CHECK_RANGE(freq, 137.0, 1025.0, RADIOLIB_ERR_INVALID_FREQUENCY);
+  RADIOLIB_CHECK_RANGE(freq, 137.0, 525.0, RADIOLIB_ERR_INVALID_FREQUENCY);
 
   // set frequency and if successful, save the new setting
   int16_t state = SX127x::setFrequencyRaw(freq);
@@ -314,6 +314,11 @@ int16_t SX1278::setDataShaping(uint8_t sh) {
 
   // check modulation
   if(SX127x::_ook) {
+    // we're in OOK mode, the only thing we can do is disable
+    if(sh == RADIOLIB_SHAPING_NONE) {
+      return(setDataShapingOOK(0));
+    }
+
     return(RADIOLIB_ERR_INVALID_MODULATION);
   }
 

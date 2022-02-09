@@ -136,11 +136,19 @@ invertIQ    KEYWORD2
 setOokThresholdType	KEYWORD2
 setOokPeakThresholdDecrement	KEYWORD2
 setOokFixedOrFloorThreshold	KEYWORD2
+setOokPeakThresholdStep KEYWORD2
 setDirectSyncWord	KEYWORD2
 setDirectAction	KEYWORD2
 readBit	KEYWORD2
 enableBitSync	KEYWORD2
 disableBitSync	KEYWORD2
+setFHSSHoppingPeriod	KEYWORD2
+getFHSSHoppingPeriod	KEYWORD2
+getFHSSChannel	KEYWORD2
+clearFHSSInt	KEYWORD2
+randomByte	KEYWORD2
+getPacketLength	KEYWORD2
+
 
 # RF69-specific
 setAESKey	KEYWORD2
