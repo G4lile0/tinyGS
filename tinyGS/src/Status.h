@@ -33,13 +33,13 @@ struct PacketInfo {
 };
 
 struct ModemInfo {
-  char satellite[25]  = "Norbi";
+  char satellite[25]  = "Waiting";
   String  modem_mode  = "LoRa" ;     // 1-LoRa  2-FSK  3-GMSK
-  float   frequency   = 436.703; // MHz  
+  float   frequency   = 0; // MHz  
   float   freqOffset  = 0;       // Hz 
-  float   bw          = 250.0;   // kHz dual sideban
-  uint8_t sf          = 10 ;
-  uint8_t cr          = 5 ;
+  float   bw          = 0;   // kHz dual sideban
+  uint8_t sf          = 0 ;
+  uint8_t cr          = 0 ;
   uint8_t sw          = 18;
   int8_t  power       = 5 ;
   uint16_t preambleLength = 8;
@@ -65,7 +65,7 @@ struct TextFrame {
 };
 
 struct Status {
-  const uint32_t version = 2202111; // version year month day release
+  const uint32_t version = 2202121; // version year month day release
   const char* git_version = GIT_VERSION;
   bool mqtt_connected = false;
   bool radio_ready = false;

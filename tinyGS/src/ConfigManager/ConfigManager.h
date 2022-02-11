@@ -62,8 +62,8 @@ constexpr auto configVersion = "0.05"; //max 4 chars
 
 #define MQTT_DEFAULT_SERVER "mqtt.tinygs.com"
 #define MQTT_DEFAULT_PORT "8883"
-#define MODEM_DEFAULT "{\"mode\":\"LoRa\",\"freq\":436.703,\"bw\":250.0,\"sf\":10,\"cr\":5,\"sw\":18,\"pwr\":5,\"cl\":120,\"pl\":8,\"gain\":0,\"crc\":true,\"fldro\":1,\"sat\":\"Norbi\",\"NORAD\":46494}"
-
+//#define MODEM_DEFAULT "{\"mode\":\"LoRa\",\"freq\":436.703,\"bw\":250.0,\"sf\":10,\"cr\":5,\"sw\":18,\"pwr\":5,\"cl\":120,\"pl\":8,\"gain\":0,\"crc\":true,\"fldro\":1,\"sat\":\"Norbi\",\"NORAD\":46494}"
+#define MODEM_DEFAULT ""
 constexpr auto AP_TIMEOUT_MS = "300000";
 
 enum boardNum

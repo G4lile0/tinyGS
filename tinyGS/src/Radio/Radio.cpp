@@ -109,13 +109,20 @@ int16_t Radio::begin()
 
   if (m.modem_mode == "LoRa")
   {
-    CHECK_ERROR(radioHal->begin(m.frequency + m.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, m.gain, board.L_TCXO_V));
-    if (m.fldro == 2)
-      radioHal->autoLDRO();
-    else
-      radioHal->forceLDRO(m.fldro);
+    if (m.frequency!=0) {
+        CHECK_ERROR(radioHal->begin(m.frequency + m.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, m.gain, board.L_TCXO_V));
+        if (m.fldro == 2)
+          radioHal->autoLDRO();
+        else
+          radioHal->forceLDRO(m.fldro);
 
-    radioHal->setCRC(m.crc);
+        radioHal->setCRC(m.crc);
+ 
+    } else 
+    {
+        CHECK_ERROR(radioHal->begin());
+    }
+
   }
   else
   {

@@ -7,6 +7,7 @@
 class IRadioHal {
 public:
     virtual int16_t begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t syncWord, int8_t power, uint16_t preambleLength, uint8_t gain, float tcxoVoltage) = 0;
+    virtual int16_t begin() = 0;
     virtual int16_t beginFSK(float freq = 434.0, float br = 48.0, float freqDev = 50.0, float rxBw = 125.0, int8_t power = 10, uint16_t preambleLength = 16, bool enableOOK = false, float tcxoVoltage = 1.6, bool useRegulatorLDO = false) = 0;
     virtual int16_t autoLDRO() = 0;
     virtual int16_t forceLDRO(bool enable) = 0;
@@ -36,6 +37,7 @@ public:
     }
 
     int16_t begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t syncWord, int8_t power, uint16_t preambleLength, uint8_t gain, float tcxoVoltage);
+    int16_t begin();
     int16_t beginFSK(float freq = 434.0, float br = 48.0, float freqDev = 50.0, float rxBw = 125.0, int8_t power = 10, uint16_t preambleLength = 16, bool enableOOK = false, float tcxoVoltage = 1.6, bool useRegulatorLDO = false);
 
     int16_t autoLDRO();
