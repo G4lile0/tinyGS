@@ -25,7 +25,7 @@
 #include <base64.h>
 #include "../Logger/Logger.h"
 
-#define CHECK_ERROR(errCode) if (errCode != RADIOLIB_ERR_NONE) { Log::console(PSTR("Radio failed, code %d\n Check that the configuration is valid for your board"), errCode); return errCode; }
+#define CHECK_ERROR(errCode) if (errCode != RADIOLIB_ERR_NONE) { Log::console(PSTR("Radio failed, code %d\n Check that the configuration is valid for your board"), errCode);status.radio_error=errCode; return errCode; }
 
 bool received = false;
 bool eInterrupt = true;
