@@ -209,6 +209,10 @@ void ConfigManager::handleDashboard()
   s += "<tr><td>Version </td><td>" + String(status.version) + "</td></tr>";
   s += "<tr><td>MQTT Server </td><td>" + String(status.mqtt_connected ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + "</td></tr>";
   s += "<tr><td>WiFi </td><td>" + String(WiFi.isConnected() ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + "</td></tr>";
+  if (WiFi.isConnected() ){
+      s += "<tr><td>WiFi RSSI </td><td>" + String(WiFi.RSSI()) + "</td></tr>";
+  }
+
   s += "<tr><td>Radio </td><td>" + String(Radio::getInstance().isReady() ? "<span class='G'>READY</span>" : "<span class='R'>NOT READY</span>") + "</td></tr>";
   //s += "<tr><td>Uptime </td><td>" + // process and update in js + "</td></tr>";
   s += F("</table></div>");
@@ -385,6 +389,9 @@ void ConfigManager::handleRefreshWorldmap()
   data_string += String(status.version) + ",";
   data_string += String(status.mqtt_connected ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + ",";
   data_string += String(WiFi.isConnected() ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + ",";
+  if (WiFi.isConnected() ){
+    data_string += String(WiFi.RSSI()) + ",";
+  }
   data_string += String(Radio::getInstance().isReady() ? "<span class='G'>READY</span>" : "<span class='R'>NOT READY</span>") + ",";
   
   // last packet received data (for lastpacket id table data)

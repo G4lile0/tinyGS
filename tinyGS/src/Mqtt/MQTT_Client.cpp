@@ -73,6 +73,7 @@ void MQTT_Client::loop()
       StaticJsonDocument<128> doc;
       doc["Vbat"] = voltage();
       doc["Mem"] = ESP.getFreeHeap();
+      doc["RSSI"] =WiFi.RSSI();
 
       char buffer[256];
       serializeJson(doc, buffer);
