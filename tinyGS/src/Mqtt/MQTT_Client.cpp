@@ -398,11 +398,21 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
       return;
     }
 
+    // check frequecy is valid prior to load  
+    board_type board;
+    board = ConfigManager::getInstance().getBoardConfig();
+    float f = doc["freq"];
+    if ( ( (board.L_radio == 1) & ( (f< 137) || (f > 525))) ||  ((board.L_radio == 2) & ( (f < 137) || (f > 525) )) || ((board.L_radio == 5) & ( (f < 410) || (f > 810)))  || ((board.L_radio == 6) & ((f<150) || (f>960)))  || ((board.L_radio == 8) & ( (f < 2400) || (f > 2500)))  ) 
+    {  Log::console(PSTR("ERROR: Wrong frequency"));
+       return;
+    }
+   
     ModemInfo &m = status.modeminfo;
     m.modem_mode = doc["mode"].as<String>();
     strcpy(m.satellite, doc["sat"].as<char *>());
     m.NORAD = doc["NORAD"];
 
+  
     if (m.modem_mode == "LoRa")
     {
       m.frequency = doc["freq"];
