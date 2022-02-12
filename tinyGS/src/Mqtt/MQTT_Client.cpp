@@ -383,6 +383,26 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     memcpy(buff, payload, length);
     buff[length] = '\0';
     Log::debug(PSTR("%s"), buff);
+
+    size_t size = JSON_ARRAY_SIZE(10) + 10 * JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(16) + JSON_ARRAY_SIZE(8) + JSON_ARRAY_SIZE(8) + 64;
+    DynamicJsonDocument doc(size);
+    DeserializationError error = deserializeJson(doc, payload, length);
+
+    if (error.code() != DeserializationError::Ok || !doc.containsKey("mode"))
+    {
+      Log::console(PSTR("ERROR: Your modem config is invalid. Resetting to default"));
+      return;
+    }
+
+    // check frequecy is valid prior to load  
+    board_type board;
+    board = ConfigManager::getInstance().getBoardConfig();
+    float f = doc["freq"];
+    if ( ( (board.L_radio == 1) & ( (f< 137) || (f > 525))) ||  ((board.L_radio == 2) & ( (f < 137) || (f > 525) )) || ((board.L_radio == 5) & ( (f < 410) || (f > 810)))  || ((board.L_radio == 6) & ((f<150) || (f>960)))  || ((board.L_radio == 8) & ( (f < 2400) || (f > 2500)))  ) 
+    {  Log::console(PSTR("ERROR: Wrong frequency"));
+       return;
+    }
+
     ConfigManager::getInstance().setModemStartup(buff);
   }
 
