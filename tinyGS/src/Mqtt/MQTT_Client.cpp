@@ -63,8 +63,26 @@ void MQTT_Client::loop()
   if (connectionAtempts > connectionTimeout)
   {
     Log::console(PSTR("Unable to connect to MQTT Server after many atempts. Restarting..."));
-    ESP.restart();
-  }
+    // if board is on LOW POWER mode instead of directly reboot it, force a 4hours deep sleep. 
+    ConfigManager &configManager = ConfigManager::getInstance();
+    if (configManager.getLowPower()) 
+        { Radio &radio = Radio::getInstance();
+          uint32_t sleep_seconds = 4*3600; // 4 hours deep sleep. 
+          Log::debug(PSTR("deep_sleep_enter"));
+          esp_sleep_enable_timer_wakeup( 1000000ULL * sleep_seconds); // using ULL  Unsigned Long long
+          delay(100);
+          Serial.flush();
+          WiFi.disconnect(true);
+          delay(100);
+          //  TODO: apagar OLED
+          radio.moduleSleep();
+          esp_deep_sleep_start();
+          delay(1000);   // shouldn't arrive here
+        } else 
+        {
+          ESP.restart();
+        }
+   }
 
   PubSubClient::loop();
 
