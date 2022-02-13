@@ -585,7 +585,8 @@ void ConfigManager::boardDetection()
 void ConfigManager::printConfig()
 {
   Log::debug(PSTR("MQTT Port: %u\nMQTT Server: %s\nMQTT Pass: %s\nLatitude: %f\nLongitude: %f"), getMqttPort(), getMqttServer(), getMqttPass(), getLatitude(), getLongitude());
-  Log::debug(PSTR("tz: %s\nboard: %u --> %s\nOLED Bright: %u\nTX %s"), getTZ(), getBoard(), boards[getBoard()].BOARD.c_str(), getOledBright(), getAllowTx() ? "Enable" : "Disable");
+  Log::debug(PSTR("tz: %s\nOLED Bright: %u\nTX %s"), getTZ(),  getOledBright(), getAllowTx() ? "Enable" : "Disable");
+  if (strlen(getBoardTemplate()) > 0) Log::debug(PSTR("board_template: %s"),getBoardTemplate()); else Log::debug(PSTR("board: %u --> %s\n:"),getBoard(), boards[getBoard()].BOARD.c_str());
 }
 
 void ConfigManager::configSavedCallback()
