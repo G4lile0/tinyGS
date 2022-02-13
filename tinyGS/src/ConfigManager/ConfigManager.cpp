@@ -647,7 +647,7 @@ void ConfigManager::parseModemStartup()
   if (error.code() != DeserializationError::Ok || !doc.containsKey("mode"))
   {
     Log::console(PSTR("ERROR: Your modem config is invalid. Resetting to default"));
-    resetModemConfig(); 
+   // resetModemConfig(); 
     return;
   }
 
