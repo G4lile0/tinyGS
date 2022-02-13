@@ -400,10 +400,42 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
       return;
     }
 
-    // check frequecy is valid prior to load  
+   // check frequecy is valid prior to load  
     board_type board;
+    if (strlen(ConfigManager::getInstance().getBoardTemplate()) > 0)
+  {
+    size_t size = 512;
+    DynamicJsonDocument doc(size);
+    DeserializationError error = deserializeJson(doc, ConfigManager::getInstance().getBoardTemplate());
+
+    if (error.code() != DeserializationError::Ok || !doc.containsKey("radio"))
+    {
+      Log::console(PSTR("Error: Your Board template is not valid. Unable to init radio."));
+      return;
+    }
+    board.OLED__address = doc["aADDR"];
+    board.OLED__SDA = doc["oSDA"];
+    board.OLED__SCL = doc["oSCL"];
+    board.OLED__RST = doc["oRST"];
+    board.PROG__BUTTON = doc["pBut"];
+    board.BOARD_LED = doc["led"];
+    board.L_radio = doc["radio"];
+    board.L_NSS = doc["lNSS"];
+    board.L_DI00 = doc["lDIO0"];
+    board.L_DI01 = doc["lDIO1"];
+    board.L_BUSSY = doc["lBUSSY"];
+    board.L_RST = doc["lRST"];
+    board.L_MISO = doc["lMISO"];
+    board.L_MOSI = doc["lMOSI"];
+    board.L_SCK = doc["lSCK"];
+    board.L_TCXO_V = doc["lTCXOV"];
+  }
+  else
+  {
     board = ConfigManager::getInstance().getBoardConfig();
+  }
     float f = doc["freq"];
+ 
     if ( ( (board.L_radio == 1) & ( (f< 137) || (f > 525))) ||  ((board.L_radio == 2) & ( (f < 137) || (f > 525) )) || ((board.L_radio == 5) & ( (f < 410) || (f > 810)))  || ((board.L_radio == 6) & ((f<150) || (f>960)))  || ((board.L_radio == 8) & ( (f < 2400) || (f > 2500)))  ) 
     {  Log::console(PSTR("ERROR: Wrong frequency"));
        return;
@@ -426,7 +458,38 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
 
     // check frequecy is valid prior to load  
     board_type board;
+    if (strlen(ConfigManager::getInstance().getBoardTemplate()) > 0)
+  {
+    size_t size = 512;
+    DynamicJsonDocument doc(size);
+    DeserializationError error = deserializeJson(doc, ConfigManager::getInstance().getBoardTemplate());
+
+    if (error.code() != DeserializationError::Ok || !doc.containsKey("radio"))
+    {
+      Log::console(PSTR("Error: Your Board template is not valid. Unable to init radio."));
+      return;
+    }
+    board.OLED__address = doc["aADDR"];
+    board.OLED__SDA = doc["oSDA"];
+    board.OLED__SCL = doc["oSCL"];
+    board.OLED__RST = doc["oRST"];
+    board.PROG__BUTTON = doc["pBut"];
+    board.BOARD_LED = doc["led"];
+    board.L_radio = doc["radio"];
+    board.L_NSS = doc["lNSS"];
+    board.L_DI00 = doc["lDIO0"];
+    board.L_DI01 = doc["lDIO1"];
+    board.L_BUSSY = doc["lBUSSY"];
+    board.L_RST = doc["lRST"];
+    board.L_MISO = doc["lMISO"];
+    board.L_MOSI = doc["lMOSI"];
+    board.L_SCK = doc["lSCK"];
+    board.L_TCXO_V = doc["lTCXOV"];
+  }
+  else
+  {
     board = ConfigManager::getInstance().getBoardConfig();
+  }
     float f = doc["freq"];
     if ( ( (board.L_radio == 1) & ( (f< 137) || (f > 525))) ||  ((board.L_radio == 2) & ( (f < 137) || (f > 525) )) || ((board.L_radio == 5) & ( (f < 410) || (f > 810)))  || ((board.L_radio == 6) & ((f<150) || (f>960)))  || ((board.L_radio == 8) & ( (f < 2400) || (f > 2500)))  ) 
     {  Log::console(PSTR("ERROR: Wrong frequency"));
