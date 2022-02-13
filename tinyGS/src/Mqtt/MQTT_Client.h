@@ -82,7 +82,7 @@ private:
   bool scheduledRestart = false;
 
   const unsigned long pingInterval = 1 * 60 * 1000;
-  const unsigned long reconnectionInterval = 5 * 1000;
+  const unsigned long reconnectionInterval = 10 * 1000;
   uint16_t connectionTimeout = 5 * 60 * 1000 / reconnectionInterval;
 
   const char* globalTopic PROGMEM = "tinygs/global/%cmnd%";

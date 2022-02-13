@@ -39,9 +39,15 @@ void MQTT_Client::loop()
   if (!connected())
   {
     status.mqtt_connected = false;
-    if (millis() - lastConnectionAtempt > reconnectionInterval)
+    if (millis() - lastConnectionAtempt > reconnectionInterval )
     {
-      lastConnectionAtempt = millis();
+      if (millis() > (reconnectionInterval/2))                                  // verify that we aren't going have a negative number
+      {
+             lastConnectionAtempt = millis() - random(reconnectionInterval/2);
+      } else
+      {
+            lastConnectionAtempt = millis();
+      }
       connectionAtempts++;
 
       lastPing = millis();
