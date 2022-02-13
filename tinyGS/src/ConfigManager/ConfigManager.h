@@ -85,8 +85,10 @@ enum boardNum
   TBEAM_OLED_v1_0,
   ESP32_SX126X_TXC0_1W_LF,
   ESP32_SX126X_TXC0_1W_HF,
+  TTGO_T3_V2_1_6,
+  ESP32_E28_2G4MxxS,
 
-  NUM_BOARDS //this line always has to be the last one
+    NUM_BOARDS //this line always has to be the last one
 };
 
 typedef struct

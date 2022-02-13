@@ -74,14 +74,31 @@ void Radio::init()
 
   spi.begin(board.L_SCK, board.L_MISO, board.L_MOSI, board.L_NSS);
 
-  if (board.L_SX127X)
-  {
-    lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
-  }
-  else
-  {
-    lora = new SX1268(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
-  }
+//  if (board.L_SX127X)
+//  {
+//    lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+//  }
+//  else
+//  {
+//    lora = new SX1268(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+//  }
+    switch (board.L_SX127X) {
+        case 0: // SX126x
+            lora = new SX1268(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi,
+                                         SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+            break;
+        case 1: // SX127x
+            lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi,
+                                         SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+            break;
+        case 2: // SX128x
+            lora = new SX1280(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_DI00, spi,
+                                         SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
+
 
   begin();
 }
@@ -95,45 +112,108 @@ int16_t Radio::begin()
 
   if (m.modem_mode == "LoRa")
   {
-    if (board.L_SX127X)
-    {
-      state = ((SX1278 *)lora)->begin(m.frequency + status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, m.gain);
-      if (m.fldro == 2)
-        ((SX1278 *)lora)->autoLDRO();
-      else
-        ((SX1278 *)lora)->forceLDRO(m.fldro);
-
-      ((SX1278 *)lora)->setCRC(m.crc);
-    }
-    else
-    {
-      state = ((SX1268 *)lora)->begin(m.frequency + status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, board.L_TCXO_V);
-      if (m.fldro == 2)
-        ((SX1268 *)lora)->autoLDRO();
-      else
-        ((SX1268 *)lora)->forceLDRO(m.fldro);
-
-      ((SX1268 *)lora)->setCRC(m.crc);
-    }
+//    if (board.L_SX127X)
+//    {
+//      state = ((SX1278 *)lora)->begin(m.frequency + status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, m.gain);
+//      if (m.fldro == 2)
+//        ((SX1278 *)lora)->autoLDRO();
+//      else
+//        ((SX1278 *)lora)->forceLDRO(m.fldro);
+//
+//      ((SX1278 *)lora)->setCRC(m.crc);
+//    }
+//    else
+//    {
+//      state = ((SX1268 *)lora)->begin(m.frequency + status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, board.L_TCXO_V);
+//      if (m.fldro == 2)
+//        ((SX1268 *)lora)->autoLDRO();
+//      else
+//        ((SX1268 *)lora)->forceLDRO(m.fldro);
+//
+//      ((SX1268 *)lora)->setCRC(m.crc);
+//    }
+      switch (board.L_SX127X) {
+          case 0: // SX126x
+              state = ((SX1268 *) lora)->begin(m.frequency + status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.sw,
+                                               m.power, m.preambleLength, board.L_TCXO_V);
+              if (m.fldro == 2)
+                  ((SX1268 *) lora)->autoLDRO();
+              else
+                  ((SX1268 *) lora)->forceLDRO(m.fldro);
+              ((SX1268 *) lora)->setCRC(m.crc);
+              break;
+          case 1: // SX127x
+              state = ((SX1278 *) lora)->begin(m.frequency + status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.sw,
+                                               m.power, m.preambleLength, m.gain);
+              if (m.fldro == 2)
+                  ((SX1278 *) lora)->autoLDRO();
+              else
+                  ((SX1278 *) lora)->forceLDRO(m.fldro);
+              ((SX1278 *) lora)->setCRC(m.crc);
+              break;
+          case 2: // SX128x
+              state = ((SX1280 *) lora)->begin(m.frequency + status.modeminfo.freqOffset, m.bw, m.sf, m.cr, m.power,
+                                               m.preambleLength);
+              //if (m.fldro == 2)
+              //    ((SX1280 *) lora)->autoLDRO();
+              //else
+              //    ((SX1280 *) lora)->forceLDRO(m.fldro);
+              ((SX1280 *) lora)->setCRC(m.crc);
+              break;
+          default: // Undefined
+              Log::console(PSTR("Board Type in Undefined ... "));
+      }
   }
   else
   {
-    if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-    {
-      state = ((SX1278 *)lora)->beginFSK(m.frequency + status.modeminfo.freqOffset, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, (m.OOK != 255));
-      ((SX1278 *)lora)->setDataShaping(m.OOK);
-      ((SX1278 *)lora)->startReceive();
-      ((SX1278 *)lora)->setDio0Action(setFlag);
-      ((SX1278 *)lora)->setSyncWord(m.fsw, m.swSize);
-    }
-    else
-    {
-      state = ((SX1268 *)lora)->beginFSK(m.frequency + status.modeminfo.freqOffset, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
-      ((SX1268 *)lora)->setDataShaping(m.OOK);
-      ((SX1268 *)lora)->startReceive();
-      ((SX1268 *)lora)->setDio1Action(setFlag);
-      state = ((SX1268 *)lora)->setSyncWord(m.fsw, m.swSize);
-    }
+//    if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//    {
+//      state = ((SX1278 *)lora)->beginFSK(m.frequency + status.modeminfo.freqOffset, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, (m.OOK != 255));
+//      ((SX1278 *)lora)->setDataShaping(m.OOK);
+//      ((SX1278 *)lora)->startReceive();
+//      ((SX1278 *)lora)->setDio0Action(setFlag);
+//      ((SX1278 *)lora)->setSyncWord(m.fsw, m.swSize);
+//    }
+//    else
+//    {
+//      state = ((SX1268 *)lora)->beginFSK(m.frequency + status.modeminfo.freqOffset, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
+//      ((SX1268 *)lora)->setDataShaping(m.OOK);
+//      ((SX1268 *)lora)->startReceive();
+//      ((SX1268 *)lora)->setDio1Action(setFlag);
+//      state = ((SX1268 *)lora)->setSyncWord(m.fsw, m.swSize);
+//    }
+      switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+          case 0: // SX126x
+              state = ((SX1268 *) lora)->beginFSK(m.frequency + status.modeminfo.freqOffset, m.bitrate, m.freqDev,
+                                                  m.bw,
+                                                  m.power, m.preambleLength,
+                                                  ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
+              ((SX1268 *) lora)->setDataShaping(m.OOK);
+              ((SX1268 *) lora)->startReceive();
+              ((SX1268 *) lora)->setDio1Action(setFlag);
+              state = ((SX1268 *) lora)->setSyncWord(m.fsw, m.swSize);
+              break;
+          case 1: // SX127x
+              state = ((SX1278 *) lora)->beginFSK(m.frequency + status.modeminfo.freqOffset, m.bitrate, m.freqDev,
+                                                  m.bw,
+                                                  m.power, m.preambleLength, (m.OOK != 255));
+              ((SX1278 *) lora)->setDataShaping(m.OOK);
+              ((SX1278 *) lora)->startReceive();
+              ((SX1278 *) lora)->setDio0Action(setFlag);
+              ((SX1278 *) lora)->setSyncWord(m.fsw, m.swSize);
+              break;
+          case 2: // SX128x
+              state = ((SX1280 *) lora)->beginGFSK(m.frequency + status.modeminfo.freqOffset, m.bitrate, m.freqDev,
+                                                   m.power, m.preambleLength);
+              ((SX1280 *) lora)->setDataShaping(m.OOK);
+              ((SX1280 *) lora)->startReceive();
+              ((SX1280 *) lora)->setDio1Action(setFlag);
+              ((SX1280 *) lora)->setSyncWord(m.fsw, m.swSize);
+              //??//state = ((SX1280 *) lora)->setSyncWord(m.fsw, m.swSize);
+              break;
+          default: // Undefined
+              Log::console(PSTR("Board Type in Undefined ... "));
+      }
   }
 
   // registers
@@ -162,21 +242,47 @@ int16_t Radio::begin()
   // set the function that will be called
   // when new packet is received
   // attach the ISR to radio interrupt
-  if (board.L_SX127X)
-  {
-    ((SX1278 *)lora)->setDio0Action(setFlag);
-  }
-  else
-  {
-    ((SX1268 *)lora)->setDio1Action(setFlag);
-  }
+//  if (board.L_SX127X)
+//  {
+//    ((SX1278 *)lora)->setDio0Action(setFlag);
+//  }
+//  else
+//  {
+//    ((SX1268 *)lora)->setDio1Action(setFlag);
+//  }
+    switch (board.L_SX127X) {
+        case 0: // SX126x
+            ((SX1268 *) lora)->setDio1Action(setFlag);
+            break;
+        case 1: // SX127x
+            ((SX1278 *) lora)->setDio0Action(setFlag);
+            break;
+        case 2: // SX128x
+            ((SX1280 *) lora)->setDio1Action(setFlag);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   // start listening for LoRa packets
   Log::console(PSTR("[SX12x8] Starting to listen to %s"), m.satellite);
-  if (board.L_SX127X)
-    state = ((SX1278 *)lora)->startReceive();
-  else
-    state = ((SX1268 *)lora)->startReceive();
+//  if (board.L_SX127X)
+//    state = ((SX1278 *)lora)->startReceive();
+//  else
+//    state = ((SX1268 *)lora)->startReceive();
+    switch (board.L_SX127X) {
+        case 0: // SX126x
+            state = ((SX1268 *) lora)->startReceive();
+            break;
+        case 1: // SX127x
+            state = ((SX1278 *) lora)->startReceive();
+            break;
+        case 2: // SX128x
+            state = ((SX1280 *) lora)->startReceive();
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   if (state == ERR_NONE)
   {
@@ -216,10 +322,23 @@ void Radio::disableInterrupt()
 void Radio::startRx()
 {
   // put module back to listen mode
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-    ((SX1278 *)lora)->startReceive();
-  else
-    ((SX1268 *)lora)->startReceive();
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//    ((SX1278 *)lora)->startReceive();
+//  else
+//    ((SX1268 *)lora)->startReceive();
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            ((SX1268 *) lora)->startReceive();
+            break;
+        case 1: // SX127x
+            ((SX1278 *) lora)->startReceive();
+            break;
+        case 2: // SX128x
+            ((SX1280 *) lora)->startReceive();
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   // we're ready to receive more packets,
   // enable interrupt service routine
@@ -237,20 +356,48 @@ int16_t Radio::sendTx(uint8_t *data, size_t length)
 
   // send data
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-  {
-    SX1278 *l = (SX1278 *)lora;
-    state = l->transmit(data, length);
-    l->setDio0Action(setFlag);
-    l->startReceive();
-  }
-  else
-  {
-    SX1268 *l = (SX1268 *)lora;
-    state = l->transmit(data, length);
-    l->setDio1Action(setFlag);
-    l->startReceive();
-  }
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//  {
+//    SX1278 *l = (SX1278 *)lora;
+//    state = l->transmit(data, length);
+//    l->setDio0Action(setFlag);
+//    l->startReceive();
+//  }
+//  else
+//  {
+//    SX1268 *l = (SX1268 *)lora;
+//    state = l->transmit(data, length);
+//    l->setDio1Action(setFlag);
+//    l->startReceive();
+//  }
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+        {
+            SX1268 *l = (SX1268 *) lora;
+            state = l->transmit(data, length);
+            l->setDio1Action(setFlag);
+            l->startReceive();
+        }
+            break;
+        case 1: // SX127x
+        {
+            SX1278 *l = (SX1278 *) lora;
+            state = l->transmit(data, length);
+            l->setDio0Action(setFlag);
+            l->startReceive();
+        }
+            break;
+        case 2: // SX128x
+        {
+            SX1280 *l = (SX1280 *) lora;
+            state = l->transmit(data, length);
+            l->setDio1Action(setFlag);
+            l->startReceive();
+        }
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   enableInterrupt();
   return state;
@@ -281,25 +428,61 @@ uint8_t Radio::listen()
   PacketInfo newPacketInfo;
   status.lastPacketInfo.crc_error = 0;
   // read received data
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-  {
-    SX1278 *l = (SX1278 *)lora;
-    respLen = l->getPacketLength();
-    respFrame = new uint8_t[respLen];
-    state = l->readData(respFrame, respLen);
-    newPacketInfo.rssi = l->getRSSI();
-    newPacketInfo.snr = l->getSNR();
-    newPacketInfo.frequencyerror = l->getFrequencyError();
-  }
-  else
-  {
-    SX1268 *l = (SX1268 *)lora;
-    respLen = l->getPacketLength();
-    respFrame = new uint8_t[respLen];
-    state = l->readData(respFrame, respLen);
-    newPacketInfo.rssi = l->getRSSI();
-    newPacketInfo.snr = l->getSNR();
-  }
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//  {
+//    SX1278 *l = (SX1278 *)lora;
+//    respLen = l->getPacketLength();
+//    respFrame = new uint8_t[respLen];
+//    state = l->readData(respFrame, respLen);
+//    newPacketInfo.rssi = l->getRSSI();
+//    newPacketInfo.snr = l->getSNR();
+//    newPacketInfo.frequencyerror = l->getFrequencyError();
+//  }
+//  else
+//  {
+//    SX1268 *l = (SX1268 *)lora;
+//    respLen = l->getPacketLength();
+//    respFrame = new uint8_t[respLen];
+//    state = l->readData(respFrame, respLen);
+//    newPacketInfo.rssi = l->getRSSI();
+//    newPacketInfo.snr = l->getSNR();
+//  }
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+        {
+            SX1268 *l = (SX1268 *) lora;
+            respLen = l->getPacketLength();
+            respFrame = new uint8_t[respLen];
+            state = l->readData(respFrame, respLen);
+            newPacketInfo.rssi = l->getRSSI();
+            newPacketInfo.snr = l->getSNR();
+        }
+            break;
+        case 1: // SX127x
+        {
+            SX1278 *l = (SX1278 *) lora;
+            respLen = l->getPacketLength();
+            respFrame = new uint8_t[respLen];
+            state = l->readData(respFrame, respLen);
+            newPacketInfo.rssi = l->getRSSI();
+            newPacketInfo.snr = l->getSNR();
+            newPacketInfo.frequencyerror = l->getFrequencyError();
+        }
+            break;
+        case 2: // SX128x
+        {
+            SX1280 *l = (SX1280 *) lora;
+            respLen = l->getPacketLength();
+            respFrame = new uint8_t[respLen];
+            state = l->readData(respFrame, respLen);
+            newPacketInfo.rssi = l->getRSSI();
+            newPacketInfo.snr = l->getSNR();
+            //newPacketInfo.frequencyerror = l->getFrequencyError();
+        }
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   // check if the packet info is exactly the same as the last one
   if (newPacketInfo.rssi == status.lastPacketInfo.rssi &&
@@ -466,18 +649,37 @@ int16_t Radio::remote_freq(char *payload, size_t payload_len)
   Log::console(PSTR("Set Frequency: %.3f MHz"), frequency);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-  {
-    ((SX1278 *)lora)->sleep(); // sleep mandatory if FastHop isn't ON.
-    state = ((SX1278 *)lora)->setFrequency(frequency + status.modeminfo.freqOffset);
-    ((SX1278 *)lora)->startReceive();
-  }
-  else
-  {
-    ((SX1268 *)lora)->sleep();
-    state = ((SX1268 *)lora)->setFrequency(frequency + status.modeminfo.freqOffset);
-    ((SX1268 *)lora)->startReceive();
-  }
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//  {
+//    ((SX1278 *)lora)->sleep(); // sleep mandatory if FastHop isn't ON.
+//    state = ((SX1278 *)lora)->setFrequency(frequency + status.modeminfo.freqOffset);
+//    ((SX1278 *)lora)->startReceive();
+//  }
+//  else
+//  {
+//    ((SX1268 *)lora)->sleep();
+//    state = ((SX1268 *)lora)->setFrequency(frequency + status.modeminfo.freqOffset);
+//    ((SX1268 *)lora)->startReceive();
+//  }
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            ((SX1268 *) lora)->sleep();
+            state = ((SX1268 *) lora)->setFrequency(frequency + status.modeminfo.freqOffset);
+            ((SX1268 *) lora)->startReceive();
+            break;
+        case 1: // SX127x
+            ((SX1278 *) lora)->sleep(); // sleep mandatory if FastHop isn't ON.
+            state = ((SX1278 *) lora)->setFrequency(frequency + status.modeminfo.freqOffset);
+            ((SX1278 *) lora)->startReceive();
+            break;
+        case 2: // SX128x
+            ((SX1280 *) lora)->sleep(); // sleep mandatory if FastHop isn't ON.
+            state = ((SX1280 *) lora)->setFrequency(frequency + status.modeminfo.freqOffset);
+            ((SX1280 *) lora)->startReceive();
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   readState(state);
   if (state == ERR_NONE)
@@ -492,18 +694,37 @@ int16_t Radio::remote_bw(char *payload, size_t payload_len)
   Log::console(PSTR("Set bandwidth: %.3f MHz"), bw);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-  {
-    state = ((SX1278 *)lora)->setBandwidth(bw);
-    ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
-  }
-  else
-  {
-    state = ((SX1268 *)lora)->setBandwidth(bw);
-    ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
-  }
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//  {
+//    state = ((SX1278 *)lora)->setBandwidth(bw);
+//    ((SX1278 *)lora)->startReceive();
+//    ((SX1278 *)lora)->setDio0Action(setFlag);
+//  }
+//  else
+//  {
+//    state = ((SX1268 *)lora)->setBandwidth(bw);
+//    ((SX1268 *)lora)->startReceive();
+//    ((SX1268 *)lora)->setDio1Action(setFlag);
+//  }
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            state = ((SX1268 *) lora)->setBandwidth(bw);
+            ((SX1268 *) lora)->startReceive();
+            ((SX1268 *) lora)->setDio1Action(setFlag);
+            break;
+        case 1: // SX127x
+            state = ((SX1278 *) lora)->setBandwidth(bw);
+            ((SX1278 *) lora)->startReceive();
+            ((SX1278 *) lora)->setDio0Action(setFlag);
+            break;
+        case 2: // SX128x
+            state = ((SX1280 *) lora)->setBandwidth(bw);
+            ((SX1280 *) lora)->startReceive();
+            ((SX1280 *) lora)->setDio1Action(setFlag);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   readState(state);
   if (state == ERR_NONE)
@@ -518,18 +739,37 @@ int16_t Radio::remote_sf(char *payload, size_t payload_len)
   Log::console(PSTR("Set spreading factor: %u"), sf);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-  {
-    state = ((SX1278 *)lora)->setSpreadingFactor(sf);
-    ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
-  }
-  else
-  {
-    state = ((SX1268 *)lora)->setSpreadingFactor(sf);
-    ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
-  }
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//  {
+//    state = ((SX1278 *)lora)->setSpreadingFactor(sf);
+//    ((SX1278 *)lora)->startReceive();
+//    ((SX1278 *)lora)->setDio0Action(setFlag);
+//  }
+//  else
+//  {
+//    state = ((SX1268 *)lora)->setSpreadingFactor(sf);
+//    ((SX1268 *)lora)->startReceive();
+//    ((SX1268 *)lora)->setDio1Action(setFlag);
+//  }
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            state = ((SX1268 *) lora)->setSpreadingFactor(sf);
+            ((SX1268 *) lora)->startReceive();
+            ((SX1268 *) lora)->setDio1Action(setFlag);
+            break;
+        case 1: // SX127x
+            state = ((SX1278 *) lora)->setSpreadingFactor(sf);
+            ((SX1278 *) lora)->startReceive();
+            ((SX1278 *) lora)->setDio0Action(setFlag);
+            break;
+        case 2: // SX128x
+            state = ((SX1280 *) lora)->setSpreadingFactor(sf);
+            ((SX1280 *) lora)->startReceive();
+            ((SX1280 *) lora)->setDio1Action(setFlag);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   readState(state);
 
@@ -545,18 +785,25 @@ int16_t Radio::remote_cr(char *payload, size_t payload_len)
   Log::console(PSTR("Set coding rate: %u"), cr);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-  {
-    state = ((SX1278 *)lora)->setCodingRate(cr);
-    ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
-  }
-  else
-  {
-    state = ((SX1268 *)lora)->setCodingRate(cr);
-    ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
-  }
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            state = ((SX1268 *) lora)->setCodingRate(cr);
+            ((SX1268 *) lora)->startReceive();
+            ((SX1268 *) lora)->setDio1Action(setFlag);
+            break;
+        case 1: // SX127x
+            state = ((SX1278 *) lora)->setCodingRate(cr);
+            ((SX1278 *) lora)->startReceive();
+            ((SX1278 *) lora)->setDio0Action(setFlag);
+            break;
+        case 2: // SX128x
+            state = ((SX1280 *) lora)->setCodingRate(cr);
+            ((SX1280 *) lora)->startReceive();
+            ((SX1280 *) lora)->setDio1Action(setFlag);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   readState(state);
 
@@ -572,18 +819,25 @@ int16_t Radio::remote_crc(char *payload, size_t payload_len)
   Log::console(PSTR("Set CRC: %s"), crc ? F("ON") : F("OFF"));
   int16_t state = 0;
 
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-  {
-    state = ((SX1278 *)lora)->setCRC(crc);
-    ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
-  }
-  else
-  {
-    state = ((SX1268 *)lora)->setCRC(crc);
-    ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
-  }
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            state = ((SX1268 *) lora)->setCRC(crc);
+            ((SX1268 *) lora)->startReceive();
+            ((SX1268 *) lora)->setDio1Action(setFlag);
+            break;
+        case 1: // SX127x
+            state = ((SX1278 *) lora)->setCRC(crc);
+            ((SX1278 *) lora)->startReceive();
+            ((SX1278 *) lora)->setDio0Action(setFlag);
+            break;
+        case 2: // SX128x
+            state = ((SX1280 *) lora)->setCRC(crc);
+            ((SX1280 *) lora)->startReceive();
+            ((SX1280 *) lora)->setDio1Action(setFlag);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   readState(state);
   return state;
@@ -597,10 +851,24 @@ int16_t Radio::remote_lsw(char *payload, size_t payload_len)
   Log::console(PSTR("Set lsw: %s"), strHex);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-    state = ((SX1278 *)lora)->setSyncWord(sw);
-  else
-    state = ((SX1268 *)lora)->setSyncWord(sw, 0x44);
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//    state = ((SX1278 *)lora)->setSyncWord(sw);
+//  else
+//    state = ((SX1268 *)lora)->setSyncWord(sw, 0x44);
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            state = ((SX1268 *) lora)->setSyncWord(sw, 0x44);
+            break;
+        case 1: // SX127x
+            state = ((SX1278 *) lora)->setSyncWord(sw);
+            break;
+        case 2: // SX128x
+            // NEED THE CORRECT VALUES for setSyncWord
+            //    state = ((SX1280 *) lora)->setSyncWord(sw, 1);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   readState(state);
   return state;
@@ -612,18 +880,37 @@ int16_t Radio::remote_fldro(char *payload, size_t payload_len)
   Log::console(PSTR("Set ForceLDRO: %s"), ldro ? F("ON") : F("OFF"));
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-  {
-    state = ((SX1278 *)lora)->forceLDRO(ldro);
-    ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
-  }
-  else
-  {
-    state = ((SX1268 *)lora)->forceLDRO(ldro);
-    ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
-  }
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//  {
+//    state = ((SX1278 *)lora)->forceLDRO(ldro);
+//    ((SX1278 *)lora)->startReceive();
+//    ((SX1278 *)lora)->setDio0Action(setFlag);
+//  }
+//  else
+//  {
+//    state = ((SX1268 *)lora)->forceLDRO(ldro);
+//    ((SX1268 *)lora)->startReceive();
+//    ((SX1268 *)lora)->setDio1Action(setFlag);
+//  }
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            state = ((SX1268 *) lora)->forceLDRO(ldro);
+            ((SX1268 *) lora)->startReceive();
+            ((SX1268 *) lora)->setDio1Action(setFlag);
+            break;
+        case 1: // SX127x
+            state = ((SX1278 *) lora)->forceLDRO(ldro);
+            ((SX1278 *) lora)->startReceive();
+            ((SX1278 *) lora)->setDio0Action(setFlag);
+            break;
+        case 2: // SX128x
+            //state = ((SX1280 *) lora)->forceLDRO(ldro);
+            ((SX1280 *) lora)->startReceive();
+            ((SX1280 *) lora)->setDio1Action(setFlag);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   readState(state);
 
@@ -643,18 +930,37 @@ int16_t Radio::remote_aldro(char *payload, size_t payload_len)
   Log::console(PSTR("Set AutoLDRO "));
   int16_t state = 0;
 
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-  {
-    state = ((SX1278 *)lora)->autoLDRO();
-    ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
-  }
-  else
-  {
-    state = ((SX1268 *)lora)->autoLDRO();
-    ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
-  }
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//  {
+//    state = ((SX1278 *)lora)->autoLDRO();
+//    ((SX1278 *)lora)->startReceive();
+//    ((SX1278 *)lora)->setDio0Action(setFlag);
+//  }
+//  else
+//  {
+//    state = ((SX1268 *)lora)->autoLDRO();
+//    ((SX1268 *)lora)->startReceive();
+//    ((SX1268 *)lora)->setDio1Action(setFlag);
+//  }
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            state = ((SX1268 *) lora)->autoLDRO();
+            ((SX1268 *) lora)->startReceive();
+            ((SX1268 *) lora)->setDio1Action(setFlag);
+            break;
+        case 1: // SX127x
+            state = ((SX1278 *) lora)->autoLDRO();
+            ((SX1278 *) lora)->startReceive();
+            ((SX1278 *) lora)->setDio0Action(setFlag);
+            break;
+        case 2: // SX128x
+            //state = ((SX1280 *) lora)->autoLDRO();
+            ((SX1280 *) lora)->startReceive();
+            ((SX1280 *) lora)->setDio1Action(setFlag);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   readState(state);
   return state;
@@ -666,18 +972,37 @@ int16_t Radio::remote_pl(char *payload, size_t payload_len)
   Log::console(PSTR("Set Preamble %u"), pl);
   int16_t state = 0;
 
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-  {
-    state = ((SX1278 *)lora)->setPreambleLength(pl);
-    ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
-  }
-  else
-  {
-    state = ((SX1268 *)lora)->setPreambleLength(pl);
-    ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
-  }
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//  {
+//    state = ((SX1278 *)lora)->setPreambleLength(pl);
+//    ((SX1278 *)lora)->startReceive();
+//    ((SX1278 *)lora)->setDio0Action(setFlag);
+//  }
+//  else
+//  {
+//    state = ((SX1268 *)lora)->setPreambleLength(pl);
+//    ((SX1268 *)lora)->startReceive();
+//    ((SX1268 *)lora)->setDio1Action(setFlag);
+//  }
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            state = ((SX1268 *) lora)->setPreambleLength(pl);
+            ((SX1268 *) lora)->startReceive();
+            ((SX1268 *) lora)->setDio1Action(setFlag);
+            break;
+        case 1: // SX127x
+            state = ((SX1278 *) lora)->setPreambleLength(pl);
+            ((SX1278 *) lora)->startReceive();
+            ((SX1278 *) lora)->setDio0Action(setFlag);
+            break;
+        case 2: // SX128x
+            state = ((SX1280 *) lora)->setPreambleLength(pl);
+            ((SX1280 *) lora)->startReceive();
+            ((SX1280 *) lora)->setDio1Action(setFlag);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   readState(state);
   if (state == ERR_NONE)
@@ -709,19 +1034,42 @@ int16_t Radio::remote_begin_lora(char *payload, size_t payload_len)
   Log::console(PSTR("Set Power: %d\nSet C limit: %u\nSet Preamble: %u\nSet Gain: %u"), power, current_limit, preambleLength, gain);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-  {
-    ((SX1278 *)lora)->sleep(); // sleep mandatory if FastHop isn't ON.
-    state = ((SX1278 *)lora)->begin(freq + status.modeminfo.freqOffset, bw, sf, cr, syncWord78, power, preambleLength, gain);
-    ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
-  }
-  else
-  {
-    state = ((SX1268 *)lora)->begin(freq + status.modeminfo.freqOffset, bw, sf, cr, syncWord68, power, preambleLength, ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
-    ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
-  }
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//  {
+//    ((SX1278 *)lora)->sleep(); // sleep mandatory if FastHop isn't ON.
+//    state = ((SX1278 *)lora)->begin(freq + status.modeminfo.freqOffset, bw, sf, cr, syncWord78, power, preambleLength, gain);
+//    ((SX1278 *)lora)->startReceive();
+//    ((SX1278 *)lora)->setDio0Action(setFlag);
+//  }
+//  else
+//  {
+//    state = ((SX1268 *)lora)->begin(freq + status.modeminfo.freqOffset, bw, sf, cr, syncWord68, power, preambleLength, ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
+//    ((SX1268 *)lora)->startReceive();
+//    ((SX1268 *)lora)->setDio1Action(setFlag);
+//  }
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            state = ((SX1268 *) lora)->begin(freq + status.modeminfo.freqOffset, bw, sf, cr, syncWord68, power,
+                                             preambleLength, ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
+            ((SX1268 *) lora)->startReceive();
+            ((SX1268 *) lora)->setDio1Action(setFlag);
+            break;
+        case 1: // SX127x
+            ((SX1278 *) lora)->sleep(); // sleep mandatory if FastHop isn't ON.
+            state = ((SX1278 *) lora)->begin(freq + status.modeminfo.freqOffset, bw, sf, cr, syncWord78, power,
+                                             preambleLength, gain);
+            ((SX1278 *) lora)->startReceive();
+            ((SX1278 *) lora)->setDio0Action(setFlag);
+            break;
+        case 2: // SX128x
+            ((SX1280 *) lora)->sleep(); // sleep mandatory if FastHop isn't ON.
+            state = ((SX1280 *) lora)->begin(freq + status.modeminfo.freqOffset, bw, sf, cr, power, preambleLength);
+            ((SX1280 *) lora)->startReceive();
+            ((SX1280 *) lora)->setDio1Action(setFlag);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   readState(state);
   if (state == ERR_NONE)
@@ -755,20 +1103,45 @@ int16_t Radio::remote_begin_fsk(char *payload, size_t payload_len)
   Log::console(PSTR("Set Current limit: %u\nSet Preamble Length: %u\nOOK Modulation %s\nSet datashaping %u"), currentlimit, preambleLength, (ook != 255) ? F("ON") : F("OFF"), ook);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-  {
-    state = ((SX1278 *)lora)->beginFSK(freq + status.modeminfo.freqOffset, br, freqDev, rxBw, power, preambleLength, (ook != 255));
-    ((SX1278 *)lora)->setDataShaping(ook);
-    ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
-  }
-  else
-  {
-    state = ((SX1268 *)lora)->beginFSK(freq + status.modeminfo.freqOffset, br, freqDev, rxBw, power, preambleLength, ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
-    ((SX1268 *)lora)->setDataShaping(ook);
-    ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
-  }
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//  {
+//    state = ((SX1278 *)lora)->beginFSK(freq + status.modeminfo.freqOffset, br, freqDev, rxBw, power, preambleLength, (ook != 255));
+//    ((SX1278 *)lora)->setDataShaping(ook);
+//    ((SX1278 *)lora)->startReceive();
+//    ((SX1278 *)lora)->setDio0Action(setFlag);
+//  }
+//  else
+//  {
+//    state = ((SX1268 *)lora)->beginFSK(freq + status.modeminfo.freqOffset, br, freqDev, rxBw, power, preambleLength, ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
+//    ((SX1268 *)lora)->setDataShaping(ook);
+//    ((SX1268 *)lora)->startReceive();
+//    ((SX1268 *)lora)->setDio1Action(setFlag);
+//  }
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            state = ((SX1268 *) lora)->beginFSK(freq + status.modeminfo.freqOffset, br, freqDev, rxBw, power,
+                                                preambleLength, ConfigManager::getInstance().getBoardConfig().L_TCXO_V);
+            ((SX1268 *) lora)->setDataShaping(ook);
+            ((SX1268 *) lora)->startReceive();
+            ((SX1268 *) lora)->setDio1Action(setFlag);
+            break;
+        case 1: // SX127x
+            state = ((SX1278 *) lora)->beginFSK(freq + status.modeminfo.freqOffset, br, freqDev, rxBw, power,
+                                                preambleLength, (ook != 255));
+            ((SX1278 *) lora)->setDataShaping(ook);
+            ((SX1278 *) lora)->startReceive();
+            ((SX1278 *) lora)->setDio0Action(setFlag);
+            break;
+        case 2: // SX128x
+            state = ((SX1280 *) lora)->beginGFSK(freq + status.modeminfo.freqOffset, br, freqDev, power,
+                                                 preambleLength);
+            ((SX1280 *) lora)->setDataShaping(ook);
+            ((SX1280 *) lora)->startReceive();
+            ((SX1280 *) lora)->setDio1Action(setFlag);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
   readState(state);
 
   if (state == ERR_NONE)
@@ -792,10 +1165,23 @@ int16_t Radio::remote_br(char *payload, size_t payload_len)
   Log::console(PSTR("Set FSK Bit rate: %u"), br);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-    state = ((SX1278 *)lora)->setBitRate(br);
-  else
-    state = ((SX1268 *)lora)->setBitRate(br);
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//    state = ((SX1278 *)lora)->setBitRate(br);
+//  else
+//    state = ((SX1268 *)lora)->setBitRate(br);
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            state = ((SX1268 *) lora)->setBitRate(br);
+            break;
+        case 1: // SX127x
+            state = ((SX1278 *) lora)->setBitRate(br);
+            break;
+        case 2: // SX128x
+            state = ((SX1280 *) lora)->setBitRate(br);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   readState(state);
   if (state == ERR_NONE)
@@ -810,10 +1196,23 @@ int16_t Radio::remote_fd(char *payload, size_t payload_len)
   Log::console(PSTR("Set FSK Frequency Dev.: %u"), fd);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-    state = ((SX1278 *)lora)->setFrequencyDeviation(fd);
-  else
-    state = ((SX1268 *)lora)->setFrequencyDeviation(fd);
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//    state = ((SX1278 *)lora)->setFrequencyDeviation(fd);
+//  else
+//    state = ((SX1268 *)lora)->setFrequencyDeviation(fd);
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            state = ((SX1268 *) lora)->setFrequencyDeviation(fd);
+            break;
+        case 1: // SX127x
+            state = ((SX1278 *) lora)->setFrequencyDeviation(fd);
+            break;
+        case 2: // SX128x
+            state = ((SX1280 *) lora)->setFrequencyDeviation(fd);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   readState(state);
   if (state == ERR_NONE)
@@ -828,10 +1227,23 @@ int16_t Radio::remote_fbw(char *payload, size_t payload_len)
   Log::console(PSTR("Set FSK bandwidth: %.3f kHz"), frequency);
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-    state = ((SX1278 *)lora)->setRxBandwidth(frequency);
-  else
-    state = ((SX1268 *)lora)->setRxBandwidth(frequency);
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//    state = ((SX1278 *)lora)->setRxBandwidth(frequency);
+//  else
+//    state = ((SX1268 *)lora)->setRxBandwidth(frequency);
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            state = ((SX1268 *) lora)->setRxBandwidth(frequency);
+            break;
+        case 1: // SX127x
+            state = ((SX1278 *) lora)->setRxBandwidth(frequency);
+            break;
+        case 2: // SX128x
+            state = ((SX1280 *) lora)->setBandwidth(frequency);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   readState(state);
   if (state == ERR_NONE)
@@ -861,10 +1273,23 @@ int16_t Radio::remote_fsw(char *payload, size_t payload_len)
   }
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-    state = ((SX1278 *)lora)->setSyncWord(syncWord, synnwordsize);
-  else
-    state = ((SX1268 *)lora)->setSyncWord(syncWord, synnwordsize);
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//    state = ((SX1278 *)lora)->setSyncWord(syncWord, synnwordsize);
+//  else
+//    state = ((SX1268 *)lora)->setSyncWord(syncWord, synnwordsize);
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            state = ((SX1268 *) lora)->setSyncWord(syncWord, synnwordsize);
+            break;
+        case 1: // SX127x
+            state = ((SX1278 *) lora)->setSyncWord(syncWord, synnwordsize);
+            break;
+        case 2: // SX128x
+            state = ((SX1280 *) lora)->setSyncWord(syncWord, synnwordsize);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   readState(state);
   return state;
@@ -881,20 +1306,46 @@ int16_t Radio::remote_fook(char *payload, size_t payload_len)
   Log::console(PSTR("Set OOK datashaping: %u"), ook_shape);
 
   int state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-  {
-    state = ((SX1278 *)lora)->setOOK(enableOOK);
-  }
-  else
-  {
-    Log::error(PSTR("OOK not supported by the selected lora module!"));
-    return -1;
-  }
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//  {
+//    state = ((SX1278 *)lora)->setOOK(enableOOK);
+//  }
+//  else
+//  {
+//    Log::error(PSTR("OOK not supported by the selected lora module!"));
+//    return -1;
+//  }
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            Log::error(PSTR("OOK not supported by the selected lora module!"));
+            return -1;
+            break;
+        case 1: // SX127x
+            state = ((SX1278 *) lora)->setOOK(enableOOK);
+            break;
+        case 2: // SX128x
+            Log::error(PSTR("OOK not supported by the selected lora module!"));
+            return -1;
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   readState(state);
 
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-    state = ((SX1278 *)lora)->setDataShapingOOK(ook_shape);
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//    state = ((SX1278 *)lora)->setDataShapingOOK(ook_shape);
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            break;
+        case 1: // SX127x
+            state = ((SX1278 *) lora)->setDataShapingOOK(ook_shape);
+            break;
+        case 2: // SX128x
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   readState(state);
   return state;
@@ -908,10 +1359,23 @@ void Radio::remote_SPIwriteRegister(char *payload, size_t payload_len)
   uint8_t data = doc[1];
   Log::console(PSTR("REG ID: 0x%x to 0x%x"), reg, data);
 
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-    ((SX1278 *)lora)->_mod->SPIwriteRegister(reg, data);
-  //  else
-  //   ((SX1268*)lora)->_mod->SPIwriteRegister(reg,data);
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//    ((SX1278 *)lora)->_mod->SPIwriteRegister(reg, data);
+//  //  else
+//  //   ((SX1268*)lora)->_mod->SPIwriteRegister(reg,data);
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            ((SX1268 *) lora)->_mod->SPIwriteRegister(reg, data);
+            break;
+        case 1: // SX127x
+            ((SX1278 *) lora)->_mod->SPIwriteRegister(reg, data);
+            break;
+        case 2: // SX128x
+            ((SX1280 *) lora)->_mod->SPIwriteRegister(reg, data);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 }
 
 int16_t Radio::remote_SPIreadRegister(char *payload, size_t payload_len)
@@ -920,10 +1384,23 @@ int16_t Radio::remote_SPIreadRegister(char *payload, size_t payload_len)
   uint8_t data = 0;
 
   int16_t state = 0;
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-    data = ((SX1278 *)lora)->_mod->SPIreadRegister(reg);
-  // else
-  //   data = ((SX1268*)lora)->_mod->SPIreadRegister(reg);
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//    data = ((SX1278 *)lora)->_mod->SPIreadRegister(reg);
+//  // else
+//  //   data = ((SX1268*)lora)->_mod->SPIreadRegister(reg);
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            data = ((SX1268 *) lora)->_mod->SPIreadRegister(reg);
+            break;
+        case 1: // SX127x
+            data = ((SX1278 *) lora)->_mod->SPIreadRegister(reg);
+            break;
+        case 2: // SX128x
+            data = ((SX1280 *) lora)->_mod->SPIreadRegister(reg);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
   Log::console(PSTR("REG ID: 0x%x HEX : 0x%x BIN : %b"), reg, data, data);
 
@@ -957,10 +1434,23 @@ int16_t Radio::remote_SPIsetRegValue(char *payload, size_t payload_len)
 
   int16_t state = 0;
 
-  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
-    state = ((SX1278 *)lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
-  else
-    //   state = ((SX1268*)lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
+//  if (ConfigManager::getInstance().getBoardConfig().L_SX127X)
+//    state = ((SX1278 *)lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
+//  else
+//    //   state = ((SX1268*)lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
+    switch (ConfigManager::getInstance().getBoardConfig().L_SX127X) {
+        case 0: // SX126x
+            state = ((SX1268 *) lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
+            break;
+        case 1: // SX127x
+            state = ((SX1278 *) lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
+            break;
+        case 2: // SX128x
+            state = ((SX1280 *) lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
+            break;
+        default: // Undefined
+            Log::console(PSTR("Board Type in Undefined ... "));
+    }
 
     readState(state);
   return state;

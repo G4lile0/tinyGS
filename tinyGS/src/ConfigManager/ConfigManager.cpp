@@ -47,6 +47,8 @@ ConfigManager::ConfigManager()
                                                                                                                                         {0x3c, 21, 22, 16, 38, 22, 1, 18, 26, 33, 0, 14, 19, 27, 5, 0.0f, "T-BEAM V1.0 + OLED"},                                         // @fafu
                                                                                                                                         {0x3c, 21, 22, 16, 0, 2, 0, 5, 0, 34, 32, 14, 19, 27, 18, 1.6f, "433Mhz FOSSA 1W Ground Station"},                               // @jgromes
                                                                                                                                         {0x3c, 21, 22, 16, 0, 2, 0, 5, 0, 34, 32, 14, 19, 27, 18, 1.6f, "868-915Mhz FOSSA 1W Ground Station"},                           // @jgromes
+                                                                                                                                        {0x3c, 21, 22, 0, 0, 25, 1, 18, 26, 33, 32, 23, 19, 27, 5, 0.0f, "433/470/868/915 MHz TTGO T3 V2.1.6"},     // @rjason
+                                                                                                                                        {0x3c, 21, 22, 0, 0, 0, 2, 18, 26, 33, 0, 23, 19, 27, 5, 0.0f, "2400 MHz ESP32 / E28-2G4MxxS"},             // @rjason
                                                                                                                                     })
 {
   server.on(ROOT_URL, [this] { handleRoot(); });
