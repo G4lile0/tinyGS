@@ -68,7 +68,7 @@ ConfigManager::ConfigManager()
   {      0x3c,       21,        22,       16,           0,         2,      5,     5,   UNNUSED,  34,     32,    14,      19,     27,    18,     1.6f, "433MHz FOSSA 1W Ground Station"  },     // SX1268 @jgromes
   {      0x3c,       21,        22,       16,           0,         2,      2,     5,   UNNUSED,  34,     32,    14,      19,     27,    18,     1.6f, "868-915MHz FOSSA 1W Ground Station"  }, //SX1276 @jgromes
   {      0x3c,       21,        22,       16,           0,        22,      8,     5,     26,     34,     32,    14,      19,     27,    18,     0.0f, "2.4GHz ESP32 + SX1280"  },              //SX1280 @g4lile0
-
+  {      0x3c,       21,        22,       0,           0,        25,      1,     18,     26,     33,     32,    23,      19,     27,    5,     0.0f, "433/470/868/915 MHz TTGO T3 V2.1.6"},    //SX1278 @JasonRJ
   })
 {
   server.on(ROOT_URL, [this] { handleRoot(); });
