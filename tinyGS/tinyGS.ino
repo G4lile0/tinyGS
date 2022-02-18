@@ -225,6 +225,7 @@ void loop() {
 
 void setupNTP()
 {
+  NTP.setNTPTimeout (10000);  //  Feedback from Damian G8FTX 
   NTP.setInterval (120); // Sync each 2 minutes
   NTP.setTimeZone (configManager.getTZ ()); // Get TX from config manager
   NTP.onNTPSyncEvent (ntp_cb); // Register event callback
@@ -235,7 +236,7 @@ void setupNTP()
   Serial.printf ("NTP started");
   
   time_t startedSync = millis ();
-  while (NTP.syncStatus() != syncd && millis() - startedSync < 5000) // Wait 5 seconds to get sync
+  while (NTP.syncStatus() != syncd && millis() - startedSync < 10000) // Wait 10 seconds to get sync
   {
     configManager.delay(100);
   }
