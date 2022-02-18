@@ -111,7 +111,7 @@ typedef struct
   String BOARD;
 } board_type;
 
-const uint8_t UNNUSED = -1;
+const uint8_t UNUSED = -1;
 
 typedef struct
 {
