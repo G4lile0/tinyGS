@@ -296,3 +296,35 @@ int16_t RadioHal<SX1280>::fixedPacketLengthMode(uint8_t len)
 {
     return 0;
 }
+
+
+template<>
+int16_t RadioHal<SX1278>::setCRC(uint8_t len,	uint16_t initial , uint16_t polynomial , bool inverted )
+{
+    return radio->setCRC(len==1);
+}
+
+template<>
+int16_t RadioHal<SX1276>::setCRC(uint8_t len,	uint16_t initial , uint16_t polynomial , bool inverted )
+{
+     return radio->setCRC(len==1);
+}
+
+template<>
+int16_t RadioHal<SX1268>::setCRC(uint8_t len,	uint16_t initial , uint16_t polynomial , bool inverted )
+{
+    return radio->setCRC(len,initial,polynomial,inverted);
+}
+
+template<>
+int16_t RadioHal<SX1262>::setCRC(uint8_t len,	uint16_t initial , uint16_t polynomial , bool inverted )
+{
+    return radio->setCRC(len,initial,polynomial,inverted);
+}
+
+template<>
+int16_t RadioHal<SX1280>::setCRC(uint8_t len,	uint16_t initial , uint16_t polynomial , bool inverted )
+{
+    return 0;
+}
+
