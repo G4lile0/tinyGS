@@ -227,6 +227,9 @@ uint8_t Radio::listen()
   status.lastPacketInfo.crc_error = 0;
   // read received data
   respLen = radioHal->getPacketLength();
+  // workaround for radiolib FSX fixed packet definition returning always a size of 255bytes
+  if (respLen == 255) respLen = status.modeminfo.len;
+
   respFrame = new uint8_t[respLen];
   state = radioHal->readData(respFrame, respLen);
   newPacketInfo.rssi = radioHal->getRSSI();
