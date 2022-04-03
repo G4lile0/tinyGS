@@ -32,6 +32,7 @@ MQTT_Client::MQTT_Client()
 #ifdef SECURE_MQTT
   espClient.setCACert(usingNewCert ? newRoot_CA : DSTroot_CA);
 #endif
+  randomTime = random(randomTimeMax - randomTimeMin) + randomTimeMin;
 }
 
 void MQTT_Client::loop()
@@ -39,18 +40,14 @@ void MQTT_Client::loop()
   if (!connected())
   {
     status.mqtt_connected = false;
-    if (millis() - lastConnectionAtempt > reconnectionInterval )
+    if (millis() - lastConnectionAtempt > reconnectionInterval * connectionAtempts + randomTime)
     {
-      if (millis() > (reconnectionInterval/2))                                  // verify that we aren't going have a negative number
-      {
-             lastConnectionAtempt = millis() - random(reconnectionInterval/2);
-      } else
-      {
-            lastConnectionAtempt = millis();
-      }
+      Serial.println(randomTime);
+      lastConnectionAtempt = millis();
       connectionAtempts++;
 
       lastPing = millis();
+      Log::console(PSTR("Attempting MQTT connection..."));
       reconnect();
     }
   }
@@ -66,23 +63,25 @@ void MQTT_Client::loop()
     // if board is on LOW POWER mode instead of directly reboot it, force a 4hours deep sleep. 
     ConfigManager &configManager = ConfigManager::getInstance();
     if (configManager.getLowPower()) 
-        { Radio &radio = Radio::getInstance();
-          uint32_t sleep_seconds = 4*3600; // 4 hours deep sleep. 
-          Log::debug(PSTR("deep_sleep_enter"));
-          esp_sleep_enable_timer_wakeup( 1000000ULL * sleep_seconds); // using ULL  Unsigned Long long
-          delay(100);
-          Serial.flush();
-          WiFi.disconnect(true);
-          delay(100);
-          //  TODO: apagar OLED
-          radio.moduleSleep();
-          esp_deep_sleep_start();
-          delay(1000);   // shouldn't arrive here
-        } else 
-        {
-          ESP.restart();
-        }
-   }
+    {
+      Radio &radio = Radio::getInstance();
+      uint32_t sleep_seconds = 4*3600; // 4 hours deep sleep. 
+      Log::debug(PSTR("deep_sleep_enter"));
+      esp_sleep_enable_timer_wakeup( 1000000ULL * sleep_seconds); // using ULL  Unsigned Long long
+      delay(100);
+      Serial.flush();
+      WiFi.disconnect(true);
+      delay(100);
+      //  TODO: apagar OLED
+      radio.moduleSleep();
+      esp_deep_sleep_start();
+      delay(1000);   // shouldn't arrive here
+    }
+    else 
+    {
+      ESP.restart();
+    }
+  }
 
   PubSubClient::loop();
 
@@ -115,8 +114,6 @@ void MQTT_Client::reconnect()
   char clientId[13];
   sprintf(clientId, "%04X%08X", (uint16_t)(chipId >> 32), (uint32_t)chipId);
 
-  Log::console(PSTR("Attempting MQTT connection..."));
-  Log::console(PSTR("If this is taking more than expected, connect to the config panel on the ip: %s to review the MQTT connection credentials."), WiFi.localIP().toString().c_str());
   if (connect(clientId, configManager.getMqttUser(), configManager.getMqttPass(), buildTopic(teleTopic, topicStatus).c_str(), 2, false, "0"))
   {
     yield();
@@ -129,17 +126,28 @@ void MQTT_Client::reconnect()
   {
     status.mqtt_connected = false;
 
-    if (state() == -2) // first attempt
+    switch (state())
     {
-      if (usingNewCert)
-        espClient.setCACert(DSTroot_CA);
-      else
-        espClient.setCACert(newRoot_CA);
-      usingNewCert = !usingNewCert;
-    }
-    else
-    {
-      Log::console(PSTR("failed, rc=%i"), state());
+      case MQTT_CONNECTION_TIMEOUT:
+        if (connectionAtempts > 4)
+          Log::console(PSTR("MQTT conection timeout, check your wifi signal strength retrying..."), state());
+        break;
+      case MQTT_CONNECT_FAILED:
+        if (connectionAtempts > 3)
+        {
+          if (usingNewCert)
+            espClient.setCACert(DSTroot_CA);
+          else
+            espClient.setCACert(newRoot_CA);
+          usingNewCert = !usingNewCert;
+        }
+        break;
+      case MQTT_CONNECT_BAD_CREDENTIALS:
+      case MQTT_CONNECT_UNAUTHORIZED:
+        Log::console(PSTR("MQTT authentication failure. You can check the MQTT credentials connecting to the config panel on the ip: %s."), WiFi.localIP().toString().c_str());
+        break;
+      default:
+        Log::console(PSTR("failed, rc=%i"), state());
     }
   }
 }

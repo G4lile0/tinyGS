@@ -75,15 +75,18 @@ private:
 
   int  voltage();
   
-  bool usingNewCert = false;
+  bool usingNewCert = true;
   unsigned long lastPing = 0;
   unsigned long lastConnectionAtempt = 0;
   uint8_t connectionAtempts = 0;
   bool scheduledRestart = false;
 
   const unsigned long pingInterval = 1 * 60 * 1000;
-  const unsigned long reconnectionInterval = 10 * 1000;
-  uint16_t connectionTimeout = 5 * 60 * 1000 / reconnectionInterval;
+  const unsigned long reconnectionInterval = 20 * 1000;
+  const unsigned long randomTimeMin = 10 * 1000;
+  const unsigned long randomTimeMax = 20 * 1000;
+  unsigned long randomTime = 0;
+  const uint16_t connectionTimeout = 6;
 
   const char* globalTopic PROGMEM = "tinygs/global/%cmnd%";
   const char* cmndTopic PROGMEM = "tinygs/%user%/%station%/cmnd/%cmnd%";
