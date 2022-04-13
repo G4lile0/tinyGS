@@ -48,7 +48,10 @@ uint8_t oldOledBright = 100;
 
 void displayInit()
 {
-  board_type board = ConfigManager::getInstance().getBoardConfig();
+  board_t board;
+   if (!ConfigManager::getInstance().getBoardConfig(board))
+    return;
+  
   display = new SSD1306(board.OLED__address, board.OLED__SDA, board.OLED__SCL);
 
   ui = new OLEDDisplayUi(display);
@@ -157,7 +160,6 @@ void drawFrame1(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_CENTER);
   display->drawString( x+70, y + 32, "Sta: " + String(configManager.getThingName()));
-  display->drawString( x+70, y + 44, configManager.getTestMode()  ? "Test mode ON" : "Test mode OFF");
 }
 
 void drawFrame2(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y)
@@ -278,9 +280,6 @@ void drawFrame8(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int1
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->drawString(x+2, 16+y, "MQTT:" );
   if (status.mqtt_connected) { display->drawString( x+7,  26+y, "ON"); }  else { display->drawString( x+5,  26+y, "OFF"); }
-  display->drawString(x+90, 10+y, "AUTO");
-  display->drawString(x+95, 21+y, "TUNE" );
-  if (ConfigManager::getInstance().getRemoteTune()) { display->drawString(x+101, 31+y, "ON"); }  else { display->drawString(x+98,  31+y, "OFF"); }
   display->drawXbm(x + 32, y + 4, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
   // The coordinates define the center of the text
   display->setTextAlignment(TEXT_ALIGN_CENTER);

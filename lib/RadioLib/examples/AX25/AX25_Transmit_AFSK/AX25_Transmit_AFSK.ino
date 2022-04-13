@@ -53,7 +53,7 @@ void setup() {
   // (RF69, CC1101,, Si4432 etc.), use the basic begin() method
   // int state = radio.begin();
 
-  if(state == ERR_NONE) {
+  if(state == RADIOLIB_ERR_NONE) {
     Serial.println(F("success!"));
   } else {
     Serial.print(F("failed, code "));
@@ -67,13 +67,29 @@ void setup() {
   // source station SSID:         0
   // preamble length:             8 bytes
   state = ax25.begin("N7LEM");
-  if(state == ERR_NONE) {
+  if(state == RADIOLIB_ERR_NONE) {
     Serial.println(F("success!"));
   } else {
     Serial.print(F("failed, code "));
     Serial.println(state);
     while(true);
   }
+
+  // Sometimes, it may be required to adjust audio
+  // frequencies to match the expected 1200/2200 Hz tones.
+  // The following method will offset mark frequency by
+  // 100 Hz up and space frequency by 100 Hz down
+  /*
+    Serial.print(F("[AX.25] Setting correction ... "));
+    state = ax25.setCorrection(100, -100);
+    if(state == RADIOLIB_ERR_NONE) {
+      Serial.println(F("success!"));
+    } else {
+      Serial.print(F("failed, code "));
+      Serial.println(state);
+      while(true);
+    }
+  */
 }
 
 void loop() {
@@ -82,7 +98,7 @@ void loop() {
   // destination station callsign:     "NJ7P"
   // destination station SSID:         0
   int state = ax25.transmit("Hello World!", "NJ7P");
-  if (state == ERR_NONE) {
+  if (state == RADIOLIB_ERR_NONE) {
     // the packet was successfully transmitted
     Serial.println(F("success!"));
 

@@ -63,8 +63,6 @@ constexpr auto configVersion = "0.05"; //max 4 chars
 
 #define MQTT_DEFAULT_SERVER "mqtt.tinygs.com"
 #define MQTT_DEFAULT_PORT "8883"
-#define MODEM_DEFAULT "{\"mode\":\"LoRa\",\"freq\":436.703,\"bw\":250.0,\"sf\":10,\"cr\":5,\"sw\":18,\"pwr\":5,\"cl\":120,\"pl\":8,\"gain\":0,\"crc\":true,\"fldro\":1,\"sat\":\"Norbi\",\"NORAD\":46494}"
-#define MODEM_DEFAULT_863 "{\"mode\":\"LoRa\",\"freq\":915.6,\"bw\":250.0,\"sf\":10,\"cr\":5,\"sw\":18,\"pwr\":5,\"cl\":120,\"pl\":8,\"gain\":0,\"crc\":true,\"fldro\":1,\"sat\":\"VR3X-A Littlefoot\",\"NORAD\":99750}"
 #define BOARD_863_INDEXES "(1)(3)(5)(7)(9)(16)"
 
 constexpr auto AP_TIMEOUT_MS = "300000";
@@ -88,6 +86,7 @@ enum boardNum
   TBEAM_OLED_v1_0,
   ESP32_SX126X_TXC0_1W_LF,
   ESP32_SX126X_TXC0_1W_HF,
+  ESP32_SX1280_1,
 
   NUM_BOARDS //this line always has to be the last one
 };
@@ -100,7 +99,7 @@ typedef struct
   uint8_t OLED__RST;
   uint8_t PROG__BUTTON;
   uint8_t BOARD_LED;
-  uint8_t L_SX127X; // 0 SX1262  1 SX1278
+  uint8_t L_radio; // 0 SX1262  1 SX1278
   uint8_t L_NSS;    // CS
   uint8_t L_DI00;
   uint8_t L_DI01;
@@ -111,7 +110,9 @@ typedef struct
   uint8_t L_SCK;
   float L_TCXO_V;
   String BOARD;
-} board_type;
+} board_t;
+
+const uint8_t UNUSED = -1;
 
 typedef struct
 {
@@ -144,48 +145,12 @@ public:
   uint8_t getBoard() { return atoi(board); }
   uint8_t getOledBright() { return atoi(oledBright); }
   bool getAllowTx() { return !strcmp(allowTx, CB_SELECTED_STR); }
-  bool getRemoteTune() { return !strcmp(remoteTune, CB_SELECTED_STR); }
-  bool getTelemetry3rd() { return !strcmp(telemetry3rd, CB_SELECTED_STR); }
-  bool getTestMode() { return !strcmp(testMode, CB_SELECTED_STR); }
-  bool getAutoUpdate() { return !strcmp(autoUpdate, CB_SELECTED_STR); }
   void setAllowTx(bool status)
   {
     if (status)
       strcpy(allowTx, CB_SELECTED_STR);
     else
       allowTx[0] = '\0';
-    this->saveConfig();
-  }
-  void setRemoteTune(bool status)
-  {
-    if (status)
-      strcpy(remoteTune, CB_SELECTED_STR);
-    else
-      remoteTune[0] = '\0';
-    this->saveConfig();
-  }
-  void setTelemetry3rd(bool status)
-  {
-    if (status)
-      strcpy(telemetry3rd, CB_SELECTED_STR);
-    else
-      telemetry3rd[0] = '\0';
-    this->saveConfig();
-  }
-  void setTestMode(bool status)
-  {
-    if (status)
-      strcpy(testMode, CB_SELECTED_STR);
-    else
-      testMode[0] = '\0';
-    this->saveConfig();
-  }
-  void setAutoUpdate(bool status)
-  {
-    if (status)
-      strcpy(autoUpdate, CB_SELECTED_STR);
-    else
-      autoUpdate[0] = '\0';
     this->saveConfig();
   }
   const char *getModemStartup() { return modemStartup; }
@@ -211,10 +176,17 @@ public:
   const char *getWiFiSSID() { return getWifiSsidParameter()->valueBuffer; }
   bool isConnected() { return getState() == IOTWEBCONF_STATE_ONLINE; };
   bool isApMode() { return (getState() != IOTWEBCONF_STATE_CONNECTING && getState() != IOTWEBCONF_STATE_ONLINE); }
-  board_type getBoardConfig() { return boards[getBoard()]; }
   bool getFlipOled() { return advancedConf.flipOled; }
   bool getDayNightOled() { return advancedConf.dnOled; }
   bool getLowPower() { return advancedConf.lowPower; }
+  bool getBoardConfig(board_t &board)
+  { 
+    if (getBoardTemplate()[0] != '\0')
+      return parseBoardTemplate(board);
+
+    board = boards[getBoard()];
+    return true; // no error
+  }
   void saveConfig()
   {
     remoteSave = true;
@@ -239,6 +211,12 @@ private:
              iotwebconf2::HtmlFormatProvider::getBodyInner();
     }
 
+    String getStyleInner() override
+    {
+      return iotwebconf2::HtmlFormatProvider::getStyleInner() +
+             String(IOTWEBCONF_CONFIG_STYLE_INNER);
+    }
+
     ConfigManager &configManager;
   };
 
@@ -249,11 +227,12 @@ private:
   void handleRefreshWorldmap();
   void handleBoardTemplateRequest();
   void handleRestart();
-  bool formValidator(iotwebconf2::WebRequestWrapper *webRequestWrapper);
+  bool formValidator(iotwebconf2::WebRequestWrapper *);
   void boardDetection();
   void configSavedCallback();
   void parseAdvancedConf();
   void parseModemStartup();
+  bool parseBoardTemplate(board_t &);
 
   std::function<boolean(iotwebconf2::WebRequestWrapper *)> formValidatorStd;
   DNSServer dnsServer;
@@ -264,7 +243,7 @@ private:
   HTTPUpdateServer httpUpdater;
 #endif
   GSConfigHtmlFormatProvider gsConfigHtmlFormatProvider;
-  board_type boards[NUM_BOARDS];
+  board_t boards[NUM_BOARDS];
   AdvancedConfig advancedConf;
   char savedThingName[IOTWEBCONF_WORD_LEN] = "";
   bool remoteSave = false;
@@ -284,7 +263,7 @@ private:
   char testMode[CHECKBOX_LENGTH] = "";
   char autoUpdate[CHECKBOX_LENGTH] = "";
   char boardTemplate[TEMPLATE_LEN] = "";
-  char modemStartup[MODEM_LEN] = MODEM_DEFAULT;
+  char modemStartup[MODEM_LEN] = "";
   char advancedConfig[ADVANCED_LEN] = "";
 
   iotwebconf2::NumberParameter latitudeParam = iotwebconf2::NumberParameter("Latitude (3 decimals, will be public)", "lat", latitude, COORDINATE_LENGTH, NULL, "0.000", "required min='-180' max='180' step='0.001'");
@@ -308,7 +287,7 @@ private:
 
   iotwebconf2::ParameterGroup groupAdvanced = iotwebconf2::ParameterGroup("Advanced config", "Advanced Config (do not modify unless you know what you are doing)");
   iotwebconf2::TextParameter boardTemplateParam = iotwebconf2::TextParameter("Board Template (requires manual restart)", "board_template", boardTemplate, TEMPLATE_LEN, NULL, NULL, "type=\"text\" maxlength=255");
-  iotwebconf2::TextParameter modemParam = iotwebconf2::TextParameter("Modem startup", "modem_startup", modemStartup, MODEM_LEN, MODEM_DEFAULT, MODEM_DEFAULT, "type=\"text\" maxlength=255");
+  iotwebconf2::TextParameter modemParam = iotwebconf2::TextParameter("Modem startup", "modem_startup", modemStartup, MODEM_LEN, "", "", "type=\"text\" maxlength=255");
   iotwebconf2::TextParameter advancedConfigParam = iotwebconf2::TextParameter("Advanced parameters", "advanced_config", advancedConfig, ADVANCED_LEN, NULL, NULL, "type=\"text\" maxlength=255");
 };
 

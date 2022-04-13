@@ -70,17 +70,23 @@ private:
   void remoteSatCmnd(char* payload, size_t payload_len);
   void remoteSatFilter(char* payload, size_t payload_len);
   void remoteGoToSleep(char* payload, size_t payload_len);
-  void remoteSetFreqOffset(char* payload, size_t payload_len);
+  void remoteGoToSiesta(char* payload, size_t payload_len);
 
-  bool usingNewCert = false;
+
+  int  voltage();
+  
+  bool usingNewCert = true;
   unsigned long lastPing = 0;
   unsigned long lastConnectionAtempt = 0;
   uint8_t connectionAtempts = 0;
   bool scheduledRestart = false;
 
   const unsigned long pingInterval = 1 * 60 * 1000;
-  const unsigned long reconnectionInterval = 5 * 1000;
-  uint16_t connectionTimeout = 5 * 60 * 1000 / reconnectionInterval;
+  const unsigned long reconnectionInterval = 20 * 1000;
+  const unsigned long randomTimeMin = 10 * 1000;
+  const unsigned long randomTimeMax = 20 * 1000;
+  unsigned long randomTime = 0;
+  const uint16_t connectionTimeout = 6;
 
   const char* globalTopic PROGMEM = "tinygs/global/%cmnd%";
   const char* cmndTopic PROGMEM = "tinygs/%user%/%station%/cmnd/%cmnd%";
@@ -120,13 +126,11 @@ private:
   const char* commandFrame PROGMEM= "frame";
   const char* commandSat PROGMEM= "sat";
   const char* commandStatus PROGMEM= "status";
-  const char* commandTest PROGMEM= "test";
-  const char* commandRemoteTune PROGMEM= "remoteTune";
-  const char* commandRemotetelemetry3rd PROGMEM= "telemetry3rd";
   const char* commandLog PROGMEM= "log";
   const char* commandTx PROGMEM= "tx";
   const char* commandSatFilter PROGMEM= "filter";
   const char* commandGoToSleep PROGMEM= "sleep";
+  const char* commandGoToSiesta PROGMEM= "siesta";
   const char* commandSetFreqOffset PROGMEM= "foff";
   const char* commandSetAdvParameters PROGMEM= "set_adv_prm";
   const char* commandGetAdvParameters PROGMEM= "get_adv_prm";

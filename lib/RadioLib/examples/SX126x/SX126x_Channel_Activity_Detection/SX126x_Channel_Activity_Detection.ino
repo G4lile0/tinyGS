@@ -29,13 +29,16 @@ SX1262 radio = new Module(10, 2, 3, 9);
 // https://github.com/jgromes/RadioShield
 //SX1262 radio = RadioShield.ModuleA;
 
+// or using CubeCell
+//SX1262 radio = new Module(RADIOLIB_ONBOARD_MODULE);
+
 void setup() {
   Serial.begin(9600);
 
   // initialize SX1262 with default settings
   Serial.print(F("[SX1262] Initializing ... "));
   int state = radio.begin();
-  if (state == ERR_NONE) {
+  if (state == RADIOLIB_ERR_NONE) {
     Serial.println(F("success!"));
   } else {
     Serial.print(F("failed, code "));
@@ -50,11 +53,11 @@ void loop() {
   // start scanning current channel
   int state = radio.scanChannel();
 
-  if (state == LORA_DETECTED) {
+  if (state == RADIOLIB_LORA_DETECTED) {
     // LoRa preamble was detected
     Serial.println(F("detected!"));
 
-  } else if (state == CHANNEL_FREE) {
+  } else if (state == RADIOLIB_CHANNEL_FREE) {
     // no preamble was detected, channel is free
     Serial.println(F("channel is free!"));
 
