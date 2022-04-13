@@ -160,7 +160,9 @@ void setup()
   }
   // make sure to call doLoop at least once before starting to use the configManager
   configManager.doLoop();
-  pinMode (configManager.getBoardConfig().PROG__BUTTON, INPUT_PULLUP);
+  board_t board;
+  if(configManager.getBoardConfig(board))
+    pinMode (board.PROG__BUTTON, INPUT_PULLUP);
   displayInit();
   displayShowInitialCredits();
   configManager.delay(1000);
@@ -248,7 +250,9 @@ void checkButton()
 {
   #define RESET_BUTTON_TIME 8000
   static unsigned long buttPressedStart = 0;
-  if (!digitalRead (configManager.getBoardConfig().PROG__BUTTON))
+  board_t board;
+  
+  if (configManager.getBoardConfig(board) && !digitalRead (board.PROG__BUTTON))
   {
     if (!buttPressedStart)
     {

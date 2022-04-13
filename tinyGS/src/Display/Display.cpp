@@ -48,7 +48,10 @@ uint8_t oldOledBright = 100;
 
 void displayInit()
 {
-  board_type board = ConfigManager::getInstance().getBoardConfig();
+  board_t board;
+   if (!ConfigManager::getInstance().getBoardConfig(board))
+    return;
+  
   display = new SSD1306(board.OLED__address, board.OLED__SDA, board.OLED__SCL);
 
   ui = new OLEDDisplayUi(display);

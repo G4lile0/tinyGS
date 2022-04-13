@@ -502,13 +502,6 @@ void ConfigManager::resetAllConfig()
   saveConfig();
 }
 
-void ConfigManager::resetModemConfig()
-{
-  strncpy(modemStartup, MODEM_DEFAULT, MODEM_LEN);
-  saveConfig();
-//  ESP.restart();
-}
-
 boolean ConfigManager::init()
 {
   boolean validConfig = IotWebConf2::init();
@@ -586,7 +579,10 @@ void ConfigManager::printConfig()
 {
   Log::debug(PSTR("MQTT Port: %u\nMQTT Server: %s\nMQTT Pass: %s\nLatitude: %f\nLongitude: %f"), getMqttPort(), getMqttServer(), getMqttPass(), getLatitude(), getLongitude());
   Log::debug(PSTR("tz: %s\nOLED Bright: %u\nTX %s"), getTZ(),  getOledBright(), getAllowTx() ? "Enable" : "Disable");
-  if (strlen(getBoardTemplate()) > 0) Log::debug(PSTR("board_template: %s"),getBoardTemplate()); else Log::debug(PSTR("board: %u --> %s\n:"),getBoard(), boards[getBoard()].BOARD.c_str());
+  if (getBoardTemplate()[0] != '\0') 
+    Log::debug(PSTR("board_template: %s"),getBoardTemplate());
+  else 
+    Log::debug(PSTR("board: %u --> %s\n:"),getBoard(), boards[getBoard()].BOARD.c_str());
 }
 
 void ConfigManager::configSavedCallback()
@@ -597,7 +593,7 @@ void ConfigManager::configSavedCallback()
     ESP.restart();
   }
 
-  if (!remoteSave)
+  if (!remoteSave) // remote save is set to true when saving programatically, it's false if the callback comes from web
   {
     forceApMode(false);
     parseModemStartup();
@@ -606,7 +602,7 @@ void ConfigManager::configSavedCallback()
 
   parseAdvancedConf();
 
-  remoteSave = false;
+  remoteSave = false; // reset to false so web callbacks are received as false
 }
 
 void ConfigManager::parseAdvancedConf()
@@ -641,6 +637,9 @@ void ConfigManager::parseAdvancedConf()
 
 void ConfigManager::parseModemStartup()
 {
+  if (modemStartup[0] == '\0')
+    return; // no modem configured yet
+  
   size_t size = JSON_ARRAY_SIZE(10) + 10 * JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(16) + JSON_ARRAY_SIZE(8) + JSON_ARRAY_SIZE(8) + 64;
   DynamicJsonDocument doc(size);
   DeserializationError error = deserializeJson(doc, (const char *)modemStartup);
@@ -648,7 +647,8 @@ void ConfigManager::parseModemStartup()
   if (error.code() != DeserializationError::Ok || !doc.containsKey("mode"))
   {
     Log::console(PSTR("ERROR: Your modem config is invalid. Resetting to default"));
-   // resetModemConfig(); 
+    modemStartup[0] = '\0';
+    saveConfig();
     return;
   }
 
@@ -702,4 +702,36 @@ void ConfigManager::parseModemStartup()
 
   if (Radio::getInstance().isReady())
     Radio::getInstance().begin();
+}
+
+bool ConfigManager::parseBoardTemplate(board_t &board)
+{
+  size_t size = 512;
+  DynamicJsonDocument doc(size);
+  DeserializationError error = deserializeJson(doc, ConfigManager::getInstance().getBoardTemplate());
+
+  if (error.code() != DeserializationError::Ok || !doc.containsKey("radio"))
+  {
+    Log::console(PSTR("Error: Your Board template is not valid. Unable to finish setup."));
+    return false;
+  }
+
+  board.OLED__address = doc["aADDR"];
+  board.OLED__SDA = doc["oSDA"];
+  board.OLED__SCL = doc["oSCL"];
+  board.OLED__RST = doc["oRST"];
+  board.PROG__BUTTON = doc["pBut"];
+  board.BOARD_LED = doc["led"];
+  board.L_radio = doc["radio"];
+  board.L_NSS = doc["lNSS"];
+  board.L_DI00 = doc["lDIO0"];
+  board.L_DI01 = doc["lDIO1"];
+  board.L_BUSSY = doc["lBUSSY"];
+  board.L_RST = doc["lRST"];
+  board.L_MISO = doc["lMISO"];
+  board.L_MOSI = doc["lMOSI"];
+  board.L_SCK = doc["lSCK"];
+  board.L_TCXO_V = doc["lTCXOV"];
+
+  return true;
 }
