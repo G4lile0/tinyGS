@@ -393,7 +393,6 @@ void ConfigManager::handleRefreshWorldmap()
     data_string += String(WiFi.RSSI()) + ",";
   }
   data_string += String(Radio::getInstance().isReady() ? "<span class='G'>READY</span>" : "<span class='R'>NOT READY</span>") + ",";
-  data_string += String(getTestMode() ? "ENABLED" : "DISABLED") + ",";
 
   // last packet received data (for lastpacket id table data)
   data_string += String(status.lastPacketInfo.time) + ",";
