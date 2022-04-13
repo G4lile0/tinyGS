@@ -163,10 +163,10 @@ void ConfigManager::handleDashboard()
   s += FPSTR(IOTWEBCONF_HTML_HEAD_END);
   s += FPSTR(IOTWEBCONF_DASHBOARD_BODY_INNER);
   s += String(FPSTR(LOGO)) + "<br />";
-  
+
   // build svg of world map with animated satellite position
-  uint ix = 0;  
-  uint sx;     
+  uint ix = 0;
+  uint sx;
   String svg = "<div style=""margin-left:35px""><svg width""100%"" height=""auto"" viewBox=""0 0 262 134"" xmlns=""http://www.w3.org/2000/svg"">";
   svg += "<rect x=""1"" y=""1"" width=""262"" height=""134"" stroke=""gray"" fill=""none"" stroke-width=""2"" />";
   for (uint y = 0; y < earth_height; y++)
@@ -176,17 +176,17 @@ void ConfigManager::handleDashboard()
     {
       for (uint i = 0; i < 8; i++)
       {
-        if (((earth_bits[ix] >> i) & 1) == 1)
+        if ((earth_bits[ix] >> i) & 1)
         {
           if (n == 0)
           {
             sx = (x * 8) + i;
           }
           n++;
-        } 
-        else 
+        }
+        if (!((earth_bits[ix] >> i) & 1) || ((x == earth_width / 8 - 1) && (i == 7)))
         {
-          if (n > 0) 
+          if (n > 0)
           {
             // append current land pixel string
             svg += "<rect x="""+ String(sx * 2 + 3) + """ y=""" + String(y * 2 + 3) + """ width=""" + String(n * 2) + """ height=""2"" />";
@@ -201,7 +201,7 @@ void ConfigManager::handleDashboard()
   svg += "<circle id=""wmsatpos"" cx=""" + String(status.satPos[0] * 2 + 3) + """ cy=""" + String(status.satPos[1] * 2 + 3) + """ stroke=""red"" fill=""none"" stroke-width=""2"">";
   svg += "  <animate attributeName=""r"" values=""2;4;6"" dur=""0.75s"" repeatCount=""indefinite"" />";
   svg += "</circle>";
-  svg += "</svg></div>";  
+  svg += "</svg></div>";
   s += svg;
 
   s += F("</table></div><div class=\"card\"><h3>Groundstation Status</h3><table id=""gsstatus"">");
@@ -364,7 +364,7 @@ void ConfigManager::handleRefreshWorldmap()
   server.send(200, F("text/plain"), "");
 
   // world map satellite position (for wmsatpos id attributes)
-  String cx= String(status.satPos[0] * 2 + 3); 
+  String cx= String(status.satPos[0] * 2 + 3);
   String cy= String(status.satPos[1] * 2 + 3);
   String data_string = cx + "," + cy + ",";
 
@@ -393,7 +393,8 @@ void ConfigManager::handleRefreshWorldmap()
     data_string += String(WiFi.RSSI()) + ",";
   }
   data_string += String(Radio::getInstance().isReady() ? "<span class='G'>READY</span>" : "<span class='R'>NOT READY</span>") + ",";
-  
+  data_string += String(getTestMode() ? "ENABLED" : "DISABLED") + ",";
+
   // last packet received data (for lastpacket id table data)
   data_string += String(status.lastPacketInfo.time) + ",";
   data_string += String(status.lastPacketInfo.rssi) + ",";
@@ -544,11 +545,11 @@ void ConfigManager::boardDetection()
     Serial.print(F(" MOSI:"));     Serial.print(boards[ite].L_MOSI);
     Serial.print(F(" MISO:"));     Serial.print(boards[ite].L_MISO);
     Serial.print(F(" SCK:"));      Serial.print(boards[ite].L_SCK);
-      
+
     if (boards[ite].L_DI00) {Serial.print(F(" DI00:")); Serial.print(boards[ite].L_DI00);}
     if (boards[ite].L_DI01) {Serial.print(F(" DI01:")); Serial.print(boards[ite].L_DI01);}
     if (boards[ite].L_BUSSY) {Serial.print(F(" BUSSY:")); Serial.print(boards[ite].L_BUSSY);}
-    Serial.println("");   
+    Serial.println("");
   }*/
 
   // test OLED configuration
