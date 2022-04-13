@@ -23,15 +23,8 @@ int16_t MorseClient::begin(float base, uint8_t speed) {
   // calculate dot length (assumes PARIS as typical word)
   _dotLength = 1200 / speed;
 
-  // set module frequency deviation to 0 if using FSK
-  int16_t state = ERR_NONE;
-  #if !defined(RADIOLIB_EXCLUDE_AFSK)
-  if(_audio == nullptr) {
-    state = _phy->setFrequencyDeviation(0);
-  }
-  #endif
-
-  return(state);
+  // configure for direct mode
+  return(_phy->startDirect());
 }
 
 size_t MorseClient::startSignal() {
@@ -55,6 +48,8 @@ size_t MorseClient::write(uint8_t* buff, size_t len) {
 }
 
 size_t MorseClient::write(uint8_t b) {
+  Module* mod = _phy->getMod();
+
   // check unprintable ASCII characters and boundaries
   if((b < ' ') || (b == 0x60) || (b > 'z')) {
     return(0);
@@ -64,35 +59,35 @@ size_t MorseClient::write(uint8_t b) {
   if(b == ' ') {
     RADIOLIB_DEBUG_PRINTLN(F("space"));
     standby();
-    Module::delay(4 * _dotLength);
+    mod->delay(4 * _dotLength);
     return(1);
   }
 
   // get morse code from lookup table
-  uint8_t code = RADIOLIB_PROGMEM_READ_BYTE(&MorseTable[(uint8_t)(toupper(b) - 32)]);
+  uint8_t code = RADIOLIB_NONVOLATILE_READ_BYTE(&MorseTable[(uint8_t)(toupper(b) - 32)]);
 
   // check unsupported characters
-  if(code == MORSE_UNSUPORTED) {
+  if(code == RADIOLIB_MORSE_UNSUPORTED) {
     return(0);
   }
 
   // iterate through codeword until guard bit is reached
-  while(code > MORSE_GUARDBIT) {
+  while(code > RADIOLIB_MORSE_GUARDBIT) {
 
     // send dot or dash
-    if (code & MORSE_DASH) {
+    if (code & RADIOLIB_MORSE_DASH) {
       RADIOLIB_DEBUG_PRINT('-');
       transmitDirect(_base, _baseHz);
-      Module::delay(3 * _dotLength);
+      mod->delay(3 * _dotLength);
     } else {
       RADIOLIB_DEBUG_PRINT('.');
       transmitDirect(_base, _baseHz);
-      Module::delay(_dotLength);
+      mod->delay(_dotLength);
     }
 
     // symbol space
     standby();
-    Module::delay(_dotLength);
+    mod->delay(_dotLength);
 
     // move onto the next bit
     code >>= 1;
@@ -100,7 +95,7 @@ size_t MorseClient::write(uint8_t b) {
 
   // letter space
   standby();
-  Module::delay(2 * _dotLength);
+  mod->delay(2 * _dotLength);
   RADIOLIB_DEBUG_PRINTLN();
 
   return(1);
@@ -110,7 +105,7 @@ size_t MorseClient::print(__FlashStringHelper* fstr) {
   PGM_P p = reinterpret_cast<PGM_P>(fstr);
   size_t n = 0;
   while(true) {
-    char c = RADIOLIB_PROGMEM_READ_BYTE(p++);
+    char c = RADIOLIB_NONVOLATILE_READ_BYTE(p++);
     if(c == '\0') {
       break;
     }

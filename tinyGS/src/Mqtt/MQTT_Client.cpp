@@ -32,6 +32,7 @@ MQTT_Client::MQTT_Client()
 #ifdef SECURE_MQTT
   espClient.setCACert(usingNewCert ? newRoot_CA : DSTroot_CA);
 #endif
+  randomTime = random(randomTimeMax - randomTimeMin) + randomTimeMin;
 }
 
 void MQTT_Client::loop()
@@ -39,12 +40,14 @@ void MQTT_Client::loop()
   if (!connected())
   {
     status.mqtt_connected = false;
-    if (millis() - lastConnectionAtempt > reconnectionInterval)
+    if (millis() - lastConnectionAtempt > reconnectionInterval * connectionAtempts + randomTime)
     {
+      Serial.println(randomTime);
       lastConnectionAtempt = millis();
       connectionAtempts++;
 
       lastPing = millis();
+      Log::console(PSTR("Attempting MQTT connection..."));
       reconnect();
     }
   }
@@ -57,7 +60,27 @@ void MQTT_Client::loop()
   if (connectionAtempts > connectionTimeout)
   {
     Log::console(PSTR("Unable to connect to MQTT Server after many atempts. Restarting..."));
-    ESP.restart();
+    // if board is on LOW POWER mode instead of directly reboot it, force a 4hours deep sleep. 
+    ConfigManager &configManager = ConfigManager::getInstance();
+    if (configManager.getLowPower()) 
+    {
+      Radio &radio = Radio::getInstance();
+      uint32_t sleep_seconds = 4*3600; // 4 hours deep sleep. 
+      Log::debug(PSTR("deep_sleep_enter"));
+      esp_sleep_enable_timer_wakeup( 1000000ULL * sleep_seconds); // using ULL  Unsigned Long long
+      delay(100);
+      Serial.flush();
+      WiFi.disconnect(true);
+      delay(100);
+      //  TODO: apagar OLED
+      radio.moduleSleep();
+      esp_deep_sleep_start();
+      delay(1000);   // shouldn't arrive here
+    }
+    else 
+    {
+      ESP.restart();
+    }
   }
 
   PubSubClient::loop();
@@ -70,16 +93,12 @@ void MQTT_Client::loop()
       sendWelcome();
     else
     {
-      int totalVbat = 0;
-      int averageVbat = 0;
-      for (int i = 0; i < 20; i++)
-      {
-        totalVbat += analogRead(36);
-      }
-      averageVbat = totalVbat / 20;
       StaticJsonDocument<128> doc;
-      doc["Vbat"] = averageVbat;
+      doc["Vbat"] = voltage();
       doc["Mem"] = ESP.getFreeHeap();
+      doc["RSSI"] =WiFi.RSSI();
+      doc["radio"]= status.radio_error;
+
       char buffer[256];
       serializeJson(doc, buffer);
       Log::debug(PSTR("%s"), buffer);
@@ -95,8 +114,6 @@ void MQTT_Client::reconnect()
   char clientId[13];
   sprintf(clientId, "%04X%08X", (uint16_t)(chipId >> 32), (uint32_t)chipId);
 
-  Log::console(PSTR("Attempting MQTT connection..."));
-  Log::console(PSTR("If this is taking more than expected, connect to the config panel on the ip: %s to review the MQTT connection credentials."), WiFi.localIP().toString().c_str());
   if (connect(clientId, configManager.getMqttUser(), configManager.getMqttPass(), buildTopic(teleTopic, topicStatus).c_str(), 2, false, "0"))
   {
     yield();
@@ -109,17 +126,28 @@ void MQTT_Client::reconnect()
   {
     status.mqtt_connected = false;
 
-    if (state() == -2) // first attempt
+    switch (state())
     {
-      if (usingNewCert)
-        espClient.setCACert(DSTroot_CA);
-      else
-        espClient.setCACert(newRoot_CA);
-      usingNewCert = !usingNewCert;
-    }
-    else
-    {
-      Log::console(PSTR("failed, rc=%i"), state());
+      case MQTT_CONNECTION_TIMEOUT:
+        if (connectionAtempts > 4)
+          Log::console(PSTR("MQTT conection timeout, check your wifi signal strength retrying..."), state());
+        break;
+      case MQTT_CONNECT_FAILED:
+        if (connectionAtempts > 3)
+        {
+          if (usingNewCert)
+            espClient.setCACert(DSTroot_CA);
+          else
+            espClient.setCACert(newRoot_CA);
+          usingNewCert = !usingNewCert;
+        }
+        break;
+      case MQTT_CONNECT_BAD_CREDENTIALS:
+      case MQTT_CONNECT_UNAUTHORIZED:
+        Log::console(PSTR("MQTT authentication failure. You can check the MQTT credentials connecting to the config panel on the ip: %s."), WiFi.localIP().toString().c_str());
+        break;
+      default:
+        Log::console(PSTR("failed, rc=%i"), state());
     }
   }
 }
@@ -152,28 +180,28 @@ void MQTT_Client::sendWelcome()
   char clientId[13];
   sprintf(clientId, "%04X%08X", (uint16_t)(chipId >> 32), (uint32_t)chipId);
 
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(17) + 22 + 20 + 20;
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(17) + 22 + 20 + 20 + 20 + 40;
   DynamicJsonDocument doc(capacity);
   JsonArray station_location = doc.createNestedArray("station_location");
   station_location.add(configManager.getLatitude());
   station_location.add(configManager.getLongitude());
   doc["tx"] = configManager.getAllowTx();
-  doc["test"] = configManager.getTestMode();
-  doc["tele3d"] = configManager.getTelemetry3rd();
   doc["time"] = now;
   doc["version"] = status.version;
   doc["git_version"] = status.git_version;
   doc["sat"] = status.modeminfo.satellite;
-  doc["autoUpdate"] = configManager.getAutoUpdate();
-  doc["remoteTune"] = configManager.getRemoteTune();
   doc["ip"] = WiFi.localIP().toString();
   if (configManager.getLowPower())
     doc["lp"].set(configManager.getLowPower());
   doc["modem_conf"].set(configManager.getModemStartup());
   doc["boardTemplate"].set(configManager.getBoardTemplate());
   doc["Mem"] = ESP.getFreeHeap();
+  doc["Size"] = ESP.getSketchSize();
+  doc["MD5"] = ESP.getSketchMD5();
   doc["board"] = configManager.getBoard();
   doc["mac"] = clientId;
+  doc["seconds"] = millis()/1000;
+  doc["Vbat"] = voltage();
 
   char buffer[1048];
   serializeJson(doc, buffer);
@@ -220,7 +248,6 @@ void MQTT_Client::sendRx(String packet, bool noisy)
   doc["crc_error"] = status.lastPacketInfo.crc_error;
   doc["data"] = packet.c_str();
   doc["NORAD"] = status.modeminfo.NORAD;
-  doc["test"] = configManager.getTestMode();
   doc["noisy"] = noisy;
 
   char buffer[1536];
@@ -245,9 +272,6 @@ void MQTT_Client::sendStatus()
   doc["version"] = status.version;
   doc["board"] = configManager.getBoard();
   doc["tx"] = configManager.getAllowTx();
-  doc["remoteTune"] = configManager.getRemoteTune();
-  doc["telemetry3d"] = configManager.getTelemetry3rd();
-  doc["test"] = configManager.getTestMode();
 
   doc["mode"] = status.modeminfo.modem_mode;
   doc["frequency"] = status.modeminfo.frequency;
@@ -297,6 +321,16 @@ void MQTT_Client::sendAdvParameters()
   publish(buildTopic(teleTopic, topicGet_adv_prm).c_str(), buffer, false);
 }
 
+// helper funcion (this has to dissapear)
+bool isValidFrequency(uint8_t radio, float f)
+{
+  return !((radio == 1 && (f < 137 || f > 525)) ||
+        (radio == 2 && (f < 137 || f > 525)) ||
+        (radio == 5 && (f < 410 || f > 810)) ||
+        (radio == 6 && (f < 150 || f > 960)) ||
+        (radio == 8 && (f < 2400|| f > 2500)));
+}
+
 void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int length)
 {
   Radio &radio = Radio::getInstance();
@@ -326,39 +360,6 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
   {
     OTA::update();
     return; // no ack
-  }
-
-  if (!strcmp(command, commandTest))
-  {
-    if (length < 1)
-      return;
-    ConfigManager &configManager = ConfigManager::getInstance();
-    bool test = payload[0] - '0';
-    Log::console(PSTR("Set Test Mode to %s"), test ? F("ON") : F("OFF"));
-    configManager.setTestMode(test);
-    result = 0;
-  }
-
-  if (!strcmp(command, commandRemoteTune))
-  {
-    if (length < 1)
-      return;
-    ConfigManager &configManager = ConfigManager::getInstance();
-    bool tune = payload[0] - '0';
-    Log::console(PSTR("Set Remote Tune to %s"), tune ? F("ON") : F("OFF"));
-    configManager.setRemoteTune(tune);
-    result = 0;
-  }
-
-  if (!strcmp(command, commandRemotetelemetry3rd))
-  {
-    if (length < 1)
-      return;
-    ConfigManager &configManager = ConfigManager::getInstance();
-    bool telemetry3rd = payload[0] - '0';
-    Log::console(PSTR("Send rx to third parties %s"), telemetry3rd ? F("ON") : F("OFF"));
-    configManager.setTelemetry3rd(telemetry3rd);
-    result = 0;
   }
 
   if (!strcmp(command, commandFrame))
@@ -415,7 +416,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
   // ######################################################
   // ############## Remote tune commands ##################
   // ######################################################
-  if (ConfigManager::getInstance().getRemoteTune() && global)
+  if (global)
     return;
 
   if (!strcmp(command, commandBeginp))
@@ -424,6 +425,28 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     memcpy(buff, payload, length);
     buff[length] = '\0';
     Log::debug(PSTR("%s"), buff);
+
+    size_t size = JSON_ARRAY_SIZE(10) + 10 * JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(16) + JSON_ARRAY_SIZE(8) + JSON_ARRAY_SIZE(8) + 64;
+    DynamicJsonDocument doc(size);
+    DeserializationError error = deserializeJson(doc, payload, length);
+
+    if (error.code() != DeserializationError::Ok || !doc.containsKey("mode"))
+    {
+      Log::console(PSTR("ERROR: Your modem config is invalid. Resetting to default"));
+      return;
+    }
+
+    // check frequecy is valid prior to load 
+    board_t board;
+    if (!ConfigManager::getInstance().getBoardConfig(board))
+      return; 
+    
+    if (!isValidFrequency(board.L_radio, doc["freq"]))
+    {
+      Log::console(PSTR("ERROR: Wrong frequency. Ignoring."));
+      return;
+    }
+
     ConfigManager::getInstance().setModemStartup(buff);
   }
 
@@ -435,15 +458,27 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
 
     if (error.code() != DeserializationError::Ok || !doc.containsKey("mode"))
     {
-      Log::console(PSTR("ERROR: Your modem config is invalid. Resetting to default"));
+      Log::console(PSTR("ERROR: The received modem configuration is invalid. Ignoring."));
       return;
     }
 
+    // check frequecy is valid prior to load  
+    board_t board;
+    if (!ConfigManager::getInstance().getBoardConfig(board))
+      return; 
+    
+    if (!isValidFrequency(board.L_radio, doc["freq"]))
+    {
+      Log::console(PSTR("ERROR: Wrong frequency. Ignoring."));
+      return;
+    }
+   
     ModemInfo &m = status.modeminfo;
     m.modem_mode = doc["mode"].as<String>();
     strcpy(m.satellite, doc["sat"].as<char *>());
     m.NORAD = doc["NORAD"];
 
+  
     if (m.modem_mode == "LoRa")
     {
       m.frequency = doc["freq"];
@@ -466,6 +501,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
       m.power = doc["pwr"];
       m.preambleLength = doc["pl"];
       m.OOK = doc["ook"];
+      m.len = doc["len"];
       m.swSize = doc["fsw"].size();
       for (int i = 0; i < 8; i++)
       {
@@ -514,7 +550,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     result = radio.remote_crc((char *)payload, length);
 
   // Remote_LoRa_syncword [8,1,2,3,4,5,6,7,8,9]
-  if (!strcmp(command, commandCrc))
+  if (!strcmp(command, commandLsw))
     result = radio.remote_lsw((char *)payload, length);
 
   if (!strcmp(command, commandFldro))
@@ -557,7 +593,16 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     result = 0;
   }
 
-  // Send station to lightsleep x seconds
+  // Send station to lightsleep (siesta) x seconds
+  if (!strcmp(command, commandGoToSiesta))
+  {
+    if (length < 1)
+      return;
+    remoteGoToSiesta((char *)payload, length);
+    result = 0;
+  }
+
+ // Send station to deepsleep x seconds
   if (!strcmp(command, commandGoToSleep))
   {
     if (length < 1)
@@ -571,8 +616,8 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
   {
     if (length < 1)
       return;
-    remoteSetFreqOffset((char *)payload, length);
-    result = 0;
+    result = radio.remoteSetFreqOffset((char *)payload, length);
+  
   }
 
   if (!strcmp(command, commandSetAdvParameters))
@@ -730,14 +775,38 @@ void MQTT_Client::remoteSatFilter(char *payload, size_t payload_len)
 
 void MQTT_Client::remoteGoToSleep(char *payload, size_t payload_len)
 {
+  Radio &radio = Radio::getInstance();
   DynamicJsonDocument doc(60);
   deserializeJson(doc, payload, payload_len);
 
-  uint16_t sleep_seconds = doc[0];
+  uint32_t sleep_seconds = doc[0];                        // max 
+  //uint8_t  int_pin = doc [1];   // 99 no int pin
+
+  Log::debug(PSTR("deep_sleep_enter"));
+  esp_sleep_enable_timer_wakeup( 1000000ULL * sleep_seconds); // using ULL  Unsigned Long long
+  //esp_sleep_enable_ext0_wakeup(int_pin,0);
+  delay(100);
+  Serial.flush();
+  WiFi.disconnect(true);
+  delay(100);
+  //  TODO: apagar OLED
+  radio.moduleSleep();
+  esp_deep_sleep_start();
+  delay(1000);   // shouldn't arrive here
+
+}
+
+
+void MQTT_Client::remoteGoToSiesta(char *payload, size_t payload_len)
+{
+  DynamicJsonDocument doc(60);
+  deserializeJson(doc, payload, payload_len);
+
+  uint32_t sleep_seconds = doc[0];                        // max 
   //uint8_t  int_pin = doc [1];   // 99 no int pin
 
   Log::debug(PSTR("light_sleep_enter"));
-  esp_sleep_enable_timer_wakeup(sleep_seconds * 1000000); //30 seconds
+  esp_sleep_enable_timer_wakeup( 1000000ULL * sleep_seconds); // using ULL  Unsigned Long long
   //esp_sleep_enable_ext0_wakeup(int_pin,0);
   delay(100);
   Serial.flush();
@@ -775,13 +844,9 @@ void MQTT_Client::remoteGoToSleep(char *payload, size_t payload_len)
   }
 }
 
-void MQTT_Client::remoteSetFreqOffset(char *payload, size_t payload_len)
-{
-  DynamicJsonDocument doc(60);
-  deserializeJson(doc, payload, payload_len);
-  status.modeminfo.freqOffset = doc[0];
-  Log::debug(PSTR("Set Frequency OffSet to %f Hz"), doc[0]);
-}
+
+
+
 
 // Helper class to use as a callback
 void manageMQTTDataCallback(char *topic, uint8_t *payload, unsigned int length)
@@ -796,3 +861,37 @@ void MQTT_Client::begin()
   setServer(configManager.getMqttServer(), configManager.getMqttPort());
   setCallback(manageMQTTDataCallback);
 }
+
+
+
+int MQTT_Client::voltage() {
+  int medianVoltage;
+  int length = 21;
+  int voltages[22];
+  
+  for (int i = 0; i < 22; i++)
+  {
+    voltages[i] = analogRead(36); 
+    }
+  
+  //    BubbleSortAsc   from https://www.luisllamas.es/arduino-bubble-sort/
+   int i, j, flag = 1;
+   int temp;
+   for (i = 1; (i <= length) && flag; i++)
+   {
+      flag = 0;
+      for (j = 0; j < (length - 1); j++)
+      {
+         if (voltages[j + 1] < voltages[j])
+         {
+            temp = voltages[j];
+            voltages[j] = voltages[j + 1];
+            voltages[j + 1] = temp;
+            flag = 1;
+         }
+      }
+   }
+  medianVoltage = voltages[10];
+  return medianVoltage;
+}
+

@@ -9,8 +9,8 @@
 #include "SX126x.h"
 #include "SX1262.h"
 
-//SX126X_CMD_SET_PA_CONFIG
-#define SX126X_PA_CONFIG_SX1261                       0x01
+//RADIOLIB_SX126X_CMD_SET_PA_CONFIG
+#define RADIOLIB_SX126X_PA_CONFIG_SX1261                       0x01
 
 /*!
   \class SX1261
@@ -35,7 +35,7 @@ class SX1261 : public SX1262 {
     */
     int16_t setOutputPower(int8_t power);
 
-#ifndef RADIOLIB_GODMODE
+#if !defined(RADIOLIB_GODMODE)
   private:
 #endif
 

@@ -41,7 +41,7 @@ void setup() {
   // initialize SX1280 with default settings
   Serial.print(F("[SX1280] Initializing ... "));
   int state = radio.begin();
-  if (state == ERR_NONE) {
+  if (state == RADIOLIB_ERR_NONE) {
     Serial.println(F("success!"));
   } else {
     Serial.print(F("failed, code "));
@@ -56,7 +56,7 @@ void setup() {
   // start listening for LoRa packets
   Serial.print(F("[SX1280] Starting to listen ... "));
   state = radio.startReceive();
-  if (state == ERR_NONE) {
+  if (state == RADIOLIB_ERR_NONE) {
     Serial.println(F("success!"));
   } else {
     Serial.print(F("failed, code "));
@@ -85,6 +85,9 @@ volatile bool enableInterrupt = true;
 // is received by the module
 // IMPORTANT: this function MUST be 'void' type
 //            and MUST NOT have any arguments!
+#if defined(ESP8266) || defined(ESP32)
+  ICACHE_RAM_ATTR
+#endif
 void setFlag(void) {
   // check if the interrupt is enabled
   if(!enableInterrupt) {
@@ -115,7 +118,7 @@ void loop() {
       int state = radio.readData(byteArr, 8);
     */
 
-    if (state == ERR_NONE) {
+    if (state == RADIOLIB_ERR_NONE) {
       // packet was successfully received
       Serial.println(F("[SX1280] Received packet!"));
 
@@ -133,7 +136,7 @@ void loop() {
       Serial.print(radio.getSNR());
       Serial.println(F(" dB"));
 
-    } else if (state == ERR_CRC_MISMATCH) {
+    } else if (state == RADIOLIB_ERR_CRC_MISMATCH) {
       // packet was received, but is malformed
       Serial.println(F("CRC error!"));
 

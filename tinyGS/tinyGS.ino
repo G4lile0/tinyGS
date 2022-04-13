@@ -79,7 +79,7 @@
 #include <ESPNtpClient.h>
 #include "src/Logger/Logger.h"
 
-#if  RADIOLIB_VERSION_MAJOR != (0x04) || RADIOLIB_VERSION_MINOR != (0x02) || RADIOLIB_VERSION_PATCH != (0x01) || RADIOLIB_VERSION_EXTRA != (0x00)
+#if  RADIOLIB_VERSION_MAJOR != (0x05) || RADIOLIB_VERSION_MINOR != (0x01) || RADIOLIB_VERSION_PATCH != (0x02) || RADIOLIB_VERSION_EXTRA != (0x00)
 #error "You are not using the correct version of RadioLib please copy TinyGS/lib/RadioLib on Arduino/libraries"
 #endif
 
@@ -160,7 +160,9 @@ void setup()
   }
   // make sure to call doLoop at least once before starting to use the configManager
   configManager.doLoop();
-  pinMode (configManager.getBoardConfig().PROG__BUTTON, INPUT_PULLUP);
+  board_t board;
+  if(configManager.getBoardConfig(board))
+    pinMode (board.PROG__BUTTON, INPUT_PULLUP);
   displayInit();
   displayShowInitialCredits();
   configManager.delay(1000);
@@ -225,6 +227,7 @@ void loop() {
 
 void setupNTP()
 {
+  NTP.setNTPTimeout (10000);  //  Feedback from Damian G8FTX 
   NTP.setInterval (120); // Sync each 2 minutes
   NTP.setTimeZone (configManager.getTZ ()); // Get TX from config manager
   NTP.onNTPSyncEvent (ntp_cb); // Register event callback
@@ -235,7 +238,7 @@ void setupNTP()
   Serial.printf ("NTP started");
   
   time_t startedSync = millis ();
-  while (NTP.syncStatus() != syncd && millis() - startedSync < 5000) // Wait 5 seconds to get sync
+  while (NTP.syncStatus() != syncd && millis() - startedSync < 10000) // Wait 10 seconds to get sync
   {
     configManager.delay(100);
   }
@@ -247,7 +250,9 @@ void checkButton()
 {
   #define RESET_BUTTON_TIME 8000
   static unsigned long buttPressedStart = 0;
-  if (!digitalRead (configManager.getBoardConfig().PROG__BUTTON))
+  board_t board;
+  
+  if (configManager.getBoardConfig(board) && !digitalRead (board.PROG__BUTTON))
   {
     if (!buttPressedStart)
     {
@@ -294,9 +299,6 @@ void handleSerial()
         configManager.resetAllConfig();
         ESP.restart();
         break;
-      case 't':
-        switchTestmode();
-        break;
       case 'b':
         ESP.restart();
         break;
@@ -327,20 +329,6 @@ void handleSerial()
   }
 }
 
-void switchTestmode()
-{  
-  if (configManager.getTestMode())
-  {
-      configManager.setTestMode(false);
-      Log::console(PSTR("Changed from test mode to normal mode"));
-  }
-  else
-  {
-      configManager.setTestMode(true);
-      Log::console(PSTR("Changed from normal mode to test mode"));
-  }
-}
-
 void printLocalTime()
 {
     time_t currenttime = time (NULL);
@@ -359,7 +347,6 @@ void printLocalTime()
 void printControls()
 {
   Log::console(PSTR("------------- Controls -------------"));
-  Log::console(PSTR("t - change the test mode and restart"));
   Log::console(PSTR("e - erase board config and reset"));
   Log::console(PSTR("b - reboot the board"));
   Log::console(PSTR("p - send test packet to nearby stations (to check transmission)"));
