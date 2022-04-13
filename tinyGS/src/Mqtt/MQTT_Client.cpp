@@ -135,11 +135,13 @@ void MQTT_Client::reconnect()
       case MQTT_CONNECT_FAILED:
         if (connectionAtempts > 3)
         {
+#ifdef SECURE_MQTT
           if (usingNewCert)
             espClient.setCACert(DSTroot_CA);
           else
             espClient.setCACert(newRoot_CA);
           usingNewCert = !usingNewCert;
+#endif
         }
         break;
       case MQTT_CONNECT_BAD_CREDENTIALS:
