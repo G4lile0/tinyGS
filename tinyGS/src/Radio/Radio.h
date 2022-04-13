@@ -28,6 +28,7 @@
 #include "../ConfigManager/ConfigManager.h"
 #include "../Status.h"
 #include "../Mqtt/MQTT_Client.h"
+#include "RadioHal.hpp"
 
 extern Status status;
 
@@ -44,6 +45,7 @@ public:
   void enableInterrupt();
   void disableInterrupt();
   void startRx();
+  int16_t moduleSleep();
   uint8_t listen();
   bool isReady() { return status.radio_ready; }
   int16_t remote_freq(char* payload, size_t payload_len);
@@ -67,10 +69,13 @@ public:
   int16_t remote_SPIreadRegister(char* payload, size_t payload_len);
   int16_t sendTx(uint8_t* data, size_t length);
   int16_t sendTestPacket();
+  int16_t remoteSetFreqOffset(char* payload, size_t payload_len);
+
    
 private:
   Radio();
-  PhysicalLayer* lora;
+  PhysicalLayer* lora; // TODO: Remove this
+  IRadioHal* radioHal;
   void readState(int state);
   static void setFlag();
   SPIClass spi;

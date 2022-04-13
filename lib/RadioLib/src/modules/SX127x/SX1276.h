@@ -49,12 +49,12 @@ class SX1276: public SX1278 {
 
       \returns \ref status_codes
     */
-    int16_t begin(float freq = 434.0, float bw = 125.0, uint8_t sf = 9, uint8_t cr = 7, uint8_t syncWord = SX127X_SYNC_WORD, int8_t power = 10, uint16_t preambleLength = 8, uint8_t gain = 0);
+    int16_t begin(float freq = 434.0, float bw = 125.0, uint8_t sf = 9, uint8_t cr = 7, uint8_t syncWord = RADIOLIB_SX127X_SYNC_WORD, int8_t power = 10, uint16_t preambleLength = 8, uint8_t gain = 0);
 
     /*!
       \brief FSK modem initialization method. Must be called at least once from Arduino sketch to initialize the module.
 
-      \param freq Carrier frequency in MHz. Allowed values range from 137.0 MHz to 525.0 MHz.
+      \param freq Carrier frequency in MHz. Allowed values range from 137.0 MHz to 1020.0 MHz.
 
       \param br Bit rate of the FSK transmission in kbps (kilobits per second). Allowed values range from 1.2 to 300.0 kbps.
 
@@ -71,7 +71,7 @@ class SX1276: public SX1278 {
 
       \returns \ref status_codes
     */
-    int16_t beginFSK(float freq = 434.0, float br = 48.0, float freqDev = 50.0, float rxBw = 125.0, int8_t power = 10, uint16_t preambleLength = 16, bool enableOOK = false);
+    int16_t beginFSK(float freq = 434.0, float br = 4.8, float freqDev = 5.0, float rxBw = 125.0, int8_t power = 10, uint16_t preambleLength = 16, bool enableOOK = false);
 
     // configuration methods
 
@@ -84,7 +84,7 @@ class SX1276: public SX1278 {
     */
     int16_t setFrequency(float freq);
 
-#ifndef RADIOLIB_GODMODE
+#if !defined(RADIOLIB_GODMODE)
   private:
 #endif
 
