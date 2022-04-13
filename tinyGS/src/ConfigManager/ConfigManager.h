@@ -176,7 +176,7 @@ public:
   bool getFlipOled() { return advancedConf.flipOled; }
   bool getDayNightOled() { return advancedConf.dnOled; }
   bool getLowPower() { return advancedConf.lowPower; }
-  bool getBoardConfig(board_t board)
+  bool getBoardConfig(board_t &board)
   { 
     if (getBoardTemplate()[0] != '\0')
       return parseBoardTemplate(board);
