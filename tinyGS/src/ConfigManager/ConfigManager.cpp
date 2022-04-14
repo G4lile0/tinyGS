@@ -77,6 +77,7 @@ ConfigManager::ConfigManager()
   server.on(RESTART_URL, [this] { handleRestart(); });
   server.on(REFRESH_CONSOLE_URL, [this] { handleRefreshConsole(); });
   server.on(REFRESH_WORLDMAP_URL, [this] { handleRefreshWorldmap(); });
+  server.on(BOARD_TEMPLATE_REQUEST_URL, [this] { handleBoardTemplateRequest(); });
   setupUpdateServer(
       [this](const char *updatePath) { httpUpdater.setup(&server, updatePath); },
       [this](const char *userName, char *password) { httpUpdater.updateCredentials(userName, password); });
@@ -402,6 +403,65 @@ void ConfigManager::handleRefreshWorldmap()
   data_string += String(status.lastPacketInfo.crc_error ? "CRC ERROR!" : "");
 
   server.sendContent(data_string + "\n");
+
+  server.sendContent("");
+  server.client().stop();
+}
+
+void ConfigManager::handleBoardTemplateRequest()
+{
+  String template_string = "";
+  String modem_startup_string = "";
+  String response_string = "";
+  String svalue = server.arg("boardindex");
+  if (svalue.length()) 
+  {
+    uint board_index = svalue.toInt();
+    board_type board = boards[board_index];
+    // build the board json string
+    // char hex_s[20];
+    template_string += "{";
+    template_string += "\"name\":\"" + board.BOARD + "\",";
+    //sprintf(hex_s, "0x%X", board.OLED__address);
+    //template_string += "\"aADDR\":" + String(hex_s) + ",";
+    template_string += "\"aADDR\":" + String(board.OLED__address) + ",";
+    template_string += "\"oSDA\":" + String(board.OLED__SDA) + ",";
+    template_string += "\"oSCL\":" + String(board.OLED__SCL) + ",";
+    template_string += "\"oRST\":" + String(board.OLED__RST) + ",";
+    template_string += "\"pBut\":" + String(board.PROG__BUTTON) + ",";
+    template_string += "\"led\":" + String(board.BOARD_LED) + ",";
+    template_string += "\"radio\":" + String(board.L_SX127X) + ",";
+    template_string += "\"lNSS\":" + String(board.L_NSS) + ",";
+    template_string += "\"lDI00\":" + String(board.L_DI00) + ",";
+    template_string += "\"lDI01\":" + String(board.L_DI01) + ",";
+    template_string += "\"lBUSSY\":" + String(board.L_BUSSY) + ",";
+    template_string += "\"lRST\":" + String(board.L_RST) + ",";
+    template_string += "\"lMISO\":" + String(board.L_MISO) + ",";
+    template_string += "\"lMOSI\":" + String(board.L_MOSI) + ",";
+    template_string += "\"lSCK\":" + String(board.L_SCK) + ",";
+    template_string += "\"lTCXO_V\":" + String(board.L_TCXO_V);
+    template_string += "}";
+
+    if (String(BOARD_863_INDEXES).indexOf("("+svalue+")") > -1) 
+    {
+        modem_startup_string = MODEM_DEFAULT_863;
+    } 
+    else 
+    {
+        modem_startup_string = MODEM_DEFAULT;
+    }
+    response_string = template_string + "|||" + modem_startup_string;
+
+  };
+ 
+  server.client().flush();
+  server.sendHeader(F("Cache-Control"), F("no-cache, no-store, must-revalidate"));
+  server.sendHeader(F("Pragma"), F("no-cache"));
+  server.sendHeader(F("Expires"), F("-1"));
+  server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  server.send(200, F("text/plain"), "");
+
+  server.sendContent(response_string + "\n");
 
   server.sendContent("");
   server.client().stop();
