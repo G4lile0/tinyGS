@@ -53,7 +53,6 @@ constexpr auto UPDATE_URL = "/firmware";
 constexpr auto RESTART_URL = "/restart";
 constexpr auto REFRESH_CONSOLE_URL = "/cs";
 constexpr auto REFRESH_WORLDMAP_URL = "/wm";
-constexpr auto BOARD_TEMPLATE_REQUEST_URL = "/bt";
 
 const char TITLE_TEXT[] PROGMEM = "TinyGS Configuration";
 
@@ -63,7 +62,6 @@ constexpr auto configVersion = "0.05"; //max 4 chars
 
 #define MQTT_DEFAULT_SERVER "mqtt.tinygs.com"
 #define MQTT_DEFAULT_PORT "8883"
-#define BOARD_863_INDEXES "(1)(3)(5)(7)(9)(16)"
 
 constexpr auto AP_TIMEOUT_MS = "300000";
 
