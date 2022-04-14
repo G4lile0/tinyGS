@@ -895,8 +895,8 @@ void Radio::remote_SPIwriteRegister(char *payload, size_t payload_len)
   board_t board;
   if (!ConfigManager::getInstance().getBoardConfig(board))
     return;
-  if (board.L_radio)
-    ((SX1278 *)lora)->_mod->SPIwriteRegister(reg, data);
+  //if (board.L_radio)
+  //  ((SX1278 *)lora)->_mod->SPIwriteRegister(reg, data);
   //  else
   //   ((SX1268*)lora)->_mod->SPIwriteRegister(reg,data);
 }
@@ -910,8 +910,8 @@ int16_t Radio::remote_SPIreadRegister(char *payload, size_t payload_len)
   board_t board;
   if (!ConfigManager::getInstance().getBoardConfig(board))
     return -1;
-  if (board.L_radio)
-    data = ((SX1278 *)lora)->_mod->SPIreadRegister(reg);
+  //if (board.L_radio)
+   // data = ((SX1278 *)lora)->_mod->SPIreadRegister(reg);
   // else
   //   data = ((SX1268*)lora)->_mod->SPIreadRegister(reg);
 
@@ -949,9 +949,9 @@ int16_t Radio::remote_SPIsetRegValue(char *payload, size_t payload_len)
   board_t board;
   if (!ConfigManager::getInstance().getBoardConfig(board))
     return -1;
-  if (board.L_radio)
-    state = ((SX1278 *)lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
-  else
+  //if (board.L_radio)
+  //  state = ((SX1278 *)lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
+  //else
     //   state = ((SX1268*)lora)->_mod->SPIsetRegValue(reg, value, msb, lsb, checkinterval);
 
     readState(state);

@@ -21,9 +21,6 @@
 #define RADIO_H
 #define RADIOLIB_EXCLUDE_HTTP
 
-#ifndef RADIOLIB_GODMODE
-#define RADIOLIB_GODMODE
-#endif
 #include <RadioLib.h>
 #include "../ConfigManager/ConfigManager.h"
 #include "../Status.h"
