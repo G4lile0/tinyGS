@@ -2,7 +2,8 @@
 
 template<>
 int16_t RadioHal<SX1278>::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t syncWord, int8_t power, uint16_t preambleLength, uint8_t gain, float tcxoVoltage)
-{
+{ 
+    if (power>=17) radio->setCurrentLimit(150);
     return radio->begin(freq, bw, sf, cr, syncWord, power, preambleLength, gain);
 }
 template<>
@@ -14,6 +15,7 @@ int16_t RadioHal<SX1278>::begin()
 template<>
 int16_t RadioHal<SX1276>::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t syncWord, int8_t power, uint16_t preambleLength, uint8_t gain, float tcxoVoltage)
 {
+    if (power>=17) radio->setCurrentLimit(150);
     return radio->begin(freq, bw, sf, cr, syncWord, power, preambleLength, gain);
 }
 template<>
@@ -25,6 +27,7 @@ int16_t RadioHal<SX1276>::begin()
 template<>
 int16_t RadioHal<SX1268>::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t syncWord, int8_t power, uint16_t preambleLength, uint8_t gain, float tcxoVoltage)
 {
+    if (power>=17) radio->setCurrentLimit(150);
     return radio->begin(freq, bw, sf, cr, syncWord, power, preambleLength, tcxoVoltage);
 }
 template<>
@@ -36,6 +39,7 @@ int16_t RadioHal<SX1268>::begin()
 template<>
 int16_t RadioHal<SX1262>::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t syncWord, int8_t power, uint16_t preambleLength, uint8_t gain, float tcxoVoltage)
 {
+    if (power>=17) radio->setCurrentLimit(150);
     return radio->begin(freq, bw, sf, cr, syncWord, power, preambleLength, tcxoVoltage);
 }
 template<>
@@ -60,24 +64,28 @@ int16_t RadioHal<SX1280>::begin()
 template<>
 int16_t RadioHal<SX1278>::beginFSK(float freq, float br, float freqDev, float rxBw, int8_t power, uint16_t preambleLength, bool enableOOK, float tcxoVoltage, bool useRegulatorLDO)
 {
+    if (power>=17) radio->setCurrentLimit(150);
     return radio->beginFSK(freq, br, freqDev, rxBw, power, preambleLength, enableOOK);
 }
 
 template<>
 int16_t RadioHal<SX1276>::beginFSK(float freq, float br, float freqDev, float rxBw, int8_t power, uint16_t preambleLength, bool enableOOK, float tcxoVoltage, bool useRegulatorLDO)
 {
+    if (power>=17) radio->setCurrentLimit(150);
     return radio->beginFSK(freq, br, freqDev, rxBw, power, preambleLength, enableOOK);
 }
 
 template<>
 int16_t RadioHal<SX1268>::beginFSK(float freq, float br, float freqDev, float rxBw, int8_t power, uint16_t preambleLength, bool enableOOK, float tcxoVoltage, bool useRegulatorLDO)
 {
+    if (power>=17) radio->setCurrentLimit(150);
     return radio->beginFSK(freq, br, freqDev, rxBw, power, preambleLength, tcxoVoltage, useRegulatorLDO);
 }
 
 template<>
 int16_t RadioHal<SX1262>::beginFSK(float freq, float br, float freqDev, float rxBw, int8_t power, uint16_t preambleLength, bool enableOOK, float tcxoVoltage, bool useRegulatorLDO)
 {
+    if (power>=17) radio->setCurrentLimit(150);
     return radio->beginFSK(freq, br, freqDev, rxBw, power, preambleLength, tcxoVoltage, useRegulatorLDO);
 }
 
