@@ -100,7 +100,7 @@ int16_t Radio::begin()
     CHECK_ERROR(radioHal->beginFSK(m.frequency + m.freqOffset, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, (m.OOK == 255), board.L_TCXO_V));
     CHECK_ERROR(radioHal->setDataShaping(m.OOK));
     CHECK_ERROR(radioHal->setCRC(0));
-    CHECK_ERROR(radioHal->fixedPacketLengthMode(m.len));
+    if (m.len!=0) CHECK_ERROR(radioHal->fixedPacketLengthMode(m.len));
     CHECK_ERROR(radioHal->setSyncWord(m.fsw, m.swSize));
   }
 
