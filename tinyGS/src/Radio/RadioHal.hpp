@@ -25,6 +25,7 @@ public:
   virtual int16_t fixedPacketLengthMode(uint8_t len) = 0;
   virtual int16_t setSyncWord(uint8_t* syncWord, uint8_t len) = 0;
   virtual int16_t setFrequency(float freq) = 0;
+  virtual int16_t setEncoding(uint8_t encoding) = 0;
 };
 
 
@@ -95,6 +96,12 @@ public:
   {
     return radio->setFrequency(freq);
   }
+
+  int16_t setEncoding(uint8_t encoding) 
+  {
+    return radio->setEncoding(encoding);
+  }
+
 
 private:
   T* radio;

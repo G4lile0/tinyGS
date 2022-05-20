@@ -688,6 +688,7 @@ void ConfigManager::parseModemStartup()
       else
         m.fsw[i] = 0;
     }
+    m.enc= doc["enc"];
   }
 
   // packets Filter

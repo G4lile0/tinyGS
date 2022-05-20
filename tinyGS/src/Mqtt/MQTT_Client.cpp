@@ -512,6 +512,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
         else
           m.fsw[i] = 0;
       }
+      m.enc= doc["enc"];
     }
 
     // packets Filter

@@ -102,6 +102,7 @@ int16_t Radio::begin()
     CHECK_ERROR(radioHal->setCRC(0));
     if (m.len!=0) CHECK_ERROR(radioHal->fixedPacketLengthMode(m.len));
     CHECK_ERROR(radioHal->setSyncWord(m.fsw, m.swSize));
+    CHECK_ERROR(radioHal->setEncoding(m.enc));
   }
 
   // set the function that will be called

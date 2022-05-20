@@ -54,6 +54,7 @@ struct ModemInfo {
   uint8_t   swSize    = 0;
   uint8_t   filter[8] = {0,0,0,0,0,0,0,0};
   uint8_t   len       = 64;     // FSK expected lenght in packet mode
+  uint8_t   enc       = 0;      // FSK  transmission encoding.     0 -> NRZ (defaul)  1 -> MANCHESTER   2 -> WHITENING
 };
 
 struct TextFrame {   
@@ -65,7 +66,7 @@ struct TextFrame {
 };
 
 struct Status {
-  const uint32_t version = 2205222; // version year month day release
+  const uint32_t version = 2205223; // version year month day release
   const char* git_version = GIT_VERSION;
   bool mqtt_connected = false;
   bool radio_ready = false;
