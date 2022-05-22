@@ -64,10 +64,11 @@ ConfigManager::ConfigManager()
   {      0x3c,       21,        22,       16,           0,        25,      5,    18,   UNUSED,   33,     32,    14,      19,     27,     5,     0.0f, "TTGO LoRa 32 V2 Modified with module SX126x (crystal)"  }, // SX1268 @TCRobotics
   {      0x3c,       21,        22,       16,           0,        25,      5,     5,   UNUSED,    2,     13,    26,      19,     23,    18,     1.6f, "Custom ESP32 Wroom + SX126x DRF1268T (TCX0) (5, 2, 26, 13)"  }, // SX1268 @sdey76
   {      0x3c,       21,        22,       16,           0,        25,      5,     5,   UNUSED,   26,     12,    14,      19,     23,    18,     1.6f, "Custom ESP32 Wroom + SX126x DRF1268T (TCX0) (5, 26, 14, 12)"  }, // SX1268 @imants
-  {      0x3c,       21,        22,       16,          38,        22,      1,    18,     26,     33,   UNUSED , 14,      19,     27,     5,     0.0f, "T-BEAM V1.0 + OLED"     },              // SX1278 @fafu
+  {      0x3c,       21,        22,       16,          38,        22,      1,    18,     26,     33,   UNUSED , 14,      19,     27,     5,     0.0f, "433MHz T-BEAM V1.0 + OLED"     },              // SX1278 @fafu
   {      0x3c,       21,        22,       16,           0,         2,      5,     5,   UNUSED,   34,     32,    14,      19,     27,    18,     1.6f, "433MHz FOSSA 1W Ground Station"  },     // SX1268 @jgromes
   {      0x3c,       21,        22,       16,           0,         2,      2,     5,   UNUSED,   34,     32,    14,      19,     27,    18,     1.6f, "868-915MHz FOSSA 1W Ground Station"  }, //SX1276 @jgromes
   {      0x3c,       21,        22,       16,           0,        22,      8,     5,     26,     34,     32,    14,      19,     27,    18,     0.0f, "2.4GHz ESP32 + SX1280"  },              //SX1280 @g4lile0
+  {      0x3c,       21,        22,       16,          38,        22,      2,    18,     26,     33,   UNUSED , 14,      19,     27,     5,     0.0f, "868-915MHzT-BEAM V1.0 + OLED"     },              // SX1278 @fafu
 
   })
 {
