@@ -599,11 +599,44 @@ void ConfigManager::configSavedCallback()
     forceApMode(false);
     parseModemStartup();
     MQTT_Client::getInstance().scheduleRestart();
+ 
+    // Prog button already pressed so something is wrong.. trying to amend it..
+    if (!digitalRead(boards[getBoard()].PROG__BUTTON)) {
+        Log::error(PSTR("Wrong selection Prog button pressed, trying to solve it"));
+        switch (getBoard()) {
+          case 8:
+               Log::error(PSTR("8->14"));
+               strcpy(board, "14");
+               this->saveConfig();
+               break;
+          case 9:
+               Log::error(PSTR("9->18"));
+               strcpy(board, "18");
+               this->saveConfig();
+               break;
+          case 14:
+               Log::error(PSTR("14->8"));
+               strcpy(board, "8");
+               this->saveConfig();
+               break;
+          case 18:
+               Log::error(PSTR("18->9"));
+               strcpy(board, "9");
+               this->saveConfig();
+               break;
+        } 
+      // seems that prog butto is still pressed wrong so chosing a safe config.
+        if (!digitalRead(boards[getBoard()].PROG__BUTTON)) {
+               Log::error(PSTR("Wrong board moving to a safe config"));
+               strcpy(board, "0");
+               this->saveConfig();
+                    }
+    }
   }
 
   parseAdvancedConf();
-
   remoteSave = false; // reset to false so web callbacks are received as false
+  
 }
 
 void ConfigManager::parseAdvancedConf()
