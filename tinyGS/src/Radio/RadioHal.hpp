@@ -103,7 +103,7 @@ public:
     return radio->setEncoding(encoding);
   }
   
-  void setRfSwitchPins(uint8_t rxEnPin, uint8_t txEnPin)  //@MODDED
+  void setRfSwitchPins(uint8_t rxEnPin, uint8_t txEnPin)
   {
    radio -> setRfSwitchPins(rxEnPin, txEnPin);
   }
