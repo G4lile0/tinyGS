@@ -65,7 +65,13 @@ void Radio::init()
   {
     radioHal = new RadioHal<SX1280>(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
   }
-
+  if (board.RX_EN == 0) board.RX_EN = UNUSED; //@ falta mejorar
+  if (board.TX_EN == 0) board.TX_EN = UNUSED; 
+  if (!((board.RX_EN == UNUSED) && (board.TX_EN == UNUSED))) 
+  { 
+    radioHal -> setRfSwitchPins(board.RX_EN, board.TX_EN);
+    Log::console(PSTR("setRfSwitchPins(RxEn->GPIO-%d, TxEn->GPIO-%d)"),board.RX_EN, board.TX_EN );
+  }
   begin();
 }
 
