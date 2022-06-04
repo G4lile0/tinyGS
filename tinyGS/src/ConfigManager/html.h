@@ -43,10 +43,11 @@ const char BOARD_NAMES[][BOARD_NAME_LENGTH] PROGMEM =
   "T-BEAM V1.0 + OLED" ,
   "433Mhz FOSSA 1W Ground Station",
   "868-915Mhz FOSSA 1W Ground Station",
+  "Custom ESP32 Wroom + NiceRF SX1262 (Crystal)", 
 };
 
 constexpr auto BOARD_LENGTH = 3;
-const char BOARD_VALUES[][BOARD_LENGTH] PROGMEM = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" };
+const char BOARD_VALUES[][BOARD_LENGTH] PROGMEM = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17" };
 
 const char IOTWEBCONF_DASHBOARD_STYLE_INNER[] PROGMEM = "table{margin:20px auto;}h3{text-align:center;}.card{height:12em;margin:10px;text-align:left;font-family:Arial;border:3px groove;border-radius:0.3rem;display:inline-block;padding:10px;min-width:260px;}td{padding:0 10px;}textarea{resize:vertical;width:100%;margin:0;height:318px;padding:5px;overflow:auto;}#c1{width:98%;padding:5px;}#t1{width:98%}.console{display:inline-block;text-align:center;margin:10px 0;width:98%;max-width:1080px;}.G{color:green;}.R{color:red}";
 const char IOTWEBCONF_DASHBOARD_BODY_INNER[] PROGMEM   = "<div style='text-align:center;min-width:260px;'>\n";

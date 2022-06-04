@@ -76,6 +76,11 @@
 #include "src/Radio/Radio.h"
 #include "src/ArduinoOTA/ArduinoOTA.h"
 #include "src/OTA/OTA.h"
+
+#include <cppQueue.h>
+#include "src/Rotator/Rotator.h"
+#include "src/Rotator/N2YO.h"
+
 #include <ESPNtpClient.h>
 #include "src/Logger/Logger.h"
 
@@ -93,8 +98,16 @@ ConfigManager& configManager = ConfigManager::getInstance();
 MQTT_Client& mqtt = MQTT_Client::getInstance();
 Radio& radio = Radio::getInstance();
 
+cppQueue passes_queue(sizeof(radiopass_t), PASSESQUEUE_SIZE, FIFO, true); // instantiate the passes queue
+cppQueue positions_queue(sizeof(position_t), POSITIONSQUEUE_SIZE, FIFO, false); // instantiate the positions queue
+
+Rotator_Client& rotator = Rotator_Client::getInstance();
+N2YO_Client n2yo = N2YO_Client::getInstance();
+TaskHandle_t taskRotor;
+
 const char* ntpServer = "time.cloudflare.com";
 void printLocalTime();
+void taskRotorHandle(void *parameter);
 
 // Global status
 Status status;
@@ -166,6 +179,9 @@ void setup()
   configManager.delay(1000);
   mqtt.begin();
 
+  N2YO_Client::getInstance().printStats();
+  xTaskCreatePinnedToCore(taskRotorHandle, "taskRotor", 10000, NULL, 1, &taskRotor, 0);                         
+
   if (configManager.getOledBright() == 0)
   {
     displayTurnOff();
@@ -232,7 +248,7 @@ void setupNTP()
   NTP.settimeSyncThreshold (1000); // Sync only if calculated offset absolute value is greater than 1 ms
   NTP.setMaxNumSyncRetry (2); // 2 resync trials if accuracy not reached
   NTP.begin (ntpServer); // Start NTP client
-  Serial.printf ("NTP started");
+  Serial.printf ("NTP started...\n");
   
   time_t startedSync = millis ();
   while (NTP.syncStatus() != syncd && millis() - startedSync < 5000) // Wait 5 seconds to get sync
@@ -352,7 +368,7 @@ void printLocalTime()
     
     timeinfo = localtime (&currenttime);
   
-  Serial.println(timeinfo, "%A, %B %d %Y %H:%M:%S");
+  Serial.println(timeinfo, "%A, %B %d %Y %H:%M:%S (local)");
 }
 
 // function to print controls
@@ -364,4 +380,99 @@ void printControls()
   Log::console(PSTR("b - reboot the board"));
   Log::console(PSTR("p - send test packet to nearby stations (to check transmission)"));
   Log::console(PSTR("------------------------------------"));
+}
+
+void taskRotorHandle(void *parameter)
+{
+  position_t position;
+  radiopass_t radiopass;
+
+  Log::debug(PSTR("taskRotor is running on core %d"), xPortGetCoreID());
+
+  // WARNING! not thread-safe!
+
+  for (;;)
+  {
+    time_t utc;
+    struct tm *currenttime;
+
+    // il positions queue is not empty, process it...
+    while (!positions_queue.isEmpty())
+    {
+      time(&utc);
+      currenttime = gmtime(&utc);
+      // Log::debug(PSTR("current UTC: timestamp=%ld %04d/%02d/%02d %02d:%02d:%02d (UTC)"), utc, 1900 + currenttime->tm_year, currenttime->tm_mon, currenttime->tm_mday, currenttime->tm_hour, currenttime->tm_min, currenttime->tm_sec);
+
+      positions_queue.peek(&position);
+
+      if (position.timestamp < utc)
+      {
+        Log::debug(PSTR("NORAD SAT#%lu: position timestamp %ld is %ld seconds in the past... and has been ignored..."), position.norad_id, position.timestamp, utc - position.timestamp);
+        positions_queue.drop();
+        continue;
+      }
+
+      // WARNING! rischio di dormire troppo a lungo ?
+      // WARNING! la coda delle posizioni dovrebbe essere resettata se arriva una nuova richiesta!
+      // WARNING! mentre aspetto potrei puntare genericamente verso lo zenith oppure sul punto di massima elevazione fornito da N2YO
+      // WARNING! prevedere di poter uscire dallo sleep di 30s... servirebbe una terminate oppure rivedere il codice affinche' continui a girare ogni secondo e stampi ogni 60s...
+      if (position.timestamp > utc)
+      {
+        int delta = position.timestamp - utc;
+        Log::debug(PSTR("NORAD SAT#%lu: position timestamp %ld is %ld seconds in the future... waiting..."), position.norad_id, position.timestamp, delta);
+        if (delta > 60)
+          delta = 60; // wake up every minute...
+        if (delta >= 1)
+          delay((1000 * delta) - 100); // just wakeup a little bit earlier...
+        continue;
+      }
+
+      struct tm *postime = gmtime(&position.timestamp);
+      Log::debug(PSTR("tracking NORAD SAT#%lu timestamp=%ld UTC:%04d/%02d/%02d %02d:%02d:%02d latitude=%f longitude=%f altitude=%f azimuth=%f elevation=%f"), position.norad_id, position.timestamp, 1900 + postime->tm_year, postime->tm_mon, postime->tm_mday, postime->tm_hour, postime->tm_min, postime->tm_sec, position.sat_latitude, position.sat_longitude, position.sat_altitude, position.azimuth, position.elevation);
+
+      positions_queue.drop();
+    }
+
+    // if we are here, positions_queue is empty...
+    // if we have radiopasses in the radiopasses-queue, extract the first one and query N2YO for SAT positions...
+    if (passes_queue.isEmpty())
+    {
+      // Log::debug(PSTR("radio-passes queue is empty..."));
+      delay(1000);
+      continue;
+    }
+
+    Log::debug(PSTR("checking first item in radio-passes queue..."));
+
+    passes_queue.peek(&radiopass);
+
+    time(&utc);
+    currenttime = gmtime(&utc);
+
+    // if the radiopass has elapsed... just remove it from the radio-pass queue...
+    if (utc >= radiopass.endUTC)
+    {
+      Log::debug(PSTR("radio-pass with endUTC %ld has expired..."), radiopass.endUTC);
+      passes_queue.drop();
+      continue;
+    }
+
+    // WARNING! rischio di dormire troppo a lungo ?
+    // WARNING! la coda dei passaggi radio dovrebbe essere resettata se arriva una nuova richiesta!
+    if (utc < radiopass.startUTC)
+    {
+      int delta = radiopass.startUTC - utc;
+      Log::debug(PSTR("radio-pass with startUTC %ld is %ld seconds in the future... waiting..."), radiopass.startUTC, delta);
+      if (delta > 60)
+        delta = 60; // wake up every minute...
+      if (delta >= 1)
+        delay((1000 * delta) - 100); // just wakeup a little bit earlier...
+      continue;
+    }
+
+    // query N2YO for the GPS positions for the given NORAD id; results will be automatically pushed in the positions_queue
+    N2YO_Client::getInstance().query_positions(radiopass.norad_id);
+
+    delay(500);
+  }
 }

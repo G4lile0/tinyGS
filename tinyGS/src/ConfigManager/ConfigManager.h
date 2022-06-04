@@ -85,6 +85,7 @@ enum boardNum
   TBEAM_OLED_v1_0,
   ESP32_SX126X_TXC0_1W_LF,
   ESP32_SX126X_TXC0_1W_HF,
+  ESP32_SX1262_XTAL,
 
   NUM_BOARDS //this line always has to be the last one
 };
@@ -97,7 +98,7 @@ typedef struct
   uint8_t OLED__RST;
   uint8_t PROG__BUTTON;
   uint8_t BOARD_LED;
-  uint8_t L_SX127X; // 0 SX1262  1 SX1278
+  uint8_t L_RADIO; // 0=SX1268  1=SX1278  2=1262
   uint8_t L_NSS;    // CS
   uint8_t L_DI00;
   uint8_t L_DI01;

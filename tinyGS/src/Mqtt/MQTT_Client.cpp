@@ -26,6 +26,9 @@
 #include "../OTA/OTA.h"
 #include "../Logger/Logger.h"
 
+#include "../Rotator/Rotator.h"
+#include "../Rotator/N2YO.h"
+
 MQTT_Client::MQTT_Client()
     : PubSubClient(espClient)
 {
@@ -347,6 +350,7 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     bool tune = payload[0] - '0';
     Log::console(PSTR("Set Remote Tune to %s"), tune ? F("ON") : F("OFF"));
     configManager.setRemoteTune(tune);
+
     result = 0;
   }
 
@@ -425,6 +429,10 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     buff[length] = '\0';
     Log::debug(PSTR("%s"), buff);
     ConfigManager::getInstance().setModemStartup(buff);
+
+    ModemInfo &m = status.modeminfo;
+    Log::console(PSTR("query_radiopasses() invoked by commandBeginp"));
+    N2YO_Client::getInstance().query_radiopasses(m.NORAD, true);
   }
 
   if (!strcmp(command, commandBegine))
@@ -443,6 +451,9 @@ void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int len
     m.modem_mode = doc["mode"].as<String>();
     strcpy(m.satellite, doc["sat"].as<char *>());
     m.NORAD = doc["NORAD"];
+
+    Log::console(PSTR("query_radiopasses() invoked by commandBegine"));
+    N2YO_Client::getInstance().query_radiopasses(m.NORAD, true);
 
     if (m.modem_mode == "LoRa")
     {
@@ -706,6 +717,9 @@ void MQTT_Client::remoteSatCmnd(char *payload, size_t payload_len)
   status.modeminfo.NORAD = NORAD;
 
   Log::debug(PSTR("Listening Satellite: %s NORAD: %u"), status.modeminfo.satellite, NORAD);
+
+  Log::console(PSTR("query_radiopasses() invoked by remoteSatCmnd()"));
+  N2YO_Client::getInstance().query_radiopasses(NORAD, true);
 }
 
 void MQTT_Client::remoteSatFilter(char *payload, size_t payload_len)

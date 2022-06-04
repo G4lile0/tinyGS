@@ -21,7 +21,6 @@
 #define MQTT_CLIENT_H
 
 #define SECURE_MQTT // Comment this line if you are not using MQTT over SSL
-#define LOG_TAG "MQTT"
 
 #include "../ConfigManager/ConfigManager.h"
 #include "../Status.h"
@@ -71,7 +70,7 @@ private:
   void remoteSatFilter(char* payload, size_t payload_len);
   void remoteGoToSleep(char* payload, size_t payload_len);
   void remoteSetFreqOffset(char* payload, size_t payload_len);
-
+ 
   bool usingNewCert = false;
   unsigned long lastPing = 0;
   unsigned long lastConnectionAtempt = 0;
