@@ -336,3 +336,47 @@ int16_t RadioHal<SX1280>::setCRC(uint8_t len,	uint16_t initial , uint16_t polyno
     return 0;
 }
 
+template<>
+int16_t RadioHal<SX1276>::setEncoding(uint8_t encoding) 
+{
+    if (encoding == 10)
+        encoding = 0;
+
+    return radio->setEncoding(encoding);
+}
+
+template<>
+int16_t RadioHal<SX1278>::setEncoding(uint8_t encoding) 
+{
+    if (encoding == 10)
+        encoding = 0;
+
+    return radio->setEncoding(encoding);
+}
+
+template<>
+int16_t RadioHal<SX1262>::setEncoding(uint8_t encoding) 
+{
+    if (encoding == 10)
+        encoding = 1;
+
+    return radio->setEncoding(encoding);
+}
+
+template<>
+int16_t RadioHal<SX1268>::setEncoding(uint8_t encoding) 
+{
+    if (encoding == 10)
+        encoding = 1;
+
+    return radio->setEncoding(encoding);
+}
+
+template<>
+int16_t RadioHal<SX1280>::setEncoding(uint8_t encoding) 
+{
+    if (encoding == 10)
+        encoding = 1;
+
+    return radio->setEncoding(encoding);
+}

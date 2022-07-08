@@ -97,11 +97,7 @@ public:
     return radio->setFrequency(freq);
   }
 
-  int16_t setEncoding(uint8_t encoding) 
-  {
-    return radio->setEncoding(encoding);
-  }
-
+  int16_t setEncoding(uint8_t encoding);
 
 private:
   T* radio;
