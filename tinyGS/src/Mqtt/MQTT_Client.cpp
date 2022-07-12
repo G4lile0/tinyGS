@@ -327,10 +327,10 @@ void MQTT_Client::sendAdvParameters()
 bool isValidFrequency(uint8_t radio, float f)
 {
   return !((radio == 1 && (f < 137 || f > 525)) ||
-          (radio == 2 && (f < 137 || f > 1020)) ||
-          (radio == 5 && (f < 410 || f > 810)) ||
-          (radio == 6 && (f < 150 || f > 960)) ||
-          (radio == 8 && (f < 2400|| f > 2500)));
+        (radio == 2 && (f < 137 || f > 1020)) ||
+        (radio == 5 && (f < 410 || f > 810)) ||
+        (radio == 6 && (f < 150 || f > 960)) ||
+        (radio == 8 && (f < 2400|| f > 2500)));
 }
 
 void MQTT_Client::manageMQTTData(char *topic, uint8_t *payload, unsigned int length)

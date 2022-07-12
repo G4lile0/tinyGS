@@ -108,7 +108,7 @@ typedef struct
   uint8_t L_MOSI;
   uint8_t L_SCK;
   float L_TCXO_V;
-  uint8_t RX_EN; 
+  uint8_t RX_EN;
   uint8_t TX_EN;
   String BOARD;
 } board_t;
@@ -181,17 +181,21 @@ public:
   bool getDayNightOled() { return advancedConf.dnOled; }
   bool getLowPower() { return advancedConf.lowPower; }
   bool getBoardConfig(board_t &board)
-  { 
-    if (getBoardTemplate()[0] != '\0')
-      return parseBoardTemplate(board);
+  {
+    bool ret = true;
+    if (!currentBoardDirty) { board = currentBoard; return ret; }
 
-    board = boards[getBoard()];
-    return true; // no error
+    if (getBoardTemplate()[0] == '\0') { currentBoard = boards[getBoard()]; }
+    else { ret = parseBoardTemplate(currentBoard); }
+    currentBoardDirty = false;
+    board = currentBoard;
+    return ret;
   }
   void saveConfig()
   {
     remoteSave = true;
     IotWebConf2::saveConfig();
+    currentBoardDirty = true;
   };
 
 private:
@@ -245,6 +249,8 @@ private:
 #endif
   GSConfigHtmlFormatProvider gsConfigHtmlFormatProvider;
   board_t boards[NUM_BOARDS];
+  board_t currentBoard;
+  bool currentBoardDirty = true;
   AdvancedConfig advancedConf;
   char savedThingName[IOTWEBCONF_WORD_LEN] = "";
   bool remoteSave = false;

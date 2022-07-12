@@ -767,8 +767,14 @@ bool ConfigManager::parseBoardTemplate(board_t &board)
   board.L_MOSI = doc["lMOSI"];
   board.L_SCK = doc["lSCK"];
   board.L_TCXO_V = doc["lTCXOV"];
-  board.RX_EN = doc["RXEN"];
-  board.TX_EN = doc["TXEN"];
+  if (doc.containsKey("RXEN"))
+    board.RX_EN = doc["RXEN"];
+  else
+    board.RX_EN = UNUSED;
+  if (doc.containsKey("TXEN"))
+    board.TX_EN = doc["TXEN"];
+  else
+    board.TX_EN = UNUSED;
 
   return true;
 }
