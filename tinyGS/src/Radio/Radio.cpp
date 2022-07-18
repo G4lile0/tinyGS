@@ -32,7 +32,11 @@ bool eInterrupt = true;
 bool noisyInterrupt = false;
 
 Radio::Radio()
-    : spi(VSPI)
+    #ifdef ESP32-S2
+      : spi(FSPI)
+    #else
+      : spi(VSPI)
+    #endif
 {
 }
 
