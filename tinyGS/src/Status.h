@@ -71,6 +71,7 @@ struct Status {
   bool mqtt_connected = false;
   bool radio_ready = false;
   int16_t radio_error = 0;
+  float vbat = 0.0;
   PacketInfo lastPacketInfo;
   ModemInfo modeminfo;
   float satPos[2] = {0, 0};

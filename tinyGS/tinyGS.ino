@@ -101,6 +101,7 @@ Status status;
 void printControls();
 void switchTestmode();
 void checkButton();
+void checkBattery(void);
 void setupNTP();
 
 void configured()
@@ -204,6 +205,8 @@ void loop() {
     return;
   }
 
+  checkBattery();
+
   // connected
 
   mqtt.loop();
@@ -246,6 +249,22 @@ void checkButton()
     if (elapsedTime > 30 && elapsedTime < 1000) // short press
       displayNextFrame();
     buttPressedStart = 0;
+  }
+}
+
+void checkBattery(void)
+{
+  #define BATTERY_INTERVAL 1000
+  static unsigned long lastReadTime = 0;
+  board_t board;
+
+  if (millis() - lastReadTime > BATTERY_INTERVAL) {
+    lastReadTime = millis();
+    if (configManager.getBoardConfig(board)) {
+      if (board.VBAT_AIN != UNUSED) {
+        status.vbat = (float)analogReadMilliVolts(board.VBAT_AIN) * board.VBAT_SCALE * 0.001f;
+      }
+    }
   }
 }
 
