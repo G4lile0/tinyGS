@@ -776,7 +776,10 @@ bool ConfigManager::parseBoardTemplate(board_t &board)
     board.TX_EN = doc["TXEN"];
   else
     board.TX_EN = UNUSED;
-  board.VBAT_AIN = doc["VBAT"] || UNUSED;
+  if (doc.containsKey("VBAT"))
+    board.VBAT_AIN = doc["VBAT"];
+  else
+    board.VBAT_AIN = UNUSED;
   board.VBAT_SCALE = doc["VBATX"];
 
   return true;
