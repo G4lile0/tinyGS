@@ -254,7 +254,7 @@ void checkButton()
 
 void checkBattery(void)
 {
-  #define BATTERY_INTERVAL 1000
+  #define BATTERY_INTERVAL 250
   static unsigned long lastReadTime = 0;
   board_t board;
 
@@ -262,7 +262,8 @@ void checkBattery(void)
     lastReadTime = millis();
     if (configManager.getBoardConfig(board)) {
       if (board.VBAT_AIN != UNUSED) {
-        status.vbat = (float)analogReadMilliVolts(board.VBAT_AIN) * board.VBAT_SCALE * 0.001f;
+        float vbatMeas = (float)analogReadMilliVolts(board.VBAT_AIN) * board.VBAT_SCALE * 0.001f;
+        status.vbat = (0.75 * status.vbat) + (0.25 * vbatMeas);
       }
     }
   }
