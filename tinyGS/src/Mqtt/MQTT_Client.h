@@ -72,9 +72,6 @@ private:
   void remoteGoToSleep(char* payload, size_t payload_len);
   void remoteGoToSiesta(char* payload, size_t payload_len);
 
-
-  int  voltage();
-  
   bool usingNewCert = true;
   unsigned long lastPing = 0;
   unsigned long lastConnectionAtempt = 0;
