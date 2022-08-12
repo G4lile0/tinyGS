@@ -1,0 +1,54 @@
+name: Build Firmware
+
+on:
+  push:
+    paths-ignore:
+      - 'doc/**'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Cache pip
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    - name: Cache PlatformIO
+      uses: actions/cache@v3
+      with:
+        path: ~/.platformio
+        key: ${{ runner.os }}-platformio-${{ hashFiles('**/lockfiles') }}
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - name: Install PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade platformio
+    - name: Run PlatformIO
+      run: pio run -e esp32dev
+    - name: Create merged binary
+      run: >
+        python ~/.platformio/packages/tool-esptoolpy/esptool.py --chip esp32 merge_bin -o .pio/build/esp32dev/firmware-full.bin
+        0x1000 ~/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/bin/bootloader_dio_40m.bin
+        0x8000 .pio/build/esp32dev/partitions.bin
+        0xe000 ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin
+        0x10000 .pio/build/esp32dev/firmware.bin
+    - name: Rename binaries
+      run: |
+        mv .pio/build/esp32dev/firmware.bin .pio/build/esp32dev/tinygs-ota.bin
+        mv .pio/build/esp32dev/firmware-full.bin .pio/build/esp32dev/tinygs-full.bin
+    - name: Archive build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: firmware
+        path: |
+          .pio/build/esp32dev/tinygs-ota.bin
+          .pio/build/esp32dev/tinygs-full.bin
