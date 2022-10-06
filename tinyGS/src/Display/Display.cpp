@@ -19,6 +19,7 @@
 
 #include "Display.h"
 #include "graphics.h"
+#include "../ConfigManager/ConfigManager.h"
 
 SSD1306* display;
 OLEDDisplayUi* ui = NULL;
@@ -63,12 +64,16 @@ void displayInit()
   ui->setFrameAnimation(SLIDE_LEFT);
   ui->setFrames(frames, frameCount);
   ui->setOverlays(overlays, overlaysCount);
+
+  if (board.OLED__RST != UNUSED) {
+    pinMode(board.OLED__RST, OUTPUT);
+    digitalWrite(board.OLED__RST, LOW);
+    delay(50);
+    digitalWrite(board.OLED__RST, HIGH);
+  }
+
+  /* ui init() also initialises the underlying display */
   ui->init();
-  pinMode(board.OLED__RST,OUTPUT);
-  digitalWrite(board.OLED__RST, LOW);     
-  delay(50);
-  digitalWrite(board.OLED__RST, HIGH);   
-  display->init();
 
   if (ConfigManager::getInstance().getFlipOled())
     display->flipScreenVertically();
