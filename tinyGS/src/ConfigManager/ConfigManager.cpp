@@ -754,7 +754,10 @@ bool ConfigManager::parseBoardTemplate(board_t &board)
   board.OLED__address = doc["aADDR"];
   board.OLED__SDA = doc["oSDA"];
   board.OLED__SCL = doc["oSCL"];
-  board.OLED__RST = doc["oRST"];
+  if (doc.containsKey("oRST"))
+    board.OLED__RST = doc["oRST"];
+  else
+    board.OLED__RST = UNUSED;
   board.PROG__BUTTON = doc["pBut"];
   board.BOARD_LED = doc["led"];
   board.L_radio = doc["radio"];
