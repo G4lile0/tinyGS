@@ -76,7 +76,7 @@ void Radio::init()
 
   if (board.L_SX127X)
   {
-    lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+    lora = new SX1278(new Module(board.L_NSS, board.L_DI00, board.L_RST, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
   }
   else
   {
