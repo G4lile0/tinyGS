@@ -32,7 +32,7 @@ SX1262 radio = new Module(10, 2, 3, 9);
 //SX1262 radio = RadioShield.ModuleA;
 
 // or using CubeCell
-//SX1262 radio = new Module(RADIOLIB_ONBOARD_MODULE);
+//SX1262 radio = new Module(RADIOLIB_BUILTIN_MODULE);
 
 // save transmission state between loops
 int transmissionState = RADIOLIB_ERR_NONE;
@@ -116,6 +116,11 @@ void loop() {
       Serial.println(transmissionState);
 
     }
+
+    // clean up after transmission is finished
+    // this will ensure transmitter is disabled,
+    // RF switch is powered down etc.
+    radio.finishTransmit();
 
     // wait a second before transmitting again
     delay(1000);

@@ -70,6 +70,19 @@
 
 
 // SX126X register map
+#define RADIOLIB_SX126X_REG_HOPPING_ENABLE                     0x0385
+#define RADIOLIB_SX126X_REG_LR_FHSS_PACKET_LENGTH              0x0386
+#define RADIOLIB_SX126X_REG_LR_FHSS_NUM_HOPPING_BLOCKS         0x0387
+#define RADIOLIB_SX126X_REG_LR_FHSS_NUM_SYMBOLS_FREQX_MSB(X)   (0x0388 + (X)*6)
+#define RADIOLIB_SX126X_REG_LR_FHSS_NUM_SYMBOLS_FREQX_LSB(X)   (0x0389 + (X)*6)
+#define RADIOLIB_SX126X_REG_LR_FHSS_FREQX_0(X)                 (0x038A + (X)*6)
+#define RADIOLIB_SX126X_REG_LR_FHSS_FREQX_1(X)                 (0x038B + (X)*6)
+#define RADIOLIB_SX126X_REG_LR_FHSS_FREQX_2(X)                 (0x038C + (X)*6)
+#define RADIOLIB_SX126X_REG_LR_FHSS_FREQX_3(X)                 (0x038D + (X)*6)
+#define RADIOLIB_SX126X_REG_DIOX_OUT_ENABLE                    0x0580
+#define RADIOLIB_SX126X_REG_DIOX_IN_ENABLE                     0x0583
+#define RADIOLIB_SX126X_REG_DIOX_PULL_UP_CTRL                  0x0584
+#define RADIOLIB_SX126X_REG_DIOX_PULL_DOWN_CTRL                0x0585
 #define RADIOLIB_SX126X_REG_WHITENING_INITIAL_MSB              0x06B8
 #define RADIOLIB_SX126X_REG_WHITENING_INITIAL_LSB              0x06B9
 #define RADIOLIB_SX126X_REG_CRC_INITIAL_MSB                    0x06BC
@@ -86,6 +99,7 @@
 #define RADIOLIB_SX126X_REG_SYNC_WORD_7                        0x06C7
 #define RADIOLIB_SX126X_REG_NODE_ADDRESS                       0x06CD
 #define RADIOLIB_SX126X_REG_BROADCAST_ADDRESS                  0x06CE
+#define RADIOLIB_SX126X_REG_IQ_CONFIG                          0x0736
 #define RADIOLIB_SX126X_REG_LORA_SYNC_WORD_MSB                 0x0740
 #define RADIOLIB_SX126X_REG_LORA_SYNC_WORD_LSB                 0x0741
 #define RADIOLIB_SX126X_REG_RANDOM_NUMBER_0                    0x0819
@@ -93,16 +107,16 @@
 #define RADIOLIB_SX126X_REG_RANDOM_NUMBER_2                    0x081B
 #define RADIOLIB_SX126X_REG_RANDOM_NUMBER_3                    0x081C
 #define RADIOLIB_SX126X_REG_RX_GAIN                            0x08AC
+#define RADIOLIB_SX126X_REG_TX_CLAMP_CONFIG                    0x08D8
 #define RADIOLIB_SX126X_REG_OCP_CONFIGURATION                  0x08E7
+#define RADIOLIB_SX126X_REG_RTC_CTRL                           0x0902
 #define RADIOLIB_SX126X_REG_XTA_TRIM                           0x0911
 #define RADIOLIB_SX126X_REG_XTB_TRIM                           0x0912
+#define RADIOLIB_SX126X_REG_DIO3_OUT_VOLTAGE_CTRL              0x0920
+#define RADIOLIB_SX126X_REG_EVENT_MASK                         0x0944
 
 // undocumented registers
 #define RADIOLIB_SX126X_REG_SENSITIVITY_CONFIG                 0x0889 // SX1268 datasheet v1.1, section 15.1
-#define RADIOLIB_SX126X_REG_TX_CLAMP_CONFIG                    0x08D8 // SX1268 datasheet v1.1, section 15.2
-#define RADIOLIB_SX126X_REG_RTC_STOP                           0x0920 // SX1268 datasheet v1.1, section 15.3
-#define RADIOLIB_SX126X_REG_RTC_EVENT                          0x0944 // SX1268 datasheet v1.1, section 15.3
-#define RADIOLIB_SX126X_REG_IQ_CONFIG                          0x0736 // SX1268 datasheet v1.1, section 15.4
 #define RADIOLIB_SX126X_REG_RX_GAIN_RETENTION_0                0x029F // SX1268 datasheet v1.1, section 9.6
 #define RADIOLIB_SX126X_REG_RX_GAIN_RETENTION_1                0x02A0 // SX1268 datasheet v1.1, section 9.6
 #define RADIOLIB_SX126X_REG_RX_GAIN_RETENTION_2                0x02A1 // SX1268 datasheet v1.1, section 9.6
@@ -174,18 +188,19 @@
 #define RADIOLIB_SX126X_RX_TX_FALLBACK_MODE_STDBY_RC           0x20        //  7     0                        standby with RC oscillator (default)
 
 //RADIOLIB_SX126X_CMD_SET_DIO_IRQ_PARAMS
-#define RADIOLIB_SX126X_IRQ_TIMEOUT                          0b1000000000  //  9     9     Rx or Tx timeout
-#define RADIOLIB_SX126X_IRQ_CAD_DETECTED                     0b0100000000  //  8     8     channel activity detected
-#define RADIOLIB_SX126X_IRQ_CAD_DONE                         0b0010000000  //  7     7     channel activity detection finished
-#define RADIOLIB_SX126X_IRQ_CRC_ERR                          0b0001000000  //  6     6     wrong CRC received
-#define RADIOLIB_SX126X_IRQ_HEADER_ERR                       0b0000100000  //  5     5     LoRa header CRC error
-#define RADIOLIB_SX126X_IRQ_HEADER_VALID                     0b0000010000  //  4     4     valid LoRa header received
-#define RADIOLIB_SX126X_IRQ_SYNC_WORD_VALID                  0b0000001000  //  3     3     valid sync word detected
-#define RADIOLIB_SX126X_IRQ_RADIOLIB_PREAMBLE_DETECTED                0b0000000100  //  2     2     preamble detected
-#define RADIOLIB_SX126X_IRQ_RX_DONE                          0b0000000010  //  1     1     packet received
-#define RADIOLIB_SX126X_IRQ_TX_DONE                          0b0000000001  //  0     0     packet transmission completed
-#define RADIOLIB_SX126X_IRQ_ALL                              0b1111111111  //  9     0     all interrupts
-#define RADIOLIB_SX126X_IRQ_NONE                             0b0000000000  //  9     0     no interrupts
+#define RADIOLIB_SX126X_IRQ_LR_FHSS_HOP                      0b0100000000000000  //  14    14    PA ramped up during LR-FHSS hop
+#define RADIOLIB_SX126X_IRQ_TIMEOUT                          0b0000001000000000  //  9     9     Rx or Tx timeout
+#define RADIOLIB_SX126X_IRQ_CAD_DETECTED                     0b0000000100000000  //  8     8     channel activity detected
+#define RADIOLIB_SX126X_IRQ_CAD_DONE                         0b0000000010000000  //  7     7     channel activity detection finished
+#define RADIOLIB_SX126X_IRQ_CRC_ERR                          0b0000000001000000  //  6     6     wrong CRC received
+#define RADIOLIB_SX126X_IRQ_HEADER_ERR                       0b0000000000100000  //  5     5     LoRa header CRC error
+#define RADIOLIB_SX126X_IRQ_HEADER_VALID                     0b0000000000010000  //  4     4     valid LoRa header received
+#define RADIOLIB_SX126X_IRQ_SYNC_WORD_VALID                  0b0000000000001000  //  3     3     valid sync word detected
+#define RADIOLIB_SX126X_IRQ_RADIOLIB_PREAMBLE_DETECTED       0b0000000000000100  //  2     2     preamble detected
+#define RADIOLIB_SX126X_IRQ_RX_DONE                          0b0000000000000010  //  1     1     packet received
+#define RADIOLIB_SX126X_IRQ_TX_DONE                          0b0000000000000001  //  0     0     packet transmission completed
+#define RADIOLIB_SX126X_IRQ_ALL                              0b0100001111111111  //  14    0     all interrupts
+#define RADIOLIB_SX126X_IRQ_NONE                             0b0000000000000000  //  14     0    no interrupts
 
 //RADIOLIB_SX126X_CMD_SET_DIO2_AS_RF_SWITCH_CTRL
 #define RADIOLIB_SX126X_DIO2_AS_IRQ                            0x00        //  7     0     DIO2 configuration: IRQ
@@ -204,6 +219,7 @@
 //RADIOLIB_SX126X_CMD_SET_PACKET_TYPE
 #define RADIOLIB_SX126X_PACKET_TYPE_GFSK                       0x00        //  7     0     packet type: GFSK
 #define RADIOLIB_SX126X_PACKET_TYPE_LORA                       0x01        //  7     0                  LoRa
+#define RADIOLIB_SX126X_PACKET_TYPE_LR_FHSS                    0x03        //  7     0                  LR-FHSS
 
 //RADIOLIB_SX126X_CMD_SET_TX_PARAMS
 #define RADIOLIB_SX126X_PA_RAMP_10U                            0x00        //  7     0     ramp time: 10 us
@@ -328,6 +344,10 @@
 
 
 // SX126X SPI register variables
+//RADIOLIB_SX126X_REG_HOPPING_ENABLE
+#define RADIOLIB_SX126X_HOPPING_ENABLED                        0b00000001  //  0     0     intra-packet hopping for LR-FHSS: enabled
+#define RADIOLIB_SX126X_HOPPING_DISABLED                       0b00000000  //  0     0                                       (disabled)
+
 //RADIOLIB_SX126X_REG_LORA_SYNC_WORD_MSB + LSB
 #define RADIOLIB_SX126X_SYNC_WORD_PUBLIC                       0x34        // actually 0x3444  NOTE: The low nibbles in each byte (0x_4_4) are masked out since apparently, they're reserved.
 #define RADIOLIB_SX126X_SYNC_WORD_PRIVATE                      0x12        // actually 0x1424        You couldn't make this up if you tried.
@@ -508,9 +528,17 @@ class SX126x: public PhysicalLayer {
     int16_t startTransmit(uint8_t* data, size_t len, uint8_t addr = 0) override;
 
     /*!
+      \brief Clean up after transmission is done.
+
+      \returns \ref status_codes
+    */
+    int16_t finishTransmit() override;
+
+    /*!
       \brief Interrupt-driven receive method. DIO1 will be activated when full packet is received.
 
       \param timeout Raw timeout value, expressed as multiples of 15.625 us. Defaults to RADIOLIB_SX126X_RX_TIMEOUT_INF for infinite timeout (Rx continuous mode), set to RADIOLIB_SX126X_RX_TIMEOUT_NONE for no timeout (Rx single mode).
+      If timeout other than infinite is set, signal will be generated on DIO1.
 
       \returns \ref status_codes
     */
@@ -540,6 +568,13 @@ class SX126x: public PhysicalLayer {
       \returns \ref status_codes
     */
     int16_t startReceiveDutyCycleAuto(uint16_t senderPreambleLength = 0, uint16_t minSymbols = 8);
+
+    /*!
+      \brief Reads the current IRQ status.
+
+      \returns IRQ status bits
+    */
+    uint16_t getIrqStatus();
 
     /*!
       \brief Reads data received after calling startReceive method.
@@ -901,6 +936,14 @@ class SX126x: public PhysicalLayer {
    uint8_t randomByte();
 
    /*!
+    \brief Get the last recorded transaction error.
+
+    \returns \ref status_codes
+   */
+   int16_t getLastError();
+
+   #if !defined(RADIOLIB_EXCLUDE_DIRECT_RECEIVE)
+   /*!
      \brief Dummy method, to ensure PhysicalLayer compatibility.
 
      \param func Ignored.
@@ -913,6 +956,8 @@ class SX126x: public PhysicalLayer {
      \param pin Ignored.
    */
    void readBit(RADIOLIB_PIN_TYPE pin);
+   #endif
+
 
 #if !defined(RADIOLIB_GODMODE)
   protected:
@@ -927,7 +972,6 @@ class SX126x: public PhysicalLayer {
     int16_t writeBuffer(uint8_t* data, uint8_t numBytes, uint8_t offset = 0x00);
     int16_t readBuffer(uint8_t* data, uint8_t numBytes);
     int16_t setDioIrqParams(uint16_t irqMask, uint16_t dio1Mask, uint16_t dio2Mask = RADIOLIB_SX126X_IRQ_NONE, uint16_t dio3Mask = RADIOLIB_SX126X_IRQ_NONE);
-    uint16_t getIrqStatus();
     int16_t clearIrqStatus(uint16_t clearIrqParams = RADIOLIB_SX126X_IRQ_ALL);
     int16_t setRfFrequency(uint32_t frf);
     int16_t calibrateImage(uint8_t* data);
@@ -944,7 +988,7 @@ class SX126x: public PhysicalLayer {
     uint16_t getDeviceErrors();
     int16_t clearDeviceErrors();
 
-    int16_t startReceiveCommon();
+    int16_t startReceiveCommon(uint32_t timeout = RADIOLIB_SX126X_RX_TIMEOUT_INF);
     int16_t setFrequencyRaw(float freq);
     int16_t setPacketMode(uint8_t mode, uint8_t len);
     int16_t setHeaderType(uint8_t headerType, size_t len = 0xFF);
@@ -961,10 +1005,10 @@ class SX126x: public PhysicalLayer {
     Module* _mod;
 
     // common low-level SPI interface
-    int16_t SPIwriteCommand(uint8_t cmd, uint8_t* data, uint8_t numBytes, bool waitForBusy = true);
-    int16_t SPIwriteCommand(uint8_t* cmd, uint8_t cmdLen, uint8_t* data, uint8_t numBytes, bool waitForBusy = true);
-    int16_t SPIreadCommand(uint8_t cmd, uint8_t* data, uint8_t numBytes, bool waitForBusy = true);
-    int16_t SPIreadCommand(uint8_t* cmd, uint8_t cmdLen, uint8_t* data, uint8_t numBytes, bool waitForBusy = true);
+    int16_t SPIwriteCommand(uint8_t cmd, uint8_t* data, uint8_t numBytes, bool waitForBusy = true, bool verify = true);
+    int16_t SPIwriteCommand(uint8_t* cmd, uint8_t cmdLen, uint8_t* data, uint8_t numBytes, bool waitForBusy = true, bool verify = true);
+    int16_t SPIreadCommand(uint8_t cmd, uint8_t* data, uint8_t numBytes, bool waitForBusy = true, bool verify = true);
+    int16_t SPIreadCommand(uint8_t* cmd, uint8_t cmdLen, uint8_t* data, uint8_t numBytes, bool waitForBusy = true, bool verify = true);
     int16_t SPItransfer(uint8_t* cmd, uint8_t cmdLen, bool write, uint8_t* dataOut, uint8_t* dataIn, uint8_t numBytes, bool waitForBusy, uint32_t timeout = 5000);
 
 #if !defined(RADIOLIB_GODMODE)
@@ -987,7 +1031,10 @@ class SX126x: public PhysicalLayer {
 
     size_t _implicitLen = 0;
 
+    int16_t _lastError = RADIOLIB_ERR_NONE;
+
     int16_t config(uint8_t modem);
+    int16_t checkCommandResult();
 };
 
 #endif

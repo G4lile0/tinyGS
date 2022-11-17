@@ -684,6 +684,13 @@ class Si443x: public PhysicalLayer {
     int16_t startTransmit(uint8_t* data, size_t len, uint8_t addr = 0) override;
 
     /*!
+      \brief Clean up after transmission is done.
+
+      \returns \ref status_codes
+    */
+    int16_t finishTransmit() override;
+
+    /*!
       \brief Interrupt-driven receive method. IRQ will be activated when full valid packet is received.
 
       \returns \ref status_codes
@@ -802,6 +809,7 @@ class Si443x: public PhysicalLayer {
    */
     int16_t getChipVersion();
 
+    #if !defined(RADIOLIB_EXCLUDE_DIRECT_RECEIVE)
     /*!
       \brief Set interrupt service routine function to call when data bit is receveid in direct mode.
 
@@ -815,6 +823,7 @@ class Si443x: public PhysicalLayer {
       \param pin Pin on which to read.
     */
     void readBit(RADIOLIB_PIN_TYPE pin);
+    #endif
 
     /*!
      \brief Set modem in fixed packet length mode.

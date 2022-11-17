@@ -140,6 +140,13 @@ class PhysicalLayer {
     virtual int16_t startTransmit(uint8_t* data, size_t len, uint8_t addr = 0) = 0;
 
     /*!
+      \brief Clean up after transmission is done.
+
+      \returns \ref status_codes
+    */
+    virtual int16_t finishTransmit() = 0;
+
+    /*!
       \brief Reads data that was received after calling startReceive method.
 
       \param str Address of Arduino String to save the received data.
@@ -184,8 +191,25 @@ class PhysicalLayer {
     // configuration methods
 
     /*!
-      \brief Sets FSK frequency deviation from carrier frequency. Allowed values depend on bit rate setting and must be lower than 200 kHz.
-      Only available in FSK mode. Must be implemented in module class.
+      \brief Sets carrier frequency. Must be implemented in module class.
+
+      \param freq Carrier frequency to be set in MHz.
+
+      \returns \ref status_codes
+    */
+    virtual int16_t setFrequency(float freq) = 0;
+
+    /*!
+      \brief Sets FSK bit rate. Only available in FSK mode. Must be implemented in module class.
+
+      \param br Bit rate to be set (in kbps).
+
+      \returns \ref status_codes
+    */
+    virtual int16_t setBitRate(float br) = 0;
+
+    /*!
+      \brief Sets FSK frequency deviation from carrier frequency. Only available in FSK mode. Must be implemented in module class.
 
       \param freqDev Frequency deviation to be set (in kHz).
 
@@ -261,6 +285,7 @@ class PhysicalLayer {
     */
     int16_t startDirect();
 
+    #if !defined(RADIOLIB_EXCLUDE_DIRECT_RECEIVE)
     /*!
       \brief Set sync word to be used to determine start of packet in direct reception mode.
 
@@ -294,16 +319,35 @@ class PhysicalLayer {
     int16_t available();
 
     /*!
+      \brief Forcefully drop synchronization.
+    */
+    void dropSync();
+
+    /*!
       \brief Get data from direct mode buffer.
+
+      \param drop Drop synchronization on read - next reading will require waiting for the sync word again. Defautls to true.
 
       \returns Byte from direct mode buffer.
     */
-    uint8_t read();
+    uint8_t read(bool drop = true);
+    #endif
 
-    virtual Module* getMod() = 0;
+    /*!
+      \brief Configure DIO pin mapping to get a given signal on a DIO pin (if available).
 
+      \param pin Pin number onto which a signal is to be placed.
+
+      \param value The value that indicates which function to place on that pin. See chip datasheet for details.
+
+      \returns \ref status_codes
+    */
+    virtual int16_t setDIOMapping(RADIOLIB_PIN_TYPE pin, uint8_t value);
+
+#if !defined(RADIOLIB_EXCLUDE_DIRECT_RECEIVE)
   protected:
     void updateDirectBuffer(uint8_t bit);
+#endif
 
 #if !defined(RADIOLIB_GODMODE)
   private:
@@ -311,6 +355,7 @@ class PhysicalLayer {
     float _freqStep;
     size_t _maxPacketLength;
 
+    #if !defined(RADIOLIB_EXCLUDE_DIRECT_RECEIVE)
     uint8_t _bufferBitPos;
     uint8_t _bufferWritePos;
     uint8_t _bufferReadPos;
@@ -320,6 +365,19 @@ class PhysicalLayer {
     uint8_t _directSyncWordLen;
     uint32_t _directSyncWordMask;
     bool _gotSync;
+    #endif
+
+    virtual Module* getMod() = 0;
+
+    // allow specific classes access the private getMod method
+    friend class AFSKClient;
+    friend class RTTYClient;
+    friend class MorseClient;
+    friend class HellClient;
+    friend class SSTVClient;
+    friend class AX25Client;
+    friend class FSK4Client;
+    friend class PagerClient;
 };
 
 #endif

@@ -81,11 +81,11 @@ int16_t CC1101::begin(float freq, float br, float freqDev, float rxBw, int8_t po
   RADIOLIB_ASSERT(state);
 
   // set default data shaping
-  state = setDataShaping(RADIOLIB_ENCODING_NRZ);
+  state = setDataShaping(RADIOLIB_SHAPING_NONE);
   RADIOLIB_ASSERT(state);
 
   // set default encoding
-  state = setEncoding(RADIOLIB_SHAPING_NONE);
+  state = setEncoding(RADIOLIB_ENCODING_NRZ);
   RADIOLIB_ASSERT(state);
 
   // set default sync word
@@ -109,35 +109,27 @@ int16_t CC1101::transmit(uint8_t* data, size_t len, uint8_t addr) {
 
   // wait for transmission start or timeout
   uint32_t start = _mod->micros();
-  while(!_mod->digitalRead(_mod->getIrq())) {
+  while(!_mod->digitalRead(_mod->getGpio())) {
     _mod->yield();
 
     if(_mod->micros() - start > timeout) {
-      standby();
-      SPIsendCommand(RADIOLIB_CC1101_CMD_FLUSH_TX);
+      finishTransmit();
       return(RADIOLIB_ERR_TX_TIMEOUT);
     }
   }
 
   // wait for transmission end or timeout
   start = _mod->micros();
-  while(_mod->digitalRead(_mod->getIrq())) {
+  while(_mod->digitalRead(_mod->getGpio())) {
     _mod->yield();
 
     if(_mod->micros() - start > timeout) {
-      standby();
-      SPIsendCommand(RADIOLIB_CC1101_CMD_FLUSH_TX);
+      finishTransmit();
       return(RADIOLIB_ERR_TX_TIMEOUT);
     }
   }
 
-  // set mode to standby
-  standby();
-
-  // flush Tx FIFO
-  SPIsendCommand(RADIOLIB_CC1101_CMD_FLUSH_TX);
-
-  return(state);
+  return(finishTransmit());
 }
 
 int16_t CC1101::receive(uint8_t* data, size_t len) {
@@ -155,7 +147,7 @@ int16_t CC1101::receive(uint8_t* data, size_t len) {
 
     if(_mod->micros() - start > timeout) {
       standby();
-      SPIsendCommand(RADIOLIB_CC1101_CMD_FLUSH_TX);
+      SPIsendCommand(RADIOLIB_CC1101_CMD_FLUSH_RX);
       return(RADIOLIB_ERR_RX_TIMEOUT);
     }
   }
@@ -174,6 +166,14 @@ int16_t CC1101::standby() {
 }
 
 int16_t CC1101::transmitDirect(uint32_t frf) {
+  return transmitDirect(true, frf);
+}
+
+int16_t CC1101::transmitDirectAsync(uint32_t frf) {
+  return transmitDirect(false, frf);
+}
+
+int16_t CC1101::transmitDirect(bool sync, uint32_t frf) {
   // set RF switch (if present)
   _mod->setRfSwitchState(LOW, HIGH);
 
@@ -187,7 +187,7 @@ int16_t CC1101::transmitDirect(uint32_t frf) {
   }
 
   // activate direct mode
-  int16_t state = directMode();
+  int16_t state = directMode(sync);
   RADIOLIB_ASSERT(state);
 
   // start transmitting
@@ -196,11 +196,19 @@ int16_t CC1101::transmitDirect(uint32_t frf) {
 }
 
 int16_t CC1101::receiveDirect() {
+  return receiveDirect(true);
+}
+
+int16_t CC1101::receiveDirectAsync() {
+  return receiveDirect(false);
+}
+
+int16_t CC1101::receiveDirect(bool sync) {
   // set RF switch (if present)
   _mod->setRfSwitchState(HIGH, LOW);
 
   // activate direct mode
-  int16_t state = directMode();
+  int16_t state = directMode(sync);
   RADIOLIB_ASSERT(state);
 
   // start receiving
@@ -224,7 +232,7 @@ void CC1101::clearGdo0Action() {
 }
 
 void CC1101::setGdo2Action(void (*func)(void), RADIOLIB_INTERRUPT_STATUS dir) {
-  if(_mod->getGpio() != RADIOLIB_NC) {
+  if(_mod->getGpio() == RADIOLIB_NC) {
     return;
   }
   _mod->pinMode(_mod->getGpio(), INPUT);
@@ -232,7 +240,7 @@ void CC1101::setGdo2Action(void (*func)(void), RADIOLIB_INTERRUPT_STATUS dir) {
 }
 
 void CC1101::clearGdo2Action() {
-  if(_mod->getGpio() != RADIOLIB_NC) {
+  if(_mod->getGpio() == RADIOLIB_NC) {
     return;
   }
   _mod->detachInterrupt(RADIOLIB_DIGITAL_PIN_TO_INTERRUPT(_mod->getGpio()));
@@ -251,7 +259,7 @@ int16_t CC1101::startTransmit(uint8_t* data, size_t len, uint8_t addr) {
   SPIsendCommand(RADIOLIB_CC1101_CMD_FLUSH_TX);
 
   // set GDO0 mapping
-  int16_t state = SPIsetRegValue(RADIOLIB_CC1101_REG_IOCFG0, RADIOLIB_CC1101_GDOX_SYNC_WORD_SENT_OR_RECEIVED);
+  int16_t state = SPIsetRegValue(RADIOLIB_CC1101_REG_IOCFG2, RADIOLIB_CC1101_GDOX_SYNC_WORD_SENT_OR_RECEIVED, 5, 0);
   RADIOLIB_ASSERT(state);
 
   // data put on FIFO.
@@ -312,6 +320,16 @@ int16_t CC1101::startTransmit(uint8_t* data, size_t len, uint8_t addr) {
   return (state);
 }
 
+int16_t CC1101::finishTransmit() {
+  // set mode to standby to disable transmitter/RF switch
+  int16_t state = standby();
+
+  // flush Tx FIFO
+  SPIsendCommand(RADIOLIB_CC1101_CMD_FLUSH_TX);
+
+  return(state);
+}
+
 int16_t CC1101::startReceive() {
   // set mode to standby
   standby();
@@ -359,12 +377,6 @@ int16_t CC1101::readData(uint8_t* data, size_t len) {
         RADIOLIB_DEBUG_PRINTLN(F("No data for more than 5mS. Stop here."));
         break;
       } else {
-        /*
-         * Does this work for all rates? If 1 ms is longer than the 1ms delay
-         * then the entire FIFO will be transmitted during that delay.
-         *
-         * TODO: drop this delay(1) or come up with a better solution:
-        */
         delay(1);
         bytesInFIFO = SPIgetRegValue(RADIOLIB_CC1101_REG_RXBYTES, 6, 0);
         continue;
@@ -384,17 +396,21 @@ int16_t CC1101::readData(uint8_t* data, size_t len) {
   // check if status bytes are enabled (default: RADIOLIB_CC1101_APPEND_STATUS_ON)
   bool isAppendStatus = SPIgetRegValue(RADIOLIB_CC1101_REG_PKTCTRL1, 2, 2) == RADIOLIB_CC1101_APPEND_STATUS_ON;
 
+  // for some reason, we need this delay here to get the correct status bytes
+  delay(3);
+
   // If status byte is enabled at least 2 bytes (2 status bytes + any following packet) will remain in FIFO.
-  if (bytesInFIFO >= 2 && isAppendStatus) {
+  if (isAppendStatus) {
     // read RSSI byte
     _rawRSSI = SPIgetRegValue(RADIOLIB_CC1101_REG_FIFO);
 
-  // read LQI and CRC byte
-  uint8_t val = SPIgetRegValue(RADIOLIB_CC1101_REG_FIFO);
-  _rawLQI = val & 0x7F;
+    // read LQI and CRC byte
+    uint8_t val = SPIgetRegValue(RADIOLIB_CC1101_REG_FIFO);
+    _rawLQI = val & 0x7F;
 
     // check CRC
     if (_crcOn && (val & RADIOLIB_CC1101_CRC_OK) == RADIOLIB_CC1101_CRC_ERROR) {
+      _packetLengthQueried = false;
       return (RADIOLIB_ERR_CRC_MISMATCH);
     }
   }
@@ -471,7 +487,7 @@ int16_t CC1101::setRxBandwidth(float rxBw) {
   for(int8_t e = 3; e >= 0; e--) {
     for(int8_t m = 3; m >= 0; m --) {
       float point = (RADIOLIB_CC1101_CRYSTAL_FREQ * 1000000.0)/(8 * (m + 4) * ((uint32_t)1 << e));
-      if((fabs(rxBw * 1000.0) - point) <= 1000) {
+      if(fabs((rxBw * 1000.0) - point) <= 1000) {
         // set Rx channel filter bandwidth
         return(SPIsetRegValue(RADIOLIB_CC1101_REG_MDMCFG4, (e << 6) | (m << 4), 7, 4));
       }
@@ -697,12 +713,25 @@ int16_t CC1101::setOOK(bool enableOOK) {
   return(setOutputPower(_power));
 }
 
-float CC1101::getRSSI() const {
+float CC1101::getRSSI() {
   float rssi;
-  if(_rawRSSI >= 128) {
-    rssi = (((float)_rawRSSI - 256.0)/2.0) - 74.0;
+
+  if (_directMode) {
+    if(_rawRSSI >= 128) {
+      rssi = (((float)_rawRSSI - 256.0)/2.0) - 74.0;
+    } else {
+      rssi = (((float)_rawRSSI)/2.0) - 74.0;
+    }
   } else {
-    rssi = (((float)_rawRSSI)/2.0) - 74.0;
+    uint8_t rawRssi = SPIreadRegister(RADIOLIB_CC1101_REG_RSSI);
+    if (rawRssi >= 128)
+    {
+      rssi = ((rawRssi - 256) / 2) - 74;
+    }
+    else
+    {
+      rssi = (rawRssi / 2) - 74;
+    }
   }
   return(rssi);
 }
@@ -863,12 +892,21 @@ int16_t CC1101::getChipVersion() {
   return(SPIgetRegValue(RADIOLIB_CC1101_REG_VERSION));
 }
 
+#if !defined(RADIOLIB_EXCLUDE_DIRECT_RECEIVE)
 void CC1101::setDirectAction(void (*func)(void)) {
   setGdo0Action(func);
 }
 
 void CC1101::readBit(RADIOLIB_PIN_TYPE pin) {
   updateDirectBuffer((uint8_t)digitalRead(pin));
+}
+#endif
+
+int16_t CC1101::setDIOMapping(RADIOLIB_PIN_TYPE pin, uint8_t value) {
+  if (pin > 2)
+    return RADIOLIB_ERR_INVALID_DIO_PIN;
+
+  return(SPIsetRegValue(RADIOLIB_CC1101_REG_IOCFG0 - pin, value));
 }
 
 int16_t CC1101::config() {
@@ -888,16 +926,28 @@ int16_t CC1101::config() {
   return(state);
 }
 
-int16_t CC1101::directMode() {
+int16_t CC1101::directMode(bool sync) {
   // set mode to standby
   SPIsendCommand(RADIOLIB_CC1101_CMD_IDLE);
 
-  // set GDO0 and GDO2 mapping
-  int16_t state = SPIsetRegValue(RADIOLIB_CC1101_REG_IOCFG0, RADIOLIB_CC1101_GDOX_SERIAL_CLOCK , 5, 0);
-  state |= SPIsetRegValue(RADIOLIB_CC1101_REG_IOCFG2, RADIOLIB_CC1101_GDOX_SERIAL_DATA_SYNC , 5, 0);
+  int16_t state = 0;
+  _directMode = sync;
+  if (sync) {
+    // set GDO0 and GDO2 mapping
+  	state |= SPIsetRegValue(RADIOLIB_CC1101_REG_IOCFG0, RADIOLIB_CC1101_GDOX_SERIAL_CLOCK , 5, 0);
+  	state |= SPIsetRegValue(RADIOLIB_CC1101_REG_IOCFG2, RADIOLIB_CC1101_GDOX_SERIAL_DATA_SYNC , 5, 0);
 
-  // set continuous mode
-  state |= SPIsetRegValue(RADIOLIB_CC1101_REG_PKTCTRL0, RADIOLIB_CC1101_PKT_FORMAT_SYNCHRONOUS, 5, 4);
+  	// set continuous mode
+  	state |= SPIsetRegValue(RADIOLIB_CC1101_REG_PKTCTRL0, RADIOLIB_CC1101_PKT_FORMAT_SYNCHRONOUS, 5, 4);
+  }
+  else {
+    // set GDO0 mapping
+    state |= SPIsetRegValue(RADIOLIB_CC1101_REG_IOCFG0, RADIOLIB_CC1101_GDOX_SERIAL_DATA_ASYNC , 5, 0);
+
+    // set asynchronous continuous mode
+    state |= SPIsetRegValue(RADIOLIB_CC1101_REG_PKTCTRL0, RADIOLIB_CC1101_PKT_FORMAT_ASYNCHRONOUS, 5, 4);
+  }
+
   state |= SPIsetRegValue(RADIOLIB_CC1101_REG_PKTCTRL0, RADIOLIB_CC1101_LENGTH_CONFIG_INFINITE, 1, 0);
   return(state);
 }

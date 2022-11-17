@@ -27,7 +27,7 @@ SX1262 radio = new Module(10, 2, 3, 9);
 //SX1262 radio = RadioShield.ModuleA;
 
 // or using CubeCell
-//SX1262 radio = new Module(RADIOLIB_ONBOARD_MODULE);
+//SX1262 radio = new Module(RADIOLIB_BUILTIN_MODULE);
 
 // save transmission states between loops
 int transmissionState = RADIOLIB_ERR_NONE;
@@ -51,7 +51,7 @@ void setFlag(void) {
     return;
   }
 
-  // we sent aor received  packet, set the flag
+  // we sent or received a packet, set the flag
   operationDone = true;
 }
 

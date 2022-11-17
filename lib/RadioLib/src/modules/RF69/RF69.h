@@ -295,8 +295,38 @@
 #define RADIOLIB_RF69_DIO1_PACK_PLL_LOCK                       0b00110000  //  5     4
 #define RADIOLIB_RF69_DIO1_PACK_TIMEOUT                        0b00110000  //  5     4
 #define RADIOLIB_RF69_DIO2_CONT_DATA                           0b00000000  //  3     2
+#define RADIOLIB_RF69_DIO2_PACK_FIFO_NOT_EMPTY                 0b00000000  //  3     2
+#define RADIOLIB_RF69_DIO2_PACK_AUTO_MODE                      0b00001100  //  3     2
+#define RADIOLIB_RF69_DIO2_PACK_DATA                           0b00000100  //  3     2
+#define RADIOLIB_RF69_DIO3_CONT_AUTO_MODE                      0b00000010  //  0     1
+#define RADIOLIB_RF69_DIO3_CONT_RSSI                           0b00000000  //  0     1
+#define RADIOLIB_RF69_DIO3_CONT_RX_READY                       0b00000001  //  0     1
+#define RADIOLIB_RF69_DIO3_CONT_TIMEOUT                        0b00000011  //  0     1
+#define RADIOLIB_RF69_DIO3_CONT_TX_READY                       0b00000001  //  0     1
+#define RADIOLIB_RF69_DIO3_PACK_FIFO_FULL                      0b00000000  //  0     1
+#define RADIOLIB_RF69_DIO3_PACK_PLL_LOCK                       0b00000011  //  0     1
+#define RADIOLIB_RF69_DIO3_PACK_RSSI                           0b00000001  //  0     1
+#define RADIOLIB_RF69_DIO3_PACK_SYNC_ADDRESSS                  0b00000010  //  0     1
+#define RADIOLIB_RF69_DIO3_PACK_TX_READY                       0b00000001  //  0     1
 
 // RF69_REG_DIO_MAPPING_2
+#define RADIOLIB_RF69_DIO4_CONT_PLL_LOCK                       0b11000000  //  7     6
+#define RADIOLIB_RF69_DIO4_CONT_TIMEOUT                        0b00000000  //  7     6
+#define RADIOLIB_RF69_DIO4_CONT_RX_READY                       0b01000000  //  7     6
+#define RADIOLIB_RF69_DIO4_CONT_SYNC_ADDRESS                   0b10000000  //  7     6
+#define RADIOLIB_RF69_DIO4_CONT_TX_READY                       0b01000000  //  7     6
+#define RADIOLIB_RF69_DIO4_PACK_PLL_LOCK                       0b11000000  //  7     6
+#define RADIOLIB_RF69_DIO4_PACK_TIMEOUT                        0b00000000  //  7     6
+#define RADIOLIB_RF69_DIO4_PACK_RSSI                           0b01000000  //  7     6
+#define RADIOLIB_RF69_DIO4_PACK_RX_READY                       0b10000000  //  7     6
+#define RADIOLIB_RF69_DIO4_PACK_MODE_READY                     0b00000000  //  7     6
+#define RADIOLIB_RF69_DIO4_PACK_TX_READY                       0b01000000  //  7     6
+#define RADIOLIB_RF69_DIO5_CONT_MODE_READY                     0b00110000  //  5     4
+#define RADIOLIB_RF69_DIO5_CONT_CLK_OUT                        0b00000000  //  5     4
+#define RADIOLIB_RF69_DIO5_CONT_RSSI                           0b00010000  //  5     4
+#define RADIOLIB_RF69_DIO5_PACK_MODE_READY                     0b00110000  //  5     4
+#define RADIOLIB_RF69_DIO5_PACK_CLK_OUT                        0b00000000  //  5     4
+#define RADIOLIB_RF69_DIO5_PACK_DATA                           0b00010000  //  5     4
 #define RADIOLIB_RF69_CLK_OUT_FXOSC                            0b00000000  //  2     0     ClkOut frequency: F(XOSC)
 #define RADIOLIB_RF69_CLK_OUT_FXOSC_2                          0b00000001  //  2     0                       F(XOSC) / 2
 #define RADIOLIB_RF69_CLK_OUT_FXOSC_4                          0b00000010  //  2     0                       F(XOSC) / 4
@@ -400,7 +430,7 @@
 // RF69_REG_FIFO_THRESH
 #define RADIOLIB_RF69_TX_START_CONDITION_FIFO_LEVEL            0b00000000  //  7     7     packet transmission start condition: FifoLevel
 #define RADIOLIB_RF69_TX_START_CONDITION_FIFO_NOT_EMPTY        0b10000000  //  7     7                                          FifoNotEmpty (default)
-#define RADIOLIB_RF69_FIFO_THRESHOLD                           0b00001111  //  6     0     default threshold to trigger FifoLevel interrupt
+#define RADIOLIB_RF69_FIFO_THRESH                              0x1F        //  6     0     default threshold to trigger FifoLevel interrupt
 
 // RF69_REG_PACKET_CONFIG_2
 #define RADIOLIB_RF69_INTER_PACKET_RX_DELAY                    0b00000000  //  7     4     delay between FIFO empty and start of new RSSI phase
@@ -591,6 +621,56 @@ class RF69: public PhysicalLayer {
     void clearDio1Action();
 
     /*!
+      \brief Set interrupt service routine function to call when FIFO is empty.
+
+      \param func Pointer to interrupt service routine.
+    */
+    void setFifoEmptyAction(void (*func)(void));
+
+    /*!
+      \brief Clears interrupt service routine to call when  FIFO is empty.
+    */
+    void clearFifoEmptyAction();
+
+    /*!
+      \brief Set interrupt service routine function to call when FIFO is full.
+
+      \param func Pointer to interrupt service routine.
+    */
+    void setFifoFullAction(void (*func)(void));
+
+    /*!
+      \brief Clears interrupt service routine to call when  FIFO is full.
+    */
+    void clearFifoFullAction();
+
+    /*!
+      \brief Set interrupt service routine function to call when FIFO is empty.
+
+      \param data Pointer to the transmission buffer.
+
+      \param totalLen Total number of bytes to transmit.
+
+      \param remLen Pointer to a counter holding the number of bytes that have been transmitted so far.
+
+      \returns True when a complete packet is sent, false if more data is needed.
+    */
+    bool fifoAdd(uint8_t* data, int totalLen, volatile int* remLen);
+
+    /*!
+      \brief Set interrupt service routine function to call when FIFO is sufficently full to read.
+
+      \param data Pointer to a buffer that stores the receive data.
+
+      \param totalLen Total number of bytes to receive.
+
+      \param rcvLen Pointer to a counter holding the number of bytes that have been received so far.
+
+      \returns True when a complete packet is received, false if more data is needed.
+    */
+    bool fifoGet(volatile uint8_t* data, int totalLen, volatile int* rcvLen);
+
+    /*!
       \brief Interrupt-driven binary transmit method.
       Overloads for string-based transmissions are implemented in PhysicalLayer.
 
@@ -603,6 +683,13 @@ class RF69: public PhysicalLayer {
       \returns \ref status_codes
     */
     int16_t startTransmit(uint8_t* data, size_t len, uint8_t addr = 0) override;
+
+    /*!
+      \brief Clean up after transmission is done.
+
+      \returns \ref status_codes
+    */
+    int16_t finishTransmit() override;
 
     /*!
       \brief Interrupt-driven receive method. GDO0 will be activated when full packet is received.
@@ -744,6 +831,7 @@ class RF69: public PhysicalLayer {
 
     /*!
       \brief Enables/disables OOK modulation instead of FSK.
+       Note: This function calls setRxBandwidth again, since register values differ based on OOK mode being enabled/disabled
 
       \param enableOOK Enable (true) or disable (false) OOK.
 
@@ -881,6 +969,15 @@ class RF69: public PhysicalLayer {
     float getRSSI();
 
     /*!
+      \brief Sets the RSSI value above which the RSSI interrupt is signaled
+
+      \param dbm A dBm value between -127.5 and 0 inclusive
+
+      \returns \ref status_codes
+    */
+    int16_t setRSSIThreshold(float dbm);
+
+    /*!
       \brief Some modules contain external RF switch controlled by two pins. This function gives RadioLib control over those two pins to automatically switch Rx and Tx state.
       When using automatic RF switch control, DO NOT change the pin mode of rxEn or txEn from Arduino sketch!
 
@@ -904,6 +1001,7 @@ class RF69: public PhysicalLayer {
    */
     int16_t getChipVersion();
 
+    #if !defined(RADIOLIB_EXCLUDE_DIRECT_RECEIVE)
     /*!
       \brief Set interrupt service routine function to call when data bit is receveid in direct mode.
 
@@ -917,6 +1015,18 @@ class RF69: public PhysicalLayer {
       \param pin Pin on which to read.
     */
     void readBit(RADIOLIB_PIN_TYPE pin);
+    #endif
+
+    /*!
+      \brief Configure DIO pin mapping to get a given signal on a DIO pin (if available).
+
+      \param pin Pin number onto which a signal is to be placed.
+
+      \param value The value that indicates which function to place on that pin. See chip datasheet for details.
+
+      \returns \ref status_codes
+    */
+    int16_t setDIOMapping(RADIOLIB_PIN_TYPE pin, uint8_t value);
 
 #if !defined(RADIOLIB_GODMODE) && !defined(RADIOLIB_LOW_LEVEL)
   protected:
@@ -941,6 +1051,8 @@ class RF69: public PhysicalLayer {
     bool _promiscuous = false;
 
     uint8_t _syncWordLength = 2;
+
+    bool _bitSync = true;
 
     int16_t config();
     int16_t directMode();

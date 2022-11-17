@@ -592,6 +592,22 @@ class CC1101: public PhysicalLayer {
     int16_t receiveDirect() override;
 
     /*!
+      \brief Starts asynchronous direct mode transmission.
+
+      \param frf Raw RF frequency value. Defaults to 0, required for quick frequency shifts in RTTY.
+
+      \returns \ref status_codes
+    */
+    int16_t transmitDirectAsync(uint32_t frf = 0);
+
+    /*!
+      \brief Starts asynchronous direct mode reception.
+
+      \returns \ref status_codes
+    */
+    int16_t receiveDirectAsync();
+
+    /*!
       \brief Stops direct mode. It is required to call this method to switch from direct transmissions to packet-based transmissions.
     */
     int16_t packetMode();
@@ -639,6 +655,13 @@ class CC1101: public PhysicalLayer {
       \returns \ref status_codes
     */
     int16_t startTransmit(uint8_t* data, size_t len, uint8_t addr = 0) override;
+
+    /*!
+      \brief Clean up after transmission is done.
+
+      \returns \ref status_codes
+    */
+    int16_t finishTransmit() override;
 
     /*!
       \brief Interrupt-driven receive method. GDO0 will be activated when full packet is received.
@@ -775,9 +798,11 @@ class CC1101: public PhysicalLayer {
     /*!
       \brief Gets RSSI (Recorded Signal Strength Indicator) of the last received packet.
 
-      \returns Last packet RSSI in dBm.
+      or in asynchronous direct mode the current RSSI level
+
+      \returns RSSI in dBm.
     */
-    float getRSSI() const;
+    float getRSSI();
 
     /*!
       \brief Gets LQI (Link Quality Indicator) of the last received packet.
@@ -836,7 +861,7 @@ class CC1101: public PhysicalLayer {
      /*!
       \brief Enable CRC filtering and generation.
 
-      \param crcOn Set or unset promiscuous mode.
+      \param crcOn Set or unset CRC generation and filtering.
 
       \returns \ref status_codes
     */
@@ -902,6 +927,7 @@ class CC1101: public PhysicalLayer {
    */
     int16_t getChipVersion();
 
+    #if !defined(RADIOLIB_EXCLUDE_DIRECT_RECEIVE)
     /*!
       \brief Set interrupt service routine function to call when data bit is receveid in direct mode.
 
@@ -915,6 +941,18 @@ class CC1101: public PhysicalLayer {
       \param pin Pin on which to read.
     */
     void readBit(RADIOLIB_PIN_TYPE pin);
+    #endif
+
+    /*!
+      \brief Configure DIO pin mapping to get a given signal on a DIO pin (if available).
+
+      \param pin Pin number onto which a signal is to be placed.
+
+      \param value The value that indicates which function to place on that pin. See chip datasheet for details.
+
+      \returns \ref status_codes
+    */
+    int16_t setDIOMapping(RADIOLIB_PIN_TYPE pin, uint8_t value);
 
   #if !defined(RADIOLIB_GODMODE) && !defined(RADIOLIB_LOW_LEVEL)
     protected:
@@ -947,12 +985,15 @@ class CC1101: public PhysicalLayer {
 
     bool _promiscuous = false;
     bool _crcOn = true;
+    bool _directMode = true;
 
     uint8_t _syncWordLength = 2;
     int8_t _power = 0;
 
     int16_t config();
-    int16_t directMode();
+    int16_t transmitDirect(bool sync, uint32_t frf);
+    int16_t receiveDirect(bool sync);
+    int16_t directMode(bool sync);
     static void getExpMant(float target, uint16_t mantOffset, uint8_t divExp, uint8_t expMax, uint8_t& exp, uint8_t& mant);
     int16_t setPacketMode(uint8_t mode, uint16_t len);
 };

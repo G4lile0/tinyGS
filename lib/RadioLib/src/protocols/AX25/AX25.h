@@ -300,9 +300,11 @@ class AX25Client {
 
       \param space Positive or negative correction offset for space audio frequency in Hz.
 
+      \param length Audio tone length modifier, defaults to 1.0.
+
       \returns \ref status_codes
     */
-    int16_t setCorrection(int16_t mark, int16_t space);
+    int16_t setCorrection(int16_t mark, int16_t space, float length = 1.0f);
     #endif
 
     // basic methods
@@ -319,6 +321,19 @@ class AX25Client {
       \returns \ref status_codes
     */
     int16_t begin(const char* srcCallsign, uint8_t srcSSID = 0x00, uint8_t preambleLen = 8);
+
+    /*!
+      \brief Transmit unnumbered information (UI) frame.
+
+      \param str Data to be sent as Arduino String.
+
+      \param destCallsign Callsign of the destination station.
+
+      \param destSSID 4-bit SSID of the destination station (in case there are more stations with the same callsign). Defaults to 0.
+
+      \returns \ref status_codes
+    */
+    int16_t transmit(String& str, const char* destCallsign, uint8_t destSSID = 0x00);
 
     /*!
       \brief Transmit unnumbered information (UI) frame.
@@ -352,6 +367,7 @@ class AX25Client {
     AFSKClient* _audio;
     uint32_t _afskMark;
     uint32_t _afskSpace;
+    uint32_t _afskLen;
     #endif
 
     char _srcCallsign[RADIOLIB_AX25_MAX_CALLSIGN_LEN + 1] = {0, 0, 0, 0, 0, 0, 0};

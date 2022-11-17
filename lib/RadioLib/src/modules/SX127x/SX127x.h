@@ -141,14 +141,6 @@
 #define RADIOLIB_SX127X_HOP_PERIOD_OFF                         0b00000000  //  7     0     number of periods between frequency hops; 0 = disabled
 #define RADIOLIB_SX127X_HOP_PERIOD_MAX                         0b11111111  //  7     0
 
-// SX127X_REG_DIO_MAPPING_1
-#define RADIOLIB_SX127X_DIO0_RX_DONE                           0b00000000  //  7     6
-#define RADIOLIB_SX127X_DIO0_TX_DONE                           0b01000000  //  7     6
-#define RADIOLIB_SX127X_DIO0_CAD_DONE                          0b10000000  //  7     6
-#define RADIOLIB_SX127X_DIO1_RX_TIMEOUT                        0b00000000  //  5     4
-#define RADIOLIB_SX127X_DIO1_FHSS_CHANGE_CHANNEL               0b00010000  //  5     4
-#define RADIOLIB_SX127X_DIO1_CAD_DETECTED                      0b00100000  //  5     4
-
 // SX127X_REG_IRQ_FLAGS
 #define RADIOLIB_SX127X_CLEAR_IRQ_FLAG_RX_TIMEOUT              0b10000000  //  7     7     timeout
 #define RADIOLIB_SX127X_CLEAR_IRQ_FLAG_RX_DONE                 0b01000000  //  6     6     packet reception complete
@@ -411,7 +403,7 @@
 // SX127X_REG_FIFO_THRESH
 #define RADIOLIB_SX127X_TX_START_FIFO_LEVEL                    0b00000000  //  7     7     start packet transmission when: number of bytes in FIFO exceeds FIFO_THRESHOLD
 #define RADIOLIB_SX127X_TX_START_FIFO_NOT_EMPTY                0b10000000  //  7     7                                     at least one byte in FIFO (default)
-#define RADIOLIB_SX127X_FIFO_THRESH                            0x0F        //  5     0     FIFO level threshold
+#define RADIOLIB_SX127X_FIFO_THRESH                            0x1F        //  5     0     FIFO level threshold
 
 // SX127X_REG_SEQ_CONFIG_1
 #define RADIOLIB_SX127X_SEQUENCER_START                        0b10000000  //  7     7     manually start sequencer
@@ -509,20 +501,64 @@
 #define RADIOLIB_SX127X_FLAG_LOW_BAT                           0b00000001  //  0     0     battery voltage dropped below threshold
 
 // SX127X_REG_DIO_MAPPING_1
+#define RADIOLIB_SX127X_DIO0_LORA_RX_DONE                      0b00000000  //  7     6
+#define RADIOLIB_SX127X_DIO0_LORA_TX_DONE                      0b01000000  //  7     6
+#define RADIOLIB_SX127X_DIO0_LORA_CAD_DONE                     0b10000000  //  7     6
+#define RADIOLIB_SX127X_DIO0_CONT_MODE_READY                   0b11000000  //  7     6
 #define RADIOLIB_SX127X_DIO0_CONT_SYNC_ADDRESS                 0b00000000  //  7     6
-#define RADIOLIB_SX127X_DIO0_CONT_TX_READY                     0b00000000  //  7     6
-#define RADIOLIB_SX127X_DIO0_CONT_RSSI_RADIOLIB_PREAMBLE_DETECTED       0b01000000  //  7     6
+#define RADIOLIB_SX127X_DIO0_CONT_RSSI_PREAMBLE_DETECT         0b01000000  //  7     6
 #define RADIOLIB_SX127X_DIO0_CONT_RX_READY                     0b10000000  //  7     6
+#define RADIOLIB_SX127X_DIO0_CONT_TX_READY                     0b00000000  //  7     6
 #define RADIOLIB_SX127X_DIO0_PACK_PAYLOAD_READY                0b00000000  //  7     6
 #define RADIOLIB_SX127X_DIO0_PACK_PACKET_SENT                  0b00000000  //  7     6
 #define RADIOLIB_SX127X_DIO0_PACK_CRC_OK                       0b01000000  //  7     6
 #define RADIOLIB_SX127X_DIO0_PACK_TEMP_CHANGE_LOW_BAT          0b11000000  //  7     6
+#define RADIOLIB_SX127X_DIO1_LORA_RX_TIMEOUT                   0b00000000  //  5     4
+#define RADIOLIB_SX127X_DIO1_LORA_FHSS_CHANGE_CHANNEL          0b00010000  //  5     4
+#define RADIOLIB_SX127X_DIO1_LORA_CAD_DETECTED                 0b00100000  //  5     4
 #define RADIOLIB_SX127X_DIO1_CONT_DCLK                         0b00000000  //  5     4
-#define RADIOLIB_SX127X_DIO1_CONT_RSSI_RADIOLIB_PREAMBLE_DETECTED       0b00010000  //  5     4
+#define RADIOLIB_SX127X_DIO1_CONT_RSSI_PREAMBLE_DETECT         0b00010000  //  5     4
 #define RADIOLIB_SX127X_DIO1_PACK_FIFO_LEVEL                   0b00000000  //  5     4
 #define RADIOLIB_SX127X_DIO1_PACK_FIFO_EMPTY                   0b00010000  //  5     4
 #define RADIOLIB_SX127X_DIO1_PACK_FIFO_FULL                    0b00100000  //  5     4
+#define RADIOLIB_SX127X_DIO2_LORA_FHSS_CHANGE_CHANNEL          0b00000000  //  3     2
 #define RADIOLIB_SX127X_DIO2_CONT_DATA                         0b00000000  //  3     2
+#define RADIOLIB_SX127X_DIO2_PACK_FIFO_FULL                    0b00000000  //  3     2
+#define RADIOLIB_SX127X_DIO2_PACK_RX_READY                     0b00000100  //  3     2
+#define RADIOLIB_SX127X_DIO2_PACK_TIMEOUT                      0b00001000  //  3     2
+#define RADIOLIB_SX127X_DIO2_PACK_SYNC_ADDRESS                 0b00011000  //  3     2
+#define RADIOLIB_SX127X_DIO3_LORA_CAD_DONE                     0b00000000  //  1     0
+#define RADIOLIB_SX127X_DIO3_LORA_VALID_HEADER                 0b00000001  //  1     0
+#define RADIOLIB_SX127X_DIO3_LORA_PAYLOAD_CRC_ERROR            0b00000010  //  1     0
+#define RADIOLIB_SX127X_DIO3_CONT_TIMEOUT                      0b00000000  //  1     0
+#define RADIOLIB_SX127X_DIO3_CONT_RSSI_PREAMBLE_DETECT         0b00000001  //  1     0
+#define RADIOLIB_SX127X_DIO3_CONT_TEMP_CHANGE_LOW_BAT          0b00000011  //  1     0
+#define RADIOLIB_SX127X_DIO3_PACK_FIFO_EMPTY                   0b00000000  //  1     0
+#define RADIOLIB_SX127X_DIO3_PACK_TX_READY                     0b00000001  //  1     0
+
+// SX127X_REG_DIO_MAPPING_2
+#define RADIOLIB_SX127X_DIO4_LORA_CAD_DETECTED                 0b10000000  //  7     6
+#define RADIOLIB_SX127X_DIO4_LORA_PLL_LOCK                     0b01000000  //  7     6
+#define RADIOLIB_SX127X_DIO4_CONT_TEMP_CHANGE_LOW_BAT          0b00000000  //  7     6
+#define RADIOLIB_SX127X_DIO4_CONT_PLL_LOCK                     0b01000000  //  7     6
+#define RADIOLIB_SX127X_DIO4_CONT_TIMEOUT                      0b10000000  //  7     6
+#define RADIOLIB_SX127X_DIO4_CONT_MODE_READY                   0b11000000  //  7     6
+#define RADIOLIB_SX127X_DIO4_PACK_TEMP_CHANGE_LOW_BAT          0b00000000  //  7     6
+#define RADIOLIB_SX127X_DIO4_PACK_PLL_LOCK                     0b01000000  //  7     6
+#define RADIOLIB_SX127X_DIO4_PACK_TIMEOUT                      0b10000000  //  7     6
+#define RADIOLIB_SX127X_DIO4_PACK_RSSI_PREAMBLE_DETECT         0b11000000  //  7     6
+#define RADIOLIB_SX127X_DIO5_LORA_MODE_READY                   0b00000000  //  5     4
+#define RADIOLIB_SX127X_DIO5_LORA_CLK_OUT                      0b00010000  //  5     4
+#define RADIOLIB_SX127X_DIO5_CONT_CLK_OUT                      0b00000000  //  5     4
+#define RADIOLIB_SX127X_DIO5_CONT_PLL_LOCK                     0b00010000  //  5     4
+#define RADIOLIB_SX127X_DIO5_CONT_RSSI_PREAMBLE_DETECT         0b00100000  //  5     4
+#define RADIOLIB_SX127X_DIO5_CONT_MODE_READY                   0b00110000  //  5     4
+#define RADIOLIB_SX127X_DIO5_PACK_CLK_OUT                      0b00000000  //  5     4
+#define RADIOLIB_SX127X_DIO5_PACK_PLL_LOCK                     0b00010000  //  5     4
+#define RADIOLIB_SX127X_DIO5_PACK_DATA                         0b00100000  //  5     4
+#define RADIOLIB_SX127X_DIO5_PACK_MODE_READY                   0b00110000  //  5     4
+#define RADIOLIB_SX127X_DIO_MAP_PREAMBLE_DETECT                0b00000001  //  0     0
+#define RADIOLIB_SX127X_DIO_MAP_RSSI                           0b00000000  //  0     0
 
 // SX1272_REG_PLL_HOP + SX1278_REG_PLL_HOP
 #define RADIOLIB_SX127X_FAST_HOP_OFF                           0b00000000  //  7     7     carrier frequency validated when FRF registers are written
@@ -681,8 +717,10 @@ class SX127x: public PhysicalLayer {
       \brief Set interrupt service routine function to call when DIO0 activates.
 
       \param func Pointer to interrupt service routine.
+
+      \param dir Signal change direction. Defaults to RISING.
     */
-    void setDio0Action(void (*func)(void));
+    void setDio0Action(void (*func)(void), RADIOLIB_INTERRUPT_STATUS dir = RISING);
 
     /*!
       \brief Clears interrupt service routine to call when DIO0 activates.
@@ -693,13 +731,65 @@ class SX127x: public PhysicalLayer {
       \brief Set interrupt service routine function to call when DIO1 activates.
 
       \param func Pointer to interrupt service routine.
+
+      \param dir Signal change direction. Defaults to RISING.
     */
-    void setDio1Action(void (*func)(void));
+    void setDio1Action(void (*func)(void), RADIOLIB_INTERRUPT_STATUS dir = RISING);
 
     /*!
       \brief Clears interrupt service routine to call when DIO1 activates.
     */
     void clearDio1Action();
+
+    /*!
+      \brief Set interrupt service routine function to call when FIFO is empty.
+
+      \param func Pointer to interrupt service routine.
+    */
+    void setFifoEmptyAction(void (*func)(void));
+
+    /*!
+      \brief Clears interrupt service routine to call when  FIFO is empty.
+    */
+    void clearFifoEmptyAction();
+
+    /*!
+      \brief Set interrupt service routine function to call when FIFO is full.
+
+      \param func Pointer to interrupt service routine.
+    */
+    void setFifoFullAction(void (*func)(void));
+
+    /*!
+      \brief Clears interrupt service routine to call when  FIFO is full.
+    */
+    void clearFifoFullAction();
+
+    /*!
+      \brief Set interrupt service routine function to call when FIFO is empty.
+
+      \param data Pointer to the transmission buffer.
+
+      \param totalLen Total number of bytes to transmit.
+
+      \param remLen Pointer to a counter holding the number of bytes that have been transmitted so far.
+
+      \returns True when a complete packet is sent, false if more data is needed.
+    */
+    bool fifoAdd(uint8_t* data, int totalLen, volatile int* remLen);
+
+    /*!
+      \brief Set interrupt service routine function to call when FIFO is sufficently full to read.
+
+      \param data Pointer to a buffer that stores the receive data.
+
+      \param totalLen Total number of bytes to receive.
+
+      \param rcvLen Pointer to a counter holding the number of bytes that have been received so far.
+
+      \returns True when a complete packet is received, false if more data is needed.
+    */
+    bool fifoGet(volatile uint8_t* data, int totalLen, volatile int* rcvLen);
 
     /*!
       \brief Interrupt-driven binary transmit method. Will start transmitting arbitrary binary data up to 255 bytes long using %LoRa or up to 63 bytes using FSK modem.
@@ -713,6 +803,13 @@ class SX127x: public PhysicalLayer {
       \returns \ref status_codes
     */
     int16_t startTransmit(uint8_t* data, size_t len, uint8_t addr = 0) override;
+
+    /*!
+      \brief Clean up after transmission is done.
+
+      \returns \ref status_codes
+    */
+    int16_t finishTransmit() override;
 
     /*!
       \brief Interrupt-driven receive method. DIO0 will be activated when full valid packet is received.
@@ -933,12 +1030,12 @@ class SX127x: public PhysicalLayer {
       /*!
       \brief Size of each decrement of the RSSI threshold in the OOK demodulator.
 
-      \param value Step size: RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_0_5_DB (default), RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_1_0_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_1_5_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_2_0_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_3_0_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_4_0_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_5_0_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_6_0_DB  
+      \param value Step size: RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_0_5_DB (default), RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_1_0_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_1_5_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_2_0_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_3_0_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_4_0_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_5_0_DB, RADIOLIB_SX127X_OOK_PEAK_THRESH_STEP_6_0_DB
 
       \returns \ref status_codes
     */
-    int16_t setOokPeakThresholdStep(uint8_t value);  
-  
+    int16_t setOokPeakThresholdStep(uint8_t value);
+
     /*!
     \brief Enable Bit synchronizer.
 
@@ -979,6 +1076,24 @@ class SX127x: public PhysicalLayer {
      \returns \ref status_codes
    */
    int16_t variablePacketLengthMode(uint8_t maxLen = RADIOLIB_SX127X_MAX_PACKET_LENGTH_FSK);
+
+   /*!
+     \brief Get expected time-on-air for a given size of payload
+
+     \param len Payload length in bytes.
+
+     \returns Expected time-on-air in microseconds.
+   */
+   uint32_t getTimeOnAir(size_t len);
+
+   /*!
+      \brief Enable CRC filtering and generation.
+
+      \param crcOn Set or unset CRC filtering and generation.
+
+      \returns \ref status_codes
+   */
+   int16_t setCrcFiltering(bool crcOn = true);
 
     /*!
       \brief Sets RSSI measurement configuration in FSK mode.
@@ -1059,6 +1174,7 @@ class SX127x: public PhysicalLayer {
     */
     int16_t invertIQ(bool invertIQ);
 
+    #if !defined(RADIOLIB_EXCLUDE_DIRECT_RECEIVE)
     /*!
       \brief Set interrupt service routine function to call when data bit is receveid in direct mode.
 
@@ -1072,6 +1188,7 @@ class SX127x: public PhysicalLayer {
       \param pin Pin on which to read.
     */
     void readBit(RADIOLIB_PIN_TYPE pin);
+    #endif
 
     /*!
       \brief Sets the hopping period and enables FHSS
@@ -1101,6 +1218,35 @@ class SX127x: public PhysicalLayer {
     */
     void clearFHSSInt(void);
 
+    /*!
+      \brief Configure DIO pin mapping to get a given signal on a DIO pin (if available).
+
+      \param pin Pin number onto which a signal is to be placed.
+
+      \param value The value that indicates which function to place on that pin. See chip datasheet for details.
+
+      \returns \ref status_codes
+    */
+    int16_t setDIOMapping(RADIOLIB_PIN_TYPE pin, uint8_t value);
+
+    /*!
+      \brief Configure DIO mapping to use RSSI or Preamble Detect for pins that support it.
+
+      \param usePreambleDetect Whether to use PreambleDetect (true) or RSSI (false) on the pins that are mapped to this function.
+
+      \returns \ref status_codes
+    */
+    int16_t setDIOPreambleDetect(bool usePreambleDetect);
+
+    /*!
+      \brief Sets the RSSI value above which the RSSI interrupt is signaled
+
+      \param dbm A dBm value between -127.5 and 0 inclusive
+
+      \returns \ref status_codes
+    */
+    int16_t setRSSIThreshold(float dbm);
+
 #if !defined(RADIOLIB_GODMODE) && !defined(RADIOLIB_LOW_LEVEL)
   protected:
 #endif
@@ -1117,6 +1263,7 @@ class SX127x: public PhysicalLayer {
     float _br = 0;
     bool _ook = false;
     bool _crcEnabled = false;
+    bool _crcOn = true; // default value used in FSK mode
     size_t _packetLength = 0;
 
     int16_t setFrequencyRaw(float newFreq);

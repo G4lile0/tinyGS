@@ -45,7 +45,7 @@ int16_t nRF24::begin(int16_t freq, int16_t dataRate, int8_t power, uint8_t addrW
   RADIOLIB_ASSERT(state);
 
   // set data rate
-  state = setDataRate(dataRate);
+  state = setBitRate(dataRate);
   RADIOLIB_ASSERT(state);
 
   // set output power
@@ -93,23 +93,18 @@ int16_t nRF24::transmit(uint8_t* data, size_t len, uint8_t addr) {
 
     // check maximum number of retransmits
     if(getStatus(RADIOLIB_NRF24_MAX_RT)) {
-      standby();
-      clearIRQ();
+      finishTransmit();
       return(RADIOLIB_ERR_ACK_NOT_RECEIVED);
     }
 
     // check timeout: 15 retries * 4ms (max Tx time as per datasheet)
     if(_mod->micros() - start >= 60000) {
-      standby();
-      clearIRQ();
+      finishTransmit();
       return(RADIOLIB_ERR_TX_TIMEOUT);
     }
   }
 
-  // clear interrupts
-  clearIRQ();
-
-  return(state);
+  return(finishTransmit());
 }
 
 int16_t nRF24::receive(uint8_t* data, size_t len) {
@@ -199,6 +194,14 @@ int16_t nRF24::startTransmit(uint8_t* data, size_t len, uint8_t addr) {
   return(state);
 }
 
+int16_t nRF24::finishTransmit() {
+  // clear interrupt flags
+  clearIRQ();
+
+  // set mode to standby to disable transmitter/RF switch
+  return(standby());
+}
+
 int16_t nRF24::startReceive() {
   // set mode to standby
   int16_t state = standby();
@@ -246,20 +249,21 @@ int16_t nRF24::readData(uint8_t* data, size_t len) {
   return(RADIOLIB_ERR_NONE);
 }
 
-int16_t nRF24::setFrequency(int16_t freq) {
-  RADIOLIB_CHECK_RANGE(freq, 2400, 2525, RADIOLIB_ERR_INVALID_FREQUENCY);
+int16_t nRF24::setFrequency(float freq) {
+  RADIOLIB_CHECK_RANGE((uint16_t)freq, 2400, 2525, RADIOLIB_ERR_INVALID_FREQUENCY);
 
   // set frequency
-  uint8_t freqRaw = freq - 2400;
+  uint8_t freqRaw = (uint16_t)freq - 2400;
   return(_mod->SPIsetRegValue(RADIOLIB_NRF24_REG_RF_CH, freqRaw, 6, 0));
 }
 
-int16_t nRF24::setDataRate(int16_t dataRate) {
+int16_t nRF24::setBitRate(float br) {
   // set mode to standby
   int16_t state = standby();
   RADIOLIB_ASSERT(state);
 
   // set data rate
+  uint16_t dataRate = (uint16_t)br;
   if(dataRate == 250) {
     state = _mod->SPIsetRegValue(RADIOLIB_NRF24_REG_RF_SETUP, RADIOLIB_NRF24_DR_250_KBPS, 5, 5);
     state |= _mod->SPIsetRegValue(RADIOLIB_NRF24_REG_RF_SETUP, RADIOLIB_NRF24_DR_250_KBPS, 3, 3);
@@ -516,6 +520,7 @@ uint8_t nRF24::randomByte() {
   return(0);
 }
 
+#if !defined(RADIOLIB_EXCLUDE_DIRECT_RECEIVE)
 void nRF24::setDirectAction(void (*func)(void)) {
   // nRF24 is unable to perform direct mode actions
   // this method is implemented only for PhysicalLayer compatibility
@@ -527,6 +532,7 @@ void nRF24::readBit(RADIOLIB_PIN_TYPE pin) {
   // this method is implemented only for PhysicalLayer compatibility
   (void)pin;
 }
+#endif
 
 void nRF24::clearIRQ() {
   // clear status bits

@@ -125,19 +125,12 @@ int16_t RF69::transmit(uint8_t* data, size_t len, uint8_t addr) {
     _mod->yield();
 
     if(_mod->micros() - start > timeout) {
-      standby();
-      clearIRQFlags();
+      finishTransmit();
       return(RADIOLIB_ERR_TX_TIMEOUT);
     }
   }
-
-  // set mode to standby
-  standby();
-
-  // clear interrupt flags
-  clearIRQFlags();
-
-  return(RADIOLIB_ERR_NONE);
+  
+  return(finishTransmit());
 }
 
 int16_t RF69::receive(uint8_t* data, size_t len) {
@@ -223,7 +216,11 @@ int16_t RF69::directMode() {
   RADIOLIB_ASSERT(state);
 
   // set continuous mode
-  return(_mod->SPIsetRegValue(RADIOLIB_RF69_REG_DATA_MODUL, RADIOLIB_RF69_CONTINUOUS_MODE_WITH_SYNC, 6, 5));
+  if(_bitSync) {
+    return(_mod->SPIsetRegValue(RADIOLIB_RF69_REG_DATA_MODUL, RADIOLIB_RF69_CONTINUOUS_MODE_WITH_SYNC, 6, 5));
+  } else {
+    return(_mod->SPIsetRegValue(RADIOLIB_RF69_REG_DATA_MODUL, RADIOLIB_RF69_CONTINUOUS_MODE, 6, 5));
+  }
 }
 
 int16_t RF69::packetMode() {
@@ -293,22 +290,108 @@ void RF69::clearDio1Action() {
   _mod->detachInterrupt(RADIOLIB_DIGITAL_PIN_TO_INTERRUPT(_mod->getGpio()));
 }
 
-int16_t RF69::startTransmit(uint8_t* data, size_t len, uint8_t addr) {
-  // check packet length
-  if(len > RADIOLIB_RF69_MAX_PACKET_LENGTH) {
-    return(RADIOLIB_ERR_PACKET_TOO_LONG);
+void RF69::setFifoEmptyAction(void (*func)(void)) {
+  // set DIO1 to the FIFO empty event (the register setting is done in startTransmit)
+  if(_mod->getGpio() == RADIOLIB_NC) {
+    return;
+  }
+  _mod->pinMode(_mod->getGpio(), INPUT);
+
+  // we need to invert the logic here (as compared to setDio1Action), since we are using the "FIFO not empty interrupt"
+  _mod->attachInterrupt(RADIOLIB_DIGITAL_PIN_TO_INTERRUPT(_mod->getGpio()), func, FALLING);
+}
+
+void RF69::clearFifoEmptyAction() {
+  clearDio1Action();
+}
+
+void RF69::setFifoFullAction(void (*func)(void)) {
+  // set the interrupt
+  _mod->SPIsetRegValue(RADIOLIB_RF69_REG_FIFO_THRESH, RADIOLIB_RF69_FIFO_THRESH, 6, 0);
+  _mod->SPIsetRegValue(RADIOLIB_RF69_REG_DIO_MAPPING_1, RADIOLIB_RF69_DIO1_PACK_FIFO_LEVEL, 5, 4);
+
+  // set DIO1 to the FIFO full event
+  setDio1Action(func);
+}
+
+void RF69::clearFifoFullAction() {
+  clearDio1Action();
+  _mod->SPIsetRegValue(RADIOLIB_RF69_REG_DIO_MAPPING_1, 0x00, 5, 4);
+}
+
+bool RF69::fifoAdd(uint8_t* data, int totalLen, volatile int* remLen) {
+  // subtract first (this may be the first time we get to modify the remaining length)
+  *remLen -= RADIOLIB_RF69_FIFO_THRESH - 1;
+
+  // check if there is still something left to send
+  if(*remLen <= 0) {
+    // we're done
+    return(true);
   }
 
+  // calculate the number of bytes we can copy
+  int len = *remLen;
+  if(len > RADIOLIB_RF69_FIFO_THRESH - 1) {
+    len = RADIOLIB_RF69_FIFO_THRESH - 1;
+  }
+
+  // clear interrupt flags
+  clearIRQFlags();
+
+  // copy the bytes to the FIFO
+  _mod->SPIwriteRegisterBurst(RADIOLIB_RF69_REG_FIFO, &data[totalLen - *remLen], len);
+
+  // this is a hack, but it seems Rx FIFO level is getting triggered 1 byte before it should
+  // we just add a padding byte that we can drop without consequence
+  _mod->SPIwriteRegister(RADIOLIB_RF69_REG_FIFO, '/');
+
+  // we're not done yet
+  return(false);
+}
+
+bool RF69::fifoGet(volatile uint8_t* data, int totalLen, volatile int* rcvLen) {
+  // get pointer to the correct position in data buffer
+  uint8_t* dataPtr = (uint8_t*)&data[*rcvLen];
+
+  // check how much data are we still expecting
+  uint8_t len = RADIOLIB_RF69_FIFO_THRESH - 1;
+  if(totalLen - *rcvLen < len) {
+    // we're nearly at the end
+    len = totalLen - *rcvLen;
+  }
+
+  // get the data
+  _mod->SPIreadRegisterBurst(RADIOLIB_RF69_REG_FIFO, len, dataPtr);
+  (*rcvLen) += (len);
+
+  // dump the padding byte
+  _mod->SPIreadRegister(RADIOLIB_RF69_REG_FIFO);
+
+  // clear flags
+  clearIRQFlags();
+
+  // check if we're done
+  if(*rcvLen >= totalLen) {
+    return(true);
+  }
+  return(false);
+}
+
+int16_t RF69::startTransmit(uint8_t* data, size_t len, uint8_t addr) {
   // set mode to standby
   int16_t state = setMode(RADIOLIB_RF69_STANDBY);
   RADIOLIB_ASSERT(state);
 
-  // set DIO pin mapping
-  state = _mod->SPIsetRegValue(RADIOLIB_RF69_REG_DIO_MAPPING_1, RADIOLIB_RF69_DIO0_PACK_PACKET_SENT, 7, 6);
-  RADIOLIB_ASSERT(state);
-
   // clear interrupt flags
   clearIRQFlags();
+
+  // set DIO mapping
+  if(len > RADIOLIB_RF69_MAX_PACKET_LENGTH) {
+    state = _mod->SPIsetRegValue(RADIOLIB_RF69_REG_DIO_MAPPING_1, RADIOLIB_RF69_DIO1_PACK_FIFO_NOT_EMPTY, 5, 4);
+  } else {
+    state = _mod->SPIsetRegValue(RADIOLIB_RF69_REG_DIO_MAPPING_1, RADIOLIB_RF69_DIO0_PACK_PACKET_SENT, 7, 6);
+  }
+  RADIOLIB_ASSERT(state);
 
   // optionally write packet length
   if (_packetLengthConfig == RADIOLIB_RF69_PACKET_FORMAT_VARIABLE) {
@@ -322,7 +405,18 @@ int16_t RF69::startTransmit(uint8_t* data, size_t len, uint8_t addr) {
   }
 
   // write packet to FIFO
-  _mod->SPIwriteRegisterBurst(RADIOLIB_RF69_REG_FIFO, data, len);
+  size_t packetLen = len;
+  if(len > RADIOLIB_RF69_MAX_PACKET_LENGTH) {
+    packetLen = RADIOLIB_RF69_FIFO_THRESH - 1;
+    _mod->SPIsetRegValue(RADIOLIB_RF69_REG_FIFO_THRESH, RADIOLIB_RF69_TX_START_CONDITION_FIFO_NOT_EMPTY, 7, 7);
+  }
+  _mod->SPIwriteRegisterBurst(RADIOLIB_RF69_REG_FIFO, data, packetLen);
+
+  // this is a hack, but it seems than in Stream mode, Rx FIFO level is getting triggered 1 byte before it should
+  // just add a padding byte that can be dropped without consequence
+  if(len > RADIOLIB_RF69_MAX_PACKET_LENGTH) {
+    _mod->SPIwriteRegister(RADIOLIB_RF69_REG_FIFO, '/');
+  }
 
   // enable +20 dBm operation
   if(_power > 17) {
@@ -339,6 +433,14 @@ int16_t RF69::startTransmit(uint8_t* data, size_t len, uint8_t addr) {
   state = setMode(RADIOLIB_RF69_TX);
 
   return(state);
+}
+
+int16_t RF69::finishTransmit() {
+  // clear interrupt flags
+  clearIRQFlags();
+
+  // set mode to standby to disable transmitter/RF switch
+  return(standby());
 }
 
 int16_t RF69::readData(uint8_t* data, size_t len) {
@@ -386,9 +488,13 @@ int16_t RF69::setOOK(bool enableOOK) {
   } else {
     state = _mod->SPIsetRegValue(RADIOLIB_RF69_REG_DATA_MODUL, RADIOLIB_RF69_FSK, 4, 3, 5);
   }
+
   if(state == RADIOLIB_ERR_NONE) {
     _ook = enableOOK;
   }
+
+  // call setRxBandwidth again, since register values differ based on OOK mode being enabled
+  state |= setRxBandwidth(_rxBw);
 
   return(state);
 }
@@ -457,93 +563,26 @@ int16_t RF69::setRxBandwidth(float rxBw) {
     return(RADIOLIB_ERR_INVALID_BIT_RATE_BW_RATIO);
   }
 
-  // check allowed bandwidth values
-  uint8_t bwMant, bwExp;
-  if(rxBw == 2.6) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_24;
-    bwExp = 7;
-  } else if(rxBw == 3.1) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_20;
-    bwExp = 7;
-  } else if(rxBw == 3.9) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_16;
-    bwExp = 7;
-  } else if(rxBw == 5.2) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_24;
-    bwExp = 6;
-  } else if(rxBw == 6.3) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_20;
-    bwExp = 6;
-  } else if(rxBw == 7.8) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_16;
-    bwExp = 6;
-  } else if(rxBw == 10.4) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_24;
-    bwExp = 5;
-  } else if(rxBw == 12.5) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_20;
-    bwExp = 5;
-  } else if(rxBw == 15.6) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_16;
-    bwExp = 5;
-  } else if(rxBw == 20.8) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_24;
-    bwExp = 4;
-  } else if(rxBw == 25.0) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_20;
-    bwExp = 4;
-  } else if(rxBw == 31.3) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_16;
-    bwExp = 4;
-  } else if(rxBw == 41.7) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_24;
-    bwExp = 3;
-  } else if(rxBw == 50.0) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_20;
-    bwExp = 3;
-  } else if(rxBw == 62.5) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_16;
-    bwExp = 3;
-  } else if(rxBw == 83.3) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_24;
-    bwExp = 2;
-  } else if(rxBw == 100.0) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_20;
-    bwExp = 2;
-  } else if(rxBw == 125.0) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_16;
-    bwExp = 2;
-  } else if(rxBw == 166.7) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_24;
-    bwExp = 1;
-  } else if(rxBw == 200.0) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_20;
-    bwExp = 1;
-  } else if(rxBw == 250.0) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_16;
-    bwExp = 1;
-  } else if(rxBw == 333.3) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_24;
-    bwExp = 0;
-  } else if(rxBw == 400.0) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_20;
-    bwExp = 0;
-  } else if(rxBw == 500.0) {
-    bwMant = RADIOLIB_RF69_RX_BW_MANT_16;
-    bwExp = 0;
-  } else {
-    return(RADIOLIB_ERR_INVALID_RX_BANDWIDTH);
-  }
-
   // set mode to standby
-  setMode(RADIOLIB_RF69_STANDBY);
+  int16_t state = setMode(RADIOLIB_RF69_STANDBY);
+  RADIOLIB_ASSERT(state);
 
-  // set Rx bandwidth
-  int16_t state = _mod->SPIsetRegValue(RADIOLIB_RF69_REG_RX_BW, RADIOLIB_RF69_DCC_FREQ | bwMant | bwExp, 7, 0);
-  if(state == RADIOLIB_ERR_NONE) {
-    RF69::_rxBw = rxBw;
+  // calculate exponent and mantissa values for receiver bandwidth
+  for(int8_t e = 7; e >= 0; e--) {
+    for(int8_t m = 2; m >= 0; m--) {
+      float point = (RADIOLIB_RF69_CRYSTAL_FREQ * 1000000.0)/(((4 * m) + 16) * ((uint32_t)1 << (e + (_ook ? 3 : 2))));
+      if(fabs(rxBw - (point / 1000.0)) <= 0.1) {
+        // set Rx bandwidth
+        state = _mod->SPIsetRegValue(RADIOLIB_RF69_REG_RX_BW, (m << 3) | e, 4, 0);
+        if(state == RADIOLIB_ERR_NONE) {
+          RF69::_rxBw = rxBw;
+        }
+        return(state);
+      }
+    }
   }
-  return(state);
+
+  return(RADIOLIB_ERR_INVALID_RX_BANDWIDTH);
 }
 
 int16_t RF69::setFrequencyDeviation(float freqDev) {
@@ -733,11 +772,21 @@ int16_t RF69::disableSyncWordFiltering() {
 }
 
 int16_t RF69::enableContinuousModeBitSync() {
-  return(_mod->SPIsetRegValue(RADIOLIB_RF69_REG_DATA_MODUL, RADIOLIB_RF69_CONTINUOUS_MODE_WITH_SYNC, 6, 5));
+  int16_t state = _mod->SPIsetRegValue(RADIOLIB_RF69_REG_DATA_MODUL, RADIOLIB_RF69_CONTINUOUS_MODE_WITH_SYNC, 6, 5);
+  if(state == RADIOLIB_ERR_NONE) {
+    _bitSync = true;
+  }
+
+  return(state);
 }
 
 int16_t RF69::disableContinuousModeBitSync() {
-  return(_mod->SPIsetRegValue(RADIOLIB_RF69_REG_DATA_MODUL, RADIOLIB_RF69_CONTINUOUS_MODE, 6, 5));
+  int16_t state = _mod->SPIsetRegValue(RADIOLIB_RF69_REG_DATA_MODUL, RADIOLIB_RF69_CONTINUOUS_MODE, 6, 5);
+  if(state == RADIOLIB_ERR_NONE) {
+    _bitSync = false;
+  }
+
+  return(state);
 }
 
 int16_t RF69::setCrcFiltering(bool crcOn) {
@@ -824,6 +873,12 @@ float RF69::getRSSI() {
   return(-1.0 * (_mod->SPIgetRegValue(RADIOLIB_RF69_REG_RSSI_VALUE)/2.0));
 }
 
+int16_t RF69::setRSSIThreshold(float dbm) {
+  RADIOLIB_CHECK_RANGE(dbm, -127.5, 0, RADIOLIB_ERR_INVALID_RSSI_THRESHOLD);
+
+  return _mod->SPIsetRegValue(RADIOLIB_RF69_REG_RSSI_THRESH, (uint8_t)(-2.0 * dbm), 7, 0);
+}
+
 void RF69::setRfSwitchPins(RADIOLIB_PIN_TYPE rxEn, RADIOLIB_PIN_TYPE txEn) {
   _mod->setRfSwitchPins(rxEn, txEn);
 }
@@ -847,12 +902,26 @@ uint8_t RF69::randomByte() {
   return(randByte);
 }
 
+#if !defined(RADIOLIB_EXCLUDE_DIRECT_RECEIVE)
 void RF69::setDirectAction(void (*func)(void)) {
   setDio1Action(func);
 }
 
 void RF69::readBit(RADIOLIB_PIN_TYPE pin) {
   updateDirectBuffer((uint8_t)digitalRead(pin));
+}
+#endif
+
+int16_t RF69::setDIOMapping(RADIOLIB_PIN_TYPE pin, uint8_t value) {
+  if(pin > 5) {
+    return(RADIOLIB_ERR_INVALID_DIO_PIN);
+  }
+
+  if(pin < 4) {
+    return(_mod->SPIsetRegValue(RADIOLIB_RF69_REG_DIO_MAPPING_1, value, 7 - 2 * pin, 6 - 2 * pin));
+  }
+
+  return(_mod->SPIsetRegValue(RADIOLIB_RF69_REG_DIO_MAPPING_2, value, 15 - 2 * pin, 14 - 2 * pin));
 }
 
 int16_t RF69::getChipVersion() {
@@ -901,7 +970,7 @@ int16_t RF69::config() {
   RADIOLIB_ASSERT(state);
 
   // set FIFO threshold
-  state = _mod->SPIsetRegValue(RADIOLIB_RF69_REG_FIFO_THRESH, RADIOLIB_RF69_TX_START_CONDITION_FIFO_NOT_EMPTY | RADIOLIB_RF69_FIFO_THRESHOLD, 7, 0);
+  state = _mod->SPIsetRegValue(RADIOLIB_RF69_REG_FIFO_THRESH, RADIOLIB_RF69_TX_START_CONDITION_FIFO_NOT_EMPTY | RADIOLIB_RF69_FIFO_THRESH, 7, 0);
   RADIOLIB_ASSERT(state);
 
   // set Rx timeouts
