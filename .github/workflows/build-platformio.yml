@@ -38,7 +38,7 @@ jobs:
       run: >
         python ~/.platformio/packages/tool-esptoolpy/esptool.py --chip esp32 merge_bin -o .pio/build/default/firmware-full.bin
         --flash_mode dio --flash_freq 40m --flash_size 4MB
-        0x1000 ~/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/bin/bootloader_dio_40m.bin
+        0x1000 ~/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/bin/bootloader_dio_40m.elf
         0x8000 .pio/build/default/partitions.bin
         0xe000 ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin
         0x10000 .pio/build/default/firmware.bin
