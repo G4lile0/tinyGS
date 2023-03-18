@@ -2,6 +2,7 @@
 #define _RADIOLIB_TYPES_H
 
 #include "BuildOpt.h"
+#include "BuildOptUser.h"
 
 /*!
   \defgroup config_shaping Data shaping filter values aliases.
@@ -58,6 +59,31 @@
   \brief Whitening.
 */
 #define RADIOLIB_ENCODING_WHITENING                             (0x02)
+
+/*!
+  \}
+*/
+
+/*!
+  \defgroup config_standby Standby mode type aliases.
+
+  \{
+*/
+
+/*!
+  \brief Default standby used by the module
+*/
+#define RADIOLIB_STANDBY_DEFAULT                                (0x00)
+
+/*!
+  \brief Warm standby (e.g. crystal left running).
+*/
+#define RADIOLIB_STANDBY_WARM                                   (0x01)
+
+/*!
+  \brief Cold standby (e.g. only internal RC oscillator running).
+*/
+#define RADIOLIB_STANDBY_COLD                                   (0x02)
 
 /*!
   \}
@@ -218,6 +244,11 @@
 */
 #define RADIOLIB_ERR_INVALID_RSSI_THRESHOLD                    (-27)
 
+/*!
+  \brief A `NULL` pointer has been encountered. If you see this, there may be a potential security vulnerability.
+*/
+#define RADIOLIB_ERR_NULL_POINTER                              (-28)
+
 // RF69-specific status codes
 
 /*!
@@ -281,6 +312,28 @@
   \brief Mic-E message cannot contaion both telemetry and status text.
 */
 #define RADIOLIB_ERR_MIC_E_TELEMETRY_STATUS                    (-204)
+
+// SSDV status codes
+
+/*!
+  \brief SSDV mode is invalid.
+*/
+#define RADIOLIB_ERR_INVALID_SSDV_MODE                         (-301)
+
+/*!
+  \brief Image size is invalid.
+*/
+#define RADIOLIB_ERR_INVALID_IMAGE_SIZE                        (-302)
+
+/*!
+  \brief Image quality is invalid.
+*/
+#define RADIOLIB_ERR_INVALID_IMAGE_QUALITY                     (-303)
+
+/*!
+  \brief Image subsampling is invalid.
+*/
+#define RADIOLIB_ERR_INVALID_SUBSAMPLING                       (-304)
 
 // RTTY status codes
 
@@ -357,6 +410,11 @@
 
 /*!
   \brief SX126x failed to execute SPI command.
+  Often this means that the module is trying to use TCXO while
+  XTAL is connected (or vice versa). Make sure your crystal setup
+  (e.g. TCXO reference voltage) matches your hardware by setting
+  "tcxoVoltage" to 0 when using XTAL module, or to appropriate value
+  when using TCXO module.
 */
 #define RADIOLIB_ERR_SPI_CMD_FAILED                            (-707)
 

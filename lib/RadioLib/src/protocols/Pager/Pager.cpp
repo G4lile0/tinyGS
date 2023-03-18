@@ -1,5 +1,7 @@
 #include "Pager.h"
+#if !defined(RADIOLIB_EXCLUDE_PAGER)
 
+#if !defined(RADIOLIB_EXCLUDE_DIRECT_RECEIVE)
 // this is a massive hack, but we need a global-scope ISR to manage the bit reading
 // let's hope nobody ever tries running two POCSAG receivers at the same time
 static PhysicalLayer* _readBitInstance = NULL;
@@ -13,13 +15,16 @@ static void PagerClientReadBit(void) {
     _readBitInstance->readBit(_readBitPin);
   }
 }
+#endif
 
 PagerClient::PagerClient(PhysicalLayer* phy) {
   _phy = phy;
+  #if !defined(RADIOLIB_EXCLUDE_DIRECT_RECEIVE)
   _readBitInstance = _phy;
+  #endif
 }
 
-int16_t PagerClient::begin(float base, uint16_t speed, uint16_t shift) {
+int16_t PagerClient::begin(float base, uint16_t speed, bool invert, uint16_t shift) {
   // calculate duration of 1 bit in us
   _speed = (float)speed/1000.0f;
   _bitDuration = (uint32_t)1000000/speed;
@@ -34,6 +39,7 @@ int16_t PagerClient::begin(float base, uint16_t speed, uint16_t shift) {
   // calculate raw frequency shift
   _shiftHz = shift;
   _shift = _shiftHz/step;
+  inv = invert;
 
   // initialize BCH encoder
   encoderInit();
@@ -212,6 +218,7 @@ int16_t PagerClient::transmit(uint8_t* data, size_t len, uint32_t addr, uint8_t 
   return(RADIOLIB_ERR_NONE);
 }
 
+#if !defined(RADIOLIB_EXCLUDE_DIRECT_RECEIVE)
 int16_t PagerClient::startReceive(RADIOLIB_PIN_TYPE pin, uint32_t addr, uint32_t mask) {
   // save the variables
   _readBitPin = pin;
@@ -233,7 +240,16 @@ int16_t PagerClient::startReceive(RADIOLIB_PIN_TYPE pin, uint32_t addr, uint32_t
   // now set up the direct mode reception
   Module* mod = _phy->getMod();
   mod->pinMode(pin, INPUT);
-  _phy->setDirectSyncWord(RADIOLIB_PAGER_FRAME_SYNC_CODE_WORD, 32);
+
+  // set direct sync word to the frame sync word
+  // the logic here is inverted, because modules like SX1278
+  // assume high frequency to be logic 1, which is opposite to POCSAG
+  if(!inv) {
+    _phy->setDirectSyncWord(~RADIOLIB_PAGER_FRAME_SYNC_CODE_WORD, 32);
+  } else {
+    _phy->setDirectSyncWord(RADIOLIB_PAGER_FRAME_SYNC_CODE_WORD, 32);
+  }
+
   _phy->setDirectAction(PagerClientReadBit);
   _phy->receiveDirect();
 
@@ -419,6 +435,7 @@ int16_t PagerClient::readData(uint8_t* data, size_t* len, uint32_t* addr) {
   *len = decodedBytes;
   return(RADIOLIB_ERR_NONE);
 }
+#endif
 
 void PagerClient::write(uint32_t* data, size_t len) {
   // write code words from buffer
@@ -433,13 +450,22 @@ void PagerClient::write(uint32_t codeWord) {
   for(int8_t i = 31; i >= 0; i--) {
     uint32_t mask = (uint32_t)0x01 << i;
     uint32_t start = mod->micros();
+
+    // figure out the shift direction - start by assuming the bit is 0
+    int16_t change = _shift;
+
+    // now check if it's actually 1
     if(codeWord & mask) {
-      // send 1
-      _phy->transmitDirect(_baseRaw + _shift);
-    } else {
-      // send 0
-      _phy->transmitDirect(_baseRaw - _shift);
+      change = -_shift;
     }
+
+    // finally, check if inversion is enabled
+    if(inv) {
+      change = -change;
+    }
+
+    // now transmit the shifted frequency
+    _phy->transmitDirect(_baseRaw + change);
 
     // this is pretty silly, while(mod->micros() ... ) would be enough
     // but for some reason, MegaCore throws a linker error on it
@@ -451,6 +477,7 @@ void PagerClient::write(uint32_t codeWord) {
   }
 }
 
+#if !defined(RADIOLIB_EXCLUDE_DIRECT_RECEIVE)
 uint32_t PagerClient::read() {
   uint32_t codeWord = 0;
   codeWord |= (uint32_t)_phy->read() << 24;
@@ -458,9 +485,20 @@ uint32_t PagerClient::read() {
   codeWord |= (uint32_t)_phy->read() << 8;
   codeWord |= (uint32_t)_phy->read();
 
+  // check if we need to invert bits
+  // the logic here is inverted, because modules like SX1278
+  // assume high frequency to be logic 1, which is opposite to POCSAG
+  if(!inv) {
+    codeWord = ~codeWord;
+  }
+
+  RADIOLIB_VERBOSE_PRINT("R\t");
+  RADIOLIB_VERBOSE_PRINTLN(codeWord, HEX);
+
   // TODO BCH error correction here
   return(codeWord);
 }
+#endif
 
 uint8_t PagerClient::encodeBCD(char c) {
   switch(c) {
@@ -721,3 +759,5 @@ uint32_t PagerClient::encodeBCH(uint32_t dat) {
 
 	return(iResult);
 }
+
+#endif

@@ -23,31 +23,14 @@ int16_t FSK4Client::begin(float base, uint32_t shift, uint16_t rate) {
   // calculate duration of 1 bit
   _bitDuration = (uint32_t)1000000/rate;
 
-  // calculate module carrier frequency resolution
-  uint32_t step = round(_phy->getFreqStep());
-
-  // check minimum shift value
-  if(shift < step / 2) {
-    return(RADIOLIB_ERR_INVALID_RTTY_SHIFT);
-  }
-
-  // round shift to multiples of frequency step size
-  if(shift % step < (step / 2)) {
-    _shift = shift / step;
-  } else {
-    _shift = (shift / step) + 1;
-  }
+  // calculate carrier shift
+  _shift = getRawShift(shift);
 
   // Write resultant tones into arrays for quick lookup when modulating.
-  _tones[0] = 0;
-  _tones[1] = _shift;
-  _tones[2] = _shift*2;
-  _tones[3] = _shift*3;
-
-  _tonesHz[0] = 0;
-  _tonesHz[1] = _shiftHz;
-  _tonesHz[2] = _shiftHz*2;
-  _tonesHz[3] = _shiftHz*3;
+  for(uint8_t i = 0; i < 4; i++) {
+    _tones[i] = _shift*i;
+    _tonesHz[i] = _shiftHz*i;
+  }
 
   // calculate 24-bit frequency
   _base = (base * 1000000.0) / _phy->getFreqStep();
@@ -59,6 +42,15 @@ int16_t FSK4Client::begin(float base, uint32_t shift, uint16_t rate) {
 void FSK4Client::idle() {
   // Idle at Tone 0.
   tone(0);
+}
+
+int16_t FSK4Client::setCorrection(int16_t offsets[], float length) {
+  for(uint8_t i = 0; i < 4; i++) {
+    _tones[i] += getRawShift(offsets[i]);
+    _tonesHz[i] += offsets[i];
+  }
+  _bitDuration *= length;
+  return(RADIOLIB_ERR_NONE);
 }
 
 size_t FSK4Client::write(uint8_t* buff, size_t len) {
@@ -90,9 +82,7 @@ void FSK4Client::tone(uint8_t i) {
   Module* mod = _phy->getMod();
   uint32_t start = mod->micros();
   transmitDirect(_base + _tones[i], _baseHz + _tonesHz[i]);
-  while(mod->micros() - start < _bitDuration) {
-    mod->yield();
-  }
+  mod->waitForMicroseconds(start, _bitDuration);
 }
 
 int16_t FSK4Client::transmitDirect(uint32_t freq, uint32_t freqHz) {
@@ -105,12 +95,34 @@ int16_t FSK4Client::transmitDirect(uint32_t freq, uint32_t freqHz) {
 }
 
 int16_t FSK4Client::standby() {
+  // ensure everything is stopped in interrupt timing mode
+  Module* mod = _phy->getMod();
+  mod->waitForMicroseconds(0, 0);
   #if !defined(RADIOLIB_EXCLUDE_AFSK)
   if(_audio != nullptr) {
     return(_audio->noTone());
   }
   #endif
   return(_phy->standby());
+}
+
+int32_t FSK4Client::getRawShift(int32_t shift) {
+  // calculate module carrier frequency resolution
+  int32_t step = round(_phy->getFreqStep());
+
+  // check minimum shift value
+  if(abs(shift) < step / 2) {
+    return(0);
+  }
+
+  // round shift to multiples of frequency step size
+  if(abs(shift) % step < (step / 2)) {
+    return(shift / step);
+  }
+  if(shift < 0) {
+    return((shift / step) - 1);
+  }
+  return((shift / step) + 1);
 }
 
 #endif

@@ -128,19 +128,19 @@ float RadioHal<SX1276>::getRSSI(bool skipReceive)
 template<>
 float RadioHal<SX1268>::getFrequencyError(bool autoCorrect)
 {
-    return 0;
+    return radio->getFrequencyError();
 }
 
 template<>
 float RadioHal<SX1262>::getFrequencyError(bool autoCorrect)
 {
-    return 0;
+    return radio->getFrequencyError();
 }
 
 template<>
 float RadioHal<SX1280>::getFrequencyError(bool autoCorrect)
 {
-    return 0;
+    return radio->getFrequencyError();
 }
 
 template<>

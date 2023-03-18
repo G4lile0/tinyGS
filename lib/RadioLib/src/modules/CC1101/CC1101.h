@@ -111,7 +111,7 @@
 
 // CC1101_REG_IOCFG0
 #define RADIOLIB_CC1101_GDO0_TEMP_SENSOR_OFF                   0b00000000  //  7     7     analog temperature sensor output: disabled (default)
-#define RADIOLIB_CC1101_GDO0_TEMP_SENSOR_ON                    0b10000000  //  7     0                                       enabled
+#define RADIOLIB_CC1101_GDO0_TEMP_SENSOR_ON                    0b10000000  //  7     7                                       enabled
 #define RADIOLIB_CC1101_GDO0_NORM                              0b00000000  //  6     6     GDO0 output: active high (default)
 #define RADIOLIB_CC1101_GDO0_INV                               0b01000000  //  6     6                  active low
 
@@ -499,6 +499,16 @@
 #define RADIOLIB_CC1101_GDO2_ACTIVE                            0b00000100  //  2     2     GDO2 is active/asserted
 #define RADIOLIB_CC1101_GDO0_ACTIVE                            0b00000001  //  0     0     GDO0 is active/asserted
 
+//Defaults
+#define RADIOLIB_CC1101_DEFAULT_FREQ                           434.0
+#define RADIOLIB_CC1101_DEFAULT_BR                             4.8
+#define RADIOLIB_CC1101_DEFAULT_FREQDEV                        5.0
+#define RADIOLIB_CC1101_DEFAULT_RXBW                           135.0
+#define RADIOLIB_CC1101_DEFAULT_POWER                          10
+#define RADIOLIB_CC1101_DEFAULT_PREAMBLELEN                    16
+#define RADIOLIB_CC1101_DEFAULT_SW                             {0x12, 0xAD}
+#define RADIOLIB_CC1101_DEFAULT_SW_LEN                         2
+
 /*!
   \class CC1101
 
@@ -526,7 +536,7 @@ class CC1101: public PhysicalLayer {
     /*!
       \brief Initialization method.
 
-      \param freq Carrier frequency in MHz. Defaults to 434.0 MHz.
+      \param freq Carrier frequency in MHz. Defaults to 434 MHz.
 
       \param br Bit rate to be used in kbps. Defaults to 4.8 kbps.
 
@@ -540,7 +550,13 @@ class CC1101: public PhysicalLayer {
 
       \returns \ref status_codes
     */
-    int16_t begin(float freq = 434.0, float br = 4.8, float freqDev = 5.0, float rxBw = 135.0, int8_t power = 10, uint8_t preambleLength = 16);
+    int16_t begin(
+      float freq = RADIOLIB_CC1101_DEFAULT_FREQ,
+      float br = RADIOLIB_CC1101_DEFAULT_BR,
+      float freqDev = RADIOLIB_CC1101_DEFAULT_FREQDEV,
+      float rxBw = RADIOLIB_CC1101_DEFAULT_RXBW,
+      int8_t power = RADIOLIB_CC1101_DEFAULT_POWER,
+      uint8_t preambleLength = RADIOLIB_CC1101_DEFAULT_PREAMBLELEN);
 
     /*!
       \brief Blocking binary transmit method.
@@ -574,6 +590,15 @@ class CC1101: public PhysicalLayer {
       \returns \ref status_codes
     */
     int16_t standby() override;
+
+    /*!
+      \brief Sets the module to standby.
+
+      \param mode Standby mode to be used. No effect, implemented only for PhysicalLayer compatibility.
+
+      \returns \ref status_codes
+    */
+    int16_t standby(uint8_t mode) override;
 
     /*!
       \brief Starts direct mode transmission.
@@ -719,6 +744,15 @@ class CC1101: public PhysicalLayer {
       \returns \ref status_codes
     */
     int16_t setFrequencyDeviation(float freqDev) override;
+
+    /*!
+      \brief Gets frequency deviation. 
+
+      \param[out] freqDev Pointer to variable where to save the frequency deviation.
+
+      \returns \ref status_codes
+    */
+    int16_t getFrequencyDeviation(float *freqDev);
 
     /*!
       \brief Sets output power. Allowed values are -30, -20, -15, -10, 0, 5, 7 or 10 dBm.
@@ -903,15 +937,11 @@ class CC1101: public PhysicalLayer {
     */
     int16_t setEncoding(uint8_t encoding) override;
 
-    /*!
-      \brief Some modules contain external RF switch controlled by two pins. This function gives RadioLib control over those two pins to automatically switch Rx and Tx state.
-      When using automatic RF switch control, DO NOT change the pin mode of rxEn or txEn from Arduino sketch!
-
-      \param rxEn RX enable pin.
-
-      \param txEn TX enable pin.
-    */
+    /*! \copydoc Module::setRfSwitchPins */
     void setRfSwitchPins(RADIOLIB_PIN_TYPE rxEn, RADIOLIB_PIN_TYPE txEn);
+
+    /*! \copydoc Module::setRfSwitchTable */
+    void setRfSwitchTable(const RADIOLIB_PIN_TYPE (&pins)[Module::RFSWITCH_MAX_PINS], const Module::RfSwitchMode_t table[]);
 
     /*!
      \brief Get one truly random byte from RSSI noise.
@@ -973,8 +1003,8 @@ class CC1101: public PhysicalLayer {
     protected:
   #endif
 
-    float _freq = 0;
-    float _br = 0;
+    float _freq = RADIOLIB_CC1101_DEFAULT_FREQ;
+    float _br = RADIOLIB_CC1101_DEFAULT_BR;
     uint8_t _rawRSSI = 0;
     uint8_t _rawLQI = 0;
     uint8_t _modulation = RADIOLIB_CC1101_MOD_FORMAT_2_FSK;
@@ -987,8 +1017,8 @@ class CC1101: public PhysicalLayer {
     bool _crcOn = true;
     bool _directMode = true;
 
-    uint8_t _syncWordLength = 2;
-    int8_t _power = 0;
+    int8_t _power = RADIOLIB_CC1101_DEFAULT_POWER;
+
 
     int16_t config();
     int16_t transmitDirect(bool sync, uint32_t frf);

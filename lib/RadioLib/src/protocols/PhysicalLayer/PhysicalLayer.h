@@ -71,7 +71,7 @@ class PhysicalLayer {
 
       \returns \ref status_codes
     */
-    virtual int16_t transmit(uint8_t* data, size_t len, uint8_t addr = 0) = 0;
+    virtual int16_t transmit(uint8_t* data, size_t len, uint8_t addr = 0);
 
     /*!
       \brief Arduino String receive method.
@@ -85,11 +85,38 @@ class PhysicalLayer {
     int16_t receive(String& str, size_t len = 0);
 
     /*!
+      \brief Sets module to sleep.
+
+      \returns \ref status_codes
+    */
+    virtual int16_t sleep();
+
+    /*!
       \brief Sets module to standby.
 
       \returns \ref status_codes
     */
-    virtual int16_t standby() = 0;
+    virtual int16_t standby();
+
+    /*!
+      \brief Sets module to a specific standby mode.
+
+      \returns \ref status_codes
+    */
+    virtual int16_t standby(uint8_t mode);
+
+    /*!
+      \brief Interrupt-driven receive method. DIO1 will be activated when full packet is received.
+
+      \param timeout Raw timeout value.
+
+      \param irqFlags Sets the IRQ flags.
+
+      \param irqMask Sets the mask of IRQ flags that will trigger DIO1.
+
+      \returns \ref status_codes
+    */
+    virtual int16_t startReceive(uint32_t timeout = 0, uint16_t irqFlags = 0, uint16_t irqMask = 0);
 
     /*!
       \brief Binary receive method. Must be implemented in module class.
@@ -100,7 +127,7 @@ class PhysicalLayer {
 
       \returns \ref status_codes
     */
-    virtual int16_t receive(uint8_t* data, size_t len) = 0;
+    virtual int16_t receive(uint8_t* data, size_t len);
 
     /*!
       \brief Interrupt-driven Arduino String transmit method. Unlike the standard transmit method, this one is non-blocking.
@@ -137,14 +164,14 @@ class PhysicalLayer {
 
       \returns \ref status_codes
     */
-    virtual int16_t startTransmit(uint8_t* data, size_t len, uint8_t addr = 0) = 0;
+    virtual int16_t startTransmit(uint8_t* data, size_t len, uint8_t addr = 0);
 
     /*!
       \brief Clean up after transmission is done.
 
       \returns \ref status_codes
     */
-    virtual int16_t finishTransmit() = 0;
+    virtual int16_t finishTransmit();
 
     /*!
       \brief Reads data that was received after calling startReceive method.
@@ -168,7 +195,7 @@ class PhysicalLayer {
 
       \returns \ref status_codes
     */
-    virtual int16_t readData(uint8_t* data, size_t len) = 0;
+    virtual int16_t readData(uint8_t* data, size_t len);
 
     /*!
       \brief Enables direct transmission mode on pins DIO1 (clock) and DIO2 (data). Must be implemented in module class.
@@ -178,7 +205,7 @@ class PhysicalLayer {
 
       \returns \ref status_codes
     */
-    virtual int16_t transmitDirect(uint32_t frf = 0) = 0;
+    virtual int16_t transmitDirect(uint32_t frf = 0);
 
     /*!
       \brief Enables direct reception mode on pins DIO1 (clock) and DIO2 (data). Must be implemented in module class.
@@ -186,7 +213,7 @@ class PhysicalLayer {
 
       \returns \ref status_codes
     */
-    virtual int16_t receiveDirect() = 0;
+    virtual int16_t receiveDirect();
 
     // configuration methods
 
@@ -197,7 +224,7 @@ class PhysicalLayer {
 
       \returns \ref status_codes
     */
-    virtual int16_t setFrequency(float freq) = 0;
+    virtual int16_t setFrequency(float freq);
 
     /*!
       \brief Sets FSK bit rate. Only available in FSK mode. Must be implemented in module class.
@@ -206,7 +233,7 @@ class PhysicalLayer {
 
       \returns \ref status_codes
     */
-    virtual int16_t setBitRate(float br) = 0;
+    virtual int16_t setBitRate(float br);
 
     /*!
       \brief Sets FSK frequency deviation from carrier frequency. Only available in FSK mode. Must be implemented in module class.
@@ -215,7 +242,7 @@ class PhysicalLayer {
 
       \returns \ref status_codes
     */
-    virtual int16_t setFrequencyDeviation(float freqDev) = 0;
+    virtual int16_t setFrequencyDeviation(float freqDev);
 
     /*!
       \brief Sets GFSK data shaping. Only available in FSK mode. Must be implemented in module class.
@@ -224,7 +251,7 @@ class PhysicalLayer {
 
       \returns \ref status_codes
     */
-    virtual int16_t setDataShaping(uint8_t sh) = 0;
+    virtual int16_t setDataShaping(uint8_t sh);
 
     /*!
       \brief Sets FSK data encoding. Only available in FSK mode. Must be implemented in module class.
@@ -233,7 +260,7 @@ class PhysicalLayer {
 
       \returns \ref status_codes
     */
-    virtual int16_t setEncoding(uint8_t encoding) = 0;
+    virtual int16_t setEncoding(uint8_t encoding);
 
     /*!
       \brief Gets the module frequency step size that was set in constructor.
@@ -249,7 +276,21 @@ class PhysicalLayer {
 
       \returns Length of last received packet in bytes.
     */
-    virtual size_t getPacketLength(bool update = true) = 0;
+    virtual size_t getPacketLength(bool update = true);
+
+    /*!
+      \brief Gets RSSI (Recorded Signal Strength Indicator) of the last received packet.
+
+      \returns RSSI of the last received packet in dBm.
+    */
+    virtual float getRSSI();
+
+    /*!
+      \brief Gets SNR (Signal to Noise Ratio) of the last received packet. Only available for LoRa modem.
+
+      \returns SNR of the last received packet in dB.
+    */
+    virtual float getSNR();
 
     /*!
       \brief Get truly random number in range 0 - max.
@@ -276,7 +317,7 @@ class PhysicalLayer {
 
       \returns TRNG byte.
     */
-    virtual uint8_t randomByte() = 0;
+    virtual uint8_t randomByte();
 
     /*!
       \brief Configure module parameters for direct modes. Must be called prior to "ham" modes like RTTY or AX.25. Only available in FSK mode.
@@ -302,14 +343,14 @@ class PhysicalLayer {
 
       \param func Pointer to interrupt service routine.
     */
-    virtual void setDirectAction(void (*func)(void)) = 0;
+    virtual void setDirectAction(void (*func)(void));
 
     /*!
       \brief Function to read and process data bit in direct reception mode. Must be implemented in module class.
 
       \param pin Pin on which to read.
     */
-    virtual void readBit(RADIOLIB_PIN_TYPE pin) = 0;
+    virtual void readBit(RADIOLIB_PIN_TYPE pin);
 
     /*!
       \brief Get the number of direct mode bytes currently available in buffer.
@@ -343,6 +384,36 @@ class PhysicalLayer {
       \returns \ref status_codes
     */
     virtual int16_t setDIOMapping(RADIOLIB_PIN_TYPE pin, uint8_t value);
+
+    /*!
+      \brief Sets interrupt service routine to call when DIO1 activates.
+
+      \param func ISR to call.
+    */
+    virtual void setDio1Action(void (*func)(void));
+
+    /*!
+      \brief Clears interrupt service routine to call when DIO1 activates.
+    */
+    virtual void clearDio1Action();
+
+    #if defined(RADIOLIB_INTERRUPT_TIMING)
+
+    /*!
+      \brief Set function to be called to set up the timing interrupt.
+      For details, see https://github.com/jgromes/RadioLib/wiki/Interrupt-Based-Timing
+
+      \param func Setup function to be called, with one argument (pulse length in microseconds).
+    */
+    void setInterruptSetup(void (*func)(uint32_t));
+
+    /*!
+      \brief Set timing interrupt flag.
+      For details, see https://github.com/jgromes/RadioLib/wiki/Interrupt-Based-Timing
+    */
+    void setTimerFlag();
+
+    #endif
 
 #if !defined(RADIOLIB_EXCLUDE_DIRECT_RECEIVE)
   protected:

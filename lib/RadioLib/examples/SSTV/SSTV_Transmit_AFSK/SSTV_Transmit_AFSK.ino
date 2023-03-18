@@ -12,6 +12,7 @@
     - SX1231
     - CC1101
     - Si443x/RFM2x
+    - SX126x/LLCC68 (only devices without TCXO!)
 
    NOTE: Some platforms (such as Arduino Uno)
          might not be fast enough to correctly
@@ -42,7 +43,14 @@ SX1278 radio = new Module(10, 2, 9, 3);
 //SX1278 radio = RadioShield.ModuleA;
 
 // create AFSK client instance using the FSK module
-// pin 5 is connected to SX1278 DIO2
+// this requires connection to the module direct
+// input pin, here connected to Arduino pin 5
+// SX127x/RFM9x:  DIO2
+// RF69:          DIO2
+// SX1231:        DIO2
+// CC1101:        GDO2
+// Si443x/RFM2x:  GPIO
+// SX126x/LLCC68: DIO2
 AFSKClient audio(&radio, 5);
 
 // create SSTV client instance using the AFSK instance
@@ -105,7 +113,16 @@ void setup() {
   // initialize SSTV client
   Serial.print(F("[SSTV] Initializing ... "));
   // SSTV mode:                   Wrasse (SC2-180)
-  // correction factor:           0.95
+  state = sstv.begin(Wrasse);
+  if(state == RADIOLIB_ERR_NONE) {
+    Serial.println(F("success!"));
+  } else {
+    Serial.print(F("failed, code "));
+    Serial.println(state);
+    while(true);
+  }
+
+  // set correction factor
   // NOTE: Due to different speeds of various platforms
   //       supported by RadioLib (Arduino Uno, ESP32 etc),
   //       and because SSTV is analog protocol, incorrect
@@ -114,7 +131,8 @@ void setup() {
   //       to adjust the length of timing pulses
   //       (lower number = shorter pulses).
   //       The value is usually around 0.95 (95%).
-  state = sstv.begin(Wrasse, 0.95);
+  Serial.print(F("[SSTV] Setting correction ... "));
+  state = sstv.setCorrection(0.95);
   if(state == RADIOLIB_ERR_NONE) {
     Serial.println(F("success!"));
   } else {

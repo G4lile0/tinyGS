@@ -47,7 +47,14 @@
 
 // print debug info
 #if defined(RADIOLIB_DEBUG)
-  #pragma message "RADIOLIB_PLATFORM: " RADIOLIB_PLATFORM
+  #define RADIOLIB_VALUE_TO_STRING(x) #x
+  #define RADIOLIB_VALUE(x) RADIOLIB_VALUE_TO_STRING(x)
+  #define RADIOLIB_VAR_NAME_VALUE(var) #var "="  RADIOLIB_VALUE(var)
+  #pragma message(RADIOLIB_VAR_NAME_VALUE(RADIOLIB_PLATFORM))
+  #pragma message(RADIOLIB_VAR_NAME_VALUE(RADIOLIB_VERSION_MAJOR))
+  #pragma message(RADIOLIB_VAR_NAME_VALUE(RADIOLIB_VERSION_MINOR))
+  #pragma message(RADIOLIB_VAR_NAME_VALUE(RADIOLIB_VERSION_PATCH))
+  #pragma message(RADIOLIB_VAR_NAME_VALUE(RADIOLIB_VERSION_EXTRA))
 #endif
 
 // check unknown/unsupported platform
@@ -71,6 +78,7 @@
 #include "modules/SX126x/SX1261.h"
 #include "modules/SX126x/SX1262.h"
 #include "modules/SX126x/SX1268.h"
+#include "modules/SX126x/STM32WLx.h"
 #include "modules/SX127x/SX1272.h"
 #include "modules/SX127x/SX1273.h"
 #include "modules/SX127x/SX1276.h"
@@ -92,6 +100,7 @@
 #include "protocols/SSTV/SSTV.h"
 #include "protocols/FSK4/FSK4.h"
 #include "protocols/APRS/APRS.h"
+#include "protocols/ExternalRadio/ExternalRadio.h"
 
 // only create Radio class when using RadioShield
 #if defined(RADIOLIB_RADIOSHIELD)

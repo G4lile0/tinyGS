@@ -38,6 +38,8 @@ SX1279	KEYWORD1
 SX1280	KEYWORD1
 SX1281	KEYWORD1
 SX1282	KEYWORD1
+STM32WLx	KEYWORD1
+STM32WLx_Module	KEYWORD1
 
 # protocols
 RTTYClient	KEYWORD1
@@ -50,6 +52,7 @@ AFSKClient	KEYWORD1
 FSK4Client	KEYWORD1
 APRSClient	KEYWORD1
 PagerClient	KEYWORD1
+ExternalRadio	KEYWORD1
 
 # SSTV modes
 Scottie1	KEYWORD1
@@ -69,7 +72,7 @@ PasokonP7	KEYWORD1
 # RadioLib
 ModuleA	KEYWORD2
 ModuleB	KEYWORD2
-Module	KEYWORD2
+setRfSwitchTable	KEYWORD2
 
 # SX127x/RFM9x + RF69 + CC1101
 begin	KEYWORD2
@@ -191,6 +194,12 @@ setRegulatorDCDC	KEYWORD2
 getCurrentLimit	KEYWORD2
 getIrqStatus	KEYWORD2
 getLastError	KEYWORD2
+setRxBoostedGainMode	KEYWORD2
+uploadPatch	KEYWORD2
+spectralScanStart	KEYWORD2
+spectralScanAbort	KEYWORD2
+spectralScanGetStatus	KEYWORD2
+spectralScanGetResult	KEYWORD2
 
 # nRF24
 setIrqAction	KEYWORD2
@@ -246,6 +255,8 @@ sendTone	KEYWORD2
 
 # PhysicalLayer
 dropSync	KEYWORD2
+setTimerFlag	KEYWORD2
+setInterruptSetup	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
@@ -253,6 +264,7 @@ dropSync	KEYWORD2
 
 RADIOLIB_NC	LITERAL1
 RADIOLIB_VERSION	LITERAL1
+RADIOLIB_PIN_TYPE	LITERAL1
 
 RADIOLIB_SHAPING_NONE	LITERAL1
 RADIOLIB_SHAPING_0_3	LITERAL1

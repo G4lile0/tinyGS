@@ -1,4 +1,4 @@
-# RadioLib ![Build Status](https://github.com/jgromes/RadioLib/workflows/CI/badge.svg)
+# RadioLib ![Build Status](https://github.com/jgromes/RadioLib/workflows/CI/badge.svg) [![PlatformIO Registry](https://badges.registry.platformio.org/packages/jgromes/library/RadioLib.svg)](https://registry.platformio.org/libraries/jgromes/RadioLib)
 
 ### _One radio library to rule them all!_
 
@@ -19,6 +19,7 @@ RadioLib was originally created as a driver for [__RadioShield__](https://github
 * __RFM2x__ series FSK modules (RFM22, RM23)
 * __RFM9x__ series LoRa modules (RFM95, RM96, RFM97, RFM98)
 * __Si443x__ series FSK modules (Si4430, Si4431, Si4432)
+* __STM32WL__ integrated microcontroller/LoRa module
 * __SX126x__ series LoRa modules (SX1261, SX1262, SX1268)
 * __SX127x__ series LoRa modules (SX1272, SX1273, SX1276, SX1277, SX1278, SX1279)
 * __SX128x__ series LoRa/GFSK/BLE/FLRC modules (SX1280, SX1281, SX1282)
@@ -71,7 +72,8 @@ SX127x, RFM9x, RF69, SX1231, CC1101, nRF24L01, RFM2x and Si443x
   * [__MegaCore__](https://github.com/MCUdude/MegaCore) - AVR (ATmega1281, ATmega640 etc.)
 
 * __Raspberry Pi__
-  * [__RP2040__](https://github.com/arduino/ArduinoCore-mbed) - Raspberry Pi Pico and Arduino Nano RP2040 Connect
+  * [__RP2040__ (official core)](https://github.com/arduino/ArduinoCore-mbed) - Raspberry Pi Pico and Arduino Nano RP2040 Connect
+  * [__RP2040__ (unofficial core)](https://github.com/earlephilhower/arduino-pico) - Raspberry Pi Pico/RP2040-based boards
   * [__Raspberry Pi__](https://github.com/me-no-dev/RasPiArduino) - Arduino framework for RaspberryPI
 
 * __Heltec__

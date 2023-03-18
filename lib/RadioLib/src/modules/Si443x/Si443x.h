@@ -627,11 +627,20 @@ class Si443x: public PhysicalLayer {
     int16_t sleep();
 
     /*!
-      \brief Sets the module to standby.
+      \brief Sets the module to standby (with XTAL on).
 
       \returns \ref status_codes
     */
     int16_t standby() override;
+
+    /*!
+      \brief Sets the module to standby.
+
+      \param mode Standby mode to be used.
+
+      \returns \ref status_codes
+    */
+    int16_t standby(uint8_t mode) override;
 
     /*!
       \brief Enables direct transmission mode. While in direct mode, the module will not be able to transmit or receive packets.
@@ -777,7 +786,7 @@ class Si443x: public PhysicalLayer {
 
     /*!
       \brief Sets Gaussian filter bandwidth-time product that will be used for data shaping. Only available in FSK mode with FSK modulation.
-      Allowed values are RADIOLIB_SHAPING_0_3, RADIOLIB_SHAPING_0_5 or RADIOLIB_SHAPING_1_0. Set to RADIOLIB_SHAPING_NONE to disable data shaping.
+      Allowed values are RADIOLIB_SHAPING_0_5 or RADIOLIB_SHAPING_1_0. Set to RADIOLIB_SHAPING_NONE to disable data shaping.
 
       \param sh Gaussian shaping bandwidth-time product that will be used for data shaping
 
@@ -785,15 +794,11 @@ class Si443x: public PhysicalLayer {
     */
     int16_t setDataShaping(uint8_t sh) override;
 
-    /*!
-      \brief Some modules contain external RF switch controlled by two pins. This function gives RadioLib control over those two pins to automatically switch Rx and Tx state.
-      When using automatic RF switch control, DO NOT change the pin mode of rxEn or txEn from Arduino sketch!
-
-      \param rxEn RX enable pin.
-
-      \param txEn TX enable pin.
-    */
+    /*! \copydoc Module::setRfSwitchPins */
     void setRfSwitchPins(RADIOLIB_PIN_TYPE rxEn, RADIOLIB_PIN_TYPE txEn);
+
+    /*! \copydoc Module::setRfSwitchTable */
+    void setRfSwitchTable(const RADIOLIB_PIN_TYPE (&pins)[Module::RFSWITCH_MAX_PINS], const Module::RfSwitchMode_t table[]);
 
     /*!
      \brief Get one truly random byte from RSSI noise.

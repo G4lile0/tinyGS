@@ -327,6 +327,7 @@
 #define RADIOLIB_SX128X_IRQ_SYNC_WORD_VALID                    0x0004      //  2     2                       sync word valid
 #define RADIOLIB_SX128X_IRQ_RX_DONE                            0x0002      //  1     1                       Rx done
 #define RADIOLIB_SX128X_IRQ_TX_DONE                            0x0001      //  0     0                       Tx done
+#define RADIOLIB_SX128X_IRQ_RX_DEFAULT                         0x4062      //  15    0                       default for Rx (RX_DONE, RX_TX_TIMEOUT, CRC_ERROR and HEADER_ERROR)
 #define RADIOLIB_SX128X_IRQ_NONE                               0x0000      //  15    0                       none
 #define RADIOLIB_SX128X_IRQ_ALL                                0xFFFF      //  15    0                       all
 
@@ -398,7 +399,7 @@ class SX128x: public PhysicalLayer {
 
       \param power Output power in dBm. Defaults to 10 dBm.
 
-      \parma preambleLength FSK preamble length in bits. Defaults to 16 bits.
+      \param preambleLength FSK preamble length in bits. Defaults to 16 bits.
 
       \returns \ref status_codes
     */
@@ -432,7 +433,7 @@ class SX128x: public PhysicalLayer {
 
       \param power Output power in dBm. Defaults to 10 dBm.
 
-      \parma preambleLength FLRC preamble length in bits. Defaults to 16 bits.
+      \param preambleLength FLRC preamble length in bits. Defaults to 16 bits.
 
       \param dataShaping Time-bandwidth product of the Gaussian filter to be used for shaping. Defaults to 0.5.
 
@@ -564,10 +565,21 @@ class SX128x: public PhysicalLayer {
       \brief Interrupt-driven receive method. DIO1 will be activated when full packet is received.
 
       \param timeout Raw timeout value, expressed as multiples of 15.625 us. Defaults to RADIOLIB_SX128X_RX_TIMEOUT_INF for infinite timeout (Rx continuous mode), set to RADIOLIB_SX128X_RX_TIMEOUT_NONE for no timeout (Rx single mode).
+      If timeout other than infinite is set, signal will be generated on DIO1.
+
+      \param irqFlags Sets the IRQ flags, defaults to RADIOLIB_SX128X_IRQ_RX_DEFAULT.
+
+      \param irqMask Sets the mask of IRQ flags that will trigger DIO1, defaults to RADIOLIB_SX128X_IRQ_RX_DONE.
 
       \returns \ref status_codes
     */
-    int16_t startReceive(uint16_t timeout = RADIOLIB_SX128X_RX_TIMEOUT_INF);
+    int16_t startReceive(uint16_t timeout = RADIOLIB_SX128X_RX_TIMEOUT_INF, uint16_t irqFlags = RADIOLIB_SX128X_IRQ_RX_DEFAULT, uint16_t irqMask = RADIOLIB_SX128X_IRQ_RX_DONE);
+
+    /*!
+      \brief Reads the current IRQ status.
+      \returns IRQ status bits
+    */
+    uint16_t getIrqStatus();
 
     /*!
       \brief Reads data received after calling startReceive method.
@@ -802,15 +814,11 @@ class SX128x: public PhysicalLayer {
     */
     int16_t setEncoding(uint8_t encoding) override;
 
-    /*!
-      \brief Some modules contain external RF switch controlled by two pins. This function gives RadioLib control over those two pins to automatically switch Rx and Tx state.
-      When using automatic RF switch control, DO NOT change the pin mode of rxEn or txEn from Arduino sketch!
-
-      \param rxEn RX enable pin.
-
-      \param txEn TX enable pin.
-    */
+    /*! \copydoc Module::setRfSwitchPins */
     void setRfSwitchPins(RADIOLIB_PIN_TYPE rxEn, RADIOLIB_PIN_TYPE txEn);
+
+    /*! \copydoc Module::setRfSwitchTable */
+    void setRfSwitchTable(const RADIOLIB_PIN_TYPE (&pins)[Module::RFSWITCH_MAX_PINS], const Module::RfSwitchMode_t table[]);
 
     /*!
      \brief Dummy random method, to ensure PhysicalLayer compatibility.
@@ -818,13 +826,6 @@ class SX128x: public PhysicalLayer {
      \returns Always returns 0.
    */
     uint8_t randomByte();
-
-    /*!
-     \brief Get the last recorded transaction error.
-
-     \returns \ref status_codes
-    */
-    int16_t getLastError();
 
     #if !defined(RADIOLIB_EXCLUDE_DIRECT_RECEIVE)
     /*!
@@ -874,7 +875,6 @@ class SX128x: public PhysicalLayer {
     int16_t setPacketParamsBLE(uint8_t connState, uint8_t crcLen, uint8_t bleTestPayload, uint8_t whitening);
     int16_t setPacketParamsLoRa(uint8_t preambleLen, uint8_t headerType, uint8_t payloadLen, uint8_t crc, uint8_t invertIQ = RADIOLIB_SX128X_LORA_IQ_STANDARD);
     int16_t setDioIrqParams(uint16_t irqMask, uint16_t dio1Mask, uint16_t dio2Mask = RADIOLIB_SX128X_IRQ_NONE, uint16_t dio3Mask = RADIOLIB_SX128X_IRQ_NONE);
-    uint16_t getIrqStatus();
     int16_t clearIrqStatus(uint16_t clearIrqParams = RADIOLIB_SX128X_IRQ_ALL);
     int16_t setRangingRole(uint8_t role);
     int16_t setPacketType(uint8_t type);
@@ -886,11 +886,7 @@ class SX128x: public PhysicalLayer {
 #endif
 
     // common low-level SPI interface
-    int16_t SPIwriteCommand(uint8_t cmd, uint8_t* data, uint8_t numBytes, bool waitForBusy = true);
-    int16_t SPIwriteCommand(uint8_t* cmd, uint8_t cmdLen, uint8_t* data, uint8_t numBytes, bool waitForBusy = true);
-    int16_t SPIreadCommand(uint8_t cmd, uint8_t* data, uint8_t numBytes, bool waitForBusy = true);
-    int16_t SPIreadCommand(uint8_t* cmd, uint8_t cmdLen, uint8_t* data, uint8_t numBytes, bool waitForBusy = true);
-    int16_t SPItransfer(uint8_t* cmd, uint8_t cmdLen, bool write, uint8_t* dataOut, uint8_t* dataIn, uint8_t numBytes, bool waitForBusy, uint32_t timeout = 5000);
+    static int16_t SPIparseStatus(uint8_t in);
 
 #if !defined(RADIOLIB_GODMODE)
   private:
@@ -910,10 +906,7 @@ class SX128x: public PhysicalLayer {
     // cached BLE parameters
     uint8_t _connectionState = 0, _crcBLE = 0, _bleTestPayload = 0;
 
-    int16_t _lastError = RADIOLIB_ERR_NONE;
-
     int16_t config(uint8_t modem);
-    int16_t checkCommandResult();
 };
 
 #endif
