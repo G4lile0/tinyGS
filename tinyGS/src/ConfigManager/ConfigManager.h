@@ -110,6 +110,8 @@ typedef struct
   float L_TCXO_V;
   uint8_t RX_EN;
   uint8_t TX_EN;
+  uint8_t VBAT_AIN;     /* GPIO pin for VBAT monitoring */
+  float VBAT_SCALE;     /* potential divider between battery and GPIO pin */
   String BOARD;
 } board_t;
 
