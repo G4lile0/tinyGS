@@ -115,10 +115,10 @@ int16_t Radio::begin()
   // when new packet is received
   // attach the ISR to radio interrupt
   radioHal->setDio0Action(setFlag);
-
   // start listening for LoRa packets
   Log::console(PSTR("[SX12x8] Starting to listen to %s"), m.satellite);
   CHECK_ERROR(radioHal->startReceive());
+  status.modeminfo.currentRssi = radioHal->getInstRSSI();
 
   status.radio_ready = true;
   return RADIOLIB_ERR_NONE;
@@ -136,7 +136,7 @@ void Radio::setFlag()
 }
 
 void Radio::enableInterrupt()
-{
+{ Serial.println ("pasa por interrupcion");
   eInterrupt = true;
 }
 
@@ -153,6 +153,14 @@ void Radio::startRx()
   // we're ready to receive more packets,
   // enable interrupt service routine
   enableInterrupt();
+  }
+
+
+ void Radio::currentRssi()
+{
+  // get current RSSI
+  status.modeminfo.currentRssi = radioHal->getInstRSSI();
+
 }
 
 int16_t Radio::sendTx(uint8_t *data, size_t length)

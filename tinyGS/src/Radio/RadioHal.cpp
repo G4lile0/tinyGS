@@ -3,6 +3,7 @@
 template<>
 int16_t RadioHal<SX1278>::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t syncWord, int8_t power, uint16_t preambleLength, uint8_t gain, float tcxoVoltage)
 { 
+    
     if (power>=17) radio->setCurrentLimit(150);
     return radio->begin(freq, bw, sf, cr, syncWord, power, preambleLength, gain);
 }
@@ -14,7 +15,7 @@ int16_t RadioHal<SX1278>::begin()
 
 template<>
 int16_t RadioHal<SX1276>::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t syncWord, int8_t power, uint16_t preambleLength, uint8_t gain, float tcxoVoltage)
-{
+{   
     if (power>=17) radio->setCurrentLimit(150);
     return radio->begin(freq, bw, sf, cr, syncWord, power, preambleLength, gain);
 }
@@ -124,6 +125,37 @@ float RadioHal<SX1276>::getRSSI(bool skipReceive)
 {
     return radio->getRSSI(skipReceive);
 }
+
+template<>
+float RadioHal<SX1280>::getInstRSSI(bool skipReceive)
+{
+    return radio->getRSSI();
+}
+
+template<>
+float RadioHal<SX1268>::getInstRSSI(bool skipReceive)
+{
+    return radio->getRSSI();
+}
+
+template<>
+float RadioHal<SX1262>::getInstRSSI(bool skipReceive)
+{
+    return radio->getRSSI();
+}
+
+template<>
+float RadioHal<SX1278>::getInstRSSI(bool skipReceive)
+{   
+    return radio->getInstRSSI(skipReceive);
+}
+
+template<>
+float RadioHal<SX1276>::getInstRSSI(bool skipReceive)
+{   
+    return radio->getInstRSSI(skipReceive);
+}
+
 
 template<>
 float RadioHal<SX1268>::getFrequencyError(bool autoCorrect)

@@ -42,6 +42,7 @@ public:
   void enableInterrupt();
   void disableInterrupt();
   void startRx();
+  void currentRssi();
   int16_t moduleSleep();
   uint8_t listen();
   bool isReady() { return status.radio_ready; }

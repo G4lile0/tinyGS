@@ -20,6 +20,7 @@ public:
   virtual size_t getPacketLength(bool update = true) = 0;
   virtual int16_t readData(uint8_t* data, size_t len) = 0;
   virtual float getRSSI(bool skipReceive = false) = 0;
+  virtual float getInstRSSI(bool skipReceive = false) = 0;
   virtual float getSNR() = 0;
   virtual float getFrequencyError(bool autoCorrect = false) = 0;
   virtual int16_t fixedPacketLengthMode(uint8_t len) = 0;
@@ -78,6 +79,8 @@ public:
   }
 
   float getRSSI(bool skipReceive = false);
+
+  float getInstRSSI(bool skipReceive = false);
 
   float getSNR()
   {
