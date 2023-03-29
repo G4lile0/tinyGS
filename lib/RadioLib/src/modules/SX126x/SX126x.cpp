@@ -536,7 +536,8 @@ int16_t SX126x::finishTransmit() {
   return(standby());
 }
 
-int16_t SX126x::startReceive(uint32_t timeout, uint16_t irqFlags, uint16_t irqMask) {
+int16_t SX126x::startReceive(uint32_t timeout, uint16_t irqFlags, uint16_t irqMask, size_t len) {
+  (void)len;
   int16_t state = startReceiveCommon(timeout, irqFlags, irqMask);
   RADIOLIB_ASSERT(state);
 
@@ -1221,11 +1222,18 @@ float SX126x::getDataRate() const {
   return(_dataRate);
 }
 
-float SX126x::getRSSI() {
-  // get last packet RSSI from packet status
-  uint32_t packetStatus = getPacketStatus();
-  uint8_t rssiPkt = packetStatus & 0xFF;
-  return(-1.0 * rssiPkt/2.0);
+float SX126x::getRSSI(bool packet) {
+  if(packet) { 
+    // get last packet RSSI from packet status
+    uint32_t packetStatus = getPacketStatus();
+    uint8_t rssiPkt = packetStatus & 0xFF;
+    return(-1.0 * rssiPkt/2.0);
+  } else {
+    // get instantaneous RSSI value
+    uint8_t data[3] = {0, 0, 0};  // RssiInst, Status, RFU
+    _mod->SPIreadStream(RADIOLIB_SX126X_CMD_GET_RSSI_INST, data, 3);
+    return((float)data[0] / (-2.0));
+  }
 }
 
 float SX126x::getSNR() {
@@ -1325,13 +1333,6 @@ uint32_t SX126x::getTimeOnAir(size_t len) {
   } else {
     return((len * 8 * _br) / (RADIOLIB_SX126X_CRYSTAL_FREQ * 32));
   }
-}
-
-float SX126x::getRSSIInst() {
-  uint8_t data[3] = {0, 0, 0};  // RssiInst, Status, RFU
-  _mod->SPIreadStream(RADIOLIB_SX126X_CMD_GET_RSSI_INST, data, 3);
-
-  return (float)data[0] / (-2.0);
 }
 
 int16_t SX126x::implicitHeader(size_t len) {
@@ -1463,7 +1464,7 @@ int16_t SX126x::uploadPatch(const uint32_t* patch, size_t len, bool nonvolatile)
   return(state);
 }
 
-int16_t SX126x::spectralScanStart(uint16_t numScans, uint8_t window, uint8_t interval) {
+int16_t SX126x::spectralScanStart(uint16_t numSamples, uint8_t window, uint8_t interval) {
   // abort first - not sure if this is strictly needed, but the example code does this
   spectralScanAbort();
 
@@ -1475,7 +1476,7 @@ int16_t SX126x::spectralScanStart(uint16_t numScans, uint8_t window, uint8_t int
   RADIOLIB_ASSERT(state);
 
   // now set the actual spectral scan parameters
-  uint8_t data[3] = { (uint8_t)((numScans >> 8) & 0xFF), (uint8_t)(numScans & 0xFF), interval };
+  uint8_t data[3] = { (uint8_t)((numSamples >> 8) & 0xFF), (uint8_t)(numSamples & 0xFF), interval };
   return(_mod->SPIwriteStream(RADIOLIB_SX126X_CMD_SET_SPECTR_SCAN_PARAMS, data, 3));
 }
 
@@ -1564,6 +1565,10 @@ int16_t SX126x::setDio2AsRfSwitch(bool enable) {
     data = RADIOLIB_SX126X_DIO2_AS_IRQ;
   }
   return(_mod->SPIwriteStream(RADIOLIB_SX126X_CMD_SET_DIO2_AS_RF_SWITCH_CTRL, &data, 1));
+}
+
+int16_t SX126x::setFs() {
+  return(_mod->SPIwriteStream(RADIOLIB_SX126X_CMD_SET_FS, NULL, 0));
 }
 
 int16_t SX126x::setTx(uint32_t timeout) {

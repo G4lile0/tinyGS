@@ -19,8 +19,7 @@ public:
   virtual int16_t sleep() = 0;
   virtual size_t getPacketLength(bool update = true) = 0;
   virtual int16_t readData(uint8_t* data, size_t len) = 0;
-  virtual float getRSSI(bool skipReceive = false) = 0;
-  virtual float getInstRSSI(bool skipReceive = false) = 0;
+  virtual float getRSSI(bool packet = true, bool skipReceive = false) = 0;
   virtual float getSNR() = 0;
   virtual float getFrequencyError(bool autoCorrect = false) = 0;
   virtual int16_t fixedPacketLengthMode(uint8_t len) = 0;
@@ -78,9 +77,8 @@ public:
     return radio->readData(data, len);
   }
 
-  float getRSSI(bool skipReceive = false);
+  float getRSSI(bool packet = true, bool skipReceive = false);
 
-  float getInstRSSI(bool skipReceive = false);
 
   float getSNR()
   {

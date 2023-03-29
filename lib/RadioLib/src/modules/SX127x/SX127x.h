@@ -830,6 +830,21 @@ class SX127x: public PhysicalLayer {
       \returns \ref status_codes
     */
     int16_t startReceive(uint8_t len = 0, uint8_t mode = RADIOLIB_SX127X_RXCONTINUOUS);
+    
+    /*!
+      \brief Interrupt-driven receive method, implemented for compatibility with PhysicalLayer.
+
+      \param mode Receive mode to be used.
+
+      \param irqFlags Ignored.
+
+      \param irqMask Ignored.
+
+      \param len Expected length of packet to be received. Required for LoRa spreading factor 6.
+
+      \returns \ref status_codes
+    */
+    int16_t startReceive(uint32_t mode, uint16_t irqFlags, uint16_t irqMask, size_t len);
 
     /*!
       \brief Reads data that was received after calling startReceive method. This method reads len characters.
@@ -1242,6 +1257,17 @@ class SX127x: public PhysicalLayer {
       \returns \ref status_codes
     */
     int16_t setDIOPreambleDetect(bool usePreambleDetect);
+
+    /*!
+      \brief Gets recorded signal strength indicator.
+
+      \param packet Whether to read last packet RSSI, or the current value. LoRa mode only, ignored for FSK.
+
+      \param skipReceive Set to true to skip putting radio in receive mode for the RSSI measurement in FSK/OOK mode.
+
+      \returns RSSI value in dBm.
+    */
+    float getRSSI(bool packet, bool skipReceive, int16_t offset);
 
     /*!
       \brief Sets the RSSI value above which the RSSI interrupt is signaled

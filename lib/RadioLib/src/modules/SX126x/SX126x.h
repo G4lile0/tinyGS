@@ -554,7 +554,7 @@ class SX126x: public PhysicalLayer {
       \returns \ref status_codes
     */
     int16_t scanChannel(uint8_t symbolNum = RADIOLIB_SX126X_CAD_PARAM_DEFAULT, uint8_t detPeak = RADIOLIB_SX126X_CAD_PARAM_DEFAULT, uint8_t detMin = RADIOLIB_SX126X_CAD_PARAM_DEFAULT);
-
+    
     /*!
       \brief Sets the module to sleep mode.
 
@@ -625,9 +625,11 @@ class SX126x: public PhysicalLayer {
 
       \param irqMask Sets the mask of IRQ flags that will trigger DIO1, defaults to RADIOLIB_SX126X_IRQ_RX_DONE.
 
+      \param len Only for PhysicalLayer compatibility, not used.
+
       \returns \ref status_codes
     */
-    int16_t startReceive(uint32_t timeout = RADIOLIB_SX126X_RX_TIMEOUT_INF, uint16_t irqFlags = RADIOLIB_SX126X_IRQ_RX_DEFAULT, uint16_t irqMask = RADIOLIB_SX126X_IRQ_RX_DONE);
+    int16_t startReceive(uint32_t timeout = RADIOLIB_SX126X_RX_TIMEOUT_INF, uint16_t irqFlags = RADIOLIB_SX126X_IRQ_RX_DEFAULT, uint16_t irqMask = RADIOLIB_SX126X_IRQ_RX_DONE, size_t len = 0);
 
     /*!
       \brief Interrupt-driven receive method where the device mostly sleeps and periodically wakes to listen.
@@ -915,11 +917,13 @@ class SX126x: public PhysicalLayer {
     float getDataRate() const;
 
     /*!
-      \brief Gets RSSI (Recorded Signal Strength Indicator) of the last received packet.
+      \brief GetsRSSI (Recorded Signal Strength Indicator).
 
-      \returns RSSI of the last received packet in dBm.
+      \param packet Whether to read last packet RSSI, or the current value.
+
+      \returns RSSI value in dBm.
     */
-    float getRSSI();
+    float getRSSI(bool packet = true);
 
     /*!
       \brief Gets SNR (Signal to Noise Ratio) of the last received packet. Only available for LoRa modem.
@@ -972,13 +976,6 @@ class SX126x: public PhysicalLayer {
       \returns Expected time-on-air in microseconds.
     */
     uint32_t getTimeOnAir(size_t len);
-
-    /*!
-      \brief Get instantaneous RSSI value during recption of the packet. Should switch to FSK receive mode for LBT implementation.
-
-      \returns Instantaneous RSSI value in dBm, in steps of 0.5dBm
-    */
-    float getRSSIInst();
 
     /*!
       \brief Set implicit header mode for future reception/transmission.
@@ -1084,7 +1081,7 @@ class SX126x: public PhysicalLayer {
     /*!
       \brief Start spectral scan. Requires binary path to be uploaded.
 
-      \param numScans Number of scans for each iteration. Fewer scans = better temporal resolution, but fewer power samples.
+      \param numSamples Number of samples for each scan. Fewer samples = better temporal resolution.
 
       \param window RSSI averaging window size.
 
@@ -1092,7 +1089,7 @@ class SX126x: public PhysicalLayer {
 
       \returns \ref status_codes
     */
-    int16_t spectralScanStart(uint16_t numScans, uint8_t window = RADIOLIB_SX126x_SPECTRAL_SCAN_WINDOW_DEFAULT, uint8_t interval = RADIOLIB_SX126X_SCAN_INTERVAL_8_20_US);
+    int16_t spectralScanStart(uint16_t numSamples, uint8_t window = RADIOLIB_SX126x_SPECTRAL_SCAN_WINDOW_DEFAULT, uint8_t interval = RADIOLIB_SX126X_SCAN_INTERVAL_8_20_US);
     
     /*!
       \brief Abort an ongoing spectral scan.
@@ -1119,6 +1116,7 @@ class SX126x: public PhysicalLayer {
   protected:
 #endif
     // SX126x SPI command implementations
+    int16_t setFs();
     int16_t setTx(uint32_t timeout = 0);
     int16_t setRx(uint32_t timeout);
     int16_t setCad(uint8_t symbolNum, uint8_t detPeak, uint8_t detMin);

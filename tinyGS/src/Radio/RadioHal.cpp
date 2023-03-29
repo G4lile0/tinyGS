@@ -97,64 +97,36 @@ int16_t RadioHal<SX1280>::beginFSK(float freq, float br, float freqDev, float rx
 }
 
 template<>
-float RadioHal<SX1280>::getRSSI(bool skipReceive)
+float RadioHal<SX1280>::getRSSI(bool packet,bool skipReceive)
 {
     return radio->getRSSI();
 }
 
 template<>
-float RadioHal<SX1268>::getRSSI(bool skipReceive)
+float RadioHal<SX1268>::getRSSI(bool packet,bool skipReceive)
 {
-    return radio->getRSSI();
+    return radio->getRSSI(packet);
 }
 
 template<>
-float RadioHal<SX1262>::getRSSI(bool skipReceive)
+float RadioHal<SX1262>::getRSSI(bool packet,bool skipReceive)
 {
-    return radio->getRSSI();
+    return radio->getRSSI(packet);
 }
 
 template<>
-float RadioHal<SX1278>::getRSSI(bool skipReceive)
+float RadioHal<SX1278>::getRSSI(bool packet,bool skipReceive)
 {
-    return radio->getRSSI(skipReceive);
+    return radio->getRSSI(packet,skipReceive);
 }
 
 template<>
-float RadioHal<SX1276>::getRSSI(bool skipReceive)
+float RadioHal<SX1276>::getRSSI(bool packet,bool skipReceive)
 {
-    return radio->getRSSI(skipReceive);
+    return radio->getRSSI(packet,skipReceive);
 }
 
-template<>
-float RadioHal<SX1280>::getInstRSSI(bool skipReceive)
-{
-    return radio->getRSSI();
-}
 
-template<>
-float RadioHal<SX1268>::getInstRSSI(bool skipReceive)
-{
-    return radio->getRSSI();
-}
-
-template<>
-float RadioHal<SX1262>::getInstRSSI(bool skipReceive)
-{
-    return radio->getRSSI();
-}
-
-template<>
-float RadioHal<SX1278>::getInstRSSI(bool skipReceive)
-{   
-    return radio->getInstRSSI(skipReceive);
-}
-
-template<>
-float RadioHal<SX1276>::getInstRSSI(bool skipReceive)
-{   
-    return radio->getInstRSSI(skipReceive);
-}
 
 
 template<>

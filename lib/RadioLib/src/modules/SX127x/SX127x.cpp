@@ -423,6 +423,12 @@ int16_t SX127x::startReceive(uint8_t len, uint8_t mode) {
   return(setMode(mode));
 }
 
+int16_t SX127x::startReceive(uint32_t mode, uint16_t irqFlags, uint16_t irqMask, size_t len) {
+  (void)irqFlags;
+  (void)irqMask;
+  return(startReceive((uint8_t)len, (uint8_t)mode));
+}
+
 void SX127x::setDio0Action(void (*func)(void), RADIOLIB_INTERRUPT_STATUS dir) {
   _mod->attachInterrupt(RADIOLIB_DIGITAL_PIN_TO_INTERRUPT(_mod->getIrq()), func, dir);
 }
@@ -1550,6 +1556,47 @@ int16_t SX127x::setDIOMapping(RADIOLIB_PIN_TYPE pin, uint8_t value) {
 
 int16_t SX127x::setDIOPreambleDetect(bool usePreambleDetect) {
   return _mod->SPIsetRegValue(RADIOLIB_SX127X_REG_DIO_MAPPING_2, (usePreambleDetect) ? RADIOLIB_SX127X_DIO_MAP_PREAMBLE_DETECT : RADIOLIB_SX127X_DIO_MAP_RSSI, 0, 0);
+}
+
+float SX127x::getRSSI(bool packet, bool skipReceive, int16_t offset) {
+  if(getActiveModem() == RADIOLIB_SX127X_LORA) {
+    if(packet) {
+      // LoRa packet mode, get RSSI of the last packet
+      float lastPacketRSSI = offset + _mod->SPIgetRegValue(RADIOLIB_SX127X_REG_PKT_RSSI_VALUE);
+
+      // spread-spectrum modulation signal can be received below noise floor
+      // check last packet SNR and if it's less than 0, add it to reported RSSI to get the correct value
+      float lastPacketSNR = SX127x::getSNR();
+      if(lastPacketSNR < 0.0) {
+        lastPacketRSSI += lastPacketSNR;
+      }
+      return(lastPacketRSSI);
+
+    } else {
+      // LoRa instant, get current RSSI
+      float currentRSSI = offset + _mod->SPIgetRegValue(RADIOLIB_SX127X_REG_RSSI_VALUE);
+      return(currentRSSI);
+    }
+  
+  } else {
+    // for FSK, there is no packet RSSI
+
+    // enable listen mode
+    if(!skipReceive) {
+      startReceive();
+    }
+
+    // read the value for FSK
+    float rssi = (float)_mod->SPIgetRegValue(RADIOLIB_SX127X_REG_RSSI_VALUE_FSK) / -2.0;
+
+    // set mode back to standby
+    if(!skipReceive) {
+      standby();
+    }
+
+    // return the value
+    return(rssi);
+  }
 }
 
 #endif
