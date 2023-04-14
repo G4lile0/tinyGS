@@ -136,7 +136,7 @@ void Radio::setFlag()
 }
 
 void Radio::enableInterrupt()
-{ Serial.println ("pasa por interrupcion");
+{ 
   eInterrupt = true;
 }
 
