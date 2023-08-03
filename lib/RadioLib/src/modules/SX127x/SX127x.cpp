@@ -1589,8 +1589,8 @@ float SX127x::getRSSI(bool packet, bool skipReceive, int16_t offset) {
     // read the value for FSK
     float rssi = (float)_mod->SPIgetRegValue(RADIOLIB_SX127X_REG_RSSI_VALUE_FSK) / -2.0;
 
-    // set mode back to standby
-    if(!skipReceive) {
+    // set mode back to standby only if skipReceive is True
+    if(skipReceive) {
       standby();
     }
 
