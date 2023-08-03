@@ -48,10 +48,7 @@ void setup() {
 
   // set the function that will be called
   // when packet transmission is finished
-  // NOTE: Unlike other modules (such as SX127x),
-  //       different GDOx pins are used for
-  //       transmit and receive interrupts!
-  radio.setGdo2Action(setFlag);
+  radio.setPacketSentAction(setFlag);
 
   // start transmitting the first packet
   Serial.print(F("[CC1101] Sending first packet ... "));
@@ -82,6 +79,9 @@ void setFlag(void) {
   // we sent a packet, set the flag
   transmittedFlag = true;
 }
+
+// counter to keep track of transmitted packets
+int count = 0;
 
 void loop() {
   // check if the previous transmission finished
@@ -116,7 +116,8 @@ void loop() {
 
     // you can transmit C-string or Arduino string up to
     // 256 characters long
-    transmissionState = radio.startTransmit("Hello World!");
+    String str = "Hello World! #" + String(count++);
+    transmissionState = radio.startTransmit(str);
 
     // you can also transmit byte array up to 256 bytes long
     /*

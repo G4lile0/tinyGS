@@ -38,6 +38,12 @@
 #include "TypeDef.h"
 #include "Module.h"
 
+#include "Hal.h"
+#if defined(RADIOLIB_BUILD_ARDUINO)
+#include "ArduinoHal.h"
+#endif
+
+
 // warnings are printed in this file since BuildOpt.h is compiled in multiple places
 
 // check God mode
@@ -101,6 +107,13 @@
 #include "protocols/FSK4/FSK4.h"
 #include "protocols/APRS/APRS.h"
 #include "protocols/ExternalRadio/ExternalRadio.h"
+#include "protocols/Print/Print.h"
+#include "protocols/BellModem/BellModem.h"
+#include "protocols/LoRaWAN/LoRaWAN.h"
+
+// utilities
+#include "utils/CRC.h"
+#include "utils/Cryptography.h"
 
 // only create Radio class when using RadioShield
 #if defined(RADIOLIB_RADIOSHIELD)

@@ -16,8 +16,8 @@ int16_t RFM96::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t syncW
     // some other error
     return(state);
   }
-  RADIOLIB_DEBUG_PRINTLN(F("M\tSX1278"));
-  RADIOLIB_DEBUG_PRINTLN(F("M\tRFM96"));
+  RADIOLIB_DEBUG_PRINTLN("M\tSX1278");
+  RADIOLIB_DEBUG_PRINTLN("M\tRFM96");
 
   // configure publicly accessible settings
   state = setBandwidth(bw);
@@ -43,17 +43,17 @@ int16_t RFM96::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t syncW
 
 int16_t RFM96::beginFSK(float freq, float br, float freqDev, float rxBw, int8_t power, uint16_t preambleLength, bool enableOOK) {
   // execute common part
-  int16_t state = SX127x::beginFSK(RADIOLIB_RFM9X_CHIP_VERSION_OFFICIAL, br, freqDev, rxBw, preambleLength, enableOOK);
+  int16_t state = SX127x::beginFSK(RADIOLIB_RFM9X_CHIP_VERSION_OFFICIAL, freqDev, rxBw, preambleLength, enableOOK);
   if(state == RADIOLIB_ERR_CHIP_NOT_FOUND) {
     // SX127X_REG_VERSION might be set 0x12
-    state = SX127x::beginFSK(RADIOLIB_RFM9X_CHIP_VERSION_UNOFFICIAL, br, freqDev, rxBw, preambleLength, enableOOK);
+    state = SX127x::beginFSK(RADIOLIB_RFM9X_CHIP_VERSION_UNOFFICIAL, freqDev, rxBw, preambleLength, enableOOK);
     RADIOLIB_ASSERT(state);
   } else if(state != RADIOLIB_ERR_NONE) {
     // some other error
     return(state);
   }
-  RADIOLIB_DEBUG_PRINTLN(F("M\tSX1278"));
-  RADIOLIB_DEBUG_PRINTLN(F("M\tRFM96"));
+  RADIOLIB_DEBUG_PRINTLN("M\tSX1278");
+  RADIOLIB_DEBUG_PRINTLN("M\tRFM96");
 
   // configure settings not accessible by API
   state = configFSK();
@@ -61,6 +61,9 @@ int16_t RFM96::beginFSK(float freq, float br, float freqDev, float rxBw, int8_t 
 
   // configure publicly accessible settings
   state = setFrequency(freq);
+  RADIOLIB_ASSERT(state);
+
+  state = setBitRate(br);
   RADIOLIB_ASSERT(state);
 
   state = setOutputPower(power);
@@ -83,7 +86,7 @@ int16_t RFM96::setFrequency(float freq) {
   // set frequency and if successful, save the new setting
   int16_t state = SX127x::setFrequencyRaw(freq);
   if(state == RADIOLIB_ERR_NONE) {
-    SX127x::_freq = freq;
+    SX127x::frequency = freq;
   }
   return(state);
 }

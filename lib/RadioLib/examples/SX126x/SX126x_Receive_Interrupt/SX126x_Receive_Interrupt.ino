@@ -54,7 +54,7 @@ void setup() {
 
   // set the function that will be called
   // when new packet is received
-  radio.setDio1Action(setFlag);
+  radio.setPacketReceivedAction(setFlag);
 
   // start listening for LoRa packets
   Serial.print(F("[SX1262] Starting to listen ... "));
@@ -74,7 +74,6 @@ void setup() {
   // radio.sleep()
   // radio.transmit();
   // radio.receive();
-  // radio.readData();
   // radio.scanChannel();
 }
 
@@ -106,7 +105,8 @@ void loop() {
     // you can also read received data as byte array
     /*
       byte byteArr[8];
-      int state = radio.readData(byteArr, 8);
+      int numBytes = radio.getPacketLength();
+      int state = radio.readData(byteArr, numBytes);
     */
 
     if (state == RADIOLIB_ERR_NONE) {
@@ -142,8 +142,5 @@ void loop() {
       Serial.println(state);
 
     }
-
-    // put module back to listen mode
-    radio.startReceive();
   }
 }

@@ -58,86 +58,72 @@
 // alias for unused altitude in Mic-E
 #define RADIOLIB_APRS_MIC_E_ALTITUDE_UNUSED                     -1000000
 
+// special header applied for APRS over LoRa
+#define RADIOLIB_APRS_LORA_HEADER                               "<\xff\x01"
+#define RADIOLIB_APRS_LORA_HEADER_LEN                           (3)
+
 /*!
   \class APRSClient
-
   \brief Client for APRS communication.
 */
 class APRSClient {
   public:
     /*!
-      \brief Default constructor.
-
+      \brief Constructor for "classic" mode using AX.25/AFSK.
       \param ax Pointer to the instance of AX25Client to be used for APRS.
     */
     explicit APRSClient(AX25Client* ax);
+
+    /*!
+      \brief Constructor for LoRa mode.
+      \param phy Pointer to the wireless module providing PhysicalLayer communication.
+    */
+    explicit APRSClient(PhysicalLayer* phy);
 
     // basic methods
 
     /*!
       \brief Initialization method.
-
-      \param symbol APRS symbol to be displayed.
-
+      \param sym APRS symbol to be displayed.
+      \param callsign Source callsign. Required and only used for APRS over LoRa, ignored in classic mode.
+      \param ssid Source SSID. Only used for APRS over LoRa, ignored in classic mode, defaults to 0.
       \param alt Whether to use the primary (false) or alternate (true) symbol table. Defaults to primary table.
-
       \returns \ref status_codes
     */
-    int16_t begin(char symbol, bool alt = false);
+    int16_t begin(char sym, char* callsign = NULL, uint8_t ssid = 0, bool alt = false);
 
     /*!
       \brief Transmit position.
-
       \param destCallsign Destination station callsign.
-
       \param destSSID Destination station SSID.
-
       \param lat Latitude as a null-terminated string.
-
       \param long Longitude as a null-terminated string.
-
       \param msg Message to be transmitted. Defaults to NULL (no message).
-
       \param msg Position timestamp. Defaults to NULL (no timestamp).
-
       \returns \ref status_codes
     */
     int16_t sendPosition(char* destCallsign, uint8_t destSSID, char* lat, char* lon, char* msg = NULL, char* time = NULL);
 
-    /*
+    /*!
       \brief Transmit position using Mic-E encoding.
-
       \param lat Geographical latitude, positive for north, negative for south.
-
       \param lon Geographical longitude, positive for east, negative for west.
-
       \param heading Heading in degrees.
-
       \param speed Speed in knots.
-
       \param type Mic-E message type - see \ref mic_e_message_types.
-
       \param telem Pointer to telemetry array (either 2 or 5 bytes long). NULL when telemetry is not used.
-
       \param telemLen Telemetry length, 2 or 5. 0 when telemetry is not used.
-
       \param grid Maidenhead grid locator. NULL when not used.
-
       \param status Status message to send. NULL when not used.
-
       \param alt Altitude to send. RADIOLIB_APRS_MIC_E_ALTITUDE_UNUSED when not used.
     */
     int16_t sendMicE(float lat, float lon, uint16_t heading, uint16_t speed, uint8_t type, uint8_t* telem = NULL, size_t telemLen = 0, char* grid = NULL, char* status = NULL, int32_t alt = RADIOLIB_APRS_MIC_E_ALTITUDE_UNUSED);
 
     /*!
       \brief Transmit generic APRS frame.
-
       \param destCallsign Destination station callsign.
-
       \param destSSID Destination station SSID.
-
       \param info AX.25 info field contents.
-
       \returns \ref status_codes
     */
     int16_t sendFrame(char* destCallsign, uint8_t destSSID, char* info);
@@ -145,11 +131,16 @@ class APRSClient {
 #if !defined(RADIOLIB_GODMODE)
   private:
 #endif
-    AX25Client* _ax;
+    AX25Client* axClient;
+    PhysicalLayer* phyLayer;
 
     // default APRS symbol (car)
-    char _symbol = '>';
-    char _table = '/';
+    char symbol = '>';
+    char table = '/';
+    
+    // source callsign when using APRS over LoRa
+    char src[RADIOLIB_AX25_MAX_CALLSIGN_LEN + 1] = { 0 };
+    uint8_t id = 0;
 };
 
 #endif

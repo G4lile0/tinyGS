@@ -9,6 +9,8 @@
 RadioLib	KEYWORD1
 RadioShield	KEYWORD1
 Module	KEYWORD1
+RadioLibHal	KEYWORD1
+ArduinoHal	KEYWORD1
 
 # modules
 CC1101	KEYWORD1
@@ -53,6 +55,9 @@ FSK4Client	KEYWORD1
 APRSClient	KEYWORD1
 PagerClient	KEYWORD1
 ExternalRadio	KEYWORD1
+BellClient	KEYWORD1
+LoRaWANNode	KEYWORD1
+LoRaWANBand_t	KEYWORD1
 
 # SSTV modes
 Scottie1	KEYWORD1
@@ -64,6 +69,22 @@ Wrasse	KEYWORD1
 PasokonP3	KEYWORD1
 PasokonP5	KEYWORD1
 PasokonP7	KEYWORD1
+
+# Bell Modems
+Bell101	KEYWORD1
+Bell103	KEYWORD1
+Bell202	KEYWORD1
+
+# LoRaWAN bands
+EU868	KEYWORD1
+US915	KEYWORD1
+CN780	KEYWORD1
+EU433	KEYWORD1
+AU915	KEYWORD1
+CN500	KEYWORD1
+AS923	KEYWORD1
+KR920	KEYWORD1
+IN865	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -257,6 +278,21 @@ sendTone	KEYWORD2
 dropSync	KEYWORD2
 setTimerFlag	KEYWORD2
 setInterruptSetup	KEYWORD2
+setPacketReceivedAction	KEYWORD2
+clearPacketReceivedAction	KEYWORD2
+setPacketSentAction	KEYWORD2
+clearPacketSentAction	KEYWORD2
+setDataRate	KEYWORD2
+
+# BellModem
+setModem	KEYWORD2
+
+# LoRaWAN
+wipe	KEYWORD2
+beginOTAA	KEYWORD2
+beginAPB	KEYWORD2
+uplink	KEYWORD2
+configureChannel	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
@@ -353,3 +389,4 @@ RADIOLIB_ERR_RANGING_TIMEOUT	LITERAL1
 
 RADIOLIB_ERR_INVALID_PAYLOAD	LITERAL1
 RADIOLIB_ERR_ADDRESS_NOT_FOUND	LITERAL1
+RADIOLIB_ERR_INVALID_FUNCTION	LITERAL1

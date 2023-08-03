@@ -1,20 +1,20 @@
 /*
-   RadioLib SX127x Transmit with Interrupts Example
+  RadioLib SX127x Transmit with Interrupts Example
 
-   This example transmits LoRa packets with one second delays
-   between them. Each packet contains up to 256 bytes
-   of data, in the form of:
-    - Arduino String
-    - null-terminated char array (C-string)
-    - arbitrary binary data (byte array)
+  This example transmits LoRa packets with one second delays
+  between them. Each packet contains up to 255 bytes
+  of data, in the form of:
+  - Arduino String
+  - null-terminated char array (C-string)
+  - arbitrary binary data (byte array)
 
-   Other modules from SX127x/RFM9x family can also be used.
+  Other modules from SX127x/RFM9x family can also be used.
 
-   For default module settings, see the wiki page
-   https://github.com/jgromes/RadioLib/wiki/Default-configuration#sx127xrfm9x---lora-modem
+  For default module settings, see the wiki page
+  https://github.com/jgromes/RadioLib/wiki/Default-configuration#sx127xrfm9x---lora-modem
 
-   For full API reference, see the GitHub Pages
-   https://jgromes.github.io/RadioLib/
+  For full API reference, see the GitHub Pages
+  https://jgromes.github.io/RadioLib/
 */
 
 // include the library
@@ -50,20 +50,20 @@ void setup() {
 
   // set the function that will be called
   // when packet transmission is finished
-  radio.setDio0Action(setFlag);
+  radio.setPacketSentAction(setFlag);
 
   // start transmitting the first packet
   Serial.print(F("[SX1278] Sending first packet ... "));
 
   // you can transmit C-string or Arduino string up to
-  // 256 characters long
+  // 255 characters long
   transmissionState = radio.startTransmit("Hello World!");
 
-  // you can also transmit byte array up to 256 bytes long
+  // you can also transmit byte array up to 255 bytes long
   /*
     byte byteArr[] = {0x01, 0x23, 0x45, 0x67,
                       0x89, 0xAB, 0xCD, 0xEF};
-    state = radio.startTransmit(byteArr, 8);
+    transmissionState = radio.startTransmit(byteArr, 8);
   */
 }
 
@@ -81,6 +81,9 @@ void setFlag(void) {
   // we sent a packet, set the flag
   transmittedFlag = true;
 }
+
+// counter to keep track of transmitted packets
+int count = 0;
 
 void loop() {
   // check if the previous transmission finished
@@ -114,14 +117,15 @@ void loop() {
     Serial.print(F("[SX1278] Sending another packet ... "));
 
     // you can transmit C-string or Arduino string up to
-    // 256 characters long
-    transmissionState = radio.startTransmit("Hello World!");
+    // 255 characters long
+    String str = "Hello World! #" + String(count++);
+    transmissionState = radio.startTransmit(str);
 
-    // you can also transmit byte array up to 256 bytes long
+    // you can also transmit byte array up to 255 bytes long
     /*
       byte byteArr[] = {0x01, 0x23, 0x45, 0x67,
                         0x89, 0xAB, 0xCD, 0xEF};
-      int state = radio.startTransmit(byteArr, 8);
+      transmissionState = radio.startTransmit(byteArr, 8);
     */
   }
 }

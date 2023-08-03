@@ -63,7 +63,7 @@ void setup() {
 
   // set the function that will be called
   // when packet transmission is finished
-  radio.setIrqAction(setFlag);
+  radio.setPacketSentAction(setFlag);
 
   // start transmitting the first packet
   Serial.print(F("[nRF24] Sending first packet ... "));
@@ -94,6 +94,9 @@ void setFlag(void) {
   // we sent a packet, set the flag
   transmittedFlag = true;
 }
+
+// counter to keep track of transmitted packets
+int count = 0;
 
 void loop() {
   // check if the previous transmission finished
@@ -127,8 +130,9 @@ void loop() {
     Serial.print(F("[nRF24] Sending another packet ... "));
 
     // you can transmit C-string or Arduino string up to
-    // 256 characters long
-    transmissionState = radio.startTransmit("Hello World!");
+    // 32 characters long
+  String str = "Hello World! #" + String(count++);
+    transmissionState = radio.startTransmit(str);
 
     // you can also transmit byte array up to 256 bytes long
     /*

@@ -2,10 +2,11 @@
 #if !defined(RADIOLIB_EXCLUDE_SX126X)
 
 LLCC68::LLCC68(Module* mod) : SX1262(mod) {
-  _chipType = RADIOLIB_LLCC68_CHIP_TYPE;
+  chipType = RADIOLIB_LLCC68_CHIP_TYPE;
+  this->XTAL = true;
 }
 
-int16_t LLCC68::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t syncWord, int8_t power, uint16_t preambleLength, float tcxoVoltage, bool useRegulatorLDO) {
+int16_t LLCC68::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t syncWord, int8_t pwr, uint16_t preambleLength, float tcxoVoltage, bool useRegulatorLDO) {
   // execute common part
   int16_t state = SX126x::begin(cr, syncWord, preambleLength, tcxoVoltage, useRegulatorLDO);
   RADIOLIB_ASSERT(state);
@@ -20,7 +21,7 @@ int16_t LLCC68::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t sync
   state = setSpreadingFactor(sf);
   RADIOLIB_ASSERT(state);
 
-  state = setOutputPower(power);
+  state = setOutputPower(pwr);
   RADIOLIB_ASSERT(state);
 
   state = SX126x::fixPaClamping();
@@ -35,7 +36,7 @@ int16_t LLCC68::setBandwidth(float bw) {
 }
 
 int16_t LLCC68::setSpreadingFactor(uint8_t sf) {
-  switch(SX126x::_bw) {
+  switch(SX126x::bandwidth) {
     case RADIOLIB_SX126X_LORA_BW_125_0:
       RADIOLIB_CHECK_RANGE(sf, 5, 9, RADIOLIB_ERR_INVALID_SPREADING_FACTOR);
       break;

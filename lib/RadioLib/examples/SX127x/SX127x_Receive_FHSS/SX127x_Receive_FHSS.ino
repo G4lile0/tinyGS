@@ -96,10 +96,10 @@ void setup() {
   }
 
   // set the function to call when reception is finished
-  radio.setDio0Action(setRxFlag);
+  radio.setDio0Action(setRxFlag, RISING);
 
   // set the function to call when we need to change frequency
-  radio.setDio1Action(setFHSSFlag);
+  radio.setDio1Action(setFHSSFlag, RISING);
 
   // start listening for LoRa packets
   Serial.print(F("[SX1278] Starting to listen ... "));
@@ -123,7 +123,8 @@ void loop() {
     // you can also read received data as byte array
     /*
       byte byteArr[8];
-      int state = radio.readData(byteArr, 8);
+      int numBytes = radio.getPacketLength();
+      int state = radio.readData(byteArr, numBytes);
     */
 
     if (state == RADIOLIB_ERR_NONE) {

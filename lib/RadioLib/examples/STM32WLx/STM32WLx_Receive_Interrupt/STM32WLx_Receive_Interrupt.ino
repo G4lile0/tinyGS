@@ -31,7 +31,9 @@ STM32WLx radio = new STM32WLx_Module();
 
 // set RF switch configuration for Nucleo WL55JC1
 // NOTE: other boards may be different!
-static const RADIOLIB_PIN_TYPE rfswitch_pins[] =
+//       Some boards may not have either LP or HP.
+//       For those, do not set the LP/HP entry in the table.
+static const uint32_t rfswitch_pins[] =
                          {PC3,  PC4,  PC5};
 static const Module::RfSwitchMode_t rfswitch_table[] = {
   {STM32WLx::MODE_IDLE,  {LOW,  LOW,  LOW}},
@@ -120,7 +122,8 @@ void loop() {
     // you can also read received data as byte array
     /*
       byte byteArr[8];
-      int state = radio.readData(byteArr, 8);
+      int numBytes = radio.getPacketLength();
+      int state = radio.readData(byteArr, numBytes);
     */
 
     if (state == RADIOLIB_ERR_NONE) {

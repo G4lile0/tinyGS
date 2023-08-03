@@ -29,12 +29,16 @@ int16_t SX1276::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t sync
   state = setGain(gain);
   RADIOLIB_ASSERT(state);
 
+  // set publicly accessible settings that are not a part of begin method
+  state = setCRC(true);
+  RADIOLIB_ASSERT(state);
+
   return(state);
 }
 
 int16_t SX1276::beginFSK(float freq, float br, float freqDev, float rxBw, int8_t power, uint16_t preambleLength, bool enableOOK) {
   // execute common part
-  int16_t state = SX127x::beginFSK(RADIOLIB_SX1278_CHIP_VERSION, br, freqDev, rxBw, preambleLength, enableOOK);
+  int16_t state = SX127x::beginFSK(RADIOLIB_SX1278_CHIP_VERSION, freqDev, rxBw, preambleLength, enableOOK);
   RADIOLIB_ASSERT(state);
 
   // configure settings not accessible by API
@@ -43,6 +47,9 @@ int16_t SX1276::beginFSK(float freq, float br, float freqDev, float rxBw, int8_t
 
   // configure publicly accessible settings
   state = setFrequency(freq);
+  RADIOLIB_ASSERT(state);
+
+  state = setBitRate(br);
   RADIOLIB_ASSERT(state);
 
   state = setOutputPower(power);
@@ -65,7 +72,7 @@ int16_t SX1276::setFrequency(float freq) {
   // set frequency and if successful, save the new setting
   int16_t state = SX127x::setFrequencyRaw(freq);
   if(state == RADIOLIB_ERR_NONE) {
-    SX127x::_freq = freq;
+    SX127x::frequency = freq;
   }
   return(state);
 }

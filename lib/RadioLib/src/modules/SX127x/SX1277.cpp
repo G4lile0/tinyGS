@@ -29,12 +29,16 @@ int16_t SX1277::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t sync
   state = setGain(gain);
   RADIOLIB_ASSERT(state);
 
+  // set publicly accessible settings that are not a part of begin method
+  state = setCRC(true);
+  RADIOLIB_ASSERT(state);
+
   return(state);
 }
 
 int16_t SX1277::beginFSK(float freq, float br, float freqDev, float rxBw, int8_t power, uint16_t preambleLength, bool enableOOK) {
   // execute common part
-  int16_t state = SX127x::beginFSK(RADIOLIB_SX1278_CHIP_VERSION, br, freqDev, rxBw, preambleLength, enableOOK);
+  int16_t state = SX127x::beginFSK(RADIOLIB_SX1278_CHIP_VERSION, freqDev, rxBw, preambleLength, enableOOK);
   RADIOLIB_ASSERT(state);
 
   // configure settings not accessible by API
@@ -43,6 +47,9 @@ int16_t SX1277::beginFSK(float freq, float br, float freqDev, float rxBw, int8_t
 
   // configure publicly accessible settings
   state = setFrequency(freq);
+  RADIOLIB_ASSERT(state);
+
+  state = setBitRate(br);
   RADIOLIB_ASSERT(state);
 
   state = setOutputPower(power);
@@ -65,7 +72,7 @@ int16_t SX1277::setFrequency(float freq) {
   // set frequency and if successful, save the new setting
   int16_t state = SX127x::setFrequencyRaw(freq);
   if(state == RADIOLIB_ERR_NONE) {
-    SX127x::_freq = freq;
+    SX127x::frequency = freq;
   }
   return(state);
 }
@@ -94,7 +101,32 @@ int16_t SX1277::setSpreadingFactor(uint8_t sf) {
   // set spreading factor and if successful, save the new setting
   int16_t state = SX1278::setSpreadingFactorRaw(newSpreadingFactor);
   if(state == RADIOLIB_ERR_NONE) {
-    SX127x::_sf = sf;
+    SX127x::spreadingFactor = sf;
+  }
+
+  return(state);
+}
+
+int16_t SX1277::setDataRate(DataRate_t dr) {
+  int16_t state = RADIOLIB_ERR_UNKNOWN;
+
+  // select interpretation based on active modem
+  uint8_t modem = this->getActiveModem();
+  if(modem == RADIOLIB_SX127X_FSK_OOK) {
+    // set the bit rate
+    state = this->setBitRate(dr.fsk.bitRate);
+    RADIOLIB_ASSERT(state);
+
+    // set the frequency deviation
+    state = this->setFrequencyDeviation(dr.fsk.freqDev);
+
+  } else if(modem == RADIOLIB_SX127X_LORA) {
+    // set the spreading factor
+    state = this->setSpreadingFactor(dr.lora.spreadingFactor);
+    RADIOLIB_ASSERT(state);
+
+    // set the bandwidth
+    state = this->setBandwidth(dr.lora.bandwidth);
   }
 
   return(state);

@@ -1,4 +1,5 @@
 #include "AX25.h"
+#include <string.h>
 #if !defined(RADIOLIB_EXCLUDE_AX25)
 
 AX25Frame::AX25Frame(const char* destCallsign, uint8_t destSSID, const char* srcCallsign, uint8_t srcSSID, uint8_t control)
@@ -151,32 +152,34 @@ void AX25Frame::setSendSequence(uint8_t seqNumber) {
 }
 
 AX25Client::AX25Client(PhysicalLayer* phy) {
-  _phy = phy;
+  phyLayer = phy;
   #if !defined(RADIOLIB_EXCLUDE_AFSK)
-  _audio = nullptr;
+  bellModem = nullptr;
   #endif
 }
 
 #if !defined(RADIOLIB_EXCLUDE_AFSK)
 AX25Client::AX25Client(AFSKClient* audio) {
-  _phy = audio->_phy;
-  _audio = audio;
-  _afskMark = RADIOLIB_AX25_AFSK_MARK;
-  _afskSpace = RADIOLIB_AX25_AFSK_SPACE;
-  _afskLen = RADIOLIB_AX25_AFSK_TONE_DURATION;
+  phyLayer = audio->phyLayer;
+  bellModem = new BellClient(audio);
+  bellModem->setModem(Bell202);
 }
 
 int16_t AX25Client::setCorrection(int16_t mark, int16_t space, float length) {
-  _afskMark = RADIOLIB_AX25_AFSK_MARK + mark;
-  _afskSpace = RADIOLIB_AX25_AFSK_SPACE + space;
-  _afskLen = length*(float)RADIOLIB_AX25_AFSK_TONE_DURATION;
+  BellModem_t modem;
+  modem.freqMark = Bell202.freqMark + mark;
+  modem.freqSpace = Bell202.freqSpace + space;
+  modem.freqMarkReply = modem.freqMark;
+  modem.freqSpaceReply = modem.freqSpace;
+  modem.baudRate = length*(float)Bell202.baudRate;
+  bellModem->setModem(modem);
   return(RADIOLIB_ERR_NONE);
 }
 #endif
 
-int16_t AX25Client::begin(const char* srcCallsign, uint8_t srcSSID, uint8_t preambleLen) {
+int16_t AX25Client::begin(const char* srcCallsign, uint8_t srcSSID, uint8_t preLen) {
   // set source SSID
-  _srcSSID = srcSSID;
+  sourceSSID = srcSSID;
 
   // check source callsign length (6 characters max)
   if(strlen(srcCallsign) > RADIOLIB_AX25_MAX_CALLSIGN_LEN) {
@@ -184,26 +187,33 @@ int16_t AX25Client::begin(const char* srcCallsign, uint8_t srcSSID, uint8_t prea
   }
 
   // copy callsign
-  memcpy(_srcCallsign, srcCallsign, strlen(srcCallsign));
-  _srcCallsign[strlen(srcCallsign)] = '\0';
+  memcpy(sourceCallsign, srcCallsign, strlen(srcCallsign));
+  sourceCallsign[strlen(srcCallsign)] = '\0';
 
   // save preamble length
-  _preambleLen = preambleLen;
+  preambleLen = preLen;
 
   // configure for direct mode
-  return(_phy->startDirect());
+  #if !defined(RADIOLIB_EXCLUDE_AFSK)
+  if(bellModem != nullptr) {
+    return(phyLayer->startDirect());
+  }
+  #endif
+  return(RADIOLIB_ERR_NONE);
 }
 
+#if defined(RADIOLIB_BUILD_ARDUINO)
 int16_t AX25Client::transmit(String& str, const char* destCallsign, uint8_t destSSID) {
   return(transmit(str.c_str(), destCallsign, destSSID));
 }
+#endif
 
 int16_t AX25Client::transmit(const char* str, const char* destCallsign, uint8_t destSSID) {
   // create control field
   uint8_t controlField = RADIOLIB_AX25_CONTROL_U_UNNUMBERED_INFORMATION | RADIOLIB_AX25_CONTROL_POLL_FINAL_DISABLED | RADIOLIB_AX25_CONTROL_UNNUMBERED_FRAME;
 
   // build the frame
-  AX25Frame frame(destCallsign, destSSID, _srcCallsign, _srcSSID, controlField, RADIOLIB_AX25_PID_NO_LAYER_3, (uint8_t*)str, strlen(str));
+  AX25Frame frame(destCallsign, destSSID, sourceCallsign, sourceSSID, controlField, RADIOLIB_AX25_PID_NO_LAYER_3, (uint8_t*)str, strlen(str));
 
   // send Unnumbered Information frame
   return(sendFrame(&frame));
@@ -298,27 +308,33 @@ int16_t AX25Client::sendFrame(AX25Frame* frame) {
 
   // flip bit order
   for(size_t i = 0; i < frameBuffLen; i++) {
-    frameBuff[i] = Module::flipBits(frameBuff[i]);
+    frameBuff[i] = Module::reflect(frameBuff[i], 8);
   }
 
-  // calculate FCS
-  uint16_t fcs = getFrameCheckSequence(frameBuff, frameBuffLen);
+  // calculate
+  RadioLibCRCInstance.size = 16;
+  RadioLibCRCInstance.poly = RADIOLIB_CRC_CCITT_POLY;
+  RadioLibCRCInstance.init = RADIOLIB_CRC_CCITT_INIT;
+  RadioLibCRCInstance.out = RADIOLIB_CRC_CCITT_OUT;
+  RadioLibCRCInstance.refIn = false;
+  RadioLibCRCInstance.refOut = false;
+  uint16_t fcs = RadioLibCRCInstance.checksum(frameBuff, frameBuffLen);
   *(frameBuffPtr++) = (uint8_t)((fcs >> 8) & 0xFF);
   *(frameBuffPtr++) = (uint8_t)(fcs & 0xFF);
 
   // prepare buffer for the final frame (stuffed, with added preamble + flags and NRZI-encoded)
   #if !defined(RADIOLIB_STATIC_ONLY)
     // worst-case scenario: sequence of 1s, will have 120% of the original length, stuffed frame also includes both flags
-    uint8_t* stuffedFrameBuff = new uint8_t[_preambleLen + 1 + (6*frameBuffLen)/5 + 2];
+    uint8_t* stuffedFrameBuff = new uint8_t[preambleLen + 1 + (6*frameBuffLen)/5 + 2];
   #else
     uint8_t stuffedFrameBuff[RADIOLIB_STATIC_ARRAY_SIZE];
   #endif
 
   // initialize buffer to all zeros
-  memset(stuffedFrameBuff, 0x00, _preambleLen + 1 + (6*frameBuffLen)/5 + 2);
+  memset(stuffedFrameBuff, 0x00, preambleLen + 1 + (6*frameBuffLen)/5 + 2);
 
   // stuff bits (skip preamble and both flags)
-  uint16_t stuffedFrameBuffLenBits = 8*(_preambleLen + 1);
+  uint16_t stuffedFrameBuffLenBits = 8*(preambleLen + 1);
   uint8_t count = 0;
   for(size_t i = 0; i < frameBuffLen + 2; i++) {
     for(int8_t shift = 7; shift >= 0; shift--) {
@@ -356,7 +372,7 @@ int16_t AX25Client::sendFrame(AX25Frame* frame) {
   #endif
 
   // set preamble bytes and start flag field
-  for(uint16_t i = 0; i < _preambleLen + 1; i++) {
+  for(uint16_t i = 0; i < preambleLen + 1; i++) {
     stuffedFrameBuff[i] = RADIOLIB_AX25_FLAG;
   }
 
@@ -374,7 +390,7 @@ int16_t AX25Client::sendFrame(AX25Frame* frame) {
   }
 
   // convert to NRZI
-  for(size_t i = _preambleLen + 1; i < stuffedFrameBuffLen*8; i++) {
+  for(size_t i = preambleLen + 1; i < stuffedFrameBuffLen*8; i++) {
     size_t currBitPos = i + 7 - 2*(i%8);
     size_t prevBitPos = (i - 1) + 7 - 2*((i - 1)%8);
     if(TEST_BIT_IN_ARRAY(stuffedFrameBuff, currBitPos)) {
@@ -398,31 +414,19 @@ int16_t AX25Client::sendFrame(AX25Frame* frame) {
   // transmit
   int16_t state = RADIOLIB_ERR_NONE;
   #if !defined(RADIOLIB_EXCLUDE_AFSK)
-  if(_audio != nullptr) {
-    Module* mod = _phy->getMod();
-    _phy->transmitDirect();
+  if(bellModem != nullptr) {
+    bellModem->idle();
 
     // iterate over all bytes in the buffer
     for(uint32_t i = 0; i < stuffedFrameBuffLen; i++) {
-
-      // check each bit
-      for(uint16_t mask = 0x80; mask >= 0x01; mask >>= 1) {
-        uint32_t start = mod->micros();
-        if(stuffedFrameBuff[i] & mask) {
-          _audio->tone(_afskMark, false);
-        } else {
-          _audio->tone(_afskSpace, false);
-        }
-        mod->waitForMicroseconds(start, _afskLen);
-      }
-
+      bellModem->write(stuffedFrameBuff[i]);
     }
 
-    _audio->noTone();
+    bellModem->standby();
 
   } else {
   #endif
-    state = _phy->transmit(stuffedFrameBuff, stuffedFrameBuffLen);
+    state = phyLayer->transmit(stuffedFrameBuff, stuffedFrameBuffLen);
   #if !defined(RADIOLIB_EXCLUDE_AFSK)
   }
   #endif
@@ -436,34 +440,11 @@ int16_t AX25Client::sendFrame(AX25Frame* frame) {
 }
 
 void AX25Client::getCallsign(char* buff) {
-  strncpy(buff, _srcCallsign, RADIOLIB_AX25_MAX_CALLSIGN_LEN);
+  strncpy(buff, sourceCallsign, RADIOLIB_AX25_MAX_CALLSIGN_LEN);
 }
 
 uint8_t AX25Client::getSSID() {
-  return(_srcSSID);
-}
-
-/*
-  CCITT CRC implementation based on https://github.com/kicksat/ax25
-
-  Licensed under Creative Commons Attribution-ShareAlike 4.0 International
-  https://creativecommons.org/licenses/by-sa/4.0/
-*/
-uint16_t AX25Client::getFrameCheckSequence(uint8_t* buff, size_t len) {
-  uint8_t outBit;
-  uint16_t mask;
-  uint16_t shiftReg = CRC_CCITT_INIT;
-
-  for(size_t i = 0; i < len; i++) {
-    for(uint8_t b = 0x80; b > 0x00; b /= 2) {
-      outBit = (shiftReg & 0x01) ? 0x01 : 0x00;
-      shiftReg >>= 1;
-      mask = XOR((buff[i] & b), outBit) ? CRC_CCITT_POLY_REVERSED : 0x0000;
-      shiftReg ^= mask;
-    }
-  }
-
-  return(Module::flipBits16(~shiftReg));
+  return(sourceSSID);
 }
 
 #endif

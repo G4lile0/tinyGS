@@ -61,7 +61,7 @@ void setup() {
 
   // set the function that will be called
   // when new packet is received
-  radio.setIrqAction(setFlag);
+  radio.setPacketReceivedAction(setFlag);
 
   // start listening
   Serial.print(F("[nRF24] Starting to listen ... "));
@@ -112,7 +112,8 @@ void loop() {
     // you can also read received data as byte array
     /*
       byte byteArr[8];
-      int state = radio.readData(byteArr, 8);
+      int numBytes = radio.getPacketLength();
+      int state = radio.readData(byteArr, numBytes);
     */
 
     if (state == RADIOLIB_ERR_NONE) {

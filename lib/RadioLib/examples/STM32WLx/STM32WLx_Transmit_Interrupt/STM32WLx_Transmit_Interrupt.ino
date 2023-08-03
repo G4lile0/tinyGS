@@ -1,18 +1,18 @@
 /*
-   RadioLib STM32WLx Transmit with Interrupts Example
+  RadioLib STM32WLx Transmit with Interrupts Example
 
-   This example transmits LoRa packets with one second delays
-   between them. Each packet contains up to 256 bytes
-   of data, in the form of:
-    - Arduino String
-    - null-terminated char array (C-string)
-    - arbitrary binary data (byte array)
+  This example transmits LoRa packets with one second delays
+  between them. Each packet contains up to 256 bytes
+  of data, in the form of:
+  - Arduino String
+  - null-terminated char array (C-string)
+  - arbitrary binary data (byte array)
 
-   For default module settings, see the wiki page
-   https://github.com/jgromes/RadioLib/wiki/Default-configuration#sx126x---lora-modem
+  For default module settings, see the wiki page
+  https://github.com/jgromes/RadioLib/wiki/Default-configuration#sx126x---lora-modem
 
-   For full API reference, see the GitHub Pages
-   https://jgromes.github.io/RadioLib/
+  For full API reference, see the GitHub Pages
+  https://jgromes.github.io/RadioLib/
 */
 
 // include the library
@@ -23,7 +23,9 @@ STM32WLx radio = new STM32WLx_Module();
 
 // set RF switch configuration for Nucleo WL55JC1
 // NOTE: other boards may be different!
-static const RADIOLIB_PIN_TYPE rfswitch_pins[] =
+//       Some boards may not have either LP or HP.
+//       For those, do not set the LP/HP entry in the table.
+static const uint32_t rfswitch_pins[] =
                          {PC3,  PC4,  PC5};
 static const Module::RfSwitchMode_t rfswitch_table[] = {
   {STM32WLx::MODE_IDLE,  {LOW,  LOW,  LOW}},
@@ -95,6 +97,9 @@ void setFlag(void) {
   transmittedFlag = true;
 }
 
+// counter to keep track of transmitted packets
+int count = 0;
+
 void loop() {
   // check if the previous transmission finished
   if(transmittedFlag) {
@@ -128,13 +133,14 @@ void loop() {
 
     // you can transmit C-string or Arduino string up to
     // 256 characters long
-    transmissionState = radio.startTransmit("Hello World!");
+    String str = "Hello World! #" + String(count++);
+    transmissionState = radio.startTransmit(str);
 
     // you can also transmit byte array up to 256 bytes long
     /*
       byte byteArr[] = {0x01, 0x23, 0x45, 0x67,
                         0x89, 0xAB, 0xCD, 0xEF};
-      int state = radio.startTransmit(byteArr, 8);
+      transmissionState = radio.startTransmit(byteArr, 8);
     */
   }
 }
