@@ -3,6 +3,7 @@
 template<>
 int16_t RadioHal<SX1278>::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t syncWord, int8_t power, uint16_t preambleLength, uint8_t gain, float tcxoVoltage)
 { 
+    
     if (power>=17) radio->setCurrentLimit(150);
     return radio->begin(freq, bw, sf, cr, syncWord, power, preambleLength, gain);
 }
@@ -14,7 +15,7 @@ int16_t RadioHal<SX1278>::begin()
 
 template<>
 int16_t RadioHal<SX1276>::begin(float freq, float bw, uint8_t sf, uint8_t cr, uint8_t syncWord, int8_t power, uint16_t preambleLength, uint8_t gain, float tcxoVoltage)
-{
+{   
     if (power>=17) radio->setCurrentLimit(150);
     return radio->begin(freq, bw, sf, cr, syncWord, power, preambleLength, gain);
 }
@@ -96,51 +97,54 @@ int16_t RadioHal<SX1280>::beginFSK(float freq, float br, float freqDev, float rx
 }
 
 template<>
-float RadioHal<SX1280>::getRSSI(bool skipReceive)
+float RadioHal<SX1280>::getRSSI(bool packet,bool skipReceive)
 {
     return radio->getRSSI();
 }
 
 template<>
-float RadioHal<SX1268>::getRSSI(bool skipReceive)
+float RadioHal<SX1268>::getRSSI(bool packet,bool skipReceive)
 {
-    return radio->getRSSI();
+    return radio->getRSSI(packet);
 }
 
 template<>
-float RadioHal<SX1262>::getRSSI(bool skipReceive)
+float RadioHal<SX1262>::getRSSI(bool packet,bool skipReceive)
 {
-    return radio->getRSSI();
+    return radio->getRSSI(packet);
 }
 
 template<>
-float RadioHal<SX1278>::getRSSI(bool skipReceive)
+float RadioHal<SX1278>::getRSSI(bool packet,bool skipReceive)
 {
-    return radio->getRSSI(skipReceive);
+    return radio->getRSSI(packet,skipReceive);
 }
 
 template<>
-float RadioHal<SX1276>::getRSSI(bool skipReceive)
+float RadioHal<SX1276>::getRSSI(bool packet,bool skipReceive)
 {
-    return radio->getRSSI(skipReceive);
+    return radio->getRSSI(packet,skipReceive);
 }
+
+
+
 
 template<>
 float RadioHal<SX1268>::getFrequencyError(bool autoCorrect)
 {
-    return 0;
+    return radio->getFrequencyError();
 }
 
 template<>
 float RadioHal<SX1262>::getFrequencyError(bool autoCorrect)
 {
-    return 0;
+    return radio->getFrequencyError();
 }
 
 template<>
 float RadioHal<SX1280>::getFrequencyError(bool autoCorrect)
 {
-    return 0;
+    return radio->getFrequencyError();
 }
 
 template<>
@@ -158,31 +162,31 @@ float RadioHal<SX1276>::getFrequencyError(bool autoCorrect)
 template<>
 void RadioHal<SX1268>::setDio0Action(void (*func)(void))
 {
-    radio->setDio1Action(func);
+    radio->setPacketReceivedAction(func);
 }
 
 template<>
 void RadioHal<SX1262>::setDio0Action(void (*func)(void))
 {
-    radio->setDio1Action(func);
+    radio->setPacketReceivedAction(func);
 }
 
 template<>
 void RadioHal<SX1278>::setDio0Action(void (*func)(void))
 {
-    radio->setDio0Action(func);
+    radio->setPacketReceivedAction(func);
 }
 
 template<>
 void RadioHal<SX1276>::setDio0Action(void (*func)(void))
 {
-    radio->setDio0Action(func);
+    radio->setPacketReceivedAction(func);
 }
 
 template<>
 void RadioHal<SX1280>::setDio0Action(void (*func)(void))
 {
-    radio->setDio1Action(func);
+    radio->setPacketReceivedAction(func);
 }
 
 template<>

@@ -50,13 +50,13 @@ na   SX1281    2.4–2.5Ghz  130       5.5            2000         0.476-202    
 ConfigManager::ConfigManager()
     : IotWebConf2(thingName, &dnsServer, &server, initialApPassword, configVersion), server(80), gsConfigHtmlFormatProvider(*this), boards({
   //OLED_add, OLED_SDA,  OLED_SCL, OLED_RST, PROG_BUTTON, BOARD_LED, L_SX127X?, L_NSS, L_DI00, L_DI01, L_BUSSY, L_RST,  L_MISO, L_MOSI, L_SCK, L_TCXO_V, RX_EN, TX_EN,   BOARD
-  {      0x3c,        4,        15,       16,           0,        25,      1,    18,     26,     12,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433MHz HELTEC WiFi LoRA 32 V1" },      // SX1278 @4m1g0
+  {      0x3c,        4,        15,     UNUSED,         0,        25,      1,    18,     26,     12,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433MHz HELTEC WiFi LoRA 32 V1" },      // SX1278 @4m1g0
   {      0x3c,        4,        15,       16,           0,        25,      2,    18,     26,     12,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "863-928MHz HELTEC WiFi LoRA 32 V1" },  // SX1276
   {      0x3c,        4,        15,       16,           0,        25,      1,    18,     26,     35,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433MHz HELTEC WiFi LoRA 32 V2" },      // SX1278 @4m1g0  
   {      0x3c,        4,        15,       16,           0,        25,      2,    18,     26,     35,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "863-928MHz HELTEC WiFi LoRA 32 V2" },  // SX1276
   {      0x3c,        4,        15,       16,           0,         2,      1,    18,     26,   UNUSED, UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433Mhz  TTGO LoRa 32 v1"        },     // SX1278 @g4lile0 
   {      0x3c,        4,        15,       16,           0,         2,      2,    18,     26,   UNUSED, UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "868-915MHz TTGO LoRa 32 v1"        },  // SX1276
-  {      0x3c,       21,        22,       16,           0,        22,      1,    18,     26,     33,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433MHz TTGO LoRA 32 v2"        },      // SX1278  @TCRobotics
+  {      0x3c,       21,        22,     UNUSED,         0,        22,      1,    18,     26,     33,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433MHz TTGO LoRA 32 v2"        },      // SX1278  @TCRobotics
   {      0x3c,       21,        22,       16,           0,        22,      2,    18,     26,     33,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "868-915MHz TTGO LoRA 32 v2"        },  // SX1276
   {      0x3c,       21,        22,       16,          39,        22,      1,    18,     26,     33,     32,    14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433MHz T-BEAM + OLED"        },        // SX1278
   {      0x3c,       21,        22,       16,          39,        22,      2,    18,     26,     33,     32,    14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "868-915MHz T-BEAM + OLED"        },    // SX1276
@@ -67,7 +67,7 @@ ConfigManager::ConfigManager()
   {      0x3c,       21,        22,       16,          38,        22,      1,    18,     26,     33,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433MHz T-BEAM V1.0 + OLED"     },              // SX1278 @fafu
   {      0x3c,       21,        22,       16,           0,         2,      5,     5,   UNUSED,   34,     32,    14,      19,     27,    18,     1.6f,   UNUSED, UNUSED, "433MHz FOSSA 1W Ground Station"  },     // SX1268 @jgromes
   {      0x3c,       21,        22,       16,           0,         2,      2,     5,   UNUSED,   34,     32,    14,      19,     27,    18,     1.6f,   UNUSED, UNUSED, "868-915MHz FOSSA 1W Ground Station"  }, //SX1276 @jgromes
-  {      0x3c,       21,        22,       16,           0,        22,      8,     5,     26,     34,     32,    14,      19,     27,    18,     0.0f,   UNUSED, UNUSED, "2.4GHz ESP32 + SX1280"  },              //SX1280 @g4lile0
+  {      0x3c,       21,        22,     UNUSED,         0,        22,      8,     5,     26,     34,     32,    14,      19,     27,    18,     0.0f,   UNUSED, UNUSED, "2.4GHz ESP32 + SX1280"  },              //SX1280 @g4lile0
   {      0x3c,       21,        22,       16,          38,        22,      2,    18,     26,     33,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "868-915MHzT-BEAM V1.0 + OLED"     },              // SX1278 @fafu
 
   })
@@ -209,13 +209,12 @@ void ConfigManager::handleDashboard()
   s += "<tr><td>Name </td><td>" + String(getThingName()) + "</td></tr>";
   s += "<tr><td>Version </td><td>" + String(status.version) + "</td></tr>";
   s += "<tr><td>MQTT Server </td><td>" + String(status.mqtt_connected ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + "</td></tr>";
-  s += "<tr><td>WiFi </td><td>" + String(WiFi.isConnected() ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + "</td></tr>";
   if (WiFi.isConnected() ){
       s += "<tr><td>WiFi RSSI </td><td>" + String(WiFi.RSSI()) + "</td></tr>";
   }
 
   s += "<tr><td>Radio </td><td>" + String(Radio::getInstance().isReady() ? "<span class='G'>READY</span>" : "<span class='R'>NOT READY</span>") + "</td></tr>";
-  //s += "<tr><td>Uptime </td><td>" + // process and update in js + "</td></tr>";
+   s += "<tr><td>Noise floor </td><td>" + String(status.modeminfo.currentRssi) + "</td></tr>"; 
   s += F("</table></div>");
   s += F("<div class=\"card\"><h3>Modem Configuration</h3><table id=""modemconfig"">");
   s += "<tr><td>Listening to </td><td>" + String(status.modeminfo.satellite) + "</td></tr>";
@@ -389,19 +388,20 @@ void ConfigManager::handleRefreshWorldmap()
   data_string += String(getThingName()) + ",";
   data_string += String(status.version) + ",";
   data_string += String(status.mqtt_connected ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + ",";
-  data_string += String(WiFi.isConnected() ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + ",";
   if (WiFi.isConnected() ){
     data_string += String(WiFi.RSSI()) + ",";
   }
   data_string += String(Radio::getInstance().isReady() ? "<span class='G'>READY</span>" : "<span class='R'>NOT READY</span>") + ",";
-
+  Radio &radio = Radio::getInstance();
+  radio.currentRssi();
+  data_string += String(status.modeminfo.currentRssi) + ",";
+  
   // last packet received data (for lastpacket id table data)
   data_string += String(status.lastPacketInfo.time) + ",";
   data_string += String(status.lastPacketInfo.rssi) + ",";
   data_string += String(status.lastPacketInfo.snr) + ",";
   data_string += String(status.lastPacketInfo.frequencyerror) + ",";
   data_string += String(status.lastPacketInfo.crc_error ? "CRC ERROR!" : "");
-
   server.sendContent(data_string + "\n");
 
   server.sendContent("");
@@ -557,10 +557,12 @@ void ConfigManager::boardDetection()
   for (uint8_t ite = 0; ite < ((sizeof(boards) / sizeof(boards[0]))); ite++)
   {
     Serial.print(boards[ite].BOARD);
+  if (boards[ite].OLED__RST != UNUSED) {
     pinMode(boards[ite].OLED__RST, OUTPUT);
     digitalWrite(boards[ite].OLED__RST, LOW);
     delay(50);
     digitalWrite(boards[ite].OLED__RST, HIGH);
+  }
     Wire.begin(boards[ite].OLED__SDA, boards[ite].OLED__SCL);
     Wire.beginTransmission(boards[ite].OLED__address);
     if (!Wire.endTransmission())
@@ -754,7 +756,10 @@ bool ConfigManager::parseBoardTemplate(board_t &board)
   board.OLED__address = doc["aADDR"];
   board.OLED__SDA = doc["oSDA"];
   board.OLED__SCL = doc["oSCL"];
-  board.OLED__RST = doc["oRST"];
+  if (doc.containsKey("oRST"))
+    board.OLED__RST = doc["oRST"];
+  else
+    board.OLED__RST = UNUSED;
   board.PROG__BUTTON = doc["pBut"];
   board.BOARD_LED = doc["led"];
   board.L_radio = doc["radio"];

@@ -25,11 +25,18 @@
 #include <base64.h>
 #include "../Logger/Logger.h"
 
+//@estbhan
+//04/08/2023
+#include "../BitCode/BitCode.h"
+#include "../Satellites/Satellites.h"
+
 #define CHECK_ERROR(errCode) if (errCode != RADIOLIB_ERR_NONE) { Log::console(PSTR("Radio failed, code %d\n Check that the configuration is valid for your board"), errCode);status.radio_error=errCode; return errCode; }
 
 bool received = false;
 bool eInterrupt = true;
 bool noisyInterrupt = false;
+
+bool allow_decode=true;
 
 Radio::Radio()
     : spi(VSPI)
@@ -115,10 +122,10 @@ int16_t Radio::begin()
   // when new packet is received
   // attach the ISR to radio interrupt
   radioHal->setDio0Action(setFlag);
-
   // start listening for LoRa packets
   Log::console(PSTR("[SX12x8] Starting to listen to %s"), m.satellite);
   CHECK_ERROR(radioHal->startReceive());
+  status.modeminfo.currentRssi = radioHal->getRSSI(false,true);
 
   status.radio_ready = true;
   return RADIOLIB_ERR_NONE;
@@ -136,7 +143,7 @@ void Radio::setFlag()
 }
 
 void Radio::enableInterrupt()
-{
+{ 
   eInterrupt = true;
 }
 
@@ -153,6 +160,14 @@ void Radio::startRx()
   // we're ready to receive more packets,
   // enable interrupt service routine
   enableInterrupt();
+  }
+
+
+ void Radio::currentRssi()
+{
+  // get current RSSI
+  status.modeminfo.currentRssi = radioHal->getRSSI(false,true);
+
 }
 
 int16_t Radio::sendTx(uint8_t *data, size_t length)
@@ -249,6 +264,43 @@ uint8_t Radio::listen()
     }
     delete[] byteStr;
 
+       if (allow_decode){
+      String modo=status.modeminfo.modem_mode;
+      if (modo=="FSK"){
+        int bytes_sincro=0;
+          for (int i=0;i<sizeof(status.modeminfo.fsw);i++){
+            if (status.modeminfo.fsw[i]!=0){bytes_sincro++;}
+          }
+          buffSize = (respLen+bytes_sincro) * 2 + 1;
+          if (buffSize > 255)
+            buffSize = 255;
+          char *byteStr_fsk = new char[buffSize];
+          for (int i=0;i<bytes_sincro;i++){
+            sprintf(byteStr_fsk+(i*2),"%02X", status.modeminfo.fsw[i]);}
+          for (int i = 0; i < respLen; i++)
+          {
+            sprintf(byteStr_fsk + (bytes_sincro + i) * 2 % (buffSize - 1), "%02X", respFrame[i]);
+            if (i * 2 % buffSize == buffSize - 3 || i == respLen - 1)
+              Log::console(PSTR("%s"), byteStr_fsk); // print before the buffer is going to loop back
+          }
+          Log::console(PSTR("Packet Buffer Size: %i"), buffSize);
+          int coding=Satellites::coding(status.modeminfo.NORAD);
+          if (coding==1){
+            char *ax25;
+            unsigned char *ax25bin;
+            size_t sizeAx25bin=0;
+            ax25=new char[buffSize];
+            ax25bin=new unsigned char[buffSize];
+            BitCode::nrz2ax25(byteStr_fsk,buffSize,ax25,ax25bin,&sizeAx25bin);
+            Log::console(PSTR("%s"),ax25);
+            //RAW packet is replaced by the processed packet.
+            respFrame=ax25bin;
+            respLen=sizeAx25bin;
+          }
+          delete[] byteStr_fsk;
+      }
+    }
+    
     // if Filter enabled filter the received packet
     if (status.modeminfo.filter[0] != 0)
     {
@@ -429,13 +481,13 @@ int16_t Radio::remote_bw(char *payload, size_t payload_len)
   {
     state = ((SX1278 *)lora)->setBandwidth(bw);
     ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
+    ((SX1278 *)lora)->setPacketReceivedAction(setFlag);
   }
   else
   {
     state = ((SX1268 *)lora)->setBandwidth(bw);
     ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
+    ((SX1268 *)lora)->setPacketReceivedAction(setFlag);
   }
 
   readState(state);
@@ -458,13 +510,13 @@ int16_t Radio::remote_sf(char *payload, size_t payload_len)
   {
     state = ((SX1278 *)lora)->setSpreadingFactor(sf);
     ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
+    ((SX1278 *)lora)->setPacketReceivedAction(setFlag);
   }
   else
   {
     state = ((SX1268 *)lora)->setSpreadingFactor(sf);
     ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
+    ((SX1268 *)lora)->setPacketReceivedAction(setFlag);
   }
 
   readState(state);
@@ -488,13 +540,13 @@ int16_t Radio::remote_cr(char *payload, size_t payload_len)
   {
     state = ((SX1278 *)lora)->setCodingRate(cr);
     ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
+    ((SX1278 *)lora)->setPacketReceivedAction(setFlag);
   }
   else
   {
     state = ((SX1268 *)lora)->setCodingRate(cr);
     ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
+    ((SX1268 *)lora)->setPacketReceivedAction(setFlag);
   }
 
   readState(state);
@@ -517,13 +569,13 @@ int16_t Radio::remote_crc(char *payload, size_t payload_len)
   {
     state = ((SX1278 *)lora)->setCRC(crc);
     ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
+    ((SX1278 *)lora)->setPacketReceivedAction(setFlag);
   }
   else
   {
     state = ((SX1268 *)lora)->setCRC(crc);
     ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
+    ((SX1268 *)lora)->setPacketReceivedAction(setFlag);
   }
 
   readState(state);
@@ -563,13 +615,13 @@ int16_t Radio::remote_fldro(char *payload, size_t payload_len)
   {
     state = ((SX1278 *)lora)->forceLDRO(ldro);
     ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
+    ((SX1278 *)lora)->setPacketReceivedAction(setFlag);
   }
   else
   {
     state = ((SX1268 *)lora)->forceLDRO(ldro);
     ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
+    ((SX1268 *)lora)->setPacketReceivedAction(setFlag);
   }
 
   readState(state);
@@ -596,13 +648,13 @@ int16_t Radio::remote_aldro(char *payload, size_t payload_len)
   {
     state = ((SX1278 *)lora)->autoLDRO();
     ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
+    ((SX1278 *)lora)->setPacketReceivedAction(setFlag);
   }
   else
   {
     state = ((SX1268 *)lora)->autoLDRO();
     ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
+    ((SX1268 *)lora)->setPacketReceivedAction(setFlag);
   }
 
   readState(state);
@@ -621,13 +673,13 @@ int16_t Radio::remote_pl(char *payload, size_t payload_len)
   {
     state = ((SX1278 *)lora)->setPreambleLength(pl);
     ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
+    ((SX1278 *)lora)->setPacketReceivedAction(setFlag);
   }
   else
   {
     state = ((SX1268 *)lora)->setPreambleLength(pl);
     ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
+    ((SX1268 *)lora)->setPacketReceivedAction(setFlag);
   }
 
   readState(state);
@@ -668,7 +720,7 @@ int16_t Radio::remote_begin_lora(char *payload, size_t payload_len)
     ((SX1278 *)lora)->sleep(); // sleep mandatory if FastHop isn't ON.
     state = ((SX1278 *)lora)->begin(freq + status.modeminfo.freqOffset, bw, sf, cr, syncWord78, power, preambleLength, gain);
     ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
+    ((SX1278 *)lora)->setPacketReceivedAction(setFlag);
   }
   else
   {
@@ -677,7 +729,7 @@ int16_t Radio::remote_begin_lora(char *payload, size_t payload_len)
       return -1;
     state = ((SX1268 *)lora)->begin(freq + status.modeminfo.freqOffset, bw, sf, cr, syncWord68, power, preambleLength, board.L_TCXO_V);
     ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
+    ((SX1268 *)lora)->setPacketReceivedAction(setFlag);
   }
 
   readState(state);
@@ -721,7 +773,7 @@ int16_t Radio::remote_begin_fsk(char *payload, size_t payload_len)
     state = ((SX1278 *)lora)->beginFSK(freq + status.modeminfo.freqOffset, br, freqDev, rxBw, power, preambleLength, (ook == 255));
     ((SX1278 *)lora)->setDataShaping(ook);
     ((SX1278 *)lora)->startReceive();
-    ((SX1278 *)lora)->setDio0Action(setFlag);
+    ((SX1278 *)lora)->setPacketReceivedAction(setFlag);
     ((SX1278 *)lora)->setCRC(false);
    // ((SX1278 *)lora)->_mod->SPIsetRegValue(SX127X_REG_SYNC_CONFIG, SX127X_PREAMBLE_POLARITY_AA, 5, 5);  
     ((SX1278 *)lora)->fixedPacketLengthMode(len);
@@ -735,7 +787,7 @@ int16_t Radio::remote_begin_fsk(char *payload, size_t payload_len)
     state = ((SX1268 *)lora)->beginFSK(freq + status.modeminfo.freqOffset, br, freqDev, rxBw, power, preambleLength, board.L_TCXO_V);
     ((SX1268 *)lora)->setDataShaping(ook);
     ((SX1268 *)lora)->startReceive();
-    ((SX1268 *)lora)->setDio1Action(setFlag);
+    ((SX1268 *)lora)->setPacketReceivedAction(setFlag);
     ((SX1268 *)lora)->setCRC(false);
     ((SX1268 *)lora)->fixedPacketLengthMode(len);
     

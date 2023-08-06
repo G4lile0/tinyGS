@@ -1,8 +1,7 @@
 /**
    The MIT License (MIT)
 
-   Copyright (c) 2018 by ThingPulse, Daniel Eichhorn
-   Copyright (c) 2018 by Fabrice Weinberg
+   Copyright (c) 2022 by Stefan Seyfried
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
@@ -21,27 +20,7 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
-
-   ThingPulse invests considerable time and money to develop these open source libraries.
-   Please support us by buying our products (and not the clones) from
-   https://thingpulse.com
-
 */
-
-#if defined(ESP8266)
-#include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
-#elif defined(ESP32)
-#include <WiFi.h>
-#include <ESPmDNS.h>
-#include <WiFiUdp.h>
-#endif
-
-#include <ArduinoOTA.h>
-
-const char *ssid         = "[Your SSID]";
-const char *password     = "[Your Password]";
-
 
 // Include the correct display library
 // For a connection via I2C using Wire include
@@ -55,7 +34,7 @@ const char *password     = "[Your Password]";
 // For a connection via SPI include
 // #include <SPI.h> // Only needed for Arduino 1.6.5 and earlier
 // #include "SSD1306Spi.h"
-// #include "SH1106SPi.h"
+// #include "SH1106Spi.h"
 
 // Use the corresponding display class:
 
@@ -80,48 +59,33 @@ const char *password     = "[Your Password]";
 SSD1306Wire display(0x3c, SDA, SCL);   // ADDRESS, SDA, SCL  -  SDA and SCL usually populate automatically based on your board's pins_arduino.h e.g. https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h
 // SH1106Wire display(0x3c, SDA, SCL);
 
+// UTF-8 sprinkled within, because it tests special conditions in the char-counting code
+const String loremipsum = "Lorem ipsum dolor sit ämet, "
+  "consetetur sadipscing elitr, sed diam nonümy eirmöd "
+  "tempor invidunt ut labore et dolore mägnä aliquyam erat, "
+  "sed diam voluptua. At vero eos et accusam et justo duo "
+  "dolores et ea rebum. Stet clita kasd gubergren, no sea "
+  "takimata sanctus est Lorem ipsum dolor sit amet. "
+  "äöü-ÄÖÜ/ß€é/çØ.";
 
 void setup() {
-  WiFi.begin ( ssid, password );
-
-  // Wait for connection
-  while ( WiFi.status() != WL_CONNECTED ) {
-    delay ( 10 );
-  }
-
   display.init();
-  display.flipScreenVertically();
   display.setContrast(255);
-
-  ArduinoOTA.begin();
-  ArduinoOTA.onStart([]() {
-    display.clear();
-    display.setFont(ArialMT_Plain_10);
-    display.setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
-    display.drawString(display.getWidth() / 2, display.getHeight() / 2 - 10, "OTA Update");
-    display.display();
-  });
-
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    display.drawProgressBar(4, 32, 120, 8, progress / (total / 100) );
-    display.display();
-  });
-
-  ArduinoOTA.onEnd([]() {
-    display.clear();
-    display.setFont(ArialMT_Plain_10);
-    display.setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
-    display.drawString(display.getWidth() / 2, display.getHeight() / 2, "Restart");
-    display.display();
-  });
-
-  // Align text vertical/horizontal center
-  display.setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
-  display.setFont(ArialMT_Plain_10);
-  display.drawString(display.getWidth() / 2, display.getHeight() / 2, "Ready for OTA:\n" + WiFi.localIP().toString());
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.setFont(ArialMT_Plain_16);
   display.display();
 }
 
 void loop() {
-  ArduinoOTA.handle();
+  static uint16_t start_at = 0;
+  display.clear();
+  uint16_t firstline = display.drawStringMaxWidth(0, 0, 128, loremipsum.substring(start_at));
+  display.display();
+  if (firstline != 0) {
+    start_at += firstline;
+  } else {
+    start_at = 0;
+    delay(1000); // additional pause before going back to start
+  }
+  delay(1000);
 }
