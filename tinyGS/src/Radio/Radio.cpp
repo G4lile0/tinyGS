@@ -88,7 +88,7 @@ int16_t Radio::begin()
   {
     if (m.frequency != 0) 
     {
-      CHECK_ERROR(radioHal->begin(m.frequency + m.freqOffset, m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, m.gain, board.L_TCXO_V));
+      CHECK_ERROR(radioHal->begin(((m.frequency + m.freqOffset) * ConfigManager::getInstance().getXtalFactor()), m.bw, m.sf, m.cr, m.sw, m.power, m.preambleLength, m.gain, board.L_TCXO_V));
       if (m.fldro == 2)
         radioHal->autoLDRO();
       else
@@ -103,7 +103,7 @@ int16_t Radio::begin()
   }
   else
   {
-    CHECK_ERROR(radioHal->beginFSK(m.frequency + m.freqOffset, m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, (m.OOK == 255), board.L_TCXO_V));
+    CHECK_ERROR(radioHal->beginFSK(((m.frequency + m.freqOffset) * ConfigManager::getInstance().getXtalFactor()), m.bitrate, m.freqDev, m.bw, m.power, m.preambleLength, (m.OOK == 255), board.L_TCXO_V));
     CHECK_ERROR(radioHal->setDataShaping(m.OOK));
     CHECK_ERROR(radioHal->setCRC(0));
     if (m.len!=0) CHECK_ERROR(radioHal->fixedPacketLengthMode(m.len));
@@ -394,14 +394,14 @@ int16_t Radio::remote_freq(char *payload, size_t payload_len)
   if (board.L_radio)
   {
     ((SX1278 *)lora)->sleep(); // sleep mandatory if FastHop isn't ON.
-    state = ((SX1278 *)lora)->setFrequency(frequency + status.modeminfo.freqOffset);
-    ((SX1278 *)lora)->startReceive();
+     state = ((SX1278 *)lora)->setFrequency((frequency + status.modeminfo.freqOffset) * ConfigManager::getInstance().getXtalFactor());
+   ((SX1278 *)lora)->startReceive();
   }
   else
   {
     ((SX1268 *)lora)->sleep();
-    state = ((SX1268 *)lora)->setFrequency(frequency + status.modeminfo.freqOffset);
-    ((SX1268 *)lora)->startReceive();
+   state = ((SX1268 *)lora)->setFrequency((frequency + status.modeminfo.freqOffset) * ConfigManager::getInstance().getXtalFactor());
+     ((SX1268 *)lora)->startReceive();
   }
 
   readState(state);
@@ -418,7 +418,7 @@ int16_t Radio::remoteSetFreqOffset(char *payload, size_t payload_len)
   status.modeminfo.freqOffset = frequency_offset / 1000000;
   status.radio_ready = false;
   CHECK_ERROR(radioHal->sleep());  // sleep mandatory if FastHop isn't ON.
-  CHECK_ERROR(radioHal->setFrequency(status.modeminfo.frequency+status.modeminfo.freqOffset)); 
+  CHECK_ERROR(radioHal->setFrequency((status.modeminfo.frequency + status.modeminfo.freqOffset)* ConfigManager::getInstance().getXtalFactor())); 
   CHECK_ERROR(radioHal->startReceive()); 
   status.radio_ready = true;
   return RADIOLIB_ERR_NONE;
@@ -674,7 +674,7 @@ int16_t Radio::remote_begin_lora(char *payload, size_t payload_len)
   if (board.L_radio)
   {
     ((SX1278 *)lora)->sleep(); // sleep mandatory if FastHop isn't ON.
-    state = ((SX1278 *)lora)->begin(freq + status.modeminfo.freqOffset, bw, sf, cr, syncWord78, power, preambleLength, gain);
+     state = ((SX1278 *)lora)->begin((freq + status.modeminfo.freqOffset) * ConfigManager::getInstance().getXtalFactor(), bw, sf, cr, syncWord78, power, preambleLength, gain);
     ((SX1278 *)lora)->startReceive();
     ((SX1278 *)lora)->setPacketReceivedAction(setFlag);
   }
@@ -683,7 +683,7 @@ int16_t Radio::remote_begin_lora(char *payload, size_t payload_len)
     board_t board;
     if (!ConfigManager::getInstance().getBoardConfig(board))
       return -1;
-    state = ((SX1268 *)lora)->begin(freq + status.modeminfo.freqOffset, bw, sf, cr, syncWord68, power, preambleLength, board.L_TCXO_V);
+    state = ((SX1268 *)lora)->begin((freq + status.modeminfo.freqOffset) * ConfigManager::getInstance().getXtalFactor(), bw, sf, cr, syncWord68, power, preambleLength, board.L_TCXO_V);
     ((SX1268 *)lora)->startReceive();
     ((SX1268 *)lora)->setPacketReceivedAction(setFlag);
   }
@@ -726,7 +726,7 @@ int16_t Radio::remote_begin_fsk(char *payload, size_t payload_len)
     return -1;
   if (board.L_radio)
   {
-    state = ((SX1278 *)lora)->beginFSK(freq + status.modeminfo.freqOffset, br, freqDev, rxBw, power, preambleLength, (ook == 255));
+    state = ((SX1278 *)lora)->beginFSK((freq + status.modeminfo.freqOffset) * ConfigManager::getInstance().getXtalFactor(), br, freqDev, rxBw, power, preambleLength, (ook == 255));
     ((SX1278 *)lora)->setDataShaping(ook);
     ((SX1278 *)lora)->startReceive();
     ((SX1278 *)lora)->setPacketReceivedAction(setFlag);
@@ -740,7 +740,7 @@ int16_t Radio::remote_begin_fsk(char *payload, size_t payload_len)
     board_t board;
     if (!ConfigManager::getInstance().getBoardConfig(board))
       return -1;
-    state = ((SX1268 *)lora)->beginFSK(freq + status.modeminfo.freqOffset, br, freqDev, rxBw, power, preambleLength, board.L_TCXO_V);
+    state = ((SX1268 *)lora)->beginFSK((freq + status.modeminfo.freqOffset) * ConfigManager::getInstance().getXtalFactor(), br, freqDev, rxBw, power, preambleLength, board.L_TCXO_V);
     ((SX1268 *)lora)->setDataShaping(ook);
     ((SX1268 *)lora)->startReceive();
     ((SX1268 *)lora)->setPacketReceivedAction(setFlag);
