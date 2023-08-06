@@ -183,7 +183,7 @@ void MQTT_Client::sendWelcome()
   char clientId[13];
   sprintf(clientId, "%04X%08X", (uint16_t)(chipId >> 32), (uint32_t)chipId);
 
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(17) + 22 + 20 + 20 + 20 + 40;
+  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(17) + 22 + 20 + 20 + 20 + 40+ 20;
   DynamicJsonDocument doc(capacity);
   JsonArray station_location = doc.createNestedArray("station_location");
   station_location.add(configManager.getLatitude());
@@ -205,6 +205,7 @@ void MQTT_Client::sendWelcome()
   doc["mac"] = clientId;
   doc["seconds"] = millis()/1000;
   doc["Vbat"] = voltage();
+  doc["chip"] = ESP.getChipModel();
 
   char buffer[1048];
   serializeJson(doc, buffer);

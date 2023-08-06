@@ -50,7 +50,7 @@ na   SX1281    2.4–2.5Ghz  130       5.5            2000         0.476-202    
 ConfigManager::ConfigManager()
     : IotWebConf2(thingName, &dnsServer, &server, initialApPassword, configVersion), server(80), gsConfigHtmlFormatProvider(*this), boards({
   //OLED_add, OLED_SDA,  OLED_SCL, OLED_RST, PROG_BUTTON, BOARD_LED, L_SX127X?, L_NSS, L_DI00, L_DI01, L_BUSSY, L_RST,  L_MISO, L_MOSI, L_SCK, L_TCXO_V, RX_EN, TX_EN,   BOARD
-  {      0x3c,        4,        15,     UNUSED,         0,        25,      1,    18,     26,     12,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433MHz HELTEC WiFi LoRA 32 V1" },      // SX1278 @4m1g0
+  {      0x3c,        4,        15,       16,           0,        25,      1,    18,     26,     12,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433MHz HELTEC WiFi LoRA 32 V1" },      // SX1278 @4m1g0
   {      0x3c,        4,        15,       16,           0,        25,      2,    18,     26,     12,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "863-928MHz HELTEC WiFi LoRA 32 V1" },  // SX1276
   {      0x3c,        4,        15,       16,           0,        25,      1,    18,     26,     35,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433MHz HELTEC WiFi LoRA 32 V2" },      // SX1278 @4m1g0  
   {      0x3c,        4,        15,       16,           0,        25,      2,    18,     26,     35,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "863-928MHz HELTEC WiFi LoRA 32 V2" },  // SX1276
@@ -556,8 +556,8 @@ void ConfigManager::boardDetection()
   Log::error(PSTR("Automatic board detection running... "));
   for (uint8_t ite = 0; ite < ((sizeof(boards) / sizeof(boards[0]))); ite++)
   {
-    Serial.print(boards[ite].BOARD);
-  if (boards[ite].OLED__RST != UNUSED) {
+    Log::error(PSTR("%s \n"), boards[ite].BOARD);
+  if (boards[ite].OLED__RST != UNUSED && (strcmp(ESP.getChipModel(), "ESP32-PICO-D4")!=0) ) {
     pinMode(boards[ite].OLED__RST, OUTPUT);
     digitalWrite(boards[ite].OLED__RST, LOW);
     delay(50);
