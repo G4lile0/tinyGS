@@ -1,0 +1,60 @@
+name: Build Firmware
+
+on:
+  push:
+    paths-ignore:
+      - 'doc/**'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Cache pip
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    - name: Cache PlatformIO
+      uses: actions/cache@v3
+      with:
+        path: ~/.platformio
+        key: ${{ runner.os }}-platformio-${{ hashFiles('**/lockfiles') }}
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - name: Install PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade platformio
+    - name: Run PlatformIO
+      run: pio run -e default
+    - name: Convert bootloader format from elf to bin
+      run: >
+        python ~/.platformio/packages/tool-esptoolpy/esptool.py --chip esp32 elf2image
+        --dont-append-digest
+        ~/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/bin/bootloader_dio_40m.elf
+    - name: Create merged binary
+      run: >
+        python ~/.platformio/packages/tool-esptoolpy/esptool.py --chip esp32 merge_bin -o .pio/build/default/firmware-full.bin
+        --flash_mode dio --flash_freq 40m --flash_size 4MB
+        0x1000 ~/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/bin/bootloader_dio_40m.bin
+        0x8000 .pio/build/default/partitions.bin
+        0xe000 ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin
+        0x10000 .pio/build/default/firmware.bin
+    - name: Rename binaries
+      run: |
+        mv .pio/build/default/firmware.bin .pio/build/default/tinygs-$(git describe --tags --always)-ota.bin
+        mv .pio/build/default/firmware-full.bin .pio/build/default/tinygs-$(git describe --tags --always)-full.bin
+    - name: Archive build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: firmware
+        path: |
+          .pio/build/default/tinygs-*-ota.bin
+          .pio/build/default/tinygs-*-full.bin
