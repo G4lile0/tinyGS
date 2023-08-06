@@ -36,6 +36,8 @@ bool received = false;
 bool eInterrupt = true;
 bool noisyInterrupt = false;
 
+bool allow_decode=true;
+
 Radio::Radio()
     : spi(VSPI)
 {
