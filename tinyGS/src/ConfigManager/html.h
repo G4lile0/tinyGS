@@ -26,6 +26,10 @@ const char TZ_NAMES[][TZ_NAME_LENGTH] PROGMEM = {"Africa/Abidjan", "Africa/Accra
 constexpr auto BOARD_NAME_LENGTH = 62;
 const char BOARD_NAMES[][BOARD_NAME_LENGTH] PROGMEM = 
 {
+  #if CONFIG_IDF_TARGET_ESP32S3
+  "433MHz HELTEC LORA32 V3",
+  "Custom ESP32-S3 433MHz SX1278", 
+  #else 
   "433MHz HELTEC WiFi LoRA 32 V1", 
   "863-928MHz HELTEC WiFi LoRA 32 V1", 
   "433MHz HELTEC WiFi LoRA 32 V2", 
@@ -46,10 +50,16 @@ const char BOARD_NAMES[][BOARD_NAME_LENGTH] PROGMEM =
   "2.4GHz ESP32 + SX1280",
   "868-915MHzT-BEAM V1.0 + OLED",
   "433MHz LILYGO T3_V1.6.1",
+#endif
 };
 
 constexpr auto BOARD_LENGTH = 3;
+
+#if CONFIG_IDF_TARGET_ESP32S3
+const char BOARD_VALUES[][BOARD_LENGTH] PROGMEM = {"0", "1" };
+#else 
 const char BOARD_VALUES[][BOARD_LENGTH] PROGMEM = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19" };
+#endif
 
 const char IOTWEBCONF_DASHBOARD_STYLE_INNER[] PROGMEM = "table{margin:20px auto;}h3{text-align:center;}.card{height:12em;margin:10px;text-align:left;font-family:Arial;border:3px groove;border-radius:0.3rem;display:inline-block;padding:10px;min-width:260px;}td{padding:0 10px;}textarea{resize:vertical;width:100%;margin:0;height:318px;padding:5px;overflow:auto;}#c1{width:98%;padding:5px;}#t1{width:98%}.console{display:inline-block;text-align:center;margin:10px 0;width:98%;max-width:1080px;}.G{color:green;}.R{color:red}";
 const char IOTWEBCONF_DASHBOARD_BODY_INNER[] PROGMEM   = "<div style='text-align:center;min-width:260px;'>\n";

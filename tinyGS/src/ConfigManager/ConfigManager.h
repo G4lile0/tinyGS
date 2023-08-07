@@ -67,6 +67,10 @@ constexpr auto AP_TIMEOUT_MS = "300000";
 
 enum boardNum
 {
+ #if CONFIG_IDF_TARGET_ESP32S3
+  HELTEC_LORA32_V3 = 0,
+  ESP32S3_SX1278_LF,
+ #else
   HELTEC_V1_LF = 0,
   HELTEC_V1_HF,
   HELTEC_V2_LF,
@@ -87,7 +91,7 @@ enum boardNum
   ESP32_SX1280_1,
   TBEAM_OLED_v1_0_HF,
   LILYGO_T3_V1_6_1_LF,
-
+#endif
   NUM_BOARDS //this line always has to be the last one
 };
 

@@ -39,7 +39,11 @@ bool noisyInterrupt = false;
 bool allow_decode=true;
 
 Radio::Radio()
-    : spi(VSPI)
+#if CONFIG_IDF_TARGET_ESP32S3
+  : spi(HSPI)
+#else
+  : spi(VSPI)
+#endif
 {
 }
 

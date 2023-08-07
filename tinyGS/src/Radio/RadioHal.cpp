@@ -175,6 +175,7 @@ template<>
 void RadioHal<SX1278>::setDio0Action(void (*func)(void))
 {
     radio->setPacketReceivedAction(func);
+
 }
 
 template<>
