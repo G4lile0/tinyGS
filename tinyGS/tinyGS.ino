@@ -48,7 +48,7 @@
     Github: https://github.com/G4lile0/tinyGS
     Main community chat: https://t.me/joinchat/DmYSElZahiJGwHX6jCzB3Q
 
-    In order to onfigure your Ground Station please open a private chat to get your credentials https://t.me/tinygs_personal_bot
+    In order to configure your Ground Station please open a private chat to get your credentials https://t.me/tinygs_personal_bot
     Data channel (station status and received packets): https://t.me/tinyGS_Telemetry
     Test channel (simulator packets received by test groundstations): https://t.me/TinyGS_Test
 
