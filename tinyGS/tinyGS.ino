@@ -1,5 +1,5 @@
 /***********************************************************************
-  tinyGS.ini - GroundStation firmware
+  tinyGS.ino - GroundStation firmware
   
   Copyright (C) 2020 -2021 @G4lile0, @gmag12 and @dev_4m1g0
 
