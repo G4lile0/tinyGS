@@ -221,7 +221,7 @@ uint8_t Radio::listen()
   int16_t state = 0;
 
   PacketInfo newPacketInfo;
-  status.lastPacketInfo.crc_error = 0;
+  status.lastPacketInfo.crc_error = false;
   // read received data
   respLen = radioHal->getPacketLength();
   // workaround for radiolib FSX fixed packet definition returning always a size of 255bytes
@@ -243,6 +243,37 @@ uint8_t Radio::listen()
     delete[] respFrame;
     startRx();
     return 4;
+  }
+
+  struct tm *timeinfo;
+  time_t currenttime = time(NULL);
+  if (currenttime < 0)
+  {
+    Log::error(PSTR("Failed to obtain time"));
+    status.lastPacketInfo.time = "";
+  }
+  else
+  {
+    // store time of the last packet received:
+    timeinfo = localtime(&currenttime);
+    String thisTime = "";
+    if (timeinfo->tm_hour < 10)
+    {
+      thisTime = thisTime + " ";
+    } // add leading space if required
+    thisTime = String(timeinfo->tm_hour) + ":";
+    if (timeinfo->tm_min < 10)
+    {
+      thisTime = thisTime + "0";
+    } // add leading zero if required
+    thisTime = thisTime + String(timeinfo->tm_min) + ":";
+    if (timeinfo->tm_sec < 10)
+    {
+      thisTime = thisTime + "0";
+    } // add leading zero if required
+    thisTime = thisTime + String(timeinfo->tm_sec);
+
+    status.lastPacketInfo.time = thisTime;
   }
 
   status.lastPacketInfo.rssi = newPacketInfo.rssi;
@@ -337,11 +368,12 @@ uint8_t Radio::listen()
   }
   else if (state == RADIOLIB_ERR_CRC_MISMATCH)
   {
+    // packet was received, but is malformed
+    status.lastPacketInfo.crc_error = true;
+
     // if filter is active, filter the CRC errors
     if (status.modeminfo.filter[0] == 0)
     {
-      // packet was received, but is malformed
-      status.lastPacketInfo.crc_error = true;
       String error_encoded = base64::encode("Error_CRC");
       MQTT_Client::getInstance().sendRx(error_encoded, noisyInterrupt);
     }
@@ -355,37 +387,6 @@ uint8_t Radio::listen()
   }
 
   delete[] respFrame;
-
-  struct tm *timeinfo;
-  time_t currenttime = time(NULL);
-  if (currenttime < 0)
-  {
-    Log::error(PSTR("Failed to obtain time"));
-    status.lastPacketInfo.time = "";
-  }
-  else
-  {
-    // store time of the last packet received:
-    timeinfo = localtime(&currenttime);
-    String thisTime = "";
-    if (timeinfo->tm_hour < 10)
-    {
-      thisTime = thisTime + " ";
-    } // add leading space if required
-    thisTime = String(timeinfo->tm_hour) + ":";
-    if (timeinfo->tm_min < 10)
-    {
-      thisTime = thisTime + "0";
-    } // add leading zero if required
-    thisTime = thisTime + String(timeinfo->tm_min) + ":";
-    if (timeinfo->tm_sec < 10)
-    {
-      thisTime = thisTime + "0";
-    } // add leading zero if required
-    thisTime = thisTime + String(timeinfo->tm_sec);
-
-    status.lastPacketInfo.time = thisTime;
-  }
 
   noisyInterrupt = false;
 
