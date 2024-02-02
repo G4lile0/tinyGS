@@ -51,7 +51,7 @@ ConfigManager::ConfigManager()
     : IotWebConf2(thingName, &dnsServer, &server, initialApPassword, configVersion), server(80), gsConfigHtmlFormatProvider(*this), boards({
   //OLED_add, OLED_SDA,  OLED_SCL, OLED_RST, PROG_BUTTON, BOARD_LED, L_SX127X?, L_NSS, L_DI00, L_DI01, L_BUSSY, L_RST,  L_MISO, L_MOSI, L_SCK, L_TCXO_V, RX_EN, TX_EN,   BOARD
 #if CONFIG_IDF_TARGET_ESP32S3
-  {      0x3c,       17,        18,       21,           0,        35,      6,     8,   UNUSED,   14,      13,   12,      11,     10,     9,     1.6f,   UNUSED, UNUSED, "433MHz HELTEC LORA32 V3 SX1262"    },  // SX1262
+  {      0x3c,       17,        18,       21,           0,        35,      6,     8,   UNUSED,   14,      13,   12,      11,     10,     9,     1.6f,   UNUSED, UNUSED, "150–960Mhz - HELTEC LORA32 V3 SX1262"    },  // SX1262
   {      0x3c,       17,        18,     UNUSED,         0,        35,      1,     8,      6,     14,   UNUSED,  12,      11,     10,     9,     0.0f,   UNUSED, UNUSED, "Custom ESP32-S3 433MHz SX1278"     },  // SX1278 @g4lile0
 #else
   {      0x3c,        4,        15,       16,           0,        25,      1,    18,     26,     12,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433MHz HELTEC WiFi LoRA 32 V1" },      // SX1278 @4m1g0
