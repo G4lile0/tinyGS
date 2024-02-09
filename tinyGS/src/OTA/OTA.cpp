@@ -24,6 +24,7 @@
 
 extern Status status;
 bool usingNewCert = true;
+const long MIN_TIME_BEFORE_UPDATE = random(60000, 20*60*1000);
 
 void OTA::update()
 {
@@ -45,7 +46,7 @@ void OTA::update()
   char url[255];
   sprintf_P(url, PSTR("%s?user=%s&name=%s&mac=%s&version=%d&rescue=%s"), OTA_URL, c.getMqttUser(), c.getThingName(), clientId, status.version, (c.isFailSafeActive()?"true":"false"));
 
-  Log::console(PSTR("Checking for firmware Updates...  "));
+  Log::debug(PSTR("Checking for firmware Updates...  "));
   t_httpUpdate_return ret = httpUpdate.update(client, url, status.git_version);
 
   switch (ret) {
@@ -67,7 +68,7 @@ void OTA::update()
 unsigned static long lastUpdateTime = 0;
 void OTA::loop()
 {
-  if (millis() < MIN_TIME_BEFORE_UPDATE || !ConfigManager::getInstance().getAutoUpdate())
+  if (millis() < MIN_TIME_BEFORE_UPDATE)
     return;
 
   if (millis() - lastUpdateTime > TIME_BETTWEN_UPDATE_CHECK)

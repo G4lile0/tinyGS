@@ -1,7 +1,7 @@
 /*
-  OTA.h - On The Air Update Class
+  Satellites.cpp - Satellites class
   
-  Copyright (C) 2020 -2021 @G4lile0, @gmag12 and @dev_4m1g0
+  Copyright (C) 2022 -2023 @estbhan
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -17,26 +17,35 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef OTA_H
-#define OTA_H
+#include "Satellites.h"
 
-#define SECURE_OTA // Comment this line if you are not using SSL for OTA (Not recommended)
+/*
+Output:
+0: Raw
+1: AX25
+*/
+int Satellites::coding(int noradid){
+    int aux=0;
+  switch (noradid)
+  {
+  case 46276://UPMSAT-2
+    aux=1;
+    /* code */
+    break;
+  
+  case 51658://INS-2TD
+    aux=1;
+    /* code */
+    break;
 
-#include <HTTPClient.h>
-#include <HTTPUpdate.h>
+  case 43798://ASTROCAST 0.1
+    aux=1;
+    /* code */
+    break;
 
-constexpr auto TIME_BETTWEN_UPDATE_CHECK = 3600000;
-constexpr auto OTA_URL = "https://ota.tinygs.com/updates/tinygs.bin";
-
-#ifdef SECURE_OTA
-#include "../certs.h"
-#endif
-
-class OTA
-{
-public:
-  static void loop();
-  static void update();
-};
-
-#endif
+  default:
+    aux=0;
+    break;
+  }
+  return aux;
+}

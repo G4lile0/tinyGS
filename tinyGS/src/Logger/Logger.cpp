@@ -18,6 +18,7 @@
 */
 
 #include "Logger.h"
+#include "time.h"
 
 char Log::logIdx = 1;
 Log::LoggingLevels Log::logLevel = LOG_LEVEL;

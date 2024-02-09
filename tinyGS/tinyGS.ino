@@ -76,10 +76,10 @@
 #include "src/Radio/Radio.h"
 #include "src/ArduinoOTA/ArduinoOTA.h"
 #include "src/OTA/OTA.h"
-#include <ESPNtpClient.h>
 #include "src/Logger/Logger.h"
+#include "time.h"
 
-#if  RADIOLIB_VERSION_MAJOR != (0x04) || RADIOLIB_VERSION_MINOR != (0x02) || RADIOLIB_VERSION_PATCH != (0x01) || RADIOLIB_VERSION_EXTRA != (0x00)
+#if  RADIOLIB_VERSION_MAJOR != (0x06) || RADIOLIB_VERSION_MINOR != (0x04) || RADIOLIB_VERSION_PATCH != (0x00) || RADIOLIB_VERSION_EXTRA != (0x00)
 #error "You are not using the correct version of RadioLib please copy TinyGS/lib/RadioLib on Arduino/libraries"
 #endif
 
@@ -94,7 +94,6 @@ MQTT_Client& mqtt = MQTT_Client::getInstance();
 Radio& radio = Radio::getInstance();
 
 const char* ntpServer = "time.cloudflare.com";
-void printLocalTime();
 
 // Global status
 Status status;
@@ -103,19 +102,6 @@ void printControls();
 void switchTestmode();
 void checkButton();
 void setupNTP();
-
-void ntp_cb (NTPEvent_t e)
-{
-  switch (e.event) {
-    case timeSyncd:
-    case partlySync:
-      //Serial.printf ("[NTP Event] %s\n", NTP.ntpEvent2str (e));
-      status.time_offset = e.info.offset;
-      break;
-    default:
-      break;
-  }
-}
 
 void configured()
 {
@@ -148,6 +134,7 @@ void setup()
   delay(100);
 
   Log::console(PSTR("TinyGS Version %d - %s"), status.version, status.git_version);
+  Log::console(PSTR("Chip  %s - %d"),  ESP.getChipModel(),ESP.getChipRevision());
   configManager.setWifiConnectionCallback(wifiConnected);
   configManager.setConfiguredCallback(configured);
   configManager.init();
@@ -160,7 +147,9 @@ void setup()
   }
   // make sure to call doLoop at least once before starting to use the configManager
   configManager.doLoop();
-  pinMode (configManager.getBoardConfig().PROG__BUTTON, INPUT_PULLUP);
+  board_t board;
+  if(configManager.getBoardConfig(board))
+    pinMode (board.PROG__BUTTON, INPUT_PULLUP);
   displayInit();
   displayShowInitialCredits();
   configManager.delay(1000);
@@ -225,29 +214,20 @@ void loop() {
 
 void setupNTP()
 {
-  NTP.setInterval (120); // Sync each 2 minutes
-  NTP.setTimeZone (configManager.getTZ ()); // Get TX from config manager
-  NTP.onNTPSyncEvent (ntp_cb); // Register event callback
-  NTP.setMinSyncAccuracy (2000); // Sync accuracy target is 2 ms
-  NTP.settimeSyncThreshold (1000); // Sync only if calculated offset absolute value is greater than 1 ms
-  NTP.setMaxNumSyncRetry (2); // 2 resync trials if accuracy not reached
-  NTP.begin (ntpServer); // Start NTP client
-  Serial.printf ("NTP started");
+  configTime(0, 0, ntpServer);
+  setenv("TZ", configManager.getTZ(), 1); 
+  tzset();
   
-  time_t startedSync = millis ();
-  while (NTP.syncStatus() != syncd && millis() - startedSync < 5000) // Wait 5 seconds to get sync
-  {
-    configManager.delay(100);
-  }
-
-  printLocalTime();
+  configManager.delay(1000);
 }
 
 void checkButton()
 {
   #define RESET_BUTTON_TIME 8000
   static unsigned long buttPressedStart = 0;
-  if (!digitalRead (configManager.getBoardConfig().PROG__BUTTON))
+  board_t board;
+  
+  if (configManager.getBoardConfig(board) && !digitalRead (board.PROG__BUTTON))
   {
     if (!buttPressedStart)
     {
@@ -294,9 +274,6 @@ void handleSerial()
         configManager.resetAllConfig();
         ESP.restart();
         break;
-      case 't':
-        switchTestmode();
-        break;
       case 'b':
         ESP.restart();
         break;
@@ -327,39 +304,10 @@ void handleSerial()
   }
 }
 
-void switchTestmode()
-{  
-  if (configManager.getTestMode())
-  {
-      configManager.setTestMode(false);
-      Log::console(PSTR("Changed from test mode to normal mode"));
-  }
-  else
-  {
-      configManager.setTestMode(true);
-      Log::console(PSTR("Changed from normal mode to test mode"));
-  }
-}
-
-void printLocalTime()
-{
-    time_t currenttime = time (NULL);
-    if (currenttime < 0) {
-        Log::error (PSTR ("Failed to obtain time: %d"), currenttime);
-        return;
-    }
-    struct tm* timeinfo;
-    
-    timeinfo = localtime (&currenttime);
-  
-  Serial.println(timeinfo, "%A, %B %d %Y %H:%M:%S");
-}
-
 // function to print controls
 void printControls()
 {
   Log::console(PSTR("------------- Controls -------------"));
-  Log::console(PSTR("t - change the test mode and restart"));
   Log::console(PSTR("e - erase board config and reset"));
   Log::console(PSTR("b - reboot the board"));
   Log::console(PSTR("p - send test packet to nearby stations (to check transmission)"));

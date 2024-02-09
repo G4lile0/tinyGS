@@ -215,6 +215,12 @@ class OLEDDisplay : public Stream {
     // Fill circle
     void fillCircle(int16_t x, int16_t y, int16_t radius);
 
+    // Draw an empty triangle i.e. only the outline
+    void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2);
+
+    // Draw a solid triangle i.e. filled
+    void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2);
+
     // Draw a line horizontally
     void drawHorizontalLine(int16_t x, int16_t y, int16_t length);
 
@@ -232,12 +238,12 @@ class OLEDDisplay : public Stream {
     void drawXbm(int16_t x, int16_t y, int16_t width, int16_t height, const uint8_t *xbm);
 
     // Draw icon 16x16 xbm format
-    void drawIco16x16(int16_t x, int16_t y, const char *ico, bool inverse = false);
+    void drawIco16x16(int16_t x, int16_t y, const uint8_t *ico, bool inverse = false);
 
     /* Text functions */
 
-    // Draws a string at the given location
-    void drawString(int16_t x, int16_t y, String text);
+    // Draws a string at the given location, returns how many chars have been written
+    uint16_t drawString(int16_t x, int16_t y, const String &text);
 
     // Draws a formatted string (like printf) at the given location
     void drawStringf(int16_t x, int16_t y, char* buffer, String format, ... );
@@ -245,14 +251,16 @@ class OLEDDisplay : public Stream {
     // Draws a String with a maximum width at the given location.
     // If the given String is wider than the specified width
     // The text will be wrapped to the next line at a space or dash
-    void drawStringMaxWidth(int16_t x, int16_t y, uint16_t maxLineWidth, String text);
+    // returns 0 if everything fits on the screen or the numbers of characters in the
+    // first line if not
+    uint16_t drawStringMaxWidth(int16_t x, int16_t y, uint16_t maxLineWidth, const String &text);
 
     // Returns the width of the const char* with the current
     // font settings
-    uint16_t getStringWidth(const char* text, uint16_t length);
+    uint16_t getStringWidth(const char* text, uint16_t length, bool utf8 = false);
 
     // Convencience method for the const char version
-    uint16_t getStringWidth(String text);
+    uint16_t getStringWidth(const String &text);
 
     // Specifies relative to which anchor point
     // the text is rendered. Available constants:
@@ -320,7 +328,7 @@ class OLEDDisplay : public Stream {
     // Implement needed function to be compatible with Print class
     size_t write(uint8_t c);
     size_t write(const char* s);
-	
+
     // Implement needed function to be compatible with Stream class
 #ifdef __MBED__
 	int _putc(int c);
@@ -361,7 +369,7 @@ class OLEDDisplay : public Stream {
 	// the header size of the buffer used, e.g. for the SPI command header
   int BufferOffset;
 	virtual int getBufferOffset(void) = 0;
-	
+
     // Send a command to the display (low level function)
     virtual void sendCommand(uint8_t com) {(void)com;};
 
@@ -372,12 +380,12 @@ class OLEDDisplay : public Stream {
     void sendInitCommands();
 
     // converts utf8 characters to extended ascii
-    char* utf8ascii(String s);
+    char* utf8ascii(const String &s);
 
     void inline drawInternal(int16_t xMove, int16_t yMove, int16_t width, int16_t height, const uint8_t *data, uint16_t offset, uint16_t bytesInData) __attribute__((always_inline));
 
-    void drawStringInternal(int16_t xMove, int16_t yMove, char* text, uint16_t textLength, uint16_t textWidth);
-	
+    uint16_t drawStringInternal(int16_t xMove, int16_t yMove, const char* text, uint16_t textLength, uint16_t textWidth, bool utf8);
+
 	FontTableLookupFunction fontTableLookupFunction;
 };
 
