@@ -25,7 +25,14 @@ Currently we are officially supporting the following proven LoRa boards:
 However, any ESP32 board with sx126x or sx127x módule can be configured using templates. You can find more info about them [here](https://github.com/G4lile0/tinyGS/wiki/Board-Templates).
 
 # Install
-The first time you flash your board you can use the [one click uploader](https://github.com/G4lile0/tinyGS/wiki/Quick-Start) available for Linux, Windows and Mac. You can find instructions [here](https://github.com/G4lile0/tinyGS/wiki/Quick-Start).
+
+------
+
+#### Use our brand new web installer to setup your board for first time. Just go to https://installer.tinygs.com and follow the instructions there
+
+-----
+
+The first time you flash your board you can use the [web installer](https://installer.tinygs.com) using Google Chrome web browser on Linux, Windows or MacOS. Follow instructions there.
 
 You can also download the latest [release](https://github.com/G4lile0/tinyGS/releases) and flash it with PlatformIO. If you dont know PlatformIO here you have our [PlatformIO guide](https://github.com/G4lile0/tinyGS/wiki/Platformio).
 
