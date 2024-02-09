@@ -21,6 +21,8 @@ Currently we are officially supporting the following proven LoRa boards:
 - **ESP32 dev board + SX126X with crystal (Custom build, OLED optional)**
 - **ESP32 dev board + SX126X with TCXO (Custom build, OLED optional)**
 - **ESP32 dev board + SX127X (Custom build, OLED optional)**
+- **ESP32-S3 150–960Mhz - HELTEC LORA32 V3 SX1262**
+- **ESP32-S3 433Mhz Custom ESP32-S3 433MHz SX1278**
 
 However, any ESP32 board with sx126x or sx127x módule can be configured using templates. You can find more info about them [here](https://github.com/G4lile0/tinyGS/wiki/Board-Templates).
 
