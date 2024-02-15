@@ -72,8 +72,9 @@ ConfigManager::ConfigManager()
   {      0x3c,       21,        22,       16,           0,         2,      5,     5,   UNUSED,   34,     32,    14,      19,     27,    18,     1.6f,   UNUSED, UNUSED, "433MHz FOSSA 1W Ground Station"  },     // SX1268 @jgromes
   {      0x3c,       21,        22,       16,           0,         2,      2,     5,   UNUSED,   34,     32,    14,      19,     27,    18,     1.6f,   UNUSED, UNUSED, "868-915MHz FOSSA 1W Ground Station"  }, //SX1276 @jgromes
   {      0x3c,       21,        22,     UNUSED,         0,        22,      8,     5,     26,     34,     32,    14,      19,     27,    18,     0.0f,   UNUSED, UNUSED, "2.4GHz ESP32 + SX1280"  },              //SX1280 @g4lile0
-  {      0x3c,       21,        22,       16,          38,        22,      2,    18,     26,     33,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "868-915MHzT-BEAM V1.0 + OLED"     },    // SX1276 @fafu
+  {      0x3c,       21,        22,       16,          38,        22,      2,    18,     26,     33,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "868-915MHz T-BEAM V1.0 + OLED"     },   // SX1276 @fafu
   {      0x3c,       21,        22,     UNUSED,         0,        25,      1,    18,     26,     33,   UNUSED , 23,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433MHz LILYGO T3_V1.6.1"     },         // SX1278
+  {      0x3c,       21,        22,     UNUSED,         0,        25,      2,    18,     26,     33,   UNUSED , 23,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "868-915MHz LILYGO T3_V1.6.1"     },     // SX1276 
  #endif
   })
 {
