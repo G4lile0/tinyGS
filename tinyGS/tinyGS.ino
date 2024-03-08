@@ -261,11 +261,12 @@ void handleSerial()
     radio.disableInterrupt();
 
     // get the first character
-    char serialCmd = Serial.read();
+    char serialCmd1 = Serial.read();
+    char serialCmd = ' ';
 
     // wait for a bit to receive any trailing characters
-    configManager.delay(50);
-
+    configManager.delay(25);
+    if (serialCmd1 == '!') serialCmd = Serial.read();
     // dump the serial buffer
     while(Serial.available())
     {
@@ -274,6 +275,8 @@ void handleSerial()
 
     // process serial command
     switch(serialCmd) {
+      case ' ':
+      break;         
       case 'e':
         configManager.resetAllConfig();
         ESP.restart();
@@ -312,8 +315,8 @@ void handleSerial()
 void printControls()
 {
   Log::console(PSTR("------------- Controls -------------"));
-  Log::console(PSTR("e - erase board config and reset"));
-  Log::console(PSTR("b - reboot the board"));
-  Log::console(PSTR("p - send test packet to nearby stations (to check transmission)"));
+  Log::console(PSTR("!e - erase board config and reset"));
+  Log::console(PSTR("!b - reboot the board"));
+  Log::console(PSTR("!p - send test packet to nearby stations (to check transmission)"));
   Log::console(PSTR("------------------------------------"));
 }
