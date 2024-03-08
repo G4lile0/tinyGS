@@ -94,6 +94,7 @@ enum boardNum
   ESP32_SX1280_1,
   TBEAM_OLED_v1_0_HF,
   LILYGO_T3_V1_6_1_LF,
+  LILYGO_T3_V1_6_1_HF,
 #endif
   NUM_BOARDS //this line always has to be the last one
 };
