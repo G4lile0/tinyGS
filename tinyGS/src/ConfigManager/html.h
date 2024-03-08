@@ -29,6 +29,9 @@ const char BOARD_NAMES[][BOARD_NAME_LENGTH] PROGMEM =
   #if CONFIG_IDF_TARGET_ESP32S3
   "433MHz HELTEC LORA32 V3",
   "Custom ESP32-S3 433MHz SX1278", 
+  #elif CONFIG_IDF_TARGET_ESP32C3  
+  "433MHz HELTEC LORA32 HT-CT62 SX1262",
+  "Custom ESP32-C3 433MHz SX1278" ,
   #else 
   "433MHz HELTEC WiFi LoRA 32 V1", 
   "863-928MHz HELTEC WiFi LoRA 32 V1", 
@@ -58,6 +61,8 @@ constexpr auto BOARD_LENGTH = 3;
 
 #if CONFIG_IDF_TARGET_ESP32S3
 const char BOARD_VALUES[][BOARD_LENGTH] PROGMEM = {"0", "1" };
+#elif CONFIG_IDF_TARGET_ESP32C3
+const char BOARD_VALUES[][BOARD_LENGTH] PROGMEM = {"0", "1"  };
 #else 
 const char BOARD_VALUES[][BOARD_LENGTH] PROGMEM = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20" };
 #endif

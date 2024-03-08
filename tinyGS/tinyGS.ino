@@ -129,7 +129,11 @@ void wifiConnected()
 
 void setup()
 { 
+#if CONFIG_IDF_TARGET_ESP32C3
+  setCpuFrequencyMhz(160);
+#else
   setCpuFrequencyMhz(240);
+#endif
   Serial.begin(115200);
   delay(100);
 

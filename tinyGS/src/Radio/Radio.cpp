@@ -41,6 +41,8 @@ bool allow_decode=true;
 Radio::Radio()
 #if CONFIG_IDF_TARGET_ESP32S3
   : spi(HSPI)
+#elif CONFIG_IDF_TARGET_ESP32C3
+  : spi(SPI)  
 #else
   : spi(VSPI)
 #endif
