@@ -67,7 +67,7 @@ struct TextFrame {
 };
 
 struct Status {
-  const uint32_t version = 2403101; // version year month day release
+  const uint32_t version = 2403111; // version year month day release
   const char* git_version = GIT_VERSION;
   bool mqtt_connected = false;
   bool radio_ready = false;

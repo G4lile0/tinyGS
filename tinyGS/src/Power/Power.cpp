@@ -65,10 +65,14 @@ void Power::I2Cread(uint8_t Address, uint8_t Register, uint8_t Nbytes, uint8_t* 
 
 
 void Power::checkAXP() 
-{
+{ 
+   board_t board;
+   if (!ConfigManager::getInstance().getBoardConfig(board))
+    return;
+  Log::console(PSTR("AXPxxx chip?"));   
   byte regV = 0;
-  Wire.begin(21, 22);                     // I2C_SDA, I2C_SCL on all new boards
-  byte ChipID = I2CreadByte(0x34, 0x03);  // read byte from xxx_IC_TYPE register
+  Wire.begin(board.OLED__SDA, board.OLED__SCL);                     // I2C_SDA, I2C_SCL on all new boards
+  byte ChipID = I2CreadByte(0x34, 0x03);                            // read byte from xxx_IC_TYPE register
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   if (ChipID == XPOWERS_AXP192_CHIP_ID) { // 0x03
     AXPchip = 1;

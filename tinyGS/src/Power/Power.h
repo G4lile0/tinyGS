@@ -23,11 +23,11 @@
 #include "Arduino.h"
 #include <Wire.h>
 #include "../Status.h"
+#include "../ConfigManager/ConfigManager.h"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // * * * * * * * A X P   C H I P   C O N F I G * * * * * * * * * *
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-
 #define AXP192_SLAVE_ADDRESS    (0x34) // I2C slaveaddress
 #define XPOWERS_AXP192_IC_TYPE  (0x03) // register address
 #define XPOWERS_AXP192_CHIP_ID  (0x03) // content
@@ -47,7 +47,6 @@
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // * * * * * * * A X P   C H I P   R E A D I N G * * * * * * * * *
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-
 #define XPOWERS_AXP2101_ADC_DATA_RELUST0                 (0x34)
 #define XPOWERS_AXP2101_ADC_DATA_RELUST1                 (0x35)
 #define XPOWERS_AXP2101_ADC_DATA_RELUST2                 (0x36)

@@ -64,8 +64,8 @@ ConfigManager::ConfigManager()
   {      0x3c,        4,        15,       16,           0,         2,      1,    18,     26,   UNUSED, UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433Mhz  TTGO LoRa 32 v1"        },     // SX1278 @g4lile0 
   {      0x3c,        4,        15,       16,           0,         2,      2,    18,     26,   UNUSED, UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "868-915MHz TTGO LoRa 32 v1"        },  // SX1276
   {      0x3c,       21,        22,     UNUSED,         0,        22,      1,    18,     26,     33,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433MHz TTGO LoRA 32 v2"        },      // SX1278  @TCRobotics
-  {      0x3c,       21,        22,     UNUSED,         0,        22,      2,    18,     26,     33,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "868-915MHz TTGO LoRA 32 v2"        },  // SX1276
-  {      0x3c,       21,        22,     UNUSED,        39,        22,      1,    18,     26,     33,     32,    14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433MHz T-BEAM + OLED"        },        // SX1278
+  {      0x3c,       21,        22,       16,           0,        22,      2,    18,     26,     33,   UNUSED , 14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "868-915MHz TTGO LoRA 32 v2"        },  // SX1276
+  {      0x3c,       21,        22,       16,        39,        22,      1,    18,     26,     33,     32,    14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433MHz T-BEAM + OLED"        },        // SX1278
   {      0x3c,       21,        22,       16,          39,        22,      2,    18,     26,     33,     32,    14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "868-915MHz T-BEAM + OLED"        },    // SX1276
   {      0x3c,       21,        22,       16,           0,        25,      5,     5,   UNUSED,   27,     26,    14,      19,     23,    18,     0.0f,   UNUSED, UNUSED, "Custom ESP32 Wroom + SX126x (Crystal)"  }, // SX1268 @4m1g0, @lillefyr
   {      0x3c,       21,        22,     UNUSED,         0,        25,      5,    18,   UNUSED,   33,     32,    14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "TTGO LoRa 32 V2 Modified with module SX126x (crystal)"  }, // SX1268 @TCRobotics
@@ -565,8 +565,7 @@ void ConfigManager::boardDetection()
   Log::error(PSTR("Automatic board detection running... "));
  
  
-  // If the cpu is a ESP32-PICO-D4 we know it is the Lilygo T3_v1.6.1
-  // and we cant use GPIO16 to test for an OLED
+  // If the cpu is a ESP32-PICO-D4 (Lilygo T3_v1.6.1) we have to avoid using pin GPIO16 as this is used for the FLASH_CS 
   // https://github.com/mpmarks/tinyGS-newboards/commit/e520086f1b43c7cea4cb85d996f0fc379f2d2786
 
 #if CONFIG_IDF_TARGET_ESP32S3
@@ -574,34 +573,31 @@ void ConfigManager::boardDetection()
 #elif CONFIG_IDF_TARGET_ESP32C3
 // nothing yet
 #else
-  if (strcmp(ESP.getChipModel(), "ESP32-PICO-D4")==0) {
-    itoa(LILYGO_T3_V1_6_1_LF, board, 10);
-    return;
-  };
- #endif
-
-  for (uint8_t ite = 0; ite < ((sizeof(boards) / sizeof(boards[0]))); ite++)
-  {
-    Log::error(PSTR("%s \n"), boards[ite].BOARD);
-  if (boards[ite].OLED__RST != UNUSED) {
-    pinMode(boards[ite].OLED__RST, OUTPUT);
-    digitalWrite(boards[ite].OLED__RST, LOW);
-    delay(50);
-    digitalWrite(boards[ite].OLED__RST, HIGH);
-  }
-    Wire.begin(boards[ite].OLED__SDA, boards[ite].OLED__SCL);
-    Wire.beginTransmission(boards[ite].OLED__address);
-    if (!Wire.endTransmission())
-    {
-      Log::error(PSTR("Compatible OLED FOUND"));
-      itoa(ite, board, 10);
-      return;
-    }
-    else
-    {
-      Log::error(PSTR("Not Compatible board found, please select it manually on the web config panel"));
-    }
-  }
+  if (strcmp(ESP.getChipModel(), "ESP32-PICO-D4") != 0) {
+        for (uint8_t ite = 0; ite < ((sizeof(boards) / sizeof(boards[0]))); ite++)
+      {
+        Log::error(PSTR("%s \n"), boards[ite].BOARD);
+      if (boards[ite].OLED__RST != UNUSED) {
+        pinMode(boards[ite].OLED__RST, OUTPUT);
+        digitalWrite(boards[ite].OLED__RST, LOW);
+        delay(25);
+        digitalWrite(boards[ite].OLED__RST, HIGH);
+      }
+        Wire.begin(boards[ite].OLED__SDA, boards[ite].OLED__SCL);
+        Wire.beginTransmission(boards[ite].OLED__address);
+        if (!Wire.endTransmission())
+        {
+          Log::error(PSTR("Compatible OLED FOUND"));
+          itoa(ite, board, 10);
+          return;
+        }
+        else
+        {
+          Log::error(PSTR("Not Compatible board found, please select it manually on the web config panel"));
+        }
+      }
+    };
+#endif
 }
 
 void ConfigManager::printConfig()

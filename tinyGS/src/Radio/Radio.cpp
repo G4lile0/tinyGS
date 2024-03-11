@@ -51,6 +51,8 @@ Radio::Radio()
 
 void Radio::init()
 {
+  Power& power = Power::getInstance();
+  power.checkAXP();                                       // check and setup AXP192 and AXP2101 power controller
   Log::console(PSTR("[SX12xx] Initializing ... "));
   board_t board;
   if (!ConfigManager::getInstance().getBoardConfig(board))
