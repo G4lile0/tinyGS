@@ -30,6 +30,15 @@
 
 extern Status status;
 
+
+enum RadioModelNum {
+  RADIO_SX1278 = 1,
+  RADIO_SX1276 = 2,
+  RADIO_SX1268 = 5,
+  RADIO_SX1262 = 6,
+  RADIO_SX1280 = 8
+};
+
 class Radio {
 public:
   static Radio& getInstance()
@@ -45,6 +54,7 @@ public:
   void startRx();
   void currentRssi();
   int16_t moduleSleep();
+  const char* moduleName();
   uint8_t listen();
   bool isReady() { return status.radio_ready; }
   int16_t remote_freq(char* payload, size_t payload_len);
@@ -79,6 +89,7 @@ private:
   static void setFlag();
   SPIClass spi;
   const char* TEST_STRING = "TinyGS-test "; // make sure this always start with "TinyGS-test"!!!
+  const char* moduleNameString = "Uninitalised";
 
   double _atof(const char* buff, size_t length);
   int _atoi(const char* buff, size_t length);
