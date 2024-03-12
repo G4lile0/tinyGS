@@ -54,7 +54,6 @@ public:
   void startRx();
   void currentRssi();
   int16_t moduleSleep();
-  const char* moduleName();
   uint8_t listen();
   bool isReady() { return status.radio_ready; }
   int16_t remote_freq(char* payload, size_t payload_len);
