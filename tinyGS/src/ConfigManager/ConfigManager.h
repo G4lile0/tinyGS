@@ -111,7 +111,7 @@ typedef struct
   uint8_t L_radio; // 0 SX1262  1 SX1278
   uint8_t L_NSS;    // CS
   uint8_t L_DI00;
-  uint8_t L_DI01;
+  uint32_t L_DI01;
   uint8_t L_BUSSY;
   uint8_t L_RST;
   uint8_t L_MISO;
