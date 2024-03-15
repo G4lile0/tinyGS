@@ -95,6 +95,7 @@ enum boardNum
   TBEAM_OLED_v1_0_HF,
   LILYGO_T3_V1_6_1_LF,
   LILYGO_T3_V1_6_1_HF,
+  LILYGO_T3_V1_6_1_HF_TCXO,
 #endif
   NUM_BOARDS //this line always has to be the last one
 };

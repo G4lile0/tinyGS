@@ -74,6 +74,12 @@ void Radio::init()
       moduleNameString="SX1268";
       break;
     case RADIO_SX1262:
+      #if CONFIG_IDF_TARGET_ESP32                                    // Heltec Lora 32 V3 patch to enable TCXO
+        if (ConfigManager::getInstance().getBoard()== LILYGO_T3_V1_6_1_HF_TCXO ) { 
+        pinMode (36, OUTPUT); 
+        digitalWrite(36, LOW);
+             }
+       #endif
       radioHal = new RadioHal<SX1262>(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
       moduleNameString="SX1262";
       break;

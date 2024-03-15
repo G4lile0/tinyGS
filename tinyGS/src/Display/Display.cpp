@@ -66,7 +66,7 @@ void displayInit()
   ui->setOverlays(overlays, overlaysCount);
 
   #if CONFIG_IDF_TARGET_ESP32S3                                      // Heltec Lora 32 V3 patch to enable Vext that power OLED
-  if (ConfigManager::getInstance().getBoard()== 0 ) { 
+  if (ConfigManager::getInstance().getBoard()== HELTEC_LORA32_V3 ) { 
       pinMode (36, OUTPUT); 
       digitalWrite(36, LOW);
       }
