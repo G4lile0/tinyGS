@@ -79,6 +79,7 @@ void Radio::init()
         Log::console(PSTR("[SX1262] Enable TCXO 33... "));
         pinMode (33, OUTPUT); 
         digitalWrite(33, HIGH);
+        delay(50);
              }
        #endif
       radioHal = new RadioHal<SX1262>(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
