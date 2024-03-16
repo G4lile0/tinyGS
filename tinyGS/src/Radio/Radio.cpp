@@ -41,6 +41,8 @@ bool allow_decode=true;
 Radio::Radio()
 #if CONFIG_IDF_TARGET_ESP32S3
   : spi(HSPI)
+#elif CONFIG_IDF_TARGET_ESP32C3
+  : spi(SPI)  
 #else
   : spi(VSPI)
 #endif
@@ -49,6 +51,8 @@ Radio::Radio()
 
 void Radio::init()
 {
+  Power& power = Power::getInstance();
+  power.checkAXP();                                       // check and setup AXP192 and AXP2101 power controller
   Log::console(PSTR("[SX12xx] Initializing ... "));
   board_t board;
   if (!ConfigManager::getInstance().getBoardConfig(board))
@@ -56,28 +60,37 @@ void Radio::init()
 
   spi.begin(board.L_SCK, board.L_MISO, board.L_MOSI, board.L_NSS);
 
-  if (board.L_radio == 1)
-  {
-    radioHal = new RadioHal<SX1278>(new Module(board.L_NSS, board.L_DI00, board.L_RST, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
-  }
-  else if (board.L_radio == 2)
-  {
-    radioHal = new RadioHal<SX1276>(new Module(board.L_NSS, board.L_DI00, board.L_RST, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
-  }
-  else if (board.L_radio == 5)
-  {
-    radioHal = new RadioHal<SX1268>(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
-  }
-  else if (board.L_radio == 6)
-  {
-    radioHal = new RadioHal<SX1262>(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
-  }
-  else if (board.L_radio == 8)
-  {
-    radioHal = new RadioHal<SX1280>(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
-  }
-  else {
-     radioHal = new RadioHal<SX1268>(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+ switch (board.L_radio) {
+    case RADIO_SX1278:
+      radioHal = new RadioHal<SX1278>(new Module(board.L_NSS, board.L_DI00, board.L_RST, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+      moduleNameString="SX1278";
+      break;
+    case RADIO_SX1276:
+      #if CONFIG_IDF_TARGET_ESP32                                    // Heltec Lora 32 V3 patch to enable TCXO
+        if (ConfigManager::getInstance().getBoard()== LILYGO_T3_V1_6_1_HF_TCXO ) { 
+          Log::console(PSTR("[SX1276] Enable TCXO 33... "));
+          pinMode (33, OUTPUT); 
+          digitalWrite(33, HIGH);
+          delay(50);
+        }
+      #endif
+      radioHal = new RadioHal<SX1276>(new Module(board.L_NSS, board.L_DI00, board.L_RST, board.L_DI01, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+      moduleNameString="SX1276";
+      break;
+    case RADIO_SX1268:
+      radioHal = new RadioHal<SX1268>(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+      moduleNameString="SX1268";
+      break;
+    case RADIO_SX1262:
+      radioHal = new RadioHal<SX1262>(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+      moduleNameString="SX1262";
+      break;
+    case RADIO_SX1280:
+      radioHal = new RadioHal<SX1280>(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+      moduleNameString="SX1280";
+    default:
+       radioHal = new RadioHal<SX1268>(new Module(board.L_NSS, board.L_DI01, board.L_RST, board.L_BUSSY, spi, SPISettings(2000000, MSBFIRST, SPI_MODE0)));
+       moduleNameString="default SX1268";
   }
 
   if (board.RX_EN != UNUSED && board.TX_EN != UNUSED)
@@ -130,7 +143,7 @@ int16_t Radio::begin()
   // attach the ISR to radio interrupt
   radioHal->setDio0Action(setFlag);
   // start listening for LoRa packets
-  Log::console(PSTR("[SX12x8] Starting to listen to %s"), m.satellite);
+  Log::console(PSTR("[%s] Starting to listen to %s"), moduleNameString, m.satellite);
   CHECK_ERROR(radioHal->startReceive());
   status.modeminfo.currentRssi = radioHal->getRSSI(false,true);
 
@@ -284,7 +297,10 @@ uint8_t Radio::listen()
   status.lastPacketInfo.frequencyerror = newPacketInfo.frequencyerror;
 
   // print RSSI (Received Signal Strength Indicator)
-  Log::console(PSTR("[SX12x8] RSSI:\t\t%f dBm\n[SX12x8] SNR:\t\t%f dB\n[SX12x8] Frequency error:\t%f Hz"), status.lastPacketInfo.rssi, status.lastPacketInfo.snr, status.lastPacketInfo.frequencyerror);
+  Log::console(PSTR("[%s] RSSI:\t\t%f dBm\n[%s] SNR:\t\t%f dB\n[%s] Frequency error:\t%f Hz"),
+   moduleNameString, status.lastPacketInfo.rssi, 
+   moduleNameString, status.lastPacketInfo.snr, 
+   moduleNameString, status.lastPacketInfo.frequencyerror);
 
   if (state == RADIOLIB_ERR_NONE && respLen > 0)
   {
@@ -403,19 +419,19 @@ uint8_t Radio::listen()
   else if (state == RADIOLIB_ERR_CRC_MISMATCH)
   {
     // packet was received, but is malformed
-    Log::console(PSTR("[SX12x8] CRC error! Data cannot be retrieved"));
+    Log::console(PSTR("[%s] CRC error! Data cannot be retrieved"), moduleNameString);
     return 2;
   }
   else if (state == RADIOLIB_ERR_LORA_HEADER_DAMAGED)
   {
     // packet was received, but is malformed
-    Log::console(PSTR("[SX12x8] Damaged header! Data cannot be retrieved"));
+    Log::console(PSTR("[%S] Damaged header! Data cannot be retrieved"), moduleNameString);
     return 2;
   }
   else
   {
     // some other error occurred
-    Log::console(PSTR("[SX12x8] Failed, code %d"), state);
+    Log::console(PSTR("[%s] Failed, code %d"), moduleNameString, state);
     return 3;
   }
 }

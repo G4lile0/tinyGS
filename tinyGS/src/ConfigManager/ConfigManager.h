@@ -70,6 +70,9 @@ enum boardNum
  #if CONFIG_IDF_TARGET_ESP32S3
   HELTEC_LORA32_V3 = 0,
   ESP32S3_SX1278_LF,
+ #elif CONFIG_IDF_TARGET_ESP32C3
+  HELTEC_LORA32_HTCT62 = 0,
+  ESP32C3_SX1278_LF,
  #else
   HELTEC_V1_LF = 0,
   HELTEC_V1_HF,
@@ -92,6 +95,7 @@ enum boardNum
   TBEAM_OLED_v1_0_HF,
   LILYGO_T3_V1_6_1_LF,
   LILYGO_T3_V1_6_1_HF,
+  LILYGO_T3_V1_6_1_HF_TCXO,
 #endif
   NUM_BOARDS //this line always has to be the last one
 };

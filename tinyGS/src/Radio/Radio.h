@@ -26,8 +26,18 @@
 #include "../Status.h"
 #include "../Mqtt/MQTT_Client.h"
 #include "RadioHal.hpp"
+#include "src/Power/Power.h"
 
 extern Status status;
+
+
+enum RadioModelNum {
+  RADIO_SX1278 = 1,
+  RADIO_SX1276 = 2,
+  RADIO_SX1268 = 5,
+  RADIO_SX1262 = 6,
+  RADIO_SX1280 = 8
+};
 
 class Radio {
 public:
@@ -78,6 +88,7 @@ private:
   static void setFlag();
   SPIClass spi;
   const char* TEST_STRING = "TinyGS-test "; // make sure this always start with "TinyGS-test"!!!
+  const char* moduleNameString = "Uninitalised";
 
   double _atof(const char* buff, size_t length);
   int _atoi(const char* buff, size_t length);

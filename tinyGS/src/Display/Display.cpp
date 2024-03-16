@@ -65,11 +65,20 @@ void displayInit()
   ui->setFrames(frames, frameCount);
   ui->setOverlays(overlays, overlaysCount);
 
+  #if CONFIG_IDF_TARGET_ESP32S3                                      // Heltec Lora 32 V3 patch to enable Vext that power OLED
+  if (ConfigManager::getInstance().getBoard()== HELTEC_LORA32_V3 ) { 
+      pinMode (36, OUTPUT); 
+      digitalWrite(36, LOW);
+      }
+  #endif
+
   if (board.OLED__RST != UNUSED) {
-    pinMode(board.OLED__RST, OUTPUT);
-    digitalWrite(board.OLED__RST, LOW);
-    delay(50);
-    digitalWrite(board.OLED__RST, HIGH);
+    if (!((strcmp(ESP.getChipModel(), "ESP32-PICO-D4") == 0) && (board.OLED__RST == 16)))  {
+        pinMode(board.OLED__RST, OUTPUT);
+        digitalWrite(board.OLED__RST, LOW);
+        delay(50);
+        digitalWrite(board.OLED__RST, HIGH);
+      }
   }
 
   /* ui init() also initialises the underlying display */
