@@ -265,7 +265,7 @@ void handleSerial()
     char serialCmd = ' ';
 
     // wait for a bit to receive any trailing characters
-    configManager.delay(50);
+    configManager.delay(500);
     if (serialCmd1 == '!') serialCmd = Serial.read();
     // dump the serial buffer
     while(Serial.available())
