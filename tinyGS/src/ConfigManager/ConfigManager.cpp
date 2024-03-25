@@ -397,13 +397,13 @@ void ConfigManager::handleRefreshWorldmap()
   data_string += String(getThingName()) + ",";
   data_string += String(status.version) + ",";
   data_string += String(status.mqtt_connected ? "<span class='G'>CONNECTED</span>" : "<span class='R'>NOT CONNECTED</span>") + ",";
-  if (!WiFi.isConnected())  
+  if (WiFi.isConnected())  
   {
-    data_string += String("<span class='R'>NOT CONNECTED</span>") + ",";
+    data_string += String(WiFi.RSSI()) + ",";
   }  
   else  
   {
-    data_string += String(WiFi.RSSI()) + ",";
+    data_string += String("<span class='R'>NOT CONNECTED</span>") + ",";
   }
   data_string += String(Radio::getInstance().isReady() ? "<span class='G'>READY</span>" : "<span class='R'>NOT READY</span>") + ",";
   Radio &radio = Radio::getInstance();
