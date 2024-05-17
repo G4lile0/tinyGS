@@ -182,15 +182,6 @@ uint8_t BitCode::compone_byte_en_hexadecimal(uint8_t msc, uint8_t lsc){
   return aux;
 }
 
-size_t BitCode::stringSize(char *cadena){
-    //Measure the size of data string.
-    int size=0;
-    while (cadena[size]!=0 && size<1024){
-      size++;
-    }
-    return size;
-}
-
 //////////////////////////////////////////////////////////////////////
 int BitCode::nrz2nrzi (char *cadena_nrz, size_t size, char *salida, uint8_t *salidabin){
 uint8_t primer_bit=0;
