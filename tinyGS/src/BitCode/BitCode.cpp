@@ -203,7 +203,7 @@ void BitCode::xor_bit_on_byte(unsigned char *byte, int k, int dato){
 size_t BitCode::stringSize(char *cadena){
     //Measure the size of data string.
     int size=0;
-    while (cadena[size]!=0 && size<255){
+    while (cadena[size]!=0 && size<1024){
       size++;
     }
     return size;
@@ -401,159 +401,6 @@ void BitCode::invierte_bytes_de_un_array(char *entrada,size_t size,char *salida,
   //printf("\n");
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-//crc check - 06/07/2023
-/*TODO:
-1. funcion, si devuelve 0 el crc esta OK, si devuelve 1, no lo está
-2. pasar como parámetro la cadena AX.25inv (Done)
-3. separar la trama de datos del crc (Done)
-4. recorrer la trama de datos bit a bit y calcular el crc para cada bit
-   4.1 crear una variable de dos bytes unsigned char (Done)
-   4.2 crear metodos para poder: 
-       4.2.1 inicializar a 1's la variable crc (Done)
-       4.2.2 setear un determinado bit de crc a '1' o '0' (Done)
-       4.2.3 rotar el crc un bit a la izquierda (Done)
-       4.2.4 hacer una operacion xor entre un bit del crc y un valor dado (Done)
-   4.3 recorrido y extracción de bits de la trama de datos (Done)
-       4.3.1 se extraen los dos primeros caracteres (Done)
-       4.3.2 se pasan a un unsigned char (Done)
-       4.3.3 se extraen los bits uno a uno hasta que se agota el byte haciendo lo siguiente con dada bit: (Done)
-         4.3.3.1 El bit extraido se hace un xor con el bit 16 del crc actual y se almacena en "feedback" (Done)
-         4.3.3.2 Se rota el crc entero a la izquierda (Done)
-         4.3.3.3 Se añade feedback al bit 1 del crc (Done)
-         4.3.3.4 Se hace xor de feedback con el bit 6 del crc (Done)
-         4.3.3.5 Se hace xor de feedback con el bit 13 del crc (Done)
-       4.3.4 se pasa a los dos siguientes caracteres y se vuelve a 4.3.2 hasta agotar la cadena de datos (Done)
-5. Al llegar al ultimo bit complemetar el valor del crc y guardarlo en crc (Done)
-6. Comparar el crc calculado con el crc de datos (Done)
-*/
-void BitCode::crc_ones(unsigned char *crc){
-  //printf("Datos en la variable CRC al entrar en crc_ones...:%2X%2X\n",crc[1],crc[0]);
-  for (int b=1;b>=0;b--){
-    for (int k=1;k<=8;k++){
-      write_bit_on_byte(&crc[b],k,1);
-    }
-  }
-  //printf("Datos en la variable CRC al salir en crc_ones....:%2X%2X\n",crc[1],crc[0]);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////// CRC ////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////
-//  _____________________     __________________
-// |_______crc[1]________|   |______crc[0]______|
-//
-//MSB                                           LSB
-// 16 15 14 13 12 11 10 09 08 07 06 05 04 03 02 01
-/////////////////////////////////////////////////////////////////////////////////////
-void BitCode::set_bit_on_CRC(unsigned char *crc, int bit_position, int bit_value){
-  //printf("Datos en la variable CRC al entrar en set_bit_on_CRC...:%2X%2X\n",crc[1],crc[0]);
-  //Determinar en cual de los dos bytes hay que escribir el bit
-  //Del bit 1 al 8 en el crc[0] y del bit 9 al 16 en el crc[1]
-  if (bit_position>=1 && bit_position<= 8){
-      write_bit_on_byte(&crc[0],bit_position,bit_value);
-      //printf("Set bit on LSB\n");
-    }
-  if (bit_position>8 && bit_position<=16){
-      write_bit_on_byte(&crc[1],bit_position-8,bit_value);  
-      //printf("Set bit on MSB\n");
-  }
-  //printf("Datos en la variable CRC al salir en set_bit_on_CRC....:%2X%2X\n",crc[1],crc[0]);
-}
-
-void BitCode::xor_bit_on_CRC(unsigned char *crc, int bit_position, int bit_value){
-  //printf("Datos en la variable CRC al entrar en xor_bit_on_CRC...:%2X%2X\n",crc[1],crc[0]);
-  //Determinar en cual de los dos bytes hay que escribir el bit
-  //Del bit 1 al 8 en el crc[0] y del bit 9 al 16 en el crc[1]
-  if (bit_position>=1 && bit_position<= 8){
-      xor_bit_on_byte(&crc[0],bit_position,bit_value);
-      //printf("Xor bit on LSB\n");
-    }
-  if (bit_position>8 && bit_position<=16){
-      xor_bit_on_byte(&crc[1],bit_position-8,bit_value);  
-      //printf("Xor bit on MSB\n");
-  }
-  //printf("Datos en la variable CRC al salir en xor_bit_on_CRC....:%2X%2X\n",crc[1],crc[0]);
-}
-
-void BitCode::shift_one_bit_on_CRC_to_left(unsigned char *crc){
-  //TODO:
-  //Asignar a "bit" el valor del bit mas significativo de crc[0]
-  //Rotar el byte crc[1] a la izquierda un bit
-  //Asignar al bit menos significativo el valor de "bit"
-  //Rotar el byte crc[0] a la izquierda un bit
-  unsigned char bit=read_bit_from_byte(crc[0],8);
-  //printf("Datos en la variable CRC al entrar en set_bit_on_CRC...:%2X%2X\n",crc[1],crc[0]);  
-  crc[1]=crc[1]<<1;
-  write_bit_on_byte(&crc[1],1,bit);
-  crc[0]=crc[0]<<1;  
-  //printf("Datos en la variable CRC al salir en set_bit_on_CRC....:%2X%2X\n",crc[1],crc[0]);
-}
-
-int BitCode::crc_check(char *ax25inv){
-  //printf("\n");
-  int largo=0;
-  unsigned char crcmsb=0;
-  unsigned char byte_recibido=0;
-  unsigned char crc_recibido[2]={0,0};
-  unsigned char crc[2]={0,0};
-  unsigned char bit=0;
-  unsigned char feedback=0;
-  unsigned char compmsb=0;
-  unsigned char complsb=0;
-  //printf("Datos en la variable CRC antes de entrar en crc_ones...:%2X%2X\n",crc[1],crc[0]);
-  crc_ones(crc);
-  //printf("Datos en la variable CRC despues de salir de crc_ones...:%2X%2X\n",crc[1],crc[0]);
-  //for (int i=1;i<=16;i++){
-  //  printf("\n");
-  //  set_bit_on_CRC(crc,i,0);}
-  //for (int i=1;i<=16;i++){
-  //  printf("\n");
-  //  set_bit_on_CRC(crc,i,1);}
-  //for (int i=1;i<=16;i++){
-  //  printf("\n");
-  //  shift_one_bit_on_CRC_to_left(crc);
-  //}
-    
-  largo=stringSize(ax25inv);
-  //printf("Cadena de datos AX.25 Bytes Invertidos:");
-  for (int i=0;i<largo-4;i+=2){
-  //for (int i=0;i<2;i+=2){
-    //printf("%c%c ",ax25inv[i],ax25inv[i+1]);
-    byte_recibido=compone_byte_en_hexadecimal(ax25inv[i],ax25inv[i+1]);
-    for (int k=8;k>=1;k--){
-      //printf("Byte a procesar:%X\n",byte_recibido);
-      //printf("\n");
-      bit=read_bit_from_byte(byte_recibido,k);
-      crcmsb=read_bit_from_byte(crc[1],8);
-      feedback=bit ^ crcmsb;
-      //printf("Bit:%X crcmsb:%X feedback:%X\n",bit,crcmsb,feedback);
-      //printf("CRC Calculado....:%2X%2X\n",crc[1],crc[0]);
-      shift_one_bit_on_CRC_to_left(crc);
-      set_bit_on_CRC(crc,1,feedback);
-      xor_bit_on_CRC(crc,6,feedback);
-      xor_bit_on_CRC(crc,13,feedback);
-      //printf("CRC Calculado....:%2X%2X\n",crc[1],crc[0]);
-    }
-  }
-  //Se complementa a 1 el crc
-  crc[1]=crc[1]^(0xFF);
-  crc[0]=crc[0]^(0XFF);
-  crc_recibido[1]=compone_byte_en_hexadecimal(ax25inv[largo-4],ax25inv[largo-3]);
-  crc_recibido[0]=compone_byte_en_hexadecimal(ax25inv[largo-2],ax25inv[largo-1]);
-  //printf("\n");
-  //printf("CRC Recibido.....:%2X%2X\n",crc_recibido[1],crc_recibido[0]);
-  //printf("\n");
-  //printf("CRC Calculado....:%2X%2X\n",crc[1],crc[0]);
-  compmsb=crc[1] ^ crc_recibido[1];
-  complsb=crc[0] ^ crc_recibido[0];
-  //printf("Comparacion......:%2X%2X\n",compmsb,complsb);
-  
-  //Si la comparacion (xor) de ambos bytes es cero es que ambos bytes son iguales
-  if (compmsb==0 && complsb==0){
-    return 0;}else{return 1;}
-}
-
 void BitCode::nrz2ax25(char *entrada, size_t buffSize, char *ax25, uint8_t *ax25bin,size_t *sizeAx25bin){
          /////////////////
         char *ax25hdlc;
@@ -574,7 +421,18 @@ void BitCode::nrz2ax25(char *entrada, size_t buffSize, char *ax25, uint8_t *ax25
         bitstuff=BitCode::remove_bit_stuffing(ax25hdlc,buffSize,ax25inv,&sizeAx25inv,ax25invbin,&sizeAx25invbin);
         if (bitstuff==0){
           BitCode::invierte_bytes_de_un_array(ax25inv,sizeAx25inv,ax25,ax25bin,sizeAx25bin);		  
-          if (crc_check(ax25inv)!=0){
+                    	
+          int newsize=*sizeAx25bin-2;
+          RadioLibCRCInstance.size = 16;
+          RadioLibCRCInstance.poly = RADIOLIB_CRC_CCITT_POLY;
+          RadioLibCRCInstance.init = RADIOLIB_CRC_CCITT_INIT;
+          RadioLibCRCInstance.out = RADIOLIB_CRC_CCITT_OUT;
+          RadioLibCRCInstance.refIn = false;
+          RadioLibCRCInstance.refOut = false;
+          uint16_t fcs=RadioLibCRCInstance.checksum(ax25invbin,newsize);
+          uint16_t crcfield=ax25invbin[*sizeAx25bin-2]*256+ax25invbin[*sizeAx25bin-1];
+  
+          if (fcs!=crcfield){
               sprintf(ax25,"CRC error!");
               *sizeAx25bin=10;
               for (int i=0;i<*sizeAx25bin;i++){
