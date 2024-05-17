@@ -182,24 +182,6 @@ uint8_t BitCode::compone_byte_en_hexadecimal(uint8_t msc, uint8_t lsc){
   return aux;
 }
 
-//////////////////////////////////////////////////////////////////////
-/*
-XOR
-bit k    dato
--------------
-  0        0   ------> 0
-  0        1   ------> 1
-  1        0   ------> 1
-  1        1   ------> 0
-*/
-//////////////////////////////////////////////////////////////////////
-void BitCode::xor_bit_on_byte(unsigned char *byte, int k, int dato){
-  unsigned char byte_aux = 1;
-  //Rotating introduce zeros on the right.
-  byte_aux = byte_aux << (k-1); 
-  if (dato==1){*byte = *byte ^ byte_aux;}
-}
-
 size_t BitCode::stringSize(char *cadena){
     //Measure the size of data string.
     int size=0;
