@@ -20,6 +20,7 @@
 #ifndef BITCODE_H
 #define BITCODE_H
 #include <stdint.h> //uint8_t
+#include <RadioLib.h>
 
 class BitCode{
     public:
@@ -48,17 +49,5 @@ static void invierte_bits_de_un_byte(uint8_t br, uint8_t *bs);
 static void invierte_bytes_de_un_array(char *entrada,size_t size,char *salida, uint8_t *salidabin, size_t *bini);
 //////////////////////////////////////////////////////////////////////
 static void nrz2ax25(char *entrada, size_t buffSize, char *salida, uint8_t *salidabin,size_t *sizeAx25bin);
-//////////////////////////////////////////////////////////////////////
-static int crc_check(char *ax25inv);
-//////////////////////////////////////////////////////////////////////
-static void crc_ones(unsigned char *crc);
-//////////////////////////////////////////////////////////////////////
-static void set_bit_on_CRC(unsigned char *crc, int bit_position, int bit_value);
-//////////////////////////////////////////////////////////////////////
-static void shift_one_bit_on_CRC_to_left(unsigned char *crc);
-//////////////////////////////////////////////////////////////////////
-static void xor_bit_on_byte(unsigned char *byte, int k, int dato);
-//////////////////////////////////////////////////////////////////////
-static void xor_bit_on_CRC(unsigned char *crc, int bit_position, int bit_value);
 };
 #endif
