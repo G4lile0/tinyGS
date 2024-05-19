@@ -331,7 +331,6 @@ uint8_t Radio::listen()
               buffSize_pck = 1024;
         
           char *byteStr_fsk = new char[buffSize_pck];
-          char *byteStr_con = new char[buffSize]; //Para imprimir por consola
         
           for (int i=0;i<bytes_sincro;i++){
             sprintf(byteStr_fsk+(i*2),"%02X", status.modeminfo.fsw[i]);}
@@ -359,7 +358,6 @@ uint8_t Radio::listen()
             respLen=sizeAx25bin;
           }
           delete[] byteStr_fsk;
-          delete[] byteStr_con;
       }
     }
     
