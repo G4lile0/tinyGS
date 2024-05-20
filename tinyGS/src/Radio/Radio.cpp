@@ -318,32 +318,23 @@ uint8_t Radio::listen()
     }
     delete[] byteStr;
 
-       if (allow_decode){
+      if (allow_decode){
       String modo=status.modeminfo.modem_mode;
       if (modo=="FSK"){
         int bytes_sincro=0;
           for (int i=0;i<sizeof(status.modeminfo.fsw);i++){
             if (status.modeminfo.fsw[i]!=0){bytes_sincro++;}
           }
-        
           uint16_t buffSize_pck = bytes_sincro * 2 + respLen * 2 + 2;
           if (buffSize_pck > 1024) 
               buffSize_pck = 1024;
-        
           char *byteStr_fsk = new char[buffSize_pck];
-        
           for (int i=0;i<bytes_sincro;i++){
             sprintf(byteStr_fsk+(i*2),"%02X", status.modeminfo.fsw[i]);}
-        
-          Log::console(PSTR("Packet with SynchWord"));
           for (int i = 0; i < respLen; i++)
           {
             sprintf(byteStr_fsk + (bytes_sincro + i) * 2 % (buffSize_pck - 1), "%02X", respFrame[i]);
           }
-          Log::console(PSTR("Packet (truncated in console if longer than 128 bytes)"));
-          Log::console(PSTR("%s"), byteStr_fsk); 
-
-        Log::console(PSTR("Packet Buffer Size: %i"), buffSize);
           int coding=Satellites::coding(status.modeminfo.NORAD);
           if (coding==1){
             char *ax25;
