@@ -396,6 +396,9 @@ void BitCode::nrz2ax25(char *entrada, size_t buffSize, char *ax25, uint8_t *ax25
           BitCode::invierte_bytes_de_un_array(ax25inv,sizeAx25inv,ax25,ax25bin,sizeAx25bin);		  
                     	
           int newsize=*sizeAx25bin-2;
+	  /////////////////////////////////////////////////////////////////////////////
+	  //https://github.com/jgromes/RadioLib/blob/master/src/protocols/AX25/AX25.cpp
+	  /////////////////////////////////////////////////////////////////////////////
           RadioLibCRCInstance.size = 16;
           RadioLibCRCInstance.poly = RADIOLIB_CRC_CCITT_POLY;
           RadioLibCRCInstance.init = RADIOLIB_CRC_CCITT_INIT;
@@ -403,6 +406,7 @@ void BitCode::nrz2ax25(char *entrada, size_t buffSize, char *ax25, uint8_t *ax25
           RadioLibCRCInstance.refIn = false;
           RadioLibCRCInstance.refOut = false;
           uint16_t fcs=RadioLibCRCInstance.checksum(ax25invbin,newsize);
+	  /////////////////////////////////////////////////////////////////////////////
           uint16_t crcfield=ax25invbin[*sizeAx25bin-2]*256+ax25invbin[*sizeAx25bin-1];
   
           if (fcs!=crcfield){
