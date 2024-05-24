@@ -318,34 +318,31 @@ uint8_t Radio::listen()
     }
     delete[] byteStr;
 
-       if (allow_decode){
+      if (allow_decode){
       String modo=status.modeminfo.modem_mode;
       if (modo=="FSK"){
         int bytes_sincro=0;
           for (int i=0;i<sizeof(status.modeminfo.fsw);i++){
             if (status.modeminfo.fsw[i]!=0){bytes_sincro++;}
           }
-          buffSize = (respLen+bytes_sincro) * 2 + 1;
-          if (buffSize > 255)
-            buffSize = 255;
-          char *byteStr_fsk = new char[buffSize];
+          uint16_t buffSize_pck = bytes_sincro * 2 + respLen * 2 + 2;
+          if (buffSize_pck > 1024) 
+              buffSize_pck = 1024;
+          char *byteStr_fsk = new char[buffSize_pck];
           for (int i=0;i<bytes_sincro;i++){
             sprintf(byteStr_fsk+(i*2),"%02X", status.modeminfo.fsw[i]);}
           for (int i = 0; i < respLen; i++)
           {
-            sprintf(byteStr_fsk + (bytes_sincro + i) * 2 % (buffSize - 1), "%02X", respFrame[i]);
-            if (i * 2 % buffSize == buffSize - 3 || i == respLen - 1)
-              Log::console(PSTR("%s"), byteStr_fsk); // print before the buffer is going to loop back
+            sprintf(byteStr_fsk + (bytes_sincro + i) * 2 % (buffSize_pck - 1), "%02X", respFrame[i]);
           }
-          Log::console(PSTR("Packet Buffer Size: %i"), buffSize);
           int coding=Satellites::coding(status.modeminfo.NORAD);
           if (coding==1){
             char *ax25;
             unsigned char *ax25bin;
             size_t sizeAx25bin=0;
-            ax25=new char[buffSize];
-            ax25bin=new unsigned char[buffSize];
-            BitCode::nrz2ax25(byteStr_fsk,buffSize,ax25,ax25bin,&sizeAx25bin);
+            ax25=new char[buffSize_pck];
+            ax25bin=new unsigned char[buffSize_pck];
+            BitCode::nrz2ax25(byteStr_fsk,buffSize_pck,ax25,ax25bin,&sizeAx25bin);
             Log::console(PSTR("%s"),ax25);
             //RAW packet is replaced by the processed packet.
             respFrame=ax25bin;
