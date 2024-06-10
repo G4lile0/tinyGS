@@ -696,6 +696,17 @@ void ConfigManager::parseAdvancedConf()
   {
     advancedConf.lowPower = doc["lowPower"];
   }
+  
+  if (doc.containsKey(F("battery")))
+  {
+    JsonObject batteryConfig = doc["battery"];    
+    if (batteryConfig.containsKey(F("pin")) & batteryConfig.containsKey(F("scale")))
+    {
+      advancedConf.battery = true;
+      advancedConf.battPin = batteryConfig["pin"];
+      advancedConf.battScale = batteryConfig["scale"];
+    }
+  }    
 }
 
 void ConfigManager::parseModemStartup()
