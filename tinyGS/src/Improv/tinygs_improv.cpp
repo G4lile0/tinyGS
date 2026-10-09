@@ -63,10 +63,20 @@ void TinyGSImprov::set_error (improv::Error error) {
 }
 
 std::vector<std::string> TinyGSImprov::getLocalUrl () {
+    // Improv onboarding (WiFi connection and backend registration) relies on
+    // the default console password, which is not a secret. If the console uses
+    // another one (e.g. the one the server assigns when the station is
+    // registered), announce the URL without a password so it is not exposed.
+    const char* apPassword = globalConfigManager->getApPasswordParameter ()->valueBuffer;
+    String auth = "admin";
+    if (strcmp (apPassword, "12345678") == 0) {
+        auth += ":";
+        auth += apPassword;
+    }
     return {
       // URL where user can finish onboarding or use device
       // Recommended to use website hosted by device
-      String ("http://admin:12345678@" + WiFi.localIP ().toString () + "/").c_str ()
+      String ("http://" + auth + "@" + WiFi.localIP ().toString () + "/").c_str ()
     };
 }
 
@@ -94,6 +104,21 @@ bool TinyGSImprov::connectWifi (std::string ssid, std::string password) {
         count++;
     }
     set_state (improv::STATE_PROVISIONED);
+
+    // The console password must be set BEFORE announcing the URL over Improv:
+    // getLocalUrl only includes it when it is the default one.
+    char* apPassword = globalConfigManager->getApPasswordParameter ()->valueBuffer;
+    int apPasswordLength = globalConfigManager->getApPasswordParameter ()->getLength ();
+    if (strncmp (apPassword, "", apPasswordLength) == 0) {
+        strncpy (apPassword, "12345678", apPasswordLength);
+        Serial.println("AP password was empty");
+    }
+    if (strcmp (apPassword, "12345678") == 0) {
+        Serial.printf ("AP password: %s\n", apPassword);
+    } else {
+        Serial.println ("AP password: <hidden>");
+    }
+
     std::vector<uint8_t> data = improv::build_rpc_response (improv::WIFI_SETTINGS, getLocalUrl (), false);
     send_response (data);
 
@@ -105,13 +130,6 @@ bool TinyGSImprov::connectWifi (std::string ssid, std::string password) {
     if (strncmp (stationName, "", stationNameLength) == 0) {
         strncpy (stationName, "TinyGS_Improv", stationNameLength);
         Serial.println("Station name was empty");
-    }
-    char* apPassword = globalConfigManager->getApPasswordParameter ()->valueBuffer;
-    int apPasswordLength = globalConfigManager->getApPasswordParameter ()->getLength ();
-    Serial.printf("AP password: %s\n", apPassword);
-    if (strncmp (apPassword, "", apPasswordLength) == 0) {
-        strncpy (apPassword, "12345678", apPasswordLength);
-        Serial.println("AP password was empty");
     }
     globalConfigManager->saveConfig ();
     delay (100);
