@@ -141,6 +141,10 @@ void setup()
 #else
   setCpuFrequencyMhz(240);
 #endif
+  // Large TX buffer: the boot log is emitted in a burst and the default buffer
+  // (256 B) fills up and `Log` truncates lines with "...", losing evidence
+  // (e.g. the radio banner).
+  Serial.setTxBufferSize(4096);
   Serial.begin(115200);
   delay (100);
   
