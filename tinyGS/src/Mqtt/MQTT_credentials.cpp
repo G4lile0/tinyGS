@@ -2,6 +2,7 @@
 #include <esp_log.h>
 #include <HTTPClient.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <stdlib.h> // For random number generation
 #include "../certs.h"
 #include "../Logger/Logger.h"
@@ -34,7 +35,16 @@ String MQTTCredentials::fetchCredentials () {
 
         HTTPClient http;
         http.setTimeout (3000);
+#if TEST_API==1
+        // Test build: api-test may serve a CA chain different from the
+        // firmware's (e.g. Google Trust Services); in test mode the certificate
+        // check is skipped so it does not depend on that.
+        WiFiClientSecure testClient;
+        testClient.setInsecure ();
+        http.begin (testClient, url);
+#else
         http.begin (url, ISRGroot_CA);
+#endif
         int httpResponseCode = http.GET ();
 
         if (httpResponseCode == 200) {
