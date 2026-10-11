@@ -77,7 +77,13 @@ bool TinyGSImprov::connectWifi (std::string ssid, std::string password) {
     // Power the station off before applying credentials: an in-flight connection
     // attempt makes the driver refuse the new configuration ("sta is connecting,
     // cannot set config"), which is common right after boot.
-    WiFi.disconnect (true);
+    // Only when the driver is already running: on a board that has not started
+    // WiFi yet (fresh config), disconnect() fails with ESP_ERR_WIFI_NOT_INIT
+    // and, with the Arduino 3.x core, the connection that follows never
+    // reports WL_CONNECTED.
+    if (WiFi.getMode () != WIFI_OFF) {
+        WiFi.disconnect (true);
+    }
     WiFi.mode (WIFI_STA);
     WiFi.begin (ssid.c_str (), password.c_str ());
 
