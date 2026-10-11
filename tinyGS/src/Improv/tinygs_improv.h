@@ -21,7 +21,7 @@ public:
 
 private:
 
-    const uint8_t MAX_ATTEMPTS_WIFI_CONNECTION = 20;
+    const uint8_t MAX_ATTEMPTS_WIFI_CONNECTION = 60;
     const uint32_t PARTIAL_FRAME_TIMEOUT_MS = 100;
 
     uint8_t improvBuffer[IMPROV_BUFFER_SIZE];
