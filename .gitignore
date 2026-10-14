@@ -13,6 +13,7 @@ tinyGS/idf_component.yml
 .vscode/*
 .agents/
 context_portal
-memvidagentmemory.instructions.md
+.github/skills/
+.github/prompts/
 
 *.bin
