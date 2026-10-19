@@ -17,3 +17,5 @@ context_portal
 .github/prompts/
 
 *.bin
+.claude/*
+.state/
