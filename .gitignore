@@ -6,6 +6,8 @@
 __pycache__/
 tests/hil/reports/
 tests/unit/build/
+tests/integration/.venv/
+tests/integration/artifacts/
 scripts/
 tinyGS/tinyGS.ino.cpp
 tinyGS/idf_component.yml
