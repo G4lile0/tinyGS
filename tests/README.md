@@ -37,9 +37,10 @@ See `tests/integration/README.md` for targets, capabilities and the `--target` m
 ### Classic ESP32 QEMU
 
 The community QEMU fork with `esp32_wifi` builds reproducibly and boots the classic ESP32
-for boot/serial/reset tests. Its WiFi model does not complete WiFi init with the Arduino
-image (`EM_RD NVDS` loop), so WiFi/MQTT/web stay on hardware for now. Full result and next
-steps: `tests/emu-esp32/SPIKE.md`.
+for boot/serial/reset tests. Its WiFi model is not usable with tinyGS: the Arduino WiFi
+stack does not associate, and an ESP-IDF control associates but gets no DHCP lease. The
+`EM_RD NVDS` log is Bluetooth debug noise, not the WiFi failure. WiFi/MQTT/web stay on
+hardware. Full result: `tests/emu-esp32/SPIKE.md`.
 
 ## Boundaries
 

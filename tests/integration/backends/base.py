@@ -34,7 +34,7 @@ class TargetBackend(ABC):
     wifi_password: str | None = None
 
     def __init__(self, artifact_dir: Path) -> None:
-        self.artifact_dir = Path(artifact_dir)
+        self.artifact_dir = Path(artifact_dir).resolve()
         self.artifact_dir.mkdir(parents=True, exist_ok=True)
 
     @property

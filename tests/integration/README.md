@@ -96,10 +96,10 @@ and `TARGET_CAPABILITIES` in `conftest.py`, and verify `test_boot.py` passes wit
 ## Scope and limitations
 
 - Boot, serial console and reset on every target.
-- WiFi/MQTT/web are not covered yet: a configured boot blocks in radio init, and the
-  QEMU fork's `esp32_wifi` model does not complete WiFi init with the Arduino image
-  (`EM_RD NVDS` loop). `test_wifi.py` is present but skipped by capability until those
-  blockers are resolved. Details: `tests/emu-esp32/SPIKE.md`.
+- WiFi/MQTT/web are not covered: the QEMU fork's `esp32_wifi` model cannot carry the
+  Arduino WiFi stack (no association), and an ESP-IDF control associates but gets no DHCP
+  lease. `test_wifi.py` stays skipped by capability. Details:
+  `tests/emu-esp32/SPIKE.md`.
 - No RF/LoRa, Bluetooth, display fidelity or real-time behaviour.
 - No project source changes: the test-only radio bypass is deferred until that change is
   approved.

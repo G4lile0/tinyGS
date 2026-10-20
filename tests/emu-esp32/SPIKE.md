@@ -15,40 +15,64 @@ Firmware: merged 4 MB `ESP32` image (`tests/emu-esp32/make_image.py`)
 | UART over TCP and console command | PASS | shared `test_console_command_is_answered` |
 | QEMU monitor `system_reset` and serial reconnect | PASS | shared `test_reset_boots_the_same_firmware_again` |
 | QEMU monitor `quit` stops the process | PASS | backend `stop()` waits for the container to exit |
-| Improv provisioning over serial | FAIL | WiFi init loops on `EM_RD NVDS 0x0000` in the QEMU log |
-| WiFi association and IPv4 address | NOT REACHED | no address or web response after provisioning |
-| Outbound TCP / MQTT | NOT REACHED | WiFi never becomes usable |
-| `hostfwd` to the device web | FAIL | `http://127.0.0.1:<port>/` timed out for 90 s |
+| Improv provisioning over serial | FAIL | firmware prints `Wifi status: 0` and `Failed to connect to wifi...` |
+| WiFi scan sees the emulated APs | PASS | Arduino control scan lists all 6 APs, including `Open Wifi` (ch 4, open) |
+| Arduino `WiFi.begin("Open Wifi", "", 4)` | FAIL | status 0 (no association) |
+| ESP-IDF 5.4 station example | PARTIAL | associates (`wifi:connected with Open Wifi, channel 4`) but no `GOT_IP` |
+| `-netdev`/`-device` alternative | FAIL | `-device esp32_wifi,netdev=n0`: "Parameter 'driver' expects a pluggable device type" |
+| `hostfwd` to the device web | FAIL | `http://127.0.0.1:<port>/` timed out |
 
 ## Diagnosis
 
-The guest boots and the console works, so the CPU, flash, UART, timers and monitor are
-usable. After provisioning, the WiFi driver repeatedly reads `NVDS` and never completes
-initialisation. The QEMU log fills with:
+The `EM_RD NVDS 0x0000` lines are **Bluetooth exchange-memory debug logging** from
+`hw/xtensa/esp32.c` (`btdm_em_debug_level = 1`), not the WiFi failure. The real firmware
+console after provisioning is:
 
 ```
-EM_RD NVDS 0x0000 -> 0x3ffae87c
+IMPROV... Wifi status: 0
+Failed to connect to wifi...
 ```
 
-This points at the `esp32_wifi` model interacting with the Arduino/ESP-IDF WiFi stack or
-its PHY/NVS calibration data, not at tinyGS's application logic. The model was validated
-by its author against specific ESP-IDF examples; the Arduino core's WiFi/NVS layout is a
-different target.
+The model exposes the right APs: an Arduino scan control sees all six hardcoded APs,
+including `Open Wifi` on channel 4 with open security. Association is the problem:
+
+- Arduino (`WiFi.begin("Open Wifi", "", 4)`) never associates: status stays 0.
+- ESP-IDF 5.4 associates at the WiFi level:
+  `wifi:connected with Open Wifi, aid = 1, channel 4, bssid = 10:01:00:c4:0a:51`,
+  but never receives `IP_EVENT_STA_GOT_IP`; the test prints `RESULT FAILED` after 60 s.
+- The IDF log shows `phy_init: failed to load RF calibration data ... falling back to
+  full calibration` and still associates, so NVS/PHY calibration is not the blocker.
+- The model is not user-creatable via `-device`; only `-nic user,model=esp32_wifi`
+  instantiates it.
+
+Conclusion: the community `esp32_wifi` model is not usable for tinyGS yet. The Arduino
+WiFi stack does not complete association, and even the IDF path that associates does not
+get a DHCP lease through the model.
 
 ## Decision
 
-- Keep the QEMU fork as a **boot/serial** backend for the classic ESP32. It is useful and
-  stable for that.
-- Do **not** claim WiFi, MQTT or device-web coverage for `esp32-qemu` yet.
-- Do **not** add a test-only radio bypass or any other firmware change in this change:
-  project sources are frozen for now.
+- Keep the QEMU fork as a **boot/serial/reset** backend for the classic ESP32.
+- Do **not** claim WiFi, MQTT or device-web coverage for `esp32-qemu`.
+- Do **not** add a test-only radio bypass or any other firmware change: project sources are
+  frozen for now.
 - Keep WiFi/MQTT/web coverage on hardware. The upstream Espressif QEMU fork does not
-  emulate WiFi, so it is not a replacement for this path.
+  emulate WiFi, so it is not a replacement.
+
+## Artifacts
+
+- `tests/integration/artifacts/wifi-repro/` — tinyGS console + QEMU log + summary
+  (`Wifi status: 0`, `Failed to connect to wifi...`).
+- `tests/integration/artifacts/wifi-scan/` — Arduino scan control (6 APs).
+- `tests/integration/artifacts/wifi-connect2/` — Arduino connect with pinned channel
+  (status 0).
+- `tests/integration/artifacts/idf-wifi/` — ESP-IDF 5.4 control (association, no GOT_IP).
 
 ## Next steps (needs approval)
 
-1. Investigate the `EM_RD NVDS` loop: whether the fork needs a populated PHY/NVS partition,
-   an eFuse/PHY blob, or a specific `-nic`/machine option.
-2. If that works, evaluate a test-only radio bypass so a configured boot reaches MQTT.
-   That requires a small firmware change and is intentionally out of scope today.
+1. Fix or replace the `esp32_wifi` model: association for the Arduino WiFi stack and a
+   working DHCP path. This is a change to the test dependency (QEMU fork), not to tinyGS.
+2. If a configured boot then still blocks in radio init, evaluate a test-only radio bypass.
+   That requires a firmware change and is intentionally out of scope today.
 3. Only then add `web`/`mqtt` capability claims and the corresponding shared tests.
+4. Alternative hosted option: Wokwi, which emulates WiFi for the classic ESP32, at the cost
+   of a token and a hosted dependency.
